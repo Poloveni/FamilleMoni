@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Famille Moni — Los Santos GTA RP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --red: #c0392b;
+      --red-dark: #a93226;
+      --bg: #0f0f0f;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --text-dim: #555;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 60px;
+      background: rgba(15,15,15,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 16px; font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--text);
+    }
+    .logo span { color: var(--red); }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-burger { display: none; cursor: pointer; color: var(--text); font-size: 22px; }
+
+    /* ── HERO ── */
+    #accueil {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 100px 32px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    }
+    .hero-glow {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(192,57,43,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 640px; }
+    .hero-tag {
+      display: inline-block; font-size: 11px; letter-spacing: 2px;
+      text-transform: uppercase; padding: 5px 14px;
+      border: 1px solid var(--red); color: var(--red);
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: clamp(52px, 10vw, 80px);
+      font-weight: 600; line-height: 1;
+      letter-spacing: -2px; margin-bottom: 20px;
+    }
+    h1 span { color: var(--red); }
+    .hero-sub {
+      font-size: 16px; color: var(--text-muted);
+      max-width: 400px; margin: 0 auto 36px; line-height: 1.7;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-red {
+      padding: 12px 28px; background: var(--red); color: #fff;
+      font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+      border: none; cursor: pointer; text-decoration: none;
+      display: inline-block; transition: background 0.2s;
+    }
+    .btn-red:hover { background: var(--red-dark); }
+    .btn-ghost {
+      padding: 12px 28px; background: transparent; color: var(--text);
+      font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+      border: 1px solid var(--border-strong); cursor: pointer;
+      text-decoration: none; display: inline-block; transition: border-color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--text-muted); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .stat {
+      padding: 28px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num { font-size: 36px; font-weight: 600; color: var(--red); }
+    .stat-label {
+      font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 1.5px; margin-top: 4px;
+    }
+
+    /* ── SECTIONS GÉNÉRALES ── */
+    section { padding: 80px 40px; }
+    .section-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-dim); margin-bottom: 32px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px); font-weight: 600;
+      letter-spacing: -1px; margin-bottom: 12px;
+    }
+    .section-title span { color: var(--red); }
+    .section-desc { color: var(--text-muted); max-width: 500px; margin-bottom: 48px; }
+
+    /* ── VALEURS ── */
+    #valeurs { background: var(--surface); }
+    .valeurs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--border); }
+    .valeur-card {
+      background: var(--surface); padding: 32px 28px;
+      transition: background 0.2s;
+    }
+    .valeur-card:hover { background: var(--surface2); }
+    .valeur-icon {
+      width: 40px; height: 40px;
+      border: 1px solid var(--red); color: var(--red);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 20px;
+    }
+    .valeur-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+    .valeur-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── MEMBRES ── */
+    #membres { background: var(--bg); }
+    .membres-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+    .membre-card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 28px 20px; text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .membre-card:hover { border-color: var(--red); background: var(--surface2); }
+    .avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--surface2); border: 2px solid var(--red);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px; font-size: 16px; font-weight: 600; color: var(--red);
+    }
+    .membre-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .membre-role {
+      font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── ACTUALITÉS ── */
+    #actualites { background: var(--surface); }
+    .actu-list { display: flex; flex-direction: column; }
+    .actu-item {
+      display: flex; gap: 20px; align-items: flex-start;
+      padding: 20px 0; border-bottom: 1px solid var(--border);
+    }
+    .actu-item:last-child { border-bottom: none; }
+    .actu-date { font-size: 12px; color: var(--text-dim); min-width: 64px; padding-top: 3px; }
+    .actu-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+      margin-top: 7px; flex-shrink: 0;
+    }
+    .actu-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .actu-body p { font-size: 13px; color: var(--text-muted); }
+    .badge {
+      display: inline-block; font-size: 10px; letter-spacing: 1px;
+      text-transform: uppercase; padding: 2px 8px;
+      background: rgba(192,57,43,0.15); color: var(--red);
+      margin-left: 8px; vertical-align: middle;
+    }
+
+    /* ── CONTACT ── */
+    #contact { background: var(--bg); text-align: center; }
+    .contact-box {
+      max-width: 500px; margin: 0 auto;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 48px 40px;
+    }
+    .contact-box p { color: var(--text-muted); margin-bottom: 32px; }
+    .contact-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 24px 40px; border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-logo { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+    .footer-logo span { color: var(--red); }
+    .footer-text { font-size: 12px; color: var(--text-dim); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column; gap: 0;
+        position: absolute; top: 60px; left: 0; right: 0;
+        background: var(--surface); border-bottom: 1px solid var(--border);
+        padding: 12px 0;
+      }
+      .nav-links.open a { padding: 12px 24px; }
+      .nav-burger { display: block; }
+      section { padding: 60px 20px; }
+      .stats-bar { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      footer { padding: 20px; flex-direction: column; text-align: center; }
+      .contact-box { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Famille <span>Moni</span></div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#accueil">Accueil</a></li>
+    <li><a href="#valeurs">Valeurs</a></li>
+    <li><a href="#membres">Membres</a></li>
+    <li><a href="#actualites">Actualités</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-burger" id="burger" onclick="toggleMenu()" aria-label="Menu">&#9776;</div>
+</nav>
+
+<!-- HERO -->
+<section id="accueil">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Los Santos &mdash; GTA RP</div>
+    <h1>La Famille<br><span>Moni</span></h1>
+    <p class="hero-sub">On est pas les plus grands, mais on est là. Solidaires, soudés, toujours dans les rues de Los Santos.</p>
+    <div class="hero-btns">
+      <a href="#contact" class="btn-red">Nous rejoindre</a>
+      <a href="#membres" class="btn-ghost">Les membres</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">12</div>
+    <div class="stat-label">Membres actifs</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">6</div>
+    <div class="stat-label">Mois d'existence</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">1</div>
+    <div class="stat-label">Quartier</div>
+  </div>
+</div>
+
+<!-- VALEURS -->
+<section id="valeurs">
+  <div class="section-label">Nos valeurs</div>
+  <h2 class="section-title">Ce qui nous <span>définit</span></h2>
+  <p class="section-desc">On est une petite frappe, mais on a du code. Des règles, une vision, et surtout — une vraie famille.</p>
+  <div class="valeurs-grid">
+    <div class="valeur-card">
+      <div class="valeur-icon">&#128101;</div>
+      <h3>La famille avant tout</h3>
+      <p>On se couvre mutuellement, quoi qu'il arrive. Les Moni ne s'abandonnent pas.</p>
+    </div>
+    <div class="valeur-card">
+      <div class="valeur-icon">&#128205;</div>
+      <h3>Ancrés dans les rues</h3>
+      <p>On connaît chaque coin de Los Santos. Notre quartier, notre territoire.</p>
+    </div>
+    <div class="valeur-card">
+      <div class="valeur-icon">&#128737;</div>
+      <h3>Discrétion & survie</h3>
+      <p>On reste dans l'ombre. Pas de bruit inutile, juste du travail bien fait.</p>
+    </div>
+    <div class="valeur-card">
+      <div class="valeur-icon">&#9994;</div>
+      <h3>Respect du code</h3>
+      <p>Des règles claires, des engagements tenus. La parole donnée est sacrée.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MEMBRES -->
+<section id="membres">
+  <div class="section-label">L'équipe</div>
+  <h2 class="section-title">Les <span>membres</span></h2>
+  <p class="section-desc">Chaque Moni a sa place et son rôle. Ensemble, on tient debout.</p>
+  <div class="membres-grid">
+    <div class="membre-card">
+      <div class="avatar">TM</div>
+      <div class="membre-name">Tony Moni</div>
+      <div class="membre-role">Chef de famille</div>
+    </div>
+    <div class="membre-card">
+      <div class="avatar">RM</div>
+      <div class="membre-name">Rico Moni</div>
+      <div class="membre-role">Bras droit</div>
+    </div>
+    <div class="membre-card">
+      <div class="avatar">SM</div>
+      <div class="membre-name">Sofia Moni</div>
+      <div class="membre-role">Contacts & infos</div>
+    </div>
+    <div class="membre-card">
+      <div class="avatar">KM</div>
+      <div class="membre-name">Kenzo Moni</div>
+      <div class="membre-role">Recrue</div>
+    </div>
+  </div>
+</section>
+
+<!-- ACTUALITÉS -->
+<section id="actualites">
+  <div class="section-label">Dernières nouvelles</div>
+  <h2 class="section-title">Actu du <span>groupe</span></h2>
+  <div class="actu-list">
+    <div class="actu-item">
+      <div class="actu-date">Juin 26</div>
+      <div class="actu-dot"></div>
+      <div class="actu-body">
+        <h4>Réunion au QG <span class="badge">Important</span></h4>
+        <p>Tous les membres sont convoqués ce soir. Soyez à l'heure.</p>
+      </div>
+    </div>
+    <div class="actu-item">
+      <div class="actu-date">Juin 22</div>
+      <div class="actu-dot"></div>
+      <div class="actu-body">
+        <h4>Nouveau membre accueilli</h4>
+        <p>Kenzo a été officiellement intégré à la famille après sa période d'essai.</p>
+      </div>
+    </div>
+    <div class="actu-item">
+      <div class="actu-date">Juin 18</div>
+      <div class="actu-dot"></div>
+      <div class="actu-body">
+        <h4>Incident dans le quartier <span class="badge">Alerte</span></h4>
+        <p>Restez vigilants, des inconnus ont été vus rôder près de nos zones.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-label">Rejoindre la famille</div>
+  <div class="contact-box">
+    <h2 class="section-title">Tu veux <span>nous rejoindre ?</span></h2>
+    <p>Contacte-nous sur Discord ou en jeu. On accepte uniquement les joueurs sérieux et impliqués dans le RP.</p>
+    <div class="contact-links">
+      <a href="#" class="btn-red">Discord</a>
+      <a href="#" class="btn-ghost">Forum RP</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Famille <span>Moni</span></div>
+  <div class="footer-text">Los Santos &mdash; GTA RP &middot; Site fictif</div>
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>
