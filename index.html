@@ -64,19 +64,32 @@
       position: relative;
       overflow: hidden;
     }
-    .hero-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    .hero-video-wrap {
+      position: absolute; inset: 0; z-index: 0;
+      pointer-events: none; overflow: hidden;
+    }
+    .hero-video-wrap iframe {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 177.78vh;
+      height: 56.25vw;
+      min-width: 100%;
+      min-height: 100%;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(to bottom,
+        rgba(10,10,10,0.55) 0%,
+        rgba(10,10,10,0.45) 60%,
+        rgba(10,10,10,0.85) 100%
+      );
     }
     .hero-glow {
-      position: absolute; top: 50%; left: 50%;
+      position: absolute; top: 50%; left: 50%; z-index: 1;
       transform: translate(-50%, -50%);
       width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(192,57,43,0.12) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(192,57,43,0.10) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-content { position: relative; z-index: 1; max-width: 640px; }
@@ -265,9 +278,18 @@
 
 <!-- HERO -->
 <section id="accueil">
-  <div class="hero-grid"></div>
+  <div class="hero-video-wrap">
+    <iframe
+      src="https://www.youtube.com/embed/-X2WUiZ3kX8?autoplay=1&mute=1&loop=1&playlist=-X2WUiZ3kX8&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1"
+      title="GTA V Los Santos ambiance"
+      frameborder="0"
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
+  </div>
+  <div class="hero-overlay"></div>
   <div class="hero-glow"></div>
-  <div class="hero-content">
+  <div class="hero-content" style="position:relative;z-index:2;">
     <div class="hero-tag">Los Santos &mdash; GTA RP</div>
     <h1>La Famille<br><span>Moni</span></h1>
     <p class="hero-sub">On est pas les plus grands, mais on est là. Solidaires, soudés, toujours dans les rues de Los Santos.</p>
