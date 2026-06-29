@@ -84,8 +84,10 @@
       display: inline-block; font-size: 11px; letter-spacing: 2px;
       text-transform: uppercase; padding: 5px 14px;
       border: 1px solid #7b2fa8; color: #7b2fa8;
-      margin-bottom: 24px;
+      margin-bottom: 24px; cursor: pointer;
+      transition: background 0.2s;
     }
+    .hero-tag:hover { background: rgba(123,47,168,0.15); }
     h1 {
       font-size: clamp(52px, 10vw, 80px);
       font-weight: 600; line-height: 1;
@@ -268,10 +270,10 @@
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <div class="hero-content">
-    <div class="hero-tag">
+    <a href="https://flashbackfa.fr/" target="_blank" class="hero-tag" style="text-decoration:none;">
       <img src="logo.jpg" alt="Flashback FA" style="height:18px; width:18px; object-fit:cover; border-radius:2px; vertical-align:middle; margin-right:8px;">
       Flashback FA &mdash; GTA RP
-    </div>
+    </a>
     <h1>La Famille<br><span>Moni</span></h1>
     <p class="hero-sub">On est pas les plus grands, mais on est là. Solidaires, soudés, toujours dans les rues de Los Santos.</p>
     <div class="hero-btns">
