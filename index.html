@@ -24,6 +24,35 @@
 
     html { scroll-behavior: smooth; }
 
+    /* ── ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-stagger > * {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-stagger.visible > * { opacity: 1; transform: translateY(0); }
+    .reveal-stagger.visible > *:nth-child(1) { transition-delay: 0.05s; }
+    .reveal-stagger.visible > *:nth-child(2) { transition-delay: 0.1s; }
+    .reveal-stagger.visible > *:nth-child(3) { transition-delay: 0.15s; }
+    .reveal-stagger.visible > *:nth-child(4) { transition-delay: 0.2s; }
+    .reveal-stagger.visible > *:nth-child(5) { transition-delay: 0.25s; }
+    .reveal-stagger.visible > *:nth-child(6) { transition-delay: 0.3s; }
+    .reveal-stagger.visible > *:nth-child(7) { transition-delay: 0.35s; }
+    .reveal-stagger.visible > *:nth-child(8) { transition-delay: 0.4s; }
+    .reveal-stagger.visible > *:nth-child(9) { transition-delay: 0.45s; }
+    .reveal-stagger.visible > *:nth-child(10) { transition-delay: 0.5s; }
+    .reveal-stagger.visible > *:nth-child(11) { transition-delay: 0.55s; }
+    .reveal-stagger.visible > *:nth-child(12) { transition-delay: 0.6s; }
+    .reveal-stagger.visible > *:nth-child(13) { transition-delay: 0.65s; }
+    .reveal-stagger.visible > *:nth-child(14) { transition-delay: 0.7s; }
+    .reveal-stagger.visible > *:nth-child(15) { transition-delay: 0.75s; }
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -68,14 +97,18 @@
       background: radial-gradient(circle, rgba(192,57,43,0.12) 0%, transparent 70%);
       pointer-events: none;
     }
-    .hero-content { position: relative; z-index: 1; max-width: 640px; }
+    .hero-content { position: relative; z-index: 1; max-width: 640px; animation: heroIn 1s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     .hero-tag {
       display: inline-flex; align-items: center; gap: 8px;
       font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 5px 14px;
       border: 1px solid #7b2fa8; color: #7b2fa8;
-      margin-bottom: 24px; cursor: pointer; transition: background 0.2s; text-decoration: none;
+      margin-bottom: 24px; cursor: pointer; transition: background 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1); text-decoration: none;
     }
-    .hero-tag:hover { background: rgba(123,47,168,0.15); }
+    .hero-tag:hover { background: rgba(123,47,168,0.15); transform: scale(1.04); }
     .hero-tag img { height: 18px; width: 18px; object-fit: cover; border-radius: 2px; }
     h1 { font-size: clamp(52px, 10vw, 80px); font-weight: 600; line-height: 1; letter-spacing: -2px; margin-bottom: 20px; }
     h1 em { font-style: normal; color: var(--red); }
@@ -84,21 +117,21 @@
     .btn-red {
       padding: 12px 28px; background: var(--red); color: #fff; font-size: 12px;
       letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer;
-      text-decoration: none; display: inline-block; transition: background 0.2s;
+      text-decoration: none; display: inline-block; transition: background 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease;
     }
-    .btn-red:hover { background: var(--red-dark); }
+    .btn-red:hover { background: var(--red-dark); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(192,57,43,0.35); }
     .btn-white {
       padding: 12px 28px; background: #fff; color: #111; font-size: 12px;
       letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer;
-      text-decoration: none; display: inline-block; transition: background 0.2s;
+      text-decoration: none; display: inline-block; transition: background 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease;
     }
-    .btn-white:hover { background: #e0e0e0; }
+    .btn-white:hover { background: #e0e0e0; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,255,255,0.15); }
     .btn-ghost {
       padding: 12px 28px; background: transparent; color: var(--text); font-size: 12px;
       letter-spacing: 1.5px; text-transform: uppercase; border: 1px solid var(--border-strong);
-      cursor: pointer; text-decoration: none; display: inline-block; transition: border-color 0.2s;
+      cursor: pointer; text-decoration: none; display: inline-block; transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
     }
-    .btn-ghost:hover { border-color: var(--text-muted); }
+    .btn-ghost:hover { border-color: var(--text-muted); transform: translateY(-3px); }
 
     .stats-bar {
       display: grid; grid-template-columns: repeat(4, 1fr);
@@ -130,12 +163,22 @@
 
     #valeurs { background: var(--bg); }
     .valeurs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--border); }
-    .valeur-card { background: var(--bg); padding: 32px 28px; transition: background 0.2s; }
-    .valeur-card:hover { background: var(--surface); }
+    .valeur-card {
+      background: var(--bg); padding: 32px 28px;
+      transition: background 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+      will-change: transform;
+    }
+    .valeur-card:hover {
+      background: var(--surface);
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 12px 32px rgba(192,57,43,0.18), 0 0 0 1px rgba(192,57,43,0.25);
+    }
     .valeur-icon {
       width: 40px; height: 40px; border: 1px solid var(--red); color: var(--red);
       display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 20px;
+      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
     }
+    .valeur-card:hover .valeur-icon { transform: scale(1.12) rotate(-4deg); box-shadow: 0 0 16px rgba(192,57,43,0.5); }
     .valeur-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
     .valeur-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
@@ -151,10 +194,17 @@
     .membres-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
     .membre-card {
       background: var(--surface); border: 1px solid var(--border); padding: 24px 16px;
-      text-align: center; transition: border-color 0.2s, background 0.2s;
+      text-align: center; transition: border-color 0.35s ease, background 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+      will-change: transform;
     }
-    .membre-card:hover { border-color: var(--red); background: var(--surface2); }
-    .membre-card.chef { border-color: var(--red); }
+    .membre-card:hover {
+      border-color: var(--red); background: var(--surface2);
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 10px 28px rgba(192,57,43,0.2);
+    }
+    .membre-card.chef:hover { box-shadow: 0 10px 28px rgba(192,57,43,0.4); }
+    .avatar { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease; }
+    .membre-card:hover .avatar { transform: scale(1.1); box-shadow: 0 0 14px rgba(192,57,43,0.45); }
     .avatar {
       width: 52px; height: 52px; border-radius: 50%; background: var(--surface2);
       border: 2px solid var(--red); display: flex; align-items: center; justify-content: center;
@@ -287,7 +337,7 @@
 
 <section id="histoire">
   <div class="section-label">Notre origine</div>
-  <div class="histoire-inner">
+  <div class="histoire-inner reveal">
     <div class="histoire-text">
       <h2 class="section-title">L'histoire de la<br><em>Famille Moni</em></h2>
       <p>Nés dans les rues de Roxwood, les Moni ne sont pas une organisation comme les autres. Pas de grands discours, pas de hiérarchie écrasante — juste un groupe de gars qui se sont trouvés et ont décidé de rester ensemble.</p>
@@ -305,7 +355,7 @@
   <div class="section-label">Nos valeurs</div>
   <h2 class="section-title">Ce qui nous <em>définit</em></h2>
   <p class="section-desc">On est une petite frappe, mais on a du code. Des règles, une vision, et surtout — une vraie famille.</p>
-  <div class="valeurs-grid">
+  <div class="valeurs-grid reveal-stagger">
     <div class="valeur-card">
       <div class="valeur-icon">&#128101;</div>
       <h3>La famille avant tout</h3>
@@ -333,7 +383,7 @@
   <div class="section-label">Le code Moni</div>
   <h2 class="section-title">Nos <em>règles</em></h2>
   <p class="section-desc">Être Moni, ça se mérite. Ces règles ne sont pas négociables.</p>
-  <div class="regles-list">
+  <div class="regles-list reveal-stagger">
     <div class="regle-item"><div class="regle-num">01</div><p><strong>La famille passe avant tout.</strong> Un Moni ne laisse jamais un autre Moni seul dans la rue.</p></div>
     <div class="regle-item"><div class="regle-num">02</div><p><strong>Pas de trahison.</strong> Quiconque trahit la famille en paie les conséquences.</p></div>
     <div class="regle-item"><div class="regle-num">03</div><p><strong>Discrétion obligatoire.</strong> On ne parle pas des affaires de la famille à l'extérieur.</p></div>
@@ -347,7 +397,7 @@
   <div class="section-label">L'équipe</div>
   <h2 class="section-title">Les <em>membres</em></h2>
   <p class="section-desc">14 membres. Un seul objectif : tenir ensemble.</p>
-  <div class="membres-grid">
+  <div class="membres-grid reveal-stagger">
     <div class="membre-card chef"><div class="avatar">LM</div><div class="membre-name">Lov Moni</div><div class="membre-role">Chef de famille</div><div class="chef-badge">&#9733; Chef</div></div>
     <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Allesandro Moretti</div><div class="membre-role">Membre</div></div>
     <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Andrea Moni</div><div class="membre-role">Membre</div></div>
@@ -368,7 +418,7 @@
 
 <section id="recrutement">
   <div class="section-label">Nous rejoindre</div>
-  <div class="recrutement-inner">
+  <div class="recrutement-inner reveal">
     <div>
       <h2 class="section-title">On <em>recrute</em></h2>
       <p class="section-desc">La famille Moni grandit, mais on choisit nos membres avec soin. Voici ce qu'on attend.</p>
@@ -392,7 +442,7 @@
   <div class="section-label">Galerie</div>
   <h2 class="section-title">Nos <em>moments</em></h2>
   <p class="section-desc">Des screens de nos meilleures sessions RP à Roxwood et Los Santos.</p>
-  <div class="galerie-placeholder">
+  <div class="galerie-placeholder reveal-stagger">
     <div class="galerie-item large">📸 Screenshot 1</div>
     <div class="galerie-item">📸 Screenshot 2</div>
     <div class="galerie-item">📸 Screenshot 3</div>
@@ -404,7 +454,7 @@
 <section id="actualites">
   <div class="section-label">Dernières nouvelles</div>
   <h2 class="section-title">Actu du <em>groupe</em></h2>
-  <div class="actu-list">
+  <div class="actu-list reveal-stagger">
     <div class="actu-item"><div class="actu-date">Juin 29</div><div class="actu-dot"></div><div class="actu-body"><h4>Site officiel en ligne <span class="badge">Nouveau</span></h4><p>Le site de la Famille Moni est maintenant en ligne. Bienvenue !</p></div></div>
     <div class="actu-item"><div class="actu-date">Juin 26</div><div class="actu-dot"></div><div class="actu-body"><h4>Réunion au QG <span class="badge">Important</span></h4><p>Tous les membres sont convoqués ce soir. Soyez à l'heure.</p></div></div>
     <div class="actu-item"><div class="actu-date">Juin 18</div><div class="actu-dot"></div><div class="actu-body"><h4>Incident à Roxwood <span class="badge">Alerte</span></h4><p>Restez vigilants, des inconnus ont été vus rôder dans notre quartier.</p></div></div>
@@ -413,7 +463,7 @@
 
 <section id="contact">
   <div class="section-label">Nous contacter</div>
-  <div class="contact-box">
+  <div class="contact-box reveal">
     <h2 class="section-title">Rejoins la <em>famille</em></h2>
     <p>Tu veux intégrer la Famille Moni ou simplement nous contacter ? Passe sur notre Discord. On accepte uniquement les joueurs sérieux et impliqués dans le RP sur Flashback FA.</p>
     <div class="contact-links">
@@ -433,6 +483,18 @@
   document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
   });
+
+  // Animations au scroll
+  const revealEls = document.querySelectorAll('.reveal, .reveal-stagger');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => observer.observe(el));
 </script>
 </body>
 </html>
