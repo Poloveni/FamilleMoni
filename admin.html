@@ -264,6 +264,12 @@
           les <strong style="color:var(--text)">membres</strong> et les textes de la <strong style="color:var(--text)">page d'accueil</strong>.
           Une fois vos modifications faites, allez dans <strong style="color:var(--text)">Exporter</strong> pour récupérer le code à uploader sur GitHub.
         </p>
+        <div style="margin-top:24px;">
+          <button class="btn-danger" onclick="resetData()">↻ Réinitialiser depuis le contenu du site</button>
+          <p style="font-size:12px;color:var(--text-dim);margin-top:10px;line-height:1.6;">
+            Efface les modifications locales non exportées et recharge la liste officielle des membres, actus et textes.
+          </p>
+        </div>
       </div>
 
       <!-- ACTUALITÉS -->
@@ -321,7 +327,17 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const PASSWORD = 'popopo';
+  // Le mot de passe n'est plus stocké en clair : seule son empreinte SHA-256 figure ici.
+  // Note : sur un site 100% statique, aucun mot de passe côté navigateur n'est vraiment
+  // sécurisé — mais au moins il n'est plus lisible directement dans le code source.
+  const PASSWORD_HASH = 'd0a88eca2303f7ac7530fedb6aba66ab55c317c50c16d81b2870ad31ac9f3a78';
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Version des données : si le cache local est plus ancien, on repart du contenu du site.
+  const DATA_VERSION = 2;
 
   const RANGS = [
     'La Donna','Braccio Destro','Anziani','Eredi','Baroni','Camerata','Vicino','Sicario','Associati'
@@ -334,19 +350,19 @@
     },
     membres: [
       { nom: "Lov Moni", rang: "La Donna" },
+      { nom: "Bass Carter", rang: "Braccio Destro" },
+      { nom: "Raymond Carter", rang: "Braccio Destro" },
+      { nom: "Andrea Moni", rang: "Anziani" },
+      { nom: "Karl Larsson", rang: "Baroni" },
+      { nom: "Oscar Santo", rang: "Baroni" },
+      { nom: "Ezio Spallow", rang: "Camerata" },
+      { nom: "James Mendoza", rang: "Camerata" },
+      { nom: "Tommy Dane", rang: "Vicino" },
       { nom: "Allesandro Moretti", rang: "Associati" },
-      { nom: "Andrea Moni", rang: "Associati" },
-      { nom: "Bass Carter", rang: "Associati" },
       { nom: "Dayon Reas", rang: "Associati" },
-      { nom: "Ezio Spallow", rang: "Associati" },
-      { nom: "James Mendoza", rang: "Associati" },
       { nom: "Javier Silva", rang: "Associati" },
       { nom: "Javier Cruz Silva", rang: "Associati" },
       { nom: "Jiji Goose", rang: "Associati" },
-      { nom: "Karl Larsson", rang: "Associati" },
-      { nom: "Oscar Santo", rang: "Associati" },
-      { nom: "Raymond Carter", rang: "Associati" },
-      { nom: "Tommy Dane", rang: "Associati" },
       { nom: "Tony Moncini", rang: "Associati" }
     ],
     actus: [
@@ -356,13 +372,14 @@
     ]
   };
 
-  // Charger depuis localStorage si dispo
+  // Charger depuis localStorage seulement si la version du cache est à jour
+  const savedVer = parseInt(localStorage.getItem('moni-admin-version') || '0', 10);
   const saved = localStorage.getItem('moni-admin-data');
-  if (saved) { try { data = JSON.parse(saved); } catch(e) {} }
+  if (saved && savedVer >= DATA_VERSION) { try { data = JSON.parse(saved); } catch(e) {} }
 
-  function doLogin() {
+  async function doLogin() {
     const val = document.getElementById('pwd-input').value;
-    if (val === PASSWORD) {
+    if (await sha256(val) === PASSWORD_HASH) {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'block';
       initAdmin();
@@ -497,7 +514,18 @@
   }
 
   // ── SAVE / EXPORT ──
-  function saveData() { localStorage.setItem('moni-admin-data', JSON.stringify(data)); }
+  function saveData() {
+    localStorage.setItem('moni-admin-data', JSON.stringify(data));
+    localStorage.setItem('moni-admin-version', String(DATA_VERSION));
+  }
+
+  function resetData() {
+    if (confirm('Réinitialiser toutes les données avec le contenu par défaut du site ?\nLes modifications non exportées seront perdues.')) {
+      localStorage.removeItem('moni-admin-data');
+      localStorage.removeItem('moni-admin-version');
+      location.reload();
+    }
+  }
 
   function exportData() {
     const json = JSON.stringify(data, null, 2);
