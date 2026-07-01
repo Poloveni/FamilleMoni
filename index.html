@@ -317,30 +317,6 @@
     .rang-3 .rang-name, .rang-4 .rang-name { color: #c07a2b; }
     .rang-desc { font-size: 12px; color: var(--text-dim); }
 
-    /* ── TERRITOIRES ── */
-    #territoires { background: var(--surface); }
-    .territoires-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-    .territoire-card {
-      background: var(--surface2); border: 1px solid var(--border); padding: 26px 24px;
-      transition: border-color 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
-    }
-    .territoire-card:hover {
-      border-color: var(--red); transform: translateY(-5px);
-      box-shadow: 0 12px 30px rgba(192,57,43,0.18);
-    }
-    .territoire-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-    .territoire-icon {
-      width: 38px; height: 38px; flex-shrink: 0; border: 1px solid var(--red); color: var(--red);
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-    .territoire-name { font-size: 15px; font-weight: 600; }
-    .territoire-type { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-    .territoire-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
-    .territoire-influence { display: flex; align-items: center; gap: 10px; }
-    .influence-bar { flex: 1; height: 5px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; }
-    .influence-fill { height: 100%; background: linear-gradient(90deg, var(--red-dark), var(--red)); width: 0; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-    .influence-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; min-width: 60px; text-align: right; }
-
     #recrutement { background: var(--surface); }
     .recrutement-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
     .recrutement-reqs { display: flex; flex-direction: column; gap: 16px; }
@@ -605,7 +581,6 @@
     <li><a href="#accueil">Accueil</a></li>
     <li><a href="#histoire">Histoire</a></li>
     <li><a href="#membres">Membres</a></li>
-    <li><a href="#territoires">Territoires</a></li>
     <li><a href="#recrutement">Recrutement</a></li>
     <li><a href="#discord">Discord</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -1029,58 +1004,6 @@
   </div>
 </section>
 
-<section id="territoires">
-  <div class="section-label">Notre influence</div>
-  <h2 class="section-title">Nos <em>territoires</em></h2>
-  <p class="section-desc">Roxwood est notre berceau. Voici les zones où la famille Moni tient ses positions.</p>
-  <div class="territoires-grid reveal-stagger">
-    <div class="territoire-card">
-      <div class="territoire-head">
-        <div class="territoire-icon">&#127963;</div>
-        <div><div class="territoire-name">QG de Roxwood</div><div class="territoire-type">Quartier général</div></div>
-      </div>
-      <p>Le cœur de la famille. C'est ici que se prennent les décisions et que se réunissent les Moni.</p>
-      <div class="territoire-influence">
-        <div class="influence-bar"><div class="influence-fill" data-w="100"></div></div>
-        <div class="influence-label">Fief</div>
-      </div>
-    </div>
-    <div class="territoire-card">
-      <div class="territoire-head">
-        <div class="territoire-icon">&#127978;</div>
-        <div><div class="territoire-name">Commerces</div><div class="territoire-type">Façade légale</div></div>
-      </div>
-      <p>Nos établissements de quartier. Une vitrine honnête qui fait tourner les affaires de la famille.</p>
-      <div class="territoire-influence">
-        <div class="influence-bar"><div class="influence-fill" data-w="80"></div></div>
-        <div class="influence-label">Solide</div>
-      </div>
-    </div>
-    <div class="territoire-card">
-      <div class="territoire-head">
-        <div class="territoire-icon">&#127751;</div>
-        <div><div class="territoire-name">Rues Nord</div><div class="territoire-type">Terrain</div></div>
-      </div>
-      <p>Le pavé qu'on arpente chaque jour. On y connaît tout le monde, et tout le monde nous connaît.</p>
-      <div class="territoire-influence">
-        <div class="influence-bar"><div class="influence-fill" data-w="65"></div></div>
-        <div class="influence-label">Contrôle</div>
-      </div>
-    </div>
-    <div class="territoire-card">
-      <div class="territoire-head">
-        <div class="territoire-icon">&#127961;</div>
-        <div><div class="territoire-name">Los Santos</div><div class="territoire-type">Contacts extérieurs</div></div>
-      </div>
-      <p>Nos relations au-delà de Roxwood. Des liens précieux qu'on cultive avec patience et prudence.</p>
-      <div class="territoire-influence">
-        <div class="influence-bar"><div class="influence-fill" data-w="40"></div></div>
-        <div class="influence-label">Émergent</div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section id="recrutement">
   <div class="section-label">Nous rejoindre</div>
   <div class="recrutement-inner reveal">
@@ -1229,18 +1152,6 @@
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   revealEls.forEach(el => observer.observe(el));
-
-  // ── BARRES D'INFLUENCE (TERRITOIRES) ──
-  const influenceFills = document.querySelectorAll('.influence-fill');
-  const infObs = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.width = (entry.target.dataset.w || 0) + '%';
-        infObs.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.4 });
-  influenceFills.forEach(f => infObs.observe(f));
 
   // ── TIMELINE HIÉRARCHIE ──
   const hierList = document.querySelector('.hierarchie-list');
