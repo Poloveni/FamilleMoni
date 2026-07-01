@@ -303,6 +303,102 @@
     .footer-logo span { color: var(--red); }
     .footer-text { font-size: 12px; color: var(--text-dim); }
 
+
+    /* ── GLITCH ── */
+    .glitch {
+      position: relative; display: inline-block;
+    }
+    .glitch::before, .glitch::after {
+      content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    }
+    .glitch::before {
+      color: #ff003c; animation: glitch1 3.5s infinite; clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+      transform: translate(-2px, 0);
+    }
+    .glitch::after {
+      color: #00f0ff; animation: glitch2 3.5s infinite; clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+      transform: translate(2px, 0);
+    }
+    @keyframes glitch1 {
+      0%,90%,100% { transform: translate(-2px,0); opacity:0; }
+      92% { transform: translate(-4px,-1px); opacity:1; }
+      94% { transform: translate(2px,1px); opacity:1; }
+      96% { transform: translate(-2px,0); opacity:0; }
+    }
+    @keyframes glitch2 {
+      0%,90%,100% { transform: translate(2px,0); opacity:0; }
+      92% { transform: translate(4px,1px); opacity:1; }
+      94% { transform: translate(-2px,-1px); opacity:1; }
+      96% { transform: translate(2px,0); opacity:0; }
+    }
+
+    /* ── TYPING ── */
+    .typing-text::after {
+      content: '|'; animation: blink 0.8s step-end infinite; color: var(--red);
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+    /* ── COMPTEURS ── */
+    .stat-num { transition: all 0.3s; }
+
+    /* ── PARTICULES ── */
+    #particles-canvas {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    }
+
+    /* ── FLIP CARD ── */
+    .membre-card {
+      perspective: 800px;
+      cursor: pointer;
+    }
+    .card-inner {
+      position: relative; width: 100%; height: 100%; min-height: 140px;
+      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+      transform-style: preserve-3d;
+    }
+    .membre-card.flipped .card-inner { transform: rotateY(180deg); }
+    .card-front, .card-back {
+      position: absolute; inset: 0; backface-visibility: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+      background: var(--surface2);
+      font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: center;
+    }
+    .card-back .back-rang {
+      font-size: 13px; font-weight: 600; margin-bottom: 8px;
+    }
+    .card-back .back-initiales {
+      font-size: 28px; font-weight: 600; color: var(--red); margin-bottom: 12px;
+    }
+    .card-hint {
+      font-size: 9px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 1px; margin-top: 8px;
+    }
+
+    /* ── TIMELINE HIÉRARCHIE ── */
+    .hierarchie-list {
+      position: relative;
+    }
+    .hierarchie-list::before {
+      content: '';
+      position: absolute; left: 37px; top: 0; bottom: 0; width: 1px;
+      background: linear-gradient(to bottom, var(--red), transparent);
+      opacity: 0; transition: opacity 0.5s;
+    }
+    .hierarchie-list.visible-timeline::before { opacity: 1; }
+    .hierarchie-item {
+      opacity: 0; transform: translateX(-20px);
+      transition: opacity 0.4s ease, transform 0.4s ease, background 0.3s, border-color 0.3s;
+    }
+    .hierarchie-item.visible-item { opacity: 1; transform: translateX(0); }
+
+    /* ── PARALLAX ── */
+    .hero-grid { will-change: transform; }
+    .hero-glow { will-change: transform; }
+
     @media (max-width: 768px) {
       .histoire-inner { grid-template-columns: 1fr; }
       .recrutement-inner { grid-template-columns: 1fr; }
@@ -330,6 +426,7 @@
 </head>
 <body>
 
+<div id="progress-bar" style="position:fixed;top:0;left:0;height:2px;width:0%;background:var(--red);z-index:9999;transition:width 0.1s linear;box-shadow:0 0 8px rgba(192,57,43,0.8);"></div>
 <nav>
   <div class="logo">Famille <span>Moni</span></div>
   <ul class="nav-links" id="navLinks">
@@ -344,6 +441,7 @@
 </nav>
 
 <section id="accueil">
+  <canvas id="particles-canvas"></canvas>
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <div class="hero-content">
@@ -351,8 +449,8 @@
       <img src="logo.jpg" alt="Flashback FA">
       Flashback FA &mdash; GTA RP
     </a>
-    <h1>La Famille<br><em>Moni</em></h1>
-    <p class="hero-sub">Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui.</p>
+    <h1>La Famille<br><em class="glitch" data-text="Moni">Moni</em></h1>
+    <p class="hero-sub typing-text" id="hero-sub-text" style="min-height:3.5em;">Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui.</p>
     <div class="hero-btns">
       <a href="https://discord.gg/8zBwmG4y3" target="_blank" class="btn-red">Rejoindre le Discord</a>
       <a href="#membres" class="btn-ghost">Les membres</a>
@@ -495,22 +593,262 @@
   </div>
 
   <!-- MEMBRES -->
-    <div class="membres-grid reveal-stagger" style="margin-top: 48px;">
-    <div class="membre-card chef"><div class="avatar">LM</div><div class="membre-name">Lov Moni</div><div class="membre-role" style="color:#ffffff;font-size:10px;">La Donna</div><div class="chef-badge">&#9733; Chef</div></div>
-    <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Allesandro Moretti</div><div class="membre-role" style="color:#555555;font-size:10px;">Associati</div></div>
-    <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Andrea Moni</div><div class="membre-role" style="color:#c07a2b;font-size:10px;">Anziani</div></div>
-    <div class="membre-card"><div class="avatar">BC</div><div class="membre-name">Bass Carter</div><div class="membre-role" style="color:#c0392b;font-size:10px;">Braccio Destro</div></div>
-    <div class="membre-card"><div class="avatar">DR</div><div class="membre-name">Dayon Reas</div><div class="membre-role" style="color:#555555;font-size:10px;">Associati</div></div>
-    <div class="membre-card"><div class="avatar">ES</div><div class="membre-name">Ezio Spallow</div><div class="membre-role" style="color:#5a7a2b;font-size:10px;">Camerata</div></div>
-    <div class="membre-card"><div class="avatar">JM</div><div class="membre-name">James Mendoza</div><div class="membre-role" style="color:#5a7a2b;font-size:10px;">Camerata</div></div>
-    <div class="membre-card"><div class="avatar">JS</div><div class="membre-name">Javier Silva</div><div class="membre-role" style="color:#555555;font-size:10px;">Associati</div></div>
-    <div class="membre-card"><div class="avatar">JC</div><div class="membre-name">Javier Cruz Silva</div><div class="membre-role" style="color:#555555;font-size:10px;">Associati</div></div>
-    <div class="membre-card"><div class="avatar">JG</div><div class="membre-name">Jiji Goose</div><div class="membre-role" style="color:#555555;font-size:10px;">Associati</div></div>
-    <div class="membre-card"><div class="avatar">KL</div><div class="membre-name">Karl Larsson</div><div class="membre-role" style="color:#5a7a2b;font-size:10px;">Baroni</div></div>
-    <div class="membre-card"><div class="avatar">OS</div><div class="membre-name">Oscar Santo</div><div class="membre-role" style="color:#5a7a2b;font-size:10px;">Baroni</div></div>
-    <div class="membre-card"><div class="avatar">RC</div><div class="membre-name">Raymond Carter</div><div class="membre-role" style="color:#c0392b;font-size:10px;">Braccio Destro</div></div>
-    <div class="membre-card"><div class="avatar">TD</div><div class="membre-name">Tommy Dane</div><div class="membre-role" style="color:#888888;font-size:10px;">Vicino</div></div>
-    <div class="membre-card"><div class="avatar">TM</div><div class="membre-name">Tony Moncini</div><div class="membre-role" style="color:#555555;font-size:10px;">Associati</div></div>
+      <div class="membres-grid reveal-stagger" style="margin-top: 48px;">
+    <div class="membre-card chef" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">LM</div>
+          <div class="membre-name">Lov Moni</div>
+          <div class="membre-role" style="color:#ffffff;font-size:10px;">La Donna</div>
+          <div class="chef-badge">&#9733; Chef</div>
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">LM</div>
+          <div class="back-rang" style="color:#ffffff;">La Donna</div>
+          <div>Lov Moni</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">AM</div>
+          <div class="membre-name">Allesandro Moretti</div>
+          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">AM</div>
+          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div>Allesandro Moretti</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">AM</div>
+          <div class="membre-name">Andrea Moni</div>
+          <div class="membre-role" style="color:#c07a2b;font-size:10px;">Anziani</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">AM</div>
+          <div class="back-rang" style="color:#c07a2b;">Anziani</div>
+          <div>Andrea Moni</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">BC</div>
+          <div class="membre-name">Bass Carter</div>
+          <div class="membre-role" style="color:#c0392b;font-size:10px;">Braccio Destro</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">BC</div>
+          <div class="back-rang" style="color:#c0392b;">Braccio Destro</div>
+          <div>Bass Carter</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">DR</div>
+          <div class="membre-name">Dayon Reas</div>
+          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">DR</div>
+          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div>Dayon Reas</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">ES</div>
+          <div class="membre-name">Ezio Spallow</div>
+          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Camerata</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">ES</div>
+          <div class="back-rang" style="color:#5a7a2b;">Camerata</div>
+          <div>Ezio Spallow</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">JM</div>
+          <div class="membre-name">James Mendoza</div>
+          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Camerata</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">JM</div>
+          <div class="back-rang" style="color:#5a7a2b;">Camerata</div>
+          <div>James Mendoza</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">JS</div>
+          <div class="membre-name">Javier Silva</div>
+          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">JS</div>
+          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div>Javier Silva</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">JC</div>
+          <div class="membre-name">Javier Cruz Silva</div>
+          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">JC</div>
+          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div>Javier Cruz Silva</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">JG</div>
+          <div class="membre-name">Jiji Goose</div>
+          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">JG</div>
+          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div>Jiji Goose</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">KL</div>
+          <div class="membre-name">Karl Larsson</div>
+          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Baroni</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">KL</div>
+          <div class="back-rang" style="color:#5a7a2b;">Baroni</div>
+          <div>Karl Larsson</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">OS</div>
+          <div class="membre-name">Oscar Santo</div>
+          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Baroni</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">OS</div>
+          <div class="back-rang" style="color:#5a7a2b;">Baroni</div>
+          <div>Oscar Santo</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">RC</div>
+          <div class="membre-name">Raymond Carter</div>
+          <div class="membre-role" style="color:#c0392b;font-size:10px;">Braccio Destro</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">RC</div>
+          <div class="back-rang" style="color:#c0392b;">Braccio Destro</div>
+          <div>Raymond Carter</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">TD</div>
+          <div class="membre-name">Tommy Dane</div>
+          <div class="membre-role" style="color:#888888;font-size:10px;">Vicino</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">TD</div>
+          <div class="back-rang" style="color:#888888;">Vicino</div>
+          <div>Tommy Dane</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
+    <div class="membre-card" onclick="this.classList.toggle('flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="avatar">TM</div>
+          <div class="membre-name">Tony Moncini</div>
+          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          
+          <div class="card-hint">Cliquer pour détails</div>
+        </div>
+        <div class="card-back">
+          <div class="back-initiales">TM</div>
+          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div>Tony Moncini</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -578,12 +916,20 @@
 </footer>
 
 <script>
+  // ── NAV BURGER ──
   function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
   document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
   });
 
-  // Animations au scroll
+  // ── BARRE DE PROGRESSION ──
+  const bar = document.getElementById('progress-bar');
+  window.addEventListener('scroll', () => {
+    const total = document.body.scrollHeight - window.innerHeight;
+    bar.style.width = (window.scrollY / total * 100) + '%';
+  });
+
+  // ── REVEAL AU SCROLL ──
   const revealEls = document.querySelectorAll('.reveal, .reveal-stagger');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -592,8 +938,119 @@
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   revealEls.forEach(el => observer.observe(el));
+
+  // ── TIMELINE HIÉRARCHIE ──
+  const hierList = document.querySelector('.hierarchie-list');
+  const hierItems = document.querySelectorAll('.hierarchie-item');
+  const hierObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        hierList.classList.add('visible-timeline');
+        hierItems.forEach((item, i) => {
+          setTimeout(() => item.classList.add('visible-item'), i * 80);
+        });
+        hierObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  if (hierList) hierObs.observe(hierList);
+
+  // ── COMPTEURS ANIMÉS ──
+  function animateCounter(el, target, duration) {
+    let start = 0;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { el.textContent = target; clearInterval(timer); return; }
+      el.textContent = Math.floor(start);
+    }, 16);
+  }
+  const statsBar = document.querySelector('.stats-bar');
+  let statsDone = false;
+  const statsObs = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !statsDone) {
+      statsDone = true;
+      animateCounter(document.querySelector('.stat:first-child .stat-num'), 14, 1200);
+      statsObs.unobserve(statsBar);
+    }
+  }, { threshold: 0.5 });
+  if (statsBar) statsObs.observe(statsBar);
+
+  // ── EFFET TYPING ──
+  const typingEl = document.getElementById('hero-sub-text');
+  const typingText = "Née de la Famiglia Moncini d\'Italie, la famille Moni bâtit à Roxwood l\'empire discret que son père a laissé derrière lui.";
+  if (typingEl) {
+    typingEl.textContent = '';
+    let i = 0;
+    setTimeout(() => {
+      const timer = setInterval(() => {
+        if (i < typingText.length) {
+          typingEl.textContent += typingText[i++];
+        } else {
+          clearInterval(timer);
+          typingEl.classList.remove('typing-text');
+        }
+      }, 28);
+    }, 800);
+  }
+
+  // ── PARALLAX HERO ──
+  const heroGrid = document.querySelector('.hero-grid');
+  const heroGlow = document.querySelector('.hero-glow');
+  document.addEventListener('mousemove', (e) => {
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    const dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
+    if (heroGrid) heroGrid.style.transform = `translate(${dx * 10}px, ${dy * 10}px)`;
+    if (heroGlow) heroGlow.style.transform = `translate(calc(-50% + ${dx * 20}px), calc(-50% + ${dy * 20}px))`;
+  });
+
+  // ── PARTICULES ──
+  const canvas = document.getElementById('particles-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+    function resize() {
+      W = canvas.width = canvas.offsetWidth;
+      H = canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H;
+        this.size = Math.random() * 1.5 + 0.3;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = -Math.random() * 0.5 - 0.1;
+        this.opacity = Math.random() * 0.5 + 0.1;
+        this.life = 0;
+        this.maxLife = Math.random() * 200 + 100;
+      }
+      update() {
+        this.x += this.speedX; this.y += this.speedY; this.life++;
+        if (this.life > this.maxLife || this.y < 0) this.reset();
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.opacity * (1 - this.life / this.maxLife);
+        ctx.fillStyle = Math.random() > 0.7 ? '#c0392b' : '#ffffff';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+    function loop() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(loop);
+    }
+    loop();
+  }
 </script>
 </body>
 </html>
