@@ -1405,66 +1405,7 @@
     });
   })();
 
-  // ── SUPABASE : photos des membres + accès aux événements ──
-  (function moniSupabase() {
-    // Si la librairie/config ne sont pas encore prêtes, on réessaie au lieu d'abandonner.
-    if (!window.supabase || !window.SUPABASE_URL) return void setTimeout(moniSupabase, 120);
-    const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-
-    // Applique une photo à la carte d'un membre (repli sur initiales si l'image casse)
-    function applyPhoto(nom, url) {
-      document.querySelectorAll('.membre-card').forEach(card => {
-        const nameEl = card.querySelector('.membre-name');
-        if (!nameEl || nameEl.textContent.trim() !== nom) return;
-        const avatar = card.querySelector('.card-front .avatar');
-        if (!avatar) return;
-        const initiales = avatar.textContent;
-        const img = document.createElement('img');
-        img.className = 'avatar-photo';
-        img.alt = nom; img.loading = 'lazy';
-        img.onerror = () => { avatar.textContent = initiales; };
-        avatar.textContent = '';
-        avatar.appendChild(img);
-        img.src = url;
-      });
-    }
-
-    // 1) Photos publiques des profils
-    sb.from('profils').select('nom, photo_url').then(({ data, error }) => {
-      if (error || !data) return;
-      data.forEach(p => { if (p.nom && p.photo_url) applyPhoto(p.nom, p.photo_url); });
-    });
-
-    // 2) Événements : visibles uniquement pour les membres connectés
-    const locked = document.getElementById('events-locked');
-    const grid = document.getElementById('events-grid');
-    async function refreshEvents() {
-      const { data: s } = await sb.auth.getSession();
-      if (!s.session) {
-        if (locked) locked.style.display = 'flex';
-        if (grid) grid.style.display = 'none';
-        return;
-      }
-      const { data, error } = await sb.from('evenements').select('*').order('ordre', { ascending: true });
-      if (error) return;
-      if (locked) locked.style.display = 'none';
-      if (grid) {
-        grid.style.display = 'grid';
-        grid.innerHTML = (data || []).map(e => `
-          <div class="event-card">
-            <div class="event-date"><span class="event-day">${e.jour||''}</span><span class="event-month">${e.mois||''}</span></div>
-            <div class="event-body">
-              ${e.type ? `<span class="event-type">${e.type}</span>` : ''}
-              <div class="event-title">${e.titre||''}</div>
-              <div class="event-time">${e.heure||''}</div>
-              <div class="event-desc">${e.texte||''}</div>
-            </div>
-          </div>`).join('');
-      }
-    }
-    refreshEvents();
-    sb.auth.onAuthStateChange(() => refreshEvents());
-  })();
+  // ── SUPABASE : voir le script dédié en fin de page (#moni-supabase) ──
 
   // ── DISCORD : compteurs en direct ──
   // Nécessite "Activer le widget" dans les paramètres du serveur Discord.
@@ -1490,6 +1431,64 @@
       })
       .catch(() => { /* widget non activé : on garde les valeurs statiques + la note */ });
   })();
+</script>
+
+<!-- Intégration Supabase : photos des membres + accès réservé aux événements -->
+<script id="moni-supabase">
+(function () {
+  function run() {
+    if (!window.supabase || !window.SUPABASE_URL) { setTimeout(run, 100); return; }
+    var sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+
+    function applyPhoto(nom, url) {
+      document.querySelectorAll('.membre-card').forEach(function (card) {
+        var nameEl = card.querySelector('.membre-name');
+        if (!nameEl || nameEl.textContent.trim() !== nom) return;
+        var avatar = card.querySelector('.card-front .avatar');
+        if (!avatar) return;
+        var initiales = avatar.textContent;
+        var img = document.createElement('img');
+        img.className = 'avatar-photo'; img.alt = nom; img.loading = 'lazy';
+        img.onerror = function () { avatar.textContent = initiales; };
+        avatar.textContent = ''; avatar.appendChild(img); img.src = url;
+      });
+    }
+
+    // Photos publiques des profils
+    sb.from('profils').select('nom, photo_url').then(function (res) {
+      if (res.error || !res.data) return;
+      res.data.forEach(function (p) { if (p.nom && p.photo_url) applyPhoto(p.nom, p.photo_url); });
+    });
+
+    // Événements : visibles uniquement pour les membres connectés
+    var locked = document.getElementById('events-locked');
+    var grid = document.getElementById('events-grid');
+    function refreshEvents() {
+      sb.auth.getSession().then(function (r) {
+        var session = r.data && r.data.session;
+        if (!session) { if (locked) locked.style.display = 'flex'; if (grid) grid.style.display = 'none'; return; }
+        sb.from('evenements').select('*').order('ordre', { ascending: true }).then(function (ev) {
+          if (ev.error) return;
+          if (locked) locked.style.display = 'none';
+          if (grid) {
+            grid.style.display = 'grid';
+            grid.innerHTML = (ev.data || []).map(function (e) {
+              return '<div class="event-card"><div class="event-date"><span class="event-day">' + (e.jour||'') +
+                '</span><span class="event-month">' + (e.mois||'') + '</span></div><div class="event-body">' +
+                (e.type ? '<span class="event-type">' + e.type + '</span>' : '') +
+                '<div class="event-title">' + (e.titre||'') + '</div><div class="event-time">' + (e.heure||'') +
+                '</div><div class="event-desc">' + (e.texte||'') + '</div></div></div>';
+            }).join('');
+          }
+        });
+      });
+    }
+    refreshEvents();
+    sb.auth.onAuthStateChange(function () { refreshEvents(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
 </script>
 </body>
 </html>
