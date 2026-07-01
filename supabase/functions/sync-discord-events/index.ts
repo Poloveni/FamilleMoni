@@ -28,6 +28,7 @@ function clean(s: string): string {
     .replace(/<a?:\w+:\d+>/g, "")     // emojis personnalisés
     .replace(/<@[&!]?\d+>/g, "")       // @mentions (membres / rôles)
     .replace(/<#\d+>/g, "")            // #salons
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "") // titres markdown (# ...)
     .replace(/\*\*?|__|`/g, "")        // markdown gras / souligné
     .replace(/[ \t]{2,}/g, " ")
     .trim();
@@ -71,6 +72,8 @@ function findTitle(text: string): string {
     .replace(/\d{1,2}\/\d{1,2}/g, "")
     .replace(/\d{1,2}\s*[hH]\d{0,2}/g, "")
     .replace(/\s{2,}/g, " ")
+    .trim()
+    .replace(/\s+(à|a|le|la|du|de|pour)$/i, "") // enlève un mot de liaison en trop à la fin
     .trim();
 }
 
