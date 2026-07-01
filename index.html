@@ -408,8 +408,42 @@
       margin-left: 8px; vertical-align: middle;
     }
 
+    /* ── ÉVÉNEMENTS ── */
+    #evenements { background: var(--bg); }
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+    .event-card {
+      display: flex; gap: 18px; align-items: stretch;
+      background: var(--surface); border: 1px solid var(--border); padding: 20px;
+      transition: border-color 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+    }
+    .event-card:hover {
+      border-color: var(--red); transform: translateY(-4px);
+      box-shadow: 0 10px 26px rgba(192,57,43,0.16);
+    }
+    .event-date {
+      flex-shrink: 0; width: 62px; text-align: center;
+      border: 1px solid var(--red); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 10px 0;
+    }
+    .event-day { font-size: 24px; font-weight: 700; color: var(--red); line-height: 1; font-family: 'Playfair Display', serif; }
+    .event-month { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 4px; }
+    .event-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .event-title { font-size: 15px; font-weight: 600; }
+    .event-time { font-size: 12px; color: var(--red); letter-spacing: 0.5px; }
+    .event-time::before { content: '🕒 '; }
+    .event-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+    .event-type {
+      display: inline-block; align-self: flex-start; font-size: 9px; letter-spacing: 1px;
+      text-transform: uppercase; padding: 2px 8px; margin-top: 2px;
+      background: rgba(192,57,43,0.15); color: var(--red);
+    }
+    .events-empty {
+      padding: 40px 24px; text-align: center; border: 1px dashed var(--border-strong);
+      color: var(--text-dim); font-size: 13px;
+    }
+
     /* ── DISCORD ── */
-    #discord { background: var(--bg); }
+    #discord { background: var(--surface); }
     .discord-inner { display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: stretch; }
     .discord-card {
       background: var(--surface); border: 1px solid var(--border); padding: 36px;
@@ -569,6 +603,26 @@
       footer { padding: 20px; flex-direction: column; text-align: center; }
       .contact-box { padding: 32px 20px; }
     }
+
+    /* ── PEAUFINAGE ── */
+    /* Les ancres ne se cachent plus sous le menu fixe */
+    section[id] { scroll-margin-top: 72px; }
+    /* Menu plus dense sur écrans moyens (avant le passage en burger) */
+    @media (max-width: 1024px) and (min-width: 641px) {
+      .nav-links { gap: 18px; }
+      .nav-links a { font-size: 11px; letter-spacing: 1px; }
+      nav { padding: 0 24px; }
+    }
+    /* État du menu au défilement */
+    nav.scrolled { background: rgba(15,15,15,0.98); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    /* Accessibilité clavier : focus visible cohérent */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--red); outline-offset: 3px; border-radius: 1px;
+    }
+    /* Respect des préférences de mouvement réduit */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 <body>
@@ -582,6 +636,7 @@
     <li><a href="#histoire">Histoire</a></li>
     <li><a href="#membres">Membres</a></li>
     <li><a href="#recrutement">Recrutement</a></li>
+    <li><a href="#evenements">Événements</a></li>
     <li><a href="#discord">Discord</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -1053,6 +1108,50 @@
   </div>
 </section>
 
+<section id="evenements">
+  <div class="section-label">À venir</div>
+  <h2 class="section-title">Nos <em>événements</em></h2>
+  <p class="section-desc">Réunions, sessions RP et soirées de la famille. Note les dates et sois au rendez-vous.</p>
+  <div class="events-grid reveal-stagger" id="events-grid">
+    <div class="event-card">
+      <div class="event-date"><span class="event-day">05</span><span class="event-month">Juil</span></div>
+      <div class="event-body">
+        <span class="event-type">Important</span>
+        <div class="event-title">Réunion générale</div>
+        <div class="event-time">21h00 — QG de Roxwood</div>
+        <div class="event-desc">Point mensuel de la famille. Présence de tous les membres attendue.</div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-date"><span class="event-day">12</span><span class="event-month">Juil</span></div>
+      <div class="event-body">
+        <span class="event-type">Social</span>
+        <div class="event-title">Soirée au bar</div>
+        <div class="event-time">22h00 — Roxwood</div>
+        <div class="event-desc">Détente entre membres autour d'un verre. Ambiance et bonne humeur.</div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-date"><span class="event-day">19</span><span class="event-month">Juil</span></div>
+      <div class="event-body">
+        <span class="event-type">RP</span>
+        <div class="event-title">Session RP majeure</div>
+        <div class="event-time">20h30 — Lieu communiqué sur Discord</div>
+        <div class="event-desc">Grosse opération prévue. Restez discrets, les détails suivront.</div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-date"><span class="event-day">26</span><span class="event-month">Juil</span></div>
+      <div class="event-body">
+        <span class="event-type">Recrutement</span>
+        <div class="event-title">Journée recrutement</div>
+        <div class="event-time">21h00 — Roxwood</div>
+        <div class="event-desc">Entretiens des nouvelles recrues. Faites passer le mot.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="discord">
   <div class="section-label">Notre serveur</div>
   <h2 class="section-title">Le <em>Discord</em></h2>
@@ -1121,10 +1220,12 @@
   // ── BARRE DE PROGRESSION + RETOUR EN HAUT ──
   const bar = document.getElementById('progress-bar');
   const backTop = document.getElementById('back-to-top');
+  const navEl = document.querySelector('nav');
   window.addEventListener('scroll', () => {
     const total = document.body.scrollHeight - window.innerHeight;
     bar.style.width = (window.scrollY / total * 100) + '%';
     if (backTop) backTop.classList.toggle('show', window.scrollY > 500);
+    if (navEl) navEl.classList.toggle('scrolled', window.scrollY > 20);
   });
   if (backTop) backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 

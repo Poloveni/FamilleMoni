@@ -91,7 +91,7 @@
     .panel-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
 
     /* ── CARDS DASHBOARD ── */
-    .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .dash-card {
       background: var(--surface); border: 1px solid var(--border); padding: 24px;
     }
@@ -224,6 +224,9 @@
       <div class="sidebar-item" onclick="showPanel('actualites', this)">
         <span class="sidebar-icon">📰</span> Actualités
       </div>
+      <div class="sidebar-item" onclick="showPanel('evenements', this)">
+        <span class="sidebar-icon">📅</span> Événements
+      </div>
       <div class="sidebar-item" onclick="showPanel('hero', this)">
         <span class="sidebar-icon">🏠</span> Page d'accueil
       </div>
@@ -254,6 +257,10 @@
             <div class="dash-card-label">Actualités</div>
           </div>
           <div class="dash-card">
+            <div class="dash-card-num" id="dash-events">4</div>
+            <div class="dash-card-label">Événements</div>
+          </div>
+          <div class="dash-card">
             <div class="dash-card-num">Roxwood</div>
             <div class="dash-card-label">Quartier</div>
           </div>
@@ -280,6 +287,16 @@
         <div class="actu-admin-list" id="actu-list"></div>
         <div class="divider"></div>
         <button class="btn-save" onclick="saveActus()">✓ Enregistrer les actualités</button>
+      </div>
+
+      <!-- ÉVÉNEMENTS -->
+      <div class="panel" id="panel-evenements">
+        <div class="panel-title">Gérer les <em>Événements</em></div>
+        <div class="panel-desc">Ajoutez, modifiez ou supprimez les événements à venir affichés sur le site.</div>
+        <button class="btn-add" onclick="addEvent()">+ Ajouter un événement</button>
+        <div class="actu-admin-list" id="event-list"></div>
+        <div class="divider"></div>
+        <button class="btn-save" onclick="saveEvents()">✓ Enregistrer les événements</button>
       </div>
 
       <!-- HERO -->
@@ -337,7 +354,7 @@
   }
 
   // Version des données : si le cache local est plus ancien, on repart du contenu du site.
-  const DATA_VERSION = 2;
+  const DATA_VERSION = 3;
 
   const RANGS = [
     'La Donna','Braccio Destro','Anziani','Eredi','Baroni','Camerata','Vicino','Sicario','Associati'
@@ -369,6 +386,12 @@
       { date: "Juin 29", titre: "Site officiel en ligne", texte: "Le site de la Famille Moni est maintenant en ligne. Bienvenue !", badge: "Nouveau" },
       { date: "Juin 26", titre: "Réunion au QG", texte: "Tous les membres sont convoqués ce soir. Soyez à l'heure.", badge: "Important" },
       { date: "Juin 18", titre: "Incident à Roxwood", texte: "Restez vigilants, des inconnus ont été vus rôder dans notre quartier.", badge: "Alerte" }
+    ],
+    events: [
+      { jour: "05", mois: "Juil", titre: "Réunion générale", heure: "21h00 — QG de Roxwood", texte: "Point mensuel de la famille. Présence de tous les membres attendue.", type: "Important" },
+      { jour: "12", mois: "Juil", titre: "Soirée au bar", heure: "22h00 — Roxwood", texte: "Détente entre membres autour d'un verre. Ambiance et bonne humeur.", type: "Social" },
+      { jour: "19", mois: "Juil", titre: "Session RP majeure", heure: "20h30 — Lieu communiqué sur Discord", texte: "Grosse opération prévue. Restez discrets, les détails suivront.", type: "RP" },
+      { jour: "26", mois: "Juil", titre: "Journée recrutement", heure: "21h00 — Roxwood", texte: "Entretiens des nouvelles recrues. Faites passer le mot.", type: "Recrutement" }
     ]
   };
 
@@ -405,8 +428,10 @@
   }
 
   function initAdmin() {
+    if (!data.events) data.events = [];
     renderMembres();
     renderActus();
+    renderEvents();
     renderHero();
     updateDash();
   }
@@ -414,6 +439,7 @@
   function updateDash() {
     document.getElementById('dash-membres').textContent = data.membres.length;
     document.getElementById('dash-actus').textContent = data.actus.length;
+    document.getElementById('dash-events').textContent = (data.events || []).length;
   }
 
   // ── HERO ──
@@ -501,7 +527,7 @@
     if (confirm('Supprimer cette actualité ?')) { data.actus.splice(i, 1); renderActus(); updateDash(); }
   }
   function saveActus() {
-    document.querySelectorAll('.actu-admin-item').forEach((item, i) => {
+    document.querySelectorAll('#actu-list .actu-admin-item').forEach((item, i) => {
       if (data.actus[i]) {
         const inputs = item.querySelectorAll('input, textarea, select');
         data.actus[i].date = inputs[0].value;
@@ -511,6 +537,72 @@
       }
     });
     saveData(); showToast('Actualités sauvegardées !'); updateDash();
+  }
+
+  // ── ÉVÉNEMENTS ──
+  const EVENT_TYPES = ['Important','Social','RP','Recrutement','Autre'];
+  function renderEvents() {
+    const list = document.getElementById('event-list');
+    list.innerHTML = (data.events || []).map((e, i) => `
+      <div class="actu-admin-item">
+        <div class="actu-admin-header">
+          <div class="actu-admin-num">Événement ${i+1}</div>
+          <button class="btn-danger" onclick="removeEvent(${i})">✕ Supprimer</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jour</label>
+            <input type="text" class="form-input" value="${e.jour||''}" placeholder="ex: 05" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mois</label>
+            <input type="text" class="form-input" value="${e.mois||''}" placeholder="ex: Juil" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre</label>
+          <input type="text" class="form-input" value="${e.titre||''}" placeholder="Titre de l'événement" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Heure / Lieu</label>
+            <input type="text" class="form-input" value="${e.heure||''}" placeholder="ex: 21h00 — Roxwood" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select">
+              ${EVENT_TYPES.map(t => `<option value="${t}" ${e.type===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" placeholder="Détails de l'événement">${e.texte||''}</textarea>
+        </div>
+      </div>
+    `).join('');
+  }
+  function addEvent() {
+    if (!data.events) data.events = [];
+    data.events.push({ jour: "", mois: "", titre: "", heure: "", texte: "", type: "Important" });
+    renderEvents(); updateDash();
+  }
+  function removeEvent(i) {
+    if (confirm('Supprimer cet événement ?')) { data.events.splice(i, 1); renderEvents(); updateDash(); }
+  }
+  function saveEvents() {
+    document.querySelectorAll('#event-list .actu-admin-item').forEach((item, i) => {
+      if (data.events[i]) {
+        const f = item.querySelectorAll('input, select, textarea');
+        data.events[i].jour  = f[0].value;
+        data.events[i].mois  = f[1].value;
+        data.events[i].titre = f[2].value;
+        data.events[i].heure = f[3].value;
+        data.events[i].type  = f[4].value;
+        data.events[i].texte = f[5].value;
+      }
+    });
+    saveData(); showToast('Événements sauvegardés !'); updateDash();
   }
 
   // ── SAVE / EXPORT ──
