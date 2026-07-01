@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espace Membre — Famille Moni</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --red: #c0392b; --red-dark: #a93226;
+      --bg: #0f0f0f; --surface: #161616; --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.14);
+      --text: #f0f0f0; --text-muted: #888; --text-dim: #555;
+      --green: #27ae60;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+    a { color: inherit; }
+
+    .top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 60px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 15px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+    .logo span { color: var(--red); }
+    .top a.back { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+    .top a.back:hover { color: var(--text); }
+
+    .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px; }
+
+    /* AUTH */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); padding: 40px;
+    }
+    .card.narrow { max-width: 400px; margin: 40px auto 0; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    h1 span { color: var(--red); }
+    .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+    label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px; }
+    input, select {
+      width: 100%; padding: 11px 14px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); font-size: 14px;
+      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; margin-bottom: 16px;
+    }
+    input:focus, select:focus { border-color: var(--red); }
+    select option { background: var(--surface2); }
+    .btn {
+      width: 100%; padding: 12px; background: var(--red); color: #fff; font-size: 12px;
+      letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: background 0.2s;
+    }
+    .btn:hover { background: var(--red-dark); }
+    .btn.green { background: var(--green); }
+    .btn.ghost { background: transparent; border: 1px solid var(--border-strong); color: var(--text); }
+    .btn.ghost:hover { background: var(--surface2); border-color: var(--text-muted); }
+    .switch { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 18px; }
+    .switch a { color: var(--red); cursor: pointer; text-decoration: none; }
+    .msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; display: none; }
+    .msg.error { display: block; color: var(--red); background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3); }
+    .msg.ok { display: block; color: var(--green); background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); }
+
+    /* MEMBER */
+    #member-screen { display: none; }
+    .member-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .member-head .who { font-size: 13px; color: var(--text-muted); }
+    .member-head .who b { color: var(--text); }
+    .profil-grid { display: grid; grid-template-columns: 160px 1fr; gap: 28px; align-items: start; }
+    .avatar-big {
+      width: 160px; height: 160px; border-radius: 50%; border: 2px solid var(--red);
+      background: var(--surface2); overflow: hidden; display: flex; align-items: center;
+      justify-content: center; color: var(--red); font-size: 40px; font-weight: 600;
+    }
+    .avatar-big img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .file-row { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+    .file-label {
+      font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text);
+      border: 1px solid var(--border-strong); padding: 9px 14px; cursor: pointer; transition: border-color 0.2s;
+    }
+    .file-label:hover { border-color: var(--text-muted); }
+    input[type=file] { display: none; }
+    .hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+    .divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+    .section-t { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 18px; }
+    .locked { font-size: 13px; color: var(--text-dim); }
+
+    /* Events */
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .event-card { display: flex; gap: 16px; background: var(--surface2); border: 1px solid var(--border); padding: 18px; }
+    .event-date { flex-shrink: 0; width: 56px; text-align: center; border: 1px solid var(--red); padding: 8px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .event-day { font-size: 22px; font-weight: 700; color: var(--red); font-family: 'Playfair Display', serif; line-height: 1; }
+    .event-month { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 3px; }
+    .event-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .event-time { font-size: 12px; color: var(--red); margin-bottom: 4px; }
+    .event-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .event-type { display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px; background: rgba(192,57,43,0.15); color: var(--red); margin-bottom: 4px; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--green); color: #fff; padding: 12px 20px; font-size: 13px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 560px) { .profil-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+  </style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo">Famille <span>Moni</span> · Espace membre</div>
+  <a class="back" href="index.html">← Retour au site</a>
+</div>
+
+<div class="wrap">
+
+  <!-- AUTH -->
+  <div id="auth-screen">
+    <div class="card narrow">
+      <h1>Espace <span>Membre</span></h1>
+      <div class="sub" id="auth-sub">Connecte-toi pour accéder à ton profil et aux événements.</div>
+
+      <label>Email</label>
+      <input type="email" id="email" placeholder="ton@email.com" autocomplete="email" />
+
+      <label>Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+
+      <button class="btn" id="auth-btn" onclick="doAuth()">Se connecter</button>
+      <div class="msg" id="auth-msg"></div>
+
+      <div class="switch" id="auth-switch">
+        Pas encore de compte ? <a onclick="setMode('signup')">Créer un compte</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBER -->
+  <div id="member-screen">
+    <div class="member-head">
+      <div class="who">Connecté en tant que <b id="who-email"></b></div>
+      <button class="btn ghost" style="width:auto;" onclick="doLogout()">Déconnexion</button>
+    </div>
+
+    <div class="card">
+      <div class="section-t">Mon profil</div>
+      <div class="profil-grid">
+        <div>
+          <div class="avatar-big" id="avatar-big">?</div>
+          <div class="file-row">
+            <label class="file-label" for="photo-input">Choisir une photo</label>
+            <input type="file" id="photo-input" accept="image/*" onchange="onPhotoChosen(event)" />
+          </div>
+          <div class="hint">JPG/PNG, carré de préférence.</div>
+        </div>
+        <div>
+          <label>Ton personnage</label>
+          <select id="nom-select"></select>
+          <label>Rang</label>
+          <input type="text" id="rang-input" readonly />
+          <button class="btn green" onclick="saveProfil()">✓ Enregistrer mon profil</button>
+          <div class="msg" id="profil-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card">
+      <div class="section-t">Événements — réservé aux membres</div>
+      <div id="events-holder"><div class="locked">Chargement…</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+  const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+  let mode = 'login';
+  let currentUser = null;
+  let pendingFile = null;
+  let currentPhotoUrl = null;
+
+  // Remplir le select des noms
+  (function fillNoms() {
+    const sel = document.getElementById('nom-select');
+    sel.innerHTML = '<option value="">— Choisis ton personnage —</option>' +
+      window.MONI_MEMBRES.map(m => `<option value="${m.nom}">${m.nom} (${m.rang})</option>`).join('');
+    sel.addEventListener('change', () => {
+      const m = window.MONI_MEMBRES.find(x => x.nom === sel.value);
+      document.getElementById('rang-input').value = m ? m.rang : '';
+      if (!currentPhotoUrl) setAvatarInitials(sel.value);
+    });
+  })();
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('auth-btn').textContent = m === 'login' ? 'Se connecter' : 'Créer mon compte';
+    document.getElementById('auth-sub').textContent = m === 'login'
+      ? 'Connecte-toi pour accéder à ton profil et aux événements.'
+      : 'Crée ton compte pour rejoindre l’espace membre.';
+    document.getElementById('auth-switch').innerHTML = m === 'login'
+      ? 'Pas encore de compte ? <a onclick="setMode(\'signup\')">Créer un compte</a>'
+      : 'Déjà un compte ? <a onclick="setMode(\'login\')">Se connecter</a>';
+    hideMsg('auth-msg');
+  }
+
+  function showMsg(id, text, ok) {
+    const el = document.getElementById(id);
+    el.textContent = text; el.className = 'msg ' + (ok ? 'ok' : 'error');
+  }
+  function hideMsg(id) { document.getElementById(id).className = 'msg'; }
+
+  function toast(t) {
+    const el = document.getElementById('toast');
+    el.textContent = t; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  async function doAuth() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!email || !password) { showMsg('auth-msg', 'Email et mot de passe requis.', false); return; }
+    hideMsg('auth-msg');
+
+    if (mode === 'signup') {
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) { showMsg('auth-msg', error.message, false); return; }
+      if (!data.session) {
+        showMsg('auth-msg', 'Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.', true);
+        setMode('login');
+        return;
+      }
+      // session directe (si confirmation email désactivée)
+      onLogged(data.user);
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { showMsg('auth-msg', error.message, false); return; }
+      onLogged(data.user);
+    }
+  }
+
+  async function doLogout() {
+    await sb.auth.signOut();
+    currentUser = null;
+    document.getElementById('member-screen').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'block';
+  }
+
+  function setAvatarInitials(nom) {
+    const box = document.getElementById('avatar-big');
+    const init = (nom || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    box.innerHTML = init || '?';
+  }
+  function setAvatarPhoto(url) {
+    const box = document.getElementById('avatar-big');
+    box.innerHTML = `<img src="${url}" alt="Photo de profil" />`;
+  }
+
+  function onPhotoChosen(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    pendingFile = file;
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPhoto(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function onLogged(user) {
+    currentUser = user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('member-screen').style.display = 'block';
+    document.getElementById('who-email').textContent = user.email;
+    await loadProfil();
+    await loadEvents();
+  }
+
+  async function loadProfil() {
+    const { data, error } = await sb.from('profils').select('*').eq('id', currentUser.id).maybeSingle();
+    if (error) { console.warn(error); }
+    if (data) {
+      if (data.nom) {
+        document.getElementById('nom-select').value = data.nom;
+        const m = window.MONI_MEMBRES.find(x => x.nom === data.nom);
+        document.getElementById('rang-input').value = m ? m.rang : (data.rang || '');
+      }
+      if (data.photo_url) { currentPhotoUrl = data.photo_url; setAvatarPhoto(data.photo_url + '?t=' + Date.now()); }
+      else setAvatarInitials(data.nom);
+    }
+  }
+
+  async function saveProfil() {
+    const nom = document.getElementById('nom-select').value;
+    if (!nom) { showMsg('profil-msg', 'Choisis d’abord ton personnage.', false); return; }
+    const m = window.MONI_MEMBRES.find(x => x.nom === nom);
+    const rang = m ? m.rang : '';
+    hideMsg('profil-msg');
+
+    // 1) upload de la photo si une nouvelle a été choisie
+    if (pendingFile) {
+      const ext = (pendingFile.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = currentUser.id + '/avatar.' + ext;
+      const up = await sb.storage.from('photos').upload(path, pendingFile, { upsert: true, cacheControl: '3600' });
+      if (up.error) { showMsg('profil-msg', 'Erreur upload photo : ' + up.error.message, false); return; }
+      const pub = sb.storage.from('photos').getPublicUrl(path);
+      currentPhotoUrl = pub.data.publicUrl;
+      pendingFile = null;
+    }
+
+    // 2) enregistrer le profil
+    const row = { id: currentUser.id, nom, rang, photo_url: currentPhotoUrl, updated_at: new Date().toISOString() };
+    const { error } = await sb.from('profils').upsert(row);
+    if (error) { showMsg('profil-msg', 'Erreur : ' + error.message, false); return; }
+    if (currentPhotoUrl) setAvatarPhoto(currentPhotoUrl + '?t=' + Date.now());
+    toast('Profil enregistré !');
+    showMsg('profil-msg', 'Ton profil est à jour. Ta photo apparaîtra sur le site.', true);
+  }
+
+  async function loadEvents() {
+    const holder = document.getElementById('events-holder');
+    const { data, error } = await sb.from('evenements').select('*').order('ordre', { ascending: true });
+    if (error) { holder.innerHTML = '<div class="locked">Impossible de charger les événements.</div>'; return; }
+    if (!data || !data.length) { holder.innerHTML = '<div class="locked">Aucun événement pour le moment.</div>'; return; }
+    holder.innerHTML = '<div class="events-grid">' + data.map(e => `
+      <div class="event-card">
+        <div class="event-date"><span class="event-day">${e.jour||''}</span><span class="event-month">${e.mois||''}</span></div>
+        <div>
+          ${e.type ? `<span class="event-type">${e.type}</span>` : ''}
+          <div class="event-title">${e.titre||''}</div>
+          <div class="event-time">${e.heure||''}</div>
+          <div class="event-desc">${e.texte||''}</div>
+        </div>
+      </div>`).join('') + '</div>';
+  }
+
+  // Session existante au chargement
+  (async function init() {
+    const { data } = await sb.auth.getSession();
+    if (data.session) onLogged(data.session.user);
+  })();
+</script>
+</body>
+</html>
