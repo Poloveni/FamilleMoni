@@ -1,17 +1,10 @@
 // ════════════════════════════════════════════════════════════
 //  Fonction Edge Supabase — sync-discord-events
-//  Recopie les messages d'un salon Discord dans la table "evenements".
+//  Ne garde QUE les messages d'annonce d'événement (avec une date ET une heure)
+//  et les recopie dans la table "evenements". Les messages de discussion sont ignorés.
 //
-//  Comportement :
-//   • Chaque message (non vide) du salon devient un événement.
-//   • 1ʳᵉ ligne = titre, lignes suivantes = description.
-//   • Date/heure = date de publication du message (fuseau Europe/Paris).
-//   • BONUS : si la 1ʳᵉ ligne commence par "JJ/MM HHhMM — Titre [Type]",
-//     cette date/heure/type-là est utilisée à la place.
-//
-//  Secrets à définir dans Supabase (Edge Functions → Secrets) :
-//    DISCORD_BOT_TOKEN   = le jeton du bot Discord
-//    DISCORD_CHANNEL_ID  = l'identifiant du salon
+//  Secrets (Edge Functions → Secrets) :
+//    DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID
 //  (SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont fournis automatiquement.)
 // ════════════════════════════════════════════════════════════
 
@@ -23,70 +16,89 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const MOIS = ["Janv", "Févr", "Mars", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
-const TYPES_VALIDES = ["Important", "Social", "RP", "Recrutement"];
+const MOIS_FR: Record<string, number> = {
+  janvier: 1, "février": 2, fevrier: 2, mars: 3, avril: 4, mai: 5, juin: 6,
+  juillet: 7, "août": 8, aout: 8, septembre: 9, octobre: 10, novembre: 11, "décembre": 12, decembre: 12,
+};
+const NB_MAX = 6; // nombre d'événements affichés (les plus récents)
 
-// Date/heure locales (Europe/Paris) à partir d'un ISO Discord.
-function partsParis(iso: string) {
-  const p = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
-  }).formatToParts(new Date(iso));
-  const g = (t: string) => (p.find((x) => x.type === t)?.value ?? "");
-  return { jour: g("day"), moisNum: parseInt(g("month"), 10), heure: `${parseInt(g("hour"), 10)}h${g("minute")}` };
+// Retire mentions, salons, emojis custom et markdown.
+function clean(s: string): string {
+  return (s || "")
+    .replace(/<a?:\w+:\d+>/g, "")     // emojis personnalisés
+    .replace(/<@[&!]?\d+>/g, "")       // @mentions (membres / rôles)
+    .replace(/<#\d+>/g, "")            // #salons
+    .replace(/\*\*?|__|`/g, "")        // markdown gras / souligné
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
 
-// Essaie le format structuré :  JJ/MM  HHhMM  —  Titre  [Type]
-function parseStructured(firstLine: string) {
-  const m = firstLine.match(
-    /^(\d{1,2})\/(\d{1,2})\s+(\d{1,2})h(\d{2})?\s*[—–-]\s*(.+?)(?:\s*\[([^\]]+)\])?$/,
-  );
+// Rassemble le texte du message + des embeds (annonces de bots).
+function fullText(msg: any): string {
+  const parts: string[] = [msg.content || ""];
+  for (const e of (msg.embeds || [])) {
+    if (e.title) parts.push(e.title);
+    if (e.description) parts.push(e.description);
+    for (const f of (e.fields || [])) parts.push(`${f.name}: ${f.value}`);
+  }
+  return parts.join("\n");
+}
+
+function findDate(text: string) {
+  let m = text.match(/(\d{1,2})\/(\d{1,2})/); // JJ/MM
+  if (m) return { jour: m[1].padStart(2, "0"), moisNum: parseInt(m[2], 10) };
+  m = text.match(/(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)/i);
+  if (m) {
+    const mn = MOIS_FR[m[2].toLowerCase()];
+    if (mn) return { jour: m[1].padStart(2, "0"), moisNum: mn };
+  }
+  return null;
+}
+
+function findTime(text: string): string | null {
+  const m = text.match(/(\d{1,2})\s*[hH]\s*(\d{2})?/); // 21h00 / 22H30 / 21 h
   if (!m) return null;
-  const [, jj, mm, hh, min, titre, typeRaw] = m;
-  const moisIdx = Math.min(12, Math.max(1, parseInt(mm, 10))) - 1;
-  let type: string | null = null;
-  if (typeRaw) {
-    const t = typeRaw.trim();
-    type = TYPES_VALIDES.find((x) => x.toLowerCase() === t.toLowerCase()) ?? t;
-  }
-  return {
-    jour: jj.padStart(2, "0"),
-    mois: MOIS[moisIdx],
-    heure: `${parseInt(hh, 10)}h${min ?? "00"}`,
-    titre: titre.trim(),
-    type,
-    ordre: parseInt(mm, 10) * 100 + parseInt(jj, 10),
-  };
+  return `${parseInt(m[1], 10)}h${m[2] ?? "00"}`;
 }
 
-// Transforme un message Discord en événement (ou null si vide).
-function toEvent(msg: { id: string; content: string; timestamp: string }) {
-  const content = (msg.content || "").trim();
-  if (!content) return null; // on ignore les messages sans texte (images seules, etc.)
-  const lines = content.split("\n").map((l) => l.trim()).filter(Boolean);
+function findTitle(text: string): string {
+  const t = text.match(/Titre\s*:?\s*([^\n]+)/i);
+  if (t) return clean(t[1]);
+  // sinon : 1ʳᵉ ligne non vide, nettoyée des symboles/date/heure
+  const first = clean((text.split("\n").map((l) => l.trim()).filter(Boolean)[0]) || "");
+  return first
+    .replace(/[📢⚠️📅🗓️🎭🕒👥📞ℹ️💬📌🎯•→\-–—]/g, " ")
+    .replace(/\d{1,2}\/\d{1,2}/g, "")
+    .replace(/\d{1,2}\s*[hH]\d{0,2}/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
-  const s = parseStructured(lines[0]);
-  if (s) {
-    return {
-      discord_id: msg.id,
-      jour: s.jour, mois: s.mois, heure: s.heure,
-      titre: s.titre,
-      texte: lines.slice(1).join(" "),
-      type: s.type,
-      ordre: s.ordre,
-    };
-  }
+function detectType(text: string): string | null {
+  if (/recrut/i.test(text)) return "Recrutement";
+  if (/soir[ée]e|\bbar\b|\bbal\b|f[êe]te/i.test(text)) return "Social";
+  return "RP";
+}
 
-  // Sinon : message brut, daté par sa date de publication.
-  const d = partsParis(msg.timestamp);
+// Transforme un message en événement, ou null si ce n'est pas une annonce.
+function toEvent(msg: any) {
+  const text = fullText(msg);
+  const date = findDate(text);
+  const heure = findTime(text);
+  if (!date || !heure) return null; // pas de date + heure → ce n'est pas un événement
+
+  const titre = (findTitle(text) || "Événement").slice(0, 90);
+  const texte = clean(text.replace(/\n/g, " ")).slice(0, 220);
+
   return {
     discord_id: msg.id,
-    jour: d.jour,
-    mois: MOIS[d.moisNum - 1],
-    heure: d.heure,
-    titre: lines[0].slice(0, 90),
-    texte: lines.slice(1).join(" "),
-    type: null,
-    ordre: d.moisNum * 100 + parseInt(d.jour, 10),
+    jour: date.jour,
+    mois: MOIS[date.moisNum - 1],
+    heure,
+    titre,
+    texte,
+    type: detectType(text),
+    ordre: date.moisNum * 100 + parseInt(date.jour, 10),
   };
 }
 
@@ -95,9 +107,9 @@ Deno.serve(async () => {
     return new Response("Secrets Discord manquants (DISCORD_BOT_TOKEN / DISCORD_CHANNEL_ID).", { status: 500 });
   }
 
-  // 1) Récupérer les derniers messages du salon
+  // 1) Récupérer les 100 derniers messages du salon
   const res = await fetch(
-    `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=50`,
+    `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=100`,
     { headers: { Authorization: `Bot ${DISCORD_TOKEN}` } },
   );
   if (!res.ok) {
@@ -106,10 +118,11 @@ Deno.serve(async () => {
   }
   const messages = await res.json();
 
-  // 2) Transformer en événements
-  const events = (messages as { id: string; content: string; timestamp: string }[])
+  // 2) Ne garder que les annonces d'événement, puis les 6 plus récentes
+  const events = (messages as any[])
     .map(toEvent)
-    .filter((e): e is NonNullable<typeof e> => e !== null);
+    .filter((e): e is NonNullable<typeof e> => e !== null)
+    .slice(0, NB_MAX);
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -119,7 +132,7 @@ Deno.serve(async () => {
     if (error) return new Response(`Erreur base: ${error.message}`, { status: 500 });
   }
 
-  // 4) Nettoyer : supprimer les événements Discord dont le message n'existe plus
+  // 4) Nettoyer : retirer les anciens événements Discord qui ne sont plus dans la liste
   const idsActifs = events.map((e) => e.discord_id);
   let delQuery = sb.from("evenements").delete().not("discord_id", "is", null);
   if (idsActifs.length) {
