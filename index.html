@@ -1407,7 +1407,8 @@
 
   // ── SUPABASE : photos des membres + accès aux événements ──
   (function moniSupabase() {
-    if (!window.supabase || !window.SUPABASE_URL) return; // librairie non chargée
+    // Si la librairie/config ne sont pas encore prêtes, on réessaie au lieu d'abandonner.
+    if (!window.supabase || !window.SUPABASE_URL) return void setTimeout(moniSupabase, 120);
     const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
     // Applique une photo à la carte d'un membre (repli sur initiales si l'image casse)
