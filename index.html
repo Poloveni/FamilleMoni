@@ -96,12 +96,34 @@
       color: var(--text-muted); text-decoration: none; transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--text); }
+    .nav-links a { position: relative; padding-bottom: 4px; }
+    .nav-links a::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+      background: var(--red); transform: scaleX(0); transform-origin: center;
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .nav-links a.active { color: var(--text); }
+    .nav-links a.active::after { transform: scaleX(1); }
     .nav-burger { display: none; cursor: pointer; color: var(--text); font-size: 22px; }
+
+    /* ── BOUTON RETOUR EN HAUT ── */
+    #back-to-top {
+      position: fixed; bottom: 24px; right: 24px; z-index: 200;
+      width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+      background: var(--red); color: #fff; border: none; cursor: pointer; font-size: 20px;
+      opacity: 0; pointer-events: none; transform: translateY(12px);
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1), background 0.25s ease;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    }
+    #back-to-top.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    #back-to-top:hover { background: var(--red-dark); transform: translateY(-3px); }
+    @media (max-width: 640px) { #back-to-top { bottom: 16px; right: 16px; } }
 
     #accueil {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
       text-align: center; padding: 100px 32px 60px; position: relative; overflow: hidden;
       background-image: url('hero-bg.png');
+      background-image: image-set(url('hero-bg.webp') type('image/webp'), url('hero-bg.png') type('image/png'));
       background-size: 55%;
       background-position: center bottom;
       background-repeat: no-repeat;
@@ -254,6 +276,8 @@
       margin: 0 auto 12px; font-size: 14px; font-weight: 600; color: var(--red);
     }
     .membre-card.chef .avatar { border-color: #fff; color: #fff; }
+    .avatar { overflow: hidden; }
+    .avatar-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
     .membre-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
     .membre-role { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
     .chef-badge {
@@ -292,6 +316,30 @@
     .rang-2 .rang-name { color: var(--red); }
     .rang-3 .rang-name, .rang-4 .rang-name { color: #c07a2b; }
     .rang-desc { font-size: 12px; color: var(--text-dim); }
+
+    /* ── TERRITOIRES ── */
+    #territoires { background: var(--surface); }
+    .territoires-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .territoire-card {
+      background: var(--surface2); border: 1px solid var(--border); padding: 26px 24px;
+      transition: border-color 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+    }
+    .territoire-card:hover {
+      border-color: var(--red); transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(192,57,43,0.18);
+    }
+    .territoire-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .territoire-icon {
+      width: 38px; height: 38px; flex-shrink: 0; border: 1px solid var(--red); color: var(--red);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .territoire-name { font-size: 15px; font-weight: 600; }
+    .territoire-type { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+    .territoire-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
+    .territoire-influence { display: flex; align-items: center; gap: 10px; }
+    .influence-bar { flex: 1; height: 5px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; }
+    .influence-fill { height: 100%; background: linear-gradient(90deg, var(--red-dark), var(--red)); width: 0; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
+    .influence-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; min-width: 60px; text-align: right; }
 
     #recrutement { background: var(--surface); }
     .recrutement-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
@@ -383,6 +431,44 @@
       padding: 2px 8px; background: rgba(192,57,43,0.15); color: var(--red);
       margin-left: 8px; vertical-align: middle;
     }
+
+    /* ── DISCORD ── */
+    #discord { background: var(--bg); }
+    .discord-inner { display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: stretch; }
+    .discord-card {
+      background: var(--surface); border: 1px solid var(--border); padding: 36px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .discord-server { display: flex; align-items: center; gap: 16px; }
+    .discord-server img {
+      width: 56px; height: 56px; border-radius: 14px; border: 1px solid var(--border-strong); object-fit: cover;
+    }
+    .discord-server-name { font-size: 17px; font-weight: 600; line-height: 1.3; }
+    .discord-server-tag { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
+    .discord-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .discord-stat { background: var(--surface2); border: 1px solid var(--border); padding: 18px; text-align: center; }
+    .discord-stat-num { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+    .discord-stat.online .discord-stat-num { color: #3ba55d; }
+    .discord-stat-num .dot {
+      display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #3ba55d;
+      margin-right: 6px; vertical-align: middle; box-shadow: 0 0 8px #3ba55d;
+      animation: pulseDot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .discord-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+    .discord-cta-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 24px; background: #5865F2; color: #fff; font-size: 13px;
+      letter-spacing: 1px; text-transform: uppercase; text-decoration: none; font-weight: 500;
+      transition: background 0.25s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s ease;
+    }
+    .discord-cta-btn:hover { background: #4752c4; transform: translateY(-3px); box-shadow: 0 8px 22px rgba(88,101,242,0.4); }
+    .discord-cta-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .discord-widget-wrap { min-height: 400px; border: 1px solid var(--border); overflow: hidden; }
+    .discord-widget-wrap iframe { display: block; width: 100%; height: 100%; min-height: 400px; border: 0; }
+    .discord-note { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+    .discord-note code { background: var(--surface2); padding: 1px 6px; color: var(--text-muted); font-size: 11px; }
+    @media (max-width: 860px) { .discord-inner { grid-template-columns: 1fr; } }
 
     #contact { background: var(--bg); text-align: center; }
     .contact-box {
@@ -512,14 +598,16 @@
 <body>
 
 <div id="progress-bar" style="position:fixed;top:0;left:0;height:2px;width:0%;background:var(--red);z-index:9999;transition:width 0.1s linear;box-shadow:0 0 8px rgba(192,57,43,0.8);"></div>
+<button id="back-to-top" aria-label="Retour en haut" title="Retour en haut">&#8593;</button>
 <nav>
   <div class="logo">Famille <span>Moni</span></div>
   <ul class="nav-links" id="navLinks">
     <li><a href="#accueil">Accueil</a></li>
     <li><a href="#histoire">Histoire</a></li>
     <li><a href="#membres">Membres</a></li>
+    <li><a href="#territoires">Territoires</a></li>
     <li><a href="#recrutement">Recrutement</a></li>
-    <li><a href="#actualites">Actualités</a></li>
+    <li><a href="#discord">Discord</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
   <div class="nav-burger" id="burger" onclick="toggleMenu()" aria-label="Menu">&#9776;</div>
@@ -530,14 +618,14 @@
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <div class="hero-content">
-    <a href="https://flashbackfa.fr/" target="_blank" class="hero-tag">
+    <a href="https://flashbackfa.fr/" target="_blank" rel="noopener noreferrer" class="hero-tag">
       <img src="logo.jpg" alt="Flashback FA">
       Flashback FA &mdash; GTA RP
     </a>
     <h1>La Famille<br><em>Moni</em></h1>
     <p class="hero-sub typing-text" id="hero-sub-text" style="min-height:3.5em;">Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui.</p>
     <div class="hero-btns">
-      <a href="https://discord.gg/8zBwmG4y3" target="_blank" class="btn-red">Rejoindre le Discord</a>
+      <a href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer" class="btn-red">Rejoindre le Discord</a>
       <a href="#membres" class="btn-ghost">Les membres</a>
     </div>
   </div>
@@ -555,7 +643,11 @@
   <div class="histoire-inner reveal">
     <div style="grid-column: 1 / -1;">
       <h2 class="section-title">L'histoire de la <em>Famille Moni</em></h2>
-      <img src="histoire.png" alt="Histoire de la Famille Moni" style="width:100%; border: 1px solid var(--border); margin-top: 24px; display: block;">
+      <picture>
+        <source srcset="histoire.webp" type="image/webp">
+        <source srcset="histoire.jpg" type="image/jpeg">
+        <img src="histoire.jpg" alt="Histoire de la Famille Moni" loading="lazy" style="width:100%; border: 1px solid var(--border); margin-top: 24px; display: block;">
+      </picture>
     </div>
   </div>
 </section>
@@ -937,6 +1029,58 @@
   </div>
 </section>
 
+<section id="territoires">
+  <div class="section-label">Notre influence</div>
+  <h2 class="section-title">Nos <em>territoires</em></h2>
+  <p class="section-desc">Roxwood est notre berceau. Voici les zones où la famille Moni tient ses positions.</p>
+  <div class="territoires-grid reveal-stagger">
+    <div class="territoire-card">
+      <div class="territoire-head">
+        <div class="territoire-icon">&#127963;</div>
+        <div><div class="territoire-name">QG de Roxwood</div><div class="territoire-type">Quartier général</div></div>
+      </div>
+      <p>Le cœur de la famille. C'est ici que se prennent les décisions et que se réunissent les Moni.</p>
+      <div class="territoire-influence">
+        <div class="influence-bar"><div class="influence-fill" data-w="100"></div></div>
+        <div class="influence-label">Fief</div>
+      </div>
+    </div>
+    <div class="territoire-card">
+      <div class="territoire-head">
+        <div class="territoire-icon">&#127978;</div>
+        <div><div class="territoire-name">Commerces</div><div class="territoire-type">Façade légale</div></div>
+      </div>
+      <p>Nos établissements de quartier. Une vitrine honnête qui fait tourner les affaires de la famille.</p>
+      <div class="territoire-influence">
+        <div class="influence-bar"><div class="influence-fill" data-w="80"></div></div>
+        <div class="influence-label">Solide</div>
+      </div>
+    </div>
+    <div class="territoire-card">
+      <div class="territoire-head">
+        <div class="territoire-icon">&#127751;</div>
+        <div><div class="territoire-name">Rues Nord</div><div class="territoire-type">Terrain</div></div>
+      </div>
+      <p>Le pavé qu'on arpente chaque jour. On y connaît tout le monde, et tout le monde nous connaît.</p>
+      <div class="territoire-influence">
+        <div class="influence-bar"><div class="influence-fill" data-w="65"></div></div>
+        <div class="influence-label">Contrôle</div>
+      </div>
+    </div>
+    <div class="territoire-card">
+      <div class="territoire-head">
+        <div class="territoire-icon">&#127961;</div>
+        <div><div class="territoire-name">Los Santos</div><div class="territoire-type">Contacts extérieurs</div></div>
+      </div>
+      <p>Nos relations au-delà de Roxwood. Des liens précieux qu'on cultive avec patience et prudence.</p>
+      <div class="territoire-influence">
+        <div class="influence-bar"><div class="influence-fill" data-w="40"></div></div>
+        <div class="influence-label">Émergent</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="recrutement">
   <div class="section-label">Nous rejoindre</div>
   <div class="recrutement-inner reveal">
@@ -954,7 +1098,7 @@
     <div class="recrutement-cta">
       <h3>Prêt à rejoindre ?</h3>
       <p>Passe sur notre Discord et présente-toi. Un membre de la famille te contactera pour un entretien en jeu.</p>
-      <a href="https://discord.gg/8zBwmG4y3" target="_blank" class="btn-red">Rejoindre le Discord</a>
+      <a href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer" class="btn-red">Rejoindre le Discord</a>
     </div>
   </div>
 </section>
@@ -986,14 +1130,54 @@
   </div>
 </section>
 
+<section id="discord">
+  <div class="section-label">Notre serveur</div>
+  <h2 class="section-title">Le <em>Discord</em></h2>
+  <p class="section-desc">Le cœur de la famille bat sur Discord. Rejoins-nous pour le RP, les annonces et les événements.</p>
+  <div class="discord-inner reveal">
+    <div class="discord-card">
+      <div class="discord-server">
+        <img src="https://cdn.discordapp.com/icons/1489387311245558004/5ec6d1ac45679fd05693dd23b88cbc14.png?size=128" alt="Icône serveur Discord" onerror="this.style.display='none'" />
+        <div>
+          <div class="discord-server-name">RC Famille Moni 🇮🇹</div>
+          <div class="discord-server-tag">Flashback FA — GTA RP</div>
+        </div>
+      </div>
+      <div class="discord-stats">
+        <div class="discord-stat online">
+          <div class="discord-stat-num"><span class="dot"></span><span id="discord-online">14</span></div>
+          <div class="discord-stat-label">En ligne</div>
+        </div>
+        <div class="discord-stat">
+          <div class="discord-stat-num" id="discord-members">74</div>
+          <div class="discord-stat-label">Membres</div>
+        </div>
+      </div>
+      <a href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer" class="discord-cta-btn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.4 2.9a.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.42 0 12.6 12.6 0 0 0-.62-1.25.07.07 0 0 0-.08-.04c-1.7.29-3.33.8-4.92 1.47a.06.06 0 0 0-.03.03C.53 9.09-.32 13.68.1 18.21a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 0 0-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.92 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.01-3.03.08.08 0 0 0 .03-.05c.5-5.25-.84-9.8-3.55-13.81a.06.06 0 0 0-.03-.03ZM8.02 15.45c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z"/></svg>
+        Rejoindre le serveur
+      </a>
+      <p class="discord-note" id="discord-note">
+        Pour afficher le widget en direct ci-contre, active-le dans Discord :
+        <code>Paramètres du serveur → Widget → Activer</code>.
+      </p>
+    </div>
+    <div class="discord-widget-wrap">
+      <iframe src="https://discord.com/widget?id=1489387311245558004&theme=dark"
+              sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts allow-same-origin"
+              title="Widget Discord Famille Moni" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
 <section id="contact">
   <div class="section-label">Nous contacter</div>
   <div class="contact-box reveal">
     <h2 class="section-title">Rejoins la <em>famille</em></h2>
     <p>Tu veux intégrer la Famille Moni ou simplement nous contacter ? Passe sur notre Discord. On accepte uniquement les joueurs sérieux et impliqués dans le RP sur Flashback FA.</p>
     <div class="contact-links">
-      <a href="https://discord.gg/8zBwmG4y3" target="_blank" class="btn-red">Discord Moni</a>
-      <a href="https://flashbackfa.fr/" target="_blank" class="btn-white">Flashback FA</a>
+      <a href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer" class="btn-red">Discord Moni</a>
+      <a href="https://flashbackfa.fr/" target="_blank" rel="noopener noreferrer" class="btn-white">Flashback FA</a>
     </div>
   </div>
 </section>
@@ -1011,12 +1195,28 @@
     link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
   });
 
-  // ── BARRE DE PROGRESSION ──
+  // ── BARRE DE PROGRESSION + RETOUR EN HAUT ──
   const bar = document.getElementById('progress-bar');
+  const backTop = document.getElementById('back-to-top');
   window.addEventListener('scroll', () => {
     const total = document.body.scrollHeight - window.innerHeight;
     bar.style.width = (window.scrollY / total * 100) + '%';
+    if (backTop) backTop.classList.toggle('show', window.scrollY > 500);
   });
+  if (backTop) backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // ── SCROLL-SPY (menu actif) ──
+  const spySections = document.querySelectorAll('section[id]');
+  const spyLinks = document.querySelectorAll('.nav-links a');
+  const spyObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        spyLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  spySections.forEach(s => spyObs.observe(s));
 
   // ── REVEAL AU SCROLL ──
   const revealEls = document.querySelectorAll('.reveal, .reveal-stagger');
@@ -1029,6 +1229,18 @@
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   revealEls.forEach(el => observer.observe(el));
+
+  // ── BARRES D'INFLUENCE (TERRITOIRES) ──
+  const influenceFills = document.querySelectorAll('.influence-fill');
+  const infObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.width = (entry.target.dataset.w || 0) + '%';
+        infObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  influenceFills.forEach(f => infObs.observe(f));
 
   // ── TIMELINE HIÉRARCHIE ──
   const hierList = document.querySelector('.hierarchie-list');
@@ -1201,6 +1413,57 @@
       else if (e.key === 'ArrowLeft') show(current - 1);
       else if (e.key === 'ArrowRight') show(current + 1);
     });
+  })();
+
+  // ── PHOTOS DES MEMBRES ──
+  // Pour donner une photo à un membre : dépose l'image dans le dossier du site
+  // (idéalement dans un sous-dossier "photos/") puis ajoute une ligne ci-dessous.
+  // Si l'image est absente ou introuvable, les initiales restent affichées.
+  const PHOTOS = {
+    // "Lov Moni": "photos/lov-moni.png",
+    // "Bass Carter": "photos/bass-carter.png",
+  };
+  document.querySelectorAll('.membre-card').forEach(card => {
+    const nameEl = card.querySelector('.membre-name');
+    if (!nameEl) return;
+    const url = PHOTOS[nameEl.textContent.trim()];
+    if (!url) return;
+    const avatar = card.querySelector('.card-front .avatar');
+    if (!avatar) return;
+    const initiales = avatar.textContent;
+    const img = document.createElement('img');
+    img.className = 'avatar-photo';
+    img.alt = nameEl.textContent.trim();
+    img.loading = 'lazy';
+    img.onerror = () => { avatar.textContent = initiales; }; // repli initiales
+    avatar.textContent = '';
+    avatar.appendChild(img);
+    img.src = url;
+  });
+
+  // ── DISCORD : compteurs en direct ──
+  // Nécessite "Activer le widget" dans les paramètres du serveur Discord.
+  (function discordLive() {
+    const GUILD_ID = '1489387311245558004';
+    const onlineEl = document.getElementById('discord-online');
+    const noteEl = document.getElementById('discord-note');
+    if (!onlineEl) return;
+    fetch('https://discord.com/api/guilds/' + GUILD_ID + '/widget.json')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        if (typeof d.presence_count === 'number') {
+          const target = d.presence_count;
+          let n = 0;
+          const step = Math.max(1, Math.ceil(target / 30));
+          const t = setInterval(() => {
+            n += step;
+            if (n >= target) { onlineEl.textContent = target; clearInterval(t); }
+            else onlineEl.textContent = n;
+          }, 30);
+        }
+        if (noteEl) noteEl.style.display = 'none'; // widget actif : on masque la note d'aide
+      })
+      .catch(() => { /* widget non activé : on garde les valeurs statiques + la note */ });
   })();
 </script>
 </body>
