@@ -1,15 +1,17 @@
 // ════════════════════════════════════════════════════════════
 //  Fonction Edge Supabase — sync-discord-events
-//  Lit les messages d'un salon Discord, les transforme en événements
-//  et les enregistre dans la table "evenements".
+//  Recopie les messages d'un salon Discord dans la table "evenements".
 //
-//  Format attendu d'un message (1 message = 1 événement) :
-//    05/07 21h00 — Réunion générale [Important]
-//    Description libre sur les lignes suivantes...
+//  Comportement :
+//   • Chaque message (non vide) du salon devient un événement.
+//   • 1ʳᵉ ligne = titre, lignes suivantes = description.
+//   • Date/heure = date de publication du message (fuseau Europe/Paris).
+//   • BONUS : si la 1ʳᵉ ligne commence par "JJ/MM HHhMM — Titre [Type]",
+//     cette date/heure/type-là est utilisée à la place.
 //
 //  Secrets à définir dans Supabase (Edge Functions → Secrets) :
 //    DISCORD_BOT_TOKEN   = le jeton du bot Discord
-//    DISCORD_CHANNEL_ID  = l'identifiant du salon d'annonces
+//    DISCORD_CHANNEL_ID  = l'identifiant du salon
 //  (SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont fournis automatiquement.)
 // ════════════════════════════════════════════════════════════
 
@@ -23,38 +25,68 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const MOIS = ["Janv", "Févr", "Mars", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
 const TYPES_VALIDES = ["Important", "Social", "RP", "Recrutement"];
 
-// Transforme un message Discord en événement, ou renvoie null si le format ne correspond pas.
-function parseMessage(msg: { id: string; content: string }) {
-  const lines = (msg.content || "").split("\n").map((l) => l.trim()).filter(Boolean);
-  if (!lines.length) return null;
+// Date/heure locales (Europe/Paris) à partir d'un ISO Discord.
+function partsParis(iso: string) {
+  const p = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date(iso));
+  const g = (t: string) => (p.find((x) => x.type === t)?.value ?? "");
+  return { jour: g("day"), moisNum: parseInt(g("month"), 10), heure: `${parseInt(g("hour"), 10)}h${g("minute")}` };
+}
 
-  // 1ʳᵉ ligne :  JJ/MM  HHhMM  —  Titre  [Type]
-  const m = lines[0].match(
+// Essaie le format structuré :  JJ/MM  HHhMM  —  Titre  [Type]
+function parseStructured(firstLine: string) {
+  const m = firstLine.match(
     /^(\d{1,2})\/(\d{1,2})\s+(\d{1,2})h(\d{2})?\s*[—–-]\s*(.+?)(?:\s*\[([^\]]+)\])?$/,
   );
   if (!m) return null;
-
   const [, jj, mm, hh, min, titre, typeRaw] = m;
   const moisIdx = Math.min(12, Math.max(1, parseInt(mm, 10))) - 1;
-
-  // Type : on ne garde que les valeurs connues (sinon vide).
   let type: string | null = null;
   if (typeRaw) {
     const t = typeRaw.trim();
-    const found = TYPES_VALIDES.find((x) => x.toLowerCase() === t.toLowerCase());
-    type = found ?? t;
+    type = TYPES_VALIDES.find((x) => x.toLowerCase() === t.toLowerCase()) ?? t;
   }
-
   return {
-    discord_id: msg.id,
     jour: jj.padStart(2, "0"),
     mois: MOIS[moisIdx],
     heure: `${parseInt(hh, 10)}h${min ?? "00"}`,
     titre: titre.trim(),
-    texte: lines.slice(1).join(" "),
     type,
-    // "ordre" pour trier chronologiquement (MMJJ)
     ordre: parseInt(mm, 10) * 100 + parseInt(jj, 10),
+  };
+}
+
+// Transforme un message Discord en événement (ou null si vide).
+function toEvent(msg: { id: string; content: string; timestamp: string }) {
+  const content = (msg.content || "").trim();
+  if (!content) return null; // on ignore les messages sans texte (images seules, etc.)
+  const lines = content.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  const s = parseStructured(lines[0]);
+  if (s) {
+    return {
+      discord_id: msg.id,
+      jour: s.jour, mois: s.mois, heure: s.heure,
+      titre: s.titre,
+      texte: lines.slice(1).join(" "),
+      type: s.type,
+      ordre: s.ordre,
+    };
+  }
+
+  // Sinon : message brut, daté par sa date de publication.
+  const d = partsParis(msg.timestamp);
+  return {
+    discord_id: msg.id,
+    jour: d.jour,
+    mois: MOIS[d.moisNum - 1],
+    heure: d.heure,
+    titre: lines[0].slice(0, 90),
+    texte: lines.slice(1).join(" "),
+    type: null,
+    ordre: d.moisNum * 100 + parseInt(d.jour, 10),
   };
 }
 
@@ -74,9 +106,9 @@ Deno.serve(async () => {
   }
   const messages = await res.json();
 
-  // 2) Parser ceux qui suivent le format
-  const events = (messages as { id: string; content: string }[])
-    .map(parseMessage)
+  // 2) Transformer en événements
+  const events = (messages as { id: string; content: string; timestamp: string }[])
+    .map(toEvent)
     .filter((e): e is NonNullable<typeof e> => e !== null);
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -87,7 +119,7 @@ Deno.serve(async () => {
     if (error) return new Response(`Erreur base: ${error.message}`, { status: 500 });
   }
 
-  // 4) Nettoyer : supprimer les événements Discord dont le message n'existe plus / ne matche plus
+  // 4) Nettoyer : supprimer les événements Discord dont le message n'existe plus
   const idsActifs = events.map((e) => e.discord_id);
   let delQuery = sb.from("evenements").delete().not("discord_id", "is", null);
   if (idsActifs.length) {
