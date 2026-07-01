@@ -218,6 +218,38 @@
       padding: 2px 7px; background: var(--red); color: #fff; margin-top: 6px;
     }
 
+    /* ── HIÉRARCHIE ── */
+    .hierarchie-section { margin-top: 8px; }
+    .hierarchie-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-dim); margin-bottom: 16px;
+    }
+    .hierarchie-list { display: flex; flex-direction: column; gap: 2px; }
+    .hierarchie-item {
+      display: flex; align-items: center; gap: 20px;
+      padding: 14px 20px; border: 1px solid var(--border);
+      background: var(--surface);
+      transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
+      cursor: default;
+    }
+    .hierarchie-item:hover { background: var(--surface2); border-color: var(--red); transform: translateX(6px); }
+    .rang-badge {
+      width: 36px; height: 36px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px;
+      border: 1px solid var(--border);
+    }
+    .rang-1 .rang-badge { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); }
+    .rang-2 .rang-badge { border-color: var(--red); color: var(--red); }
+    .rang-3 .rang-badge, .rang-4 .rang-badge { border-color: #c07a2b; color: #c07a2b; }
+    .rang-5 .rang-badge, .rang-6 .rang-badge { border-color: #5a7a2b; color: #5a7a2b; }
+    .rang-7 .rang-badge, .rang-8 .rang-badge, .rang-9 .rang-badge { border-color: var(--border-strong); color: var(--text-muted); }
+    .rang-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .rang-1 .rang-name { color: #fff; }
+    .rang-2 .rang-name { color: var(--red); }
+    .rang-3 .rang-name, .rang-4 .rang-name { color: #c07a2b; }
+    .rang-desc { font-size: 12px; color: var(--text-dim); }
+
     #recrutement { background: var(--surface); }
     .recrutement-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
     .recrutement-reqs { display: flex; flex-direction: column; gap: 16px; }
@@ -390,23 +422,95 @@
 <section id="membres">
   <div class="section-label">L'équipe</div>
   <h2 class="section-title">Les <em>membres</em></h2>
-  <p class="section-desc">14 membres. Un seul objectif : tenir ensemble.</p>
-  <div class="membres-grid reveal-stagger">
-    <div class="membre-card chef"><div class="avatar">LM</div><div class="membre-name">Lov Moni</div><div class="membre-role">Chef de famille</div><div class="chef-badge">&#9733; Chef</div></div>
-    <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Allesandro Moretti</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Andrea Moni</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">BC</div><div class="membre-name">Bass Carter</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">DR</div><div class="membre-name">Dayon Reas</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">ES</div><div class="membre-name">Ezio Spallow</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">JM</div><div class="membre-name">James Mendoza</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">JS</div><div class="membre-name">Javier Silva</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">JC</div><div class="membre-name">Javier Cruz Silva</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">JG</div><div class="membre-name">Jiji Goose</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">KL</div><div class="membre-name">Karl Larsson</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">OS</div><div class="membre-name">Oscar Santo</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">RC</div><div class="membre-name">Raymond Carter</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">TD</div><div class="membre-name">Tommy Dane</div><div class="membre-role">Membre</div></div>
-    <div class="membre-card"><div class="avatar">TM</div><div class="membre-name">Tony Moncini</div><div class="membre-role">Membre</div></div>
+  <p class="section-desc">14 membres. Une hiérarchie italienne, un seul objectif : tenir ensemble.</p>
+
+  <!-- HIÉRARCHIE -->
+  <div class="hierarchie-section reveal">
+    <div class="hierarchie-title">Hiérarchie</div>
+    <div class="hierarchie-list">
+      <div class="hierarchie-item rang-1">
+        <div class="rang-badge">I</div>
+        <div class="rang-info">
+          <div class="rang-name">La Donna</div>
+          <div class="rang-desc">Chef</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-2">
+        <div class="rang-badge">II</div>
+        <div class="rang-info">
+          <div class="rang-name">Braccio Destro</div>
+          <div class="rang-desc">Bras Droit — Co-Lead</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-3">
+        <div class="rang-badge">III</div>
+        <div class="rang-info">
+          <div class="rang-name">Anziani</div>
+          <div class="rang-desc">Aînés — Capitaines</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-4">
+        <div class="rang-badge">IV</div>
+        <div class="rang-info">
+          <div class="rang-name">Eredi</div>
+          <div class="rang-desc">Héritiers — Lieutenants</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-5">
+        <div class="rang-badge">V</div>
+        <div class="rang-info">
+          <div class="rang-name">Baroni</div>
+          <div class="rang-desc">Barons — Gérants drogue, armes, blanchiment, opérations, événements…</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-6">
+        <div class="rang-badge">VI</div>
+        <div class="rang-info">
+          <div class="rang-name">Camerata</div>
+          <div class="rang-desc">Camarades</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-7">
+        <div class="rang-badge">VII</div>
+        <div class="rang-info">
+          <div class="rang-name">Vicino</div>
+          <div class="rang-desc">Proches</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-8">
+        <div class="rang-badge">VIII</div>
+        <div class="rang-info">
+          <div class="rang-name">Sicario</div>
+          <div class="rang-desc">Hommes de main — Membres confirmés</div>
+        </div>
+      </div>
+      <div class="hierarchie-item rang-9">
+        <div class="rang-badge">IX</div>
+        <div class="rang-info">
+          <div class="rang-name">Associati</div>
+          <div class="rang-desc">Associés — Membres</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBRES -->
+  <div class="membres-grid reveal-stagger" style="margin-top: 48px;">
+    <div class="membre-card chef"><div class="avatar">LM</div><div class="membre-name">Lov Moni</div><div class="membre-role">La Donna</div><div class="chef-badge">&#9733; Chef</div></div>
+    <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Allesandro Moretti</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">AM</div><div class="membre-name">Andrea Moni</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">BC</div><div class="membre-name">Bass Carter</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">DR</div><div class="membre-name">Dayon Reas</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">ES</div><div class="membre-name">Ezio Spallow</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">JM</div><div class="membre-name">James Mendoza</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">JS</div><div class="membre-name">Javier Silva</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">JC</div><div class="membre-name">Javier Cruz Silva</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">JG</div><div class="membre-name">Jiji Goose</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">KL</div><div class="membre-name">Karl Larsson</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">OS</div><div class="membre-name">Oscar Santo</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">RC</div><div class="membre-name">Raymond Carter</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">TD</div><div class="membre-name">Tommy Dane</div><div class="membre-role">Associati</div></div>
+    <div class="membre-card"><div class="avatar">TM</div><div class="membre-name">Tony Moncini</div><div class="membre-role">Associati</div></div>
   </div>
 </section>
 
@@ -470,6 +574,7 @@
 <footer>
   <div class="footer-logo">Famille <span>Moni</span></div>
   <div class="footer-text">Roxwood, Los Santos &mdash; Flashback FA GTA RP &middot; Site fictif</div>
+  <a href="admin.html" title="Administration" style="font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-dim)'">⚙ Admin</a>
 </footer>
 
 <script>

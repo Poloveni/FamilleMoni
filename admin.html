@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Famille Moni</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --red: #c0392b; --red-dark: #a93226;
+      --bg: #0f0f0f; --surface: #161616; --surface2: #1e1e1e;
+      --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.14);
+      --text: #f0f0f0; --text-muted: #888; --text-dim: #555;
+      --green: #27ae60; --orange: #e67e22;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    }
+    .login-box {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 48px 40px; width: 360px; text-align: center;
+    }
+    .login-logo { font-size: 18px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+    .login-logo span { color: var(--red); }
+    .login-sub { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 36px; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); font-size: 14px;
+      font-family: 'Inter', sans-serif; margin-bottom: 12px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-box input:focus { border-color: var(--red); }
+    .login-box button {
+      width: 100%; padding: 12px; background: var(--red); color: #fff;
+      font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+      border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background 0.2s;
+    }
+    .login-box button:hover { background: var(--red-dark); }
+    .login-error { font-size: 12px; color: var(--red); margin-top: 12px; display: none; }
+
+    /* ── ADMIN ── */
+    #admin-screen { display: none; }
+    .admin-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 60px; background: var(--surface);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+    }
+    .admin-nav .logo { font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+    .admin-nav .logo span { color: var(--red); }
+    .admin-badge {
+      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+      padding: 3px 10px; background: rgba(192,57,43,0.15); color: var(--red);
+      border: 1px solid rgba(192,57,43,0.3);
+    }
+    .logout-btn {
+      font-size: 12px; color: var(--text-muted); background: none;
+      border: 1px solid var(--border); padding: 6px 14px; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: color 0.2s, border-color 0.2s;
+    }
+    .logout-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+    .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+
+    /* ── SIDEBAR ── */
+    .admin-sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; }
+    .sidebar-label {
+      font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px;
+      padding: 0 20px; margin-bottom: 8px; margin-top: 20px;
+    }
+    .sidebar-label:first-child { margin-top: 0; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; font-size: 13px; color: var(--text-muted);
+      cursor: pointer; transition: color 0.2s, background 0.2s; border-left: 2px solid transparent;
+    }
+    .sidebar-item:hover { color: var(--text); background: var(--surface2); }
+    .sidebar-item.active { color: var(--text); border-left-color: var(--red); background: var(--surface2); }
+    .sidebar-icon { font-size: 15px; width: 20px; text-align: center; }
+
+    /* ── CONTENT ── */
+    .admin-content { padding: 32px; overflow-y: auto; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .panel-title em { font-style: normal; color: var(--red); }
+    .panel-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+
+    /* ── CARDS DASHBOARD ── */
+    .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .dash-card {
+      background: var(--surface); border: 1px solid var(--border); padding: 24px;
+    }
+    .dash-card-num { font-size: 32px; font-weight: 600; color: var(--red); }
+    .dash-card-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+    /* ── FORMS ── */
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; padding: 10px 14px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); font-size: 14px;
+      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--red); }
+    .form-textarea { min-height: 100px; resize: vertical; }
+    .form-select option { background: var(--surface2); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ── BUTTONS ── */
+    .btn-save {
+      padding: 10px 24px; background: var(--green); color: #fff; font-size: 12px;
+      letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: opacity 0.2s;
+    }
+    .btn-save:hover { opacity: 0.85; }
+    .btn-danger {
+      padding: 8px 16px; background: transparent; color: var(--red); font-size: 12px;
+      letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(192,57,43,0.4);
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;
+    }
+    .btn-danger:hover { background: rgba(192,57,43,0.1); }
+    .btn-add {
+      padding: 10px 20px; background: transparent; color: var(--text); font-size: 12px;
+      letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--border-strong);
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: border-color 0.2s;
+      margin-bottom: 24px;
+    }
+    .btn-add:hover { border-color: var(--text-muted); }
+
+    /* ── MEMBRE LIST ── */
+    .membre-list { display: flex; flex-direction: column; gap: 8px; }
+    .membre-row {
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: 12px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border); padding: 14px 16px;
+    }
+    .membre-row input, .membre-row select {
+      padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none;
+      width: 100%; transition: border-color 0.2s;
+    }
+    .membre-row input:focus, .membre-row select:focus { border-color: var(--red); }
+    .membre-row select option { background: var(--surface2); }
+
+    /* ── ACTU LIST ── */
+    .actu-admin-list { display: flex; flex-direction: column; gap: 12px; }
+    .actu-admin-item {
+      background: var(--surface); border: 1px solid var(--border); padding: 20px;
+    }
+    .actu-admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .actu-admin-num { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--green); color: #fff; padding: 12px 20px;
+      font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── EXPORT ── */
+    .export-box {
+      background: var(--surface); border: 1px solid var(--border); padding: 24px; margin-top: 24px;
+    }
+    .export-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .export-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+    .copy-btn {
+      padding: 10px 20px; background: var(--red); color: #fff; font-size: 12px;
+      letter-spacing: 1px; text-transform: uppercase; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: background 0.2s;
+    }
+    .copy-btn:hover { background: var(--red-dark); }
+
+    .divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+    @media (max-width: 768px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar { display: none; }
+      .dash-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .membre-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Famille <span>Moni</span></div>
+    <div class="login-sub">Accès Administrateur</div>
+    <input type="password" id="pwd-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button onclick="doLogin()">Connexion</button>
+    <div class="login-error" id="login-error">Mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <div class="admin-nav">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="logo">Famille <span>Moni</span></div>
+      <div class="admin-badge">Admin</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="index.html" target="_blank" style="font-size:12px;color:var(--text-muted);text-decoration:none;">Voir le site ↗</a>
+      <button class="logout-btn" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="admin-layout">
+    <!-- SIDEBAR -->
+    <div class="admin-sidebar">
+      <div class="sidebar-label">Vue générale</div>
+      <div class="sidebar-item active" onclick="showPanel('dashboard', this)">
+        <span class="sidebar-icon">📊</span> Dashboard
+      </div>
+      <div class="sidebar-label">Contenu</div>
+      <div class="sidebar-item" onclick="showPanel('actualites', this)">
+        <span class="sidebar-icon">📰</span> Actualités
+      </div>
+      <div class="sidebar-item" onclick="showPanel('hero', this)">
+        <span class="sidebar-icon">🏠</span> Page d'accueil
+      </div>
+      <div class="sidebar-label">Organisation</div>
+      <div class="sidebar-item" onclick="showPanel('membres', this)">
+        <span class="sidebar-icon">👥</span> Membres
+      </div>
+      <div class="sidebar-label">Export</div>
+      <div class="sidebar-item" onclick="showPanel('export', this)">
+        <span class="sidebar-icon">💾</span> Exporter
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="panel-title">Bienvenue, <em>Donna</em> 👑</div>
+        <div class="panel-desc">Gérez le contenu du site de la Famille Moni depuis ce panneau.</div>
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-card-num" id="dash-membres">15</div>
+            <div class="dash-card-label">Membres</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-num" id="dash-actus">3</div>
+            <div class="dash-card-label">Actualités</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-num">Roxwood</div>
+            <div class="dash-card-label">Quartier</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+          Utilisez le menu à gauche pour modifier les <strong style="color:var(--text)">actualités</strong>, 
+          les <strong style="color:var(--text)">membres</strong> et les textes de la <strong style="color:var(--text)">page d'accueil</strong>.
+          Une fois vos modifications faites, allez dans <strong style="color:var(--text)">Exporter</strong> pour récupérer le code à uploader sur GitHub.
+        </p>
+      </div>
+
+      <!-- ACTUALITÉS -->
+      <div class="panel" id="panel-actualites">
+        <div class="panel-title">Gérer les <em>Actualités</em></div>
+        <div class="panel-desc">Modifiez, ajoutez ou supprimez les actualités affichées sur le site.</div>
+        <button class="btn-add" onclick="addActu()">+ Ajouter une actualité</button>
+        <div class="actu-admin-list" id="actu-list"></div>
+        <div class="divider"></div>
+        <button class="btn-save" onclick="saveActus()">✓ Enregistrer les actualités</button>
+      </div>
+
+      <!-- HERO -->
+      <div class="panel" id="panel-hero">
+        <div class="panel-title">Page d'<em>Accueil</em></div>
+        <div class="panel-desc">Modifiez le texte principal affiché sur la page d'accueil.</div>
+        <div class="form-group">
+          <label class="form-label">Sous-titre du hero</label>
+          <input type="text" class="form-input" id="hero-sub" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Texte du bouton principal</label>
+          <input type="text" class="form-input" id="hero-btn" />
+        </div>
+        <div class="divider"></div>
+        <button class="btn-save" onclick="saveHero()">✓ Enregistrer l'accueil</button>
+      </div>
+
+      <!-- MEMBRES -->
+      <div class="panel" id="panel-membres">
+        <div class="panel-title">Gérer les <em>Membres</em></div>
+        <div class="panel-desc">Ajoutez, modifiez ou supprimez des membres. Le rang est mis à jour automatiquement.</div>
+        <button class="btn-add" onclick="addMembre()">+ Ajouter un membre</button>
+        <div class="membre-list" id="membre-list"></div>
+        <div class="divider"></div>
+        <button class="btn-save" onclick="saveMembres()">✓ Enregistrer les membres</button>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="panel" id="panel-export">
+        <div class="panel-title">Exporter le <em>Site</em></div>
+        <div class="panel-desc">Récupérez les données à intégrer dans votre index.html pour mettre à jour le site sur GitHub.</div>
+        <div class="export-box">
+          <h3>📋 Données JSON exportées</h3>
+          <p>Copiez ce JSON et envoyez-le à Claude pour qu'il mette à jour automatiquement votre index.html.</p>
+          <button class="copy-btn" onclick="exportData()">Copier les données</button>
+          <pre id="export-preview" style="margin-top:16px;font-size:11px;color:var(--text-muted);background:var(--surface2);padding:16px;overflow:auto;max-height:300px;white-space:pre-wrap;display:none;"></pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const PASSWORD = 'popopo';
+
+  const RANGS = [
+    'La Donna','Braccio Destro','Anziani','Eredi','Baroni','Camerata','Vicino','Sicario','Associati'
+  ];
+
+  let data = {
+    hero: {
+      sub: "Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui.",
+      btn: "Rejoindre le Discord"
+    },
+    membres: [
+      { nom: "Lov Moni", rang: "La Donna" },
+      { nom: "Allesandro Moretti", rang: "Associati" },
+      { nom: "Andrea Moni", rang: "Associati" },
+      { nom: "Bass Carter", rang: "Associati" },
+      { nom: "Dayon Reas", rang: "Associati" },
+      { nom: "Ezio Spallow", rang: "Associati" },
+      { nom: "James Mendoza", rang: "Associati" },
+      { nom: "Javier Silva", rang: "Associati" },
+      { nom: "Javier Cruz Silva", rang: "Associati" },
+      { nom: "Jiji Goose", rang: "Associati" },
+      { nom: "Karl Larsson", rang: "Associati" },
+      { nom: "Oscar Santo", rang: "Associati" },
+      { nom: "Raymond Carter", rang: "Associati" },
+      { nom: "Tommy Dane", rang: "Associati" },
+      { nom: "Tony Moncini", rang: "Associati" }
+    ],
+    actus: [
+      { date: "Juin 29", titre: "Site officiel en ligne", texte: "Le site de la Famille Moni est maintenant en ligne. Bienvenue !", badge: "Nouveau" },
+      { date: "Juin 26", titre: "Réunion au QG", texte: "Tous les membres sont convoqués ce soir. Soyez à l'heure.", badge: "Important" },
+      { date: "Juin 18", titre: "Incident à Roxwood", texte: "Restez vigilants, des inconnus ont été vus rôder dans notre quartier.", badge: "Alerte" }
+    ]
+  };
+
+  // Charger depuis localStorage si dispo
+  const saved = localStorage.getItem('moni-admin-data');
+  if (saved) { try { data = JSON.parse(saved); } catch(e) {} }
+
+  function doLogin() {
+    const val = document.getElementById('pwd-input').value;
+    if (val === PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      initAdmin();
+    } else {
+      const err = document.getElementById('login-error');
+      err.style.display = 'block';
+      document.getElementById('pwd-input').value = '';
+      setTimeout(() => err.style.display = 'none', 3000);
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('pwd-input').value = '';
+  }
+
+  function showPanel(id, el) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  function initAdmin() {
+    renderMembres();
+    renderActus();
+    renderHero();
+    updateDash();
+  }
+
+  function updateDash() {
+    document.getElementById('dash-membres').textContent = data.membres.length;
+    document.getElementById('dash-actus').textContent = data.actus.length;
+  }
+
+  // ── HERO ──
+  function renderHero() {
+    document.getElementById('hero-sub').value = data.hero.sub;
+    document.getElementById('hero-btn').value = data.hero.btn;
+  }
+  function saveHero() {
+    data.hero.sub = document.getElementById('hero-sub').value;
+    data.hero.btn = document.getElementById('hero-btn').value;
+    saveData(); showToast('Accueil sauvegardé !');
+  }
+
+  // ── MEMBRES ──
+  function renderMembres() {
+    const list = document.getElementById('membre-list');
+    list.innerHTML = data.membres.map((m, i) => `
+      <div class="membre-row">
+        <input type="text" value="${m.nom}" placeholder="Nom du membre" onchange="data.membres[${i}].nom=this.value" />
+        <select onchange="data.membres[${i}].rang=this.value">
+          ${RANGS.map(r => `<option value="${r}" ${m.rang===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+        <button class="btn-danger" onclick="removeMembre(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+  function addMembre() {
+    data.membres.push({ nom: "", rang: "Associati" });
+    renderMembres(); updateDash();
+  }
+  function removeMembre(i) {
+    if (confirm('Supprimer ce membre ?')) { data.membres.splice(i, 1); renderMembres(); updateDash(); }
+  }
+  function saveMembres() {
+    // Sync depuis les inputs
+    document.querySelectorAll('.membre-row').forEach((row, i) => {
+      if (data.membres[i]) {
+        data.membres[i].nom = row.querySelector('input').value;
+        data.membres[i].rang = row.querySelector('select').value;
+      }
+    });
+    saveData(); showToast('Membres sauvegardés !'); updateDash();
+  }
+
+  // ── ACTUS ──
+  function renderActus() {
+    const list = document.getElementById('actu-list');
+    list.innerHTML = data.actus.map((a, i) => `
+      <div class="actu-admin-item">
+        <div class="actu-admin-header">
+          <div class="actu-admin-num">Actualité ${i+1}</div>
+          <button class="btn-danger" onclick="removeActu(${i})">✕ Supprimer</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="text" class="form-input" value="${a.date}" placeholder="ex: Juil 01" onchange="data.actus[${i}].date=this.value" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge</label>
+            <select class="form-select" onchange="data.actus[${i}].badge=this.value">
+              <option value="" ${a.badge===''?'selected':''}>Aucun</option>
+              <option value="Nouveau" ${a.badge==='Nouveau'?'selected':''}>Nouveau</option>
+              <option value="Important" ${a.badge==='Important'?'selected':''}>Important</option>
+              <option value="Alerte" ${a.badge==='Alerte'?'selected':''}>Alerte</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre</label>
+          <input type="text" class="form-input" value="${a.titre}" placeholder="Titre de l'actualité" onchange="data.actus[${i}].titre=this.value" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Texte</label>
+          <textarea class="form-textarea" placeholder="Contenu de l'actualité" onchange="data.actus[${i}].texte=this.value">${a.texte}</textarea>
+        </div>
+      </div>
+    `).join('');
+  }
+  function addActu() {
+    data.actus.unshift({ date: "", titre: "", texte: "", badge: "" });
+    renderActus(); updateDash();
+  }
+  function removeActu(i) {
+    if (confirm('Supprimer cette actualité ?')) { data.actus.splice(i, 1); renderActus(); updateDash(); }
+  }
+  function saveActus() {
+    document.querySelectorAll('.actu-admin-item').forEach((item, i) => {
+      if (data.actus[i]) {
+        const inputs = item.querySelectorAll('input, textarea, select');
+        data.actus[i].date = inputs[0].value;
+        data.actus[i].badge = inputs[1].value;
+        data.actus[i].titre = inputs[2].value;
+        data.actus[i].texte = inputs[3].value;
+      }
+    });
+    saveData(); showToast('Actualités sauvegardées !'); updateDash();
+  }
+
+  // ── SAVE / EXPORT ──
+  function saveData() { localStorage.setItem('moni-admin-data', JSON.stringify(data)); }
+
+  function exportData() {
+    const json = JSON.stringify(data, null, 2);
+    const preview = document.getElementById('export-preview');
+    preview.textContent = json;
+    preview.style.display = 'block';
+    navigator.clipboard.writeText(json).then(() => {
+      showToast('Données copiées ! Envoyez-les à Claude pour mettre à jour le site.');
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
