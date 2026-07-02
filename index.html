@@ -71,6 +71,45 @@
     .reveal-stagger.visible > *:nth-child(13) { transition-delay: 0.65s; }
     .reveal-stagger.visible > *:nth-child(14) { transition-delay: 0.7s; }
     .reveal-stagger.visible > *:nth-child(15) { transition-delay: 0.75s; }
+    /* Accessibilité : si l'utilisateur préfère moins d'animations, tout reste
+       visible immédiatement, sans mouvement ni transition. */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .reveal-stagger > *,
+      .hero-photo { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
+    }
+
+    /* ── ORGANIGRAMME ── */
+    .organigramme { margin-top: 64px; }
+    .org-title { text-align: center; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 40px; }
+    .org-title em { color: var(--red); font-style: normal; }
+    .org-tree { display: flex; flex-direction: column; align-items: center; }
+    .org-tier { display: flex; flex-direction: column; align-items: center; position: relative; }
+    .org-tier + .org-tier { margin-top: 40px; }
+    /* trait vertical reliant les niveaux */
+    .org-tier + .org-tier::before {
+      content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+      width: 2px; height: 40px; background: linear-gradient(var(--border), rgba(192,57,43,0.5));
+    }
+    .org-rank { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; }
+    .org-nodes { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .org-node {
+      display: flex; flex-direction: column; align-items: center; gap: 9px; width: 108px;
+      padding: 16px 8px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .org-node:hover { transform: translateY(-4px); border-color: var(--red); }
+    .org-ava {
+      width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-weight: 700; font-size: 15px; color: #fff;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .org-node-name { font-size: 12.5px; font-weight: 600; text-align: center; line-height: 1.3; }
+    .org-node-role { font-size: 10px; color: var(--text-dim); }
+    /* Le chef, mis en avant */
+    .org-node.donna { width: 132px; padding: 20px 10px; border-color: rgba(212,178,110,0.5); background: linear-gradient(180deg, rgba(212,178,110,0.10), var(--surface)); }
+    .org-node.donna .org-ava { width: 58px; height: 58px; font-size: 18px; box-shadow: 0 6px 20px rgba(212,178,110,0.4); }
+    .org-node.donna .org-node-name { font-size: 14px; }
+    @media (max-width: 560px) { .org-node { width: 88px; } .org-node.donna { width: 108px; } }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -844,6 +883,12 @@
     </div>
   </div>
 
+  <!-- ORGANIGRAMME -->
+  <div class="organigramme reveal" id="organigramme">
+    <div class="org-title">L'organigramme de la <em>famille</em></div>
+    <div class="org-tree" id="org-tree"></div>
+  </div>
+
   <!-- MEMBRES -->
       <div class="membres-grid reveal-stagger" style="margin-top: 48px;">
     <div class="membre-card chef" onclick="this.classList.toggle('flipped')">
@@ -1473,12 +1518,12 @@
   // puis ajoute une ligne ci-dessous. Elles se placent automatiquement
   // en éventail (gauche/droite) et s'inclinent toutes seules.
   const HERO_PHOTOS = [
-    { src: "ladonna.png",          caption: "La Donna",     w: 215 },
-    { src: "famille-villa.png",    caption: "À la villa",   w: 285 },
-    { src: "deux-hommes.png",      caption: "Les frères",   w: 260 },
-    { src: "duo-nuit.png",         caption: "Complices",    w: 255 },
-    { src: "famille-escaliers.png",caption: "Le clan",      w: 285 },
-    { src: "famille-balcon.png",   caption: "La Famiglia",  w: 285 },
+    { src: "ladonna.webp",          caption: "La Donna",     w: 215 },
+    { src: "famille-villa.webp",    caption: "À la villa",   w: 285 },
+    { src: "deux-hommes.webp",      caption: "Les frères",   w: 260 },
+    { src: "duo-nuit.webp",         caption: "Complices",    w: 255 },
+    { src: "famille-escaliers.webp",caption: "Le clan",      w: 285 },
+    { src: "famille-balcon.webp",   caption: "La Famiglia",  w: 285 },
     // Ajoute d'autres photos ici (w = largeur optionnelle en px) :
     // { src: "photo.png", caption: "Légende", w: 200 },
   ];
@@ -1504,6 +1549,34 @@
       fig.addEventListener('click', () => openLightbox(HERO_PHOTOS, i));
       wrap.appendChild(fig);
     });
+  })();
+
+  // ── ORGANIGRAMME DE LA FAMILLE ──
+  // Pour tenir l'organigramme à jour : modifie les niveaux ci-dessous
+  // (ajoute/retire un nom dans "members", dans le bon rang).
+  const ORGANIGRAMME = [
+    { rank: 'La Donna',       color: '#d4b26e', donna: true, members: ['Lov Moni'] },
+    { rank: 'Braccio Destro', color: '#c0392b', members: ['Bass Carter', 'Raymond Carter'] },
+    { rank: 'Anziani',        color: '#c07a2b', members: ['Andrea Moni'] },
+    { rank: 'Baroni',         color: '#5a7a2b', members: ['Karl Larsson', 'Oscar Santo'] },
+    { rank: 'Camerata',       color: '#5a7a2b', members: ['Ezio Spallow', 'James Mendoza'] },
+    { rank: 'Vicino',         color: '#888888', members: ['Tommy Dane'] },
+    { rank: 'Associati',      color: '#777777', members: ['Allesandro Moretti', 'Dayon Reas', 'Javier Silva', 'Javier Cruz Silva', 'Jiji Goose', 'Tony Moncini'] },
+  ];
+  (function initOrganigramme() {
+    const tree = document.getElementById('org-tree');
+    if (!tree) return;
+    const initials = n => n.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    tree.innerHTML = ORGANIGRAMME.map(tier => {
+      const nodes = tier.members.map(m =>
+        '<div class="org-node' + (tier.donna ? ' donna' : '') + '">' +
+          '<div class="org-ava" style="background:' + tier.color + (tier.donna ? ';color:#1a1206' : '') + '">' + initials(m) + '</div>' +
+          '<div class="org-node-name">' + m + '</div>' +
+          '<div class="org-node-role" style="color:' + tier.color + '">' + tier.rank + '</div>' +
+        '</div>'
+      ).join('');
+      return '<div class="org-tier"><div class="org-rank">' + tier.rank + '</div><div class="org-nodes">' + nodes + '</div></div>';
+    }).join('');
   })();
 
   // ── GALERIE + LIGHTBOX ──
