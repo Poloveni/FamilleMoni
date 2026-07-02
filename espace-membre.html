@@ -18,6 +18,10 @@
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
     a { color: inherit; }
 
+    /* Fond animé discret (Aura tricolore) derrière tout le contenu */
+    #member-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .top, .wrap { position: relative; z-index: 1; }
+
     .top {
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 32px; height: 60px; background: var(--surface);
@@ -108,6 +112,7 @@
   </style>
 </head>
 <body>
+<canvas id="member-canvas"></canvas>
 
 <div class="top">
   <div class="logo">Famille <span>Moni</span> · Espace membre</div>
@@ -413,6 +418,38 @@
   (async function init() {
     const { data } = await sb.auth.getSession();
     if (data.session) onLogged(data.session.user);
+  })();
+</script>
+
+<script>
+  // ── Fond animé "Aura tricolore" (discret) ──
+  (function memberAura() {
+    const c = document.getElementById('member-canvas');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    let W, H;
+    const BLOBS = [['0,140,69', 0.34], ['245,245,240', 0.16], ['205,33,42', 0.34]];
+    function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    let t = 0;
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      BLOBS.forEach((b, i) => {
+        const px = W / 2 + Math.sin(t * 0.6 + i * 2.1) * W * 0.3;
+        const py = H / 2 + Math.cos(t * 0.5 + i * 1.7) * H * 0.34;
+        const rad = Math.max(W, H) * (0.5 + 0.12 * Math.sin(t + i));
+        const g = ctx.createRadialGradient(px, py, 0, px, py, rad);
+        g.addColorStop(0, 'rgba(' + b[0] + ',' + b[1] + ')');
+        g.addColorStop(1, 'rgba(' + b[0] + ',0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      });
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { draw(); return; }
+    (function loop() { draw(); t += 0.004; requestAnimationFrame(loop); })();
   })();
 </script>
 </body>
