@@ -1,10 +1,8 @@
 // ════════════════════════════════════════════════════════════
 //  Fonction Edge Supabase — sync-discord-events
-//  Recopie les annonces d'événement (avec date + heure) d'un salon Discord.
-//  Gère les messages NATIFS, les EMBEDS (bots) et les messages TRANSFÉRÉS
-//  (forwards → contenu dans message_snapshots), et récupère l'image jointe.
-//
-//  Secrets : DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID
+//  Annonces d'événement (date + heure) d'un salon Discord → table "evenements".
+//  Gère messages natifs, embeds (bots) et messages TRANSFÉRÉS (message_snapshots),
+//  récupère l'image, et enregistre ligne par ligne (résilient).
 // ════════════════════════════════════════════════════════════
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -42,7 +40,6 @@ function embedsText(embeds: any[]): string[] {
   return out;
 }
 
-// Texte complet : contenu + embeds + messages transférés (snapshots).
 function fullText(msg: any): string {
   const parts: string[] = [msg.content || "", ...embedsText(msg.embeds)];
   for (const s of (msg.message_snapshots || [])) {
@@ -65,15 +62,16 @@ function imageFromEmbeds(embeds: any[]): string | null {
   }
   return null;
 }
-
-// Cherche une image (message, embeds, ou message transféré).
 function findImage(msg: any): string | null {
-  return imageFromAttachments(msg.attachments) || imageFromEmbeds(msg.embeds) ||
-    (msg.message_snapshots || []).reduce((acc: string | null, s: any) => {
-      if (acc) return acc;
+  let img = imageFromAttachments(msg.attachments) || imageFromEmbeds(msg.embeds);
+  if (!img) {
+    for (const s of (msg.message_snapshots || [])) {
       const sm = s.message || {};
-      return imageFromAttachments(sm.attachments) || imageFromEmbeds(sm.embeds);
-    }, null);
+      img = imageFromAttachments(sm.attachments) || imageFromEmbeds(sm.embeds);
+      if (img) break;
+    }
+  }
+  return img ? String(img).split("#")[0] : null; // retire un éventuel fragment #
 }
 
 function findDate(text: string) {
@@ -95,19 +93,19 @@ function findTime(text: string): string | null {
 
 function findTitle(text: string): string {
   const t = text.match(/Titre\s*:?\s*([^\n]+)/i);
-  if (t) return clean(t[1]);
+  if (t) return clean(t[1]).replace(/[^\p{L}\p{N} '’()\-]/gu, " ").replace(/\s{2,}/g, " ").trim();
   const first = clean((text.split("\n").map((l) => l.trim()).filter(Boolean)[0]) || "");
   return first
-    .replace(/[📢⚠️📅🗓️🎭🕒👥📞ℹ️💬📌🎯•→\-–—]/g, " ")
     .replace(/\d{1,2}\/\d{1,2}/g, "")
     .replace(/\d{1,2}\s*[hH]\d{0,2}/g, "")
+    .replace(/[^\p{L}\p{N} '’()\-]/gu, " ") // enlève emojis/symboles (sûr, garde lettres/chiffres)
     .replace(/\s{2,}/g, " ")
     .trim()
     .replace(/\s+(à|a|le|la|du|de|pour)$/i, "")
     .trim();
 }
 
-function detectType(text: string): string | null {
+function detectType(text: string): string {
   if (/recrut/i.test(text)) return "Recrutement";
   if (/soir[ée]e|\bbar\b|\bbal\b|f[êe]te/i.test(text)) return "Social";
   return "RP";
@@ -119,16 +117,17 @@ function toEvent(msg: any) {
   const heure = findTime(text);
   if (!date || !heure) return null;
 
+  const moisNum = Number(date.moisNum);
   return {
-    discord_id: msg.id,
-    jour: date.jour,
-    mois: MOIS[date.moisNum - 1],
-    heure,
+    discord_id: String(msg.id),
+    jour: String(date.jour),
+    mois: MOIS[moisNum - 1] ?? "",
+    heure: String(heure),
     titre: (findTitle(text) || "Événement").slice(0, 90),
     texte: clean(text.replace(/\n/g, " ")).slice(0, 300),
     type: detectType(text),
     image_url: findImage(msg),
-    ordre: date.moisNum * 100 + parseInt(date.jour, 10),
+    ordre: moisNum * 100 + parseInt(String(date.jour), 10),
   };
 }
 
@@ -154,19 +153,24 @@ Deno.serve(async () => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
-  if (events.length) {
-    const { error } = await sb.from("evenements").upsert(events, { onConflict: "discord_id" });
-    if (error) return new Response(`Erreur base: ${error.message} :: DEBUG=${JSON.stringify(events[0])}`, { status: 500 });
+  // Enregistrement ligne par ligne : une mauvaise ligne n'empêche pas les autres.
+  let ok = 0;
+  const fails: any[] = [];
+  const idsActifs: string[] = [];
+  for (const ev of events) {
+    const { error } = await sb.from("evenements").upsert(ev, { onConflict: "discord_id" });
+    if (error) fails.push({ id: ev.discord_id, msg: error.message });
+    else { ok++; idsActifs.push(ev.discord_id); }
   }
 
-  const idsActifs = events.map((e) => e.discord_id);
+  // Nettoyage : retirer les anciens événements Discord qui ne sont plus présents
   let delQuery = sb.from("evenements").delete().not("discord_id", "is", null);
   if (idsActifs.length) {
     delQuery = delQuery.not("discord_id", "in", `(${idsActifs.map((i) => `"${i}"`).join(",")})`);
   }
   await delQuery;
 
-  return new Response(JSON.stringify({ synchronises: events.length }), {
+  return new Response(JSON.stringify({ ok, total: events.length, fails }), {
     headers: { "Content-Type": "application/json" },
   });
 });
