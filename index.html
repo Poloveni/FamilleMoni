@@ -158,11 +158,34 @@
       70%  { transform: translate(-50%, -50%) scale(1);    opacity: 0.5; }
       100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.6; }
     }
-    .hero-content { position: relative; z-index: 1; max-width: 640px; animation: heroIn 1s cubic-bezier(0.16,1,0.3,1) both; }
+    .hero-content { position: relative; z-index: 2; max-width: 640px; animation: heroIn 1s cubic-bezier(0.16,1,0.3,1) both; }
     @keyframes heroIn {
       from { opacity: 0; transform: translateY(24px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    /* ── Photos "polaroïds" épinglées dans le hero ── */
+    .hero-photos { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+    .hero-photo {
+      position: absolute; width: var(--pw, 180px); margin: 0;
+      background: #f7f5ef; padding: 10px 10px 32px;
+      border-radius: 3px; box-shadow: 0 18px 42px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4);
+      transform: rotate(var(--rot, -6deg));
+      transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.45s ease;
+      pointer-events: auto; opacity: 0;
+      animation: photoIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    .hero-photo img { display: block; width: 100%; height: auto; border-radius: 2px; }
+    .hero-photo .cap {
+      position: absolute; left: 8px; right: 8px; bottom: 8px; text-align: center;
+      font-size: 13px; font-style: italic; color: #3a3a3a; letter-spacing: 0.3px;
+    }
+    .hero-photo:hover { transform: rotate(0deg) scale(1.05); box-shadow: 0 26px 60px rgba(0,0,0,0.65); z-index: 5; }
+    @keyframes photoIn {
+      from { opacity: 0; transform: rotate(var(--rot,-6deg)) translateY(30px); }
+      to   { opacity: 1; transform: rotate(var(--rot,-6deg)); }
+    }
+    /* Sur petit écran, on masque les polaroïds pour garder le hero lisible */
+    @media (max-width: 1024px) { .hero-photos { display: none; } }
     .hero-tag {
       display: inline-flex; align-items: center; gap: 10px;
       font-size: 13px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 22px;
@@ -680,6 +703,7 @@
       <a href="#membres" class="btn-ghost">Les membres</a>
     </div>
   </div>
+  <div class="hero-photos" id="hero-photos"></div>
 </section>
 
 <div class="stats-bar">
@@ -1413,6 +1437,38 @@
     }
     loop();
   }
+
+  // ── PHOTOS "POLAROÏDS" DU HERO ──
+  // Pour ajouter une photo : dépose le fichier dans le dossier du site,
+  // puis ajoute une ligne ci-dessous. Elles se placent automatiquement
+  // en éventail (gauche/droite) et s'inclinent toutes seules.
+  const HERO_PHOTOS = [
+    { src: "ladonna.png", caption: "La Donna" },
+    // { src: "photo2.png", caption: "Le Parrain" },
+    // { src: "photo3.png", caption: "Réunion de famille" },
+  ];
+  // Emplacements pré-réglés (position, inclinaison, largeur) — jusqu'à 6 photos
+  const HERO_SLOTS = [
+    { pos: "right:3%;",   top: "24%", rot: 5,  w: 178 },
+    { pos: "left:2.5%;",  top: "15%", rot: -7, w: 168 },
+    { pos: "right:7%;",   top: "6%",  rot: -4, w: 150 },
+    { pos: "left:5.5%;",  top: "50%", rot: 6,  w: 162 },
+    { pos: "right:10%;",  top: "54%", rot: 8,  w: 148 },
+    { pos: "left:9%;",    top: "5%",  rot: 4,  w: 142 },
+  ];
+  (function initHeroPhotos() {
+    const wrap = document.getElementById('hero-photos');
+    if (!wrap) return;
+    HERO_PHOTOS.forEach((p, i) => {
+      const s = HERO_SLOTS[i % HERO_SLOTS.length];
+      const fig = document.createElement('figure');
+      fig.className = 'hero-photo';
+      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + s.w + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
+      fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy">' +
+        (p.caption ? '<figcaption class="cap">' + p.caption + '</figcaption>' : '');
+      wrap.appendChild(fig);
+    });
+  })();
 
   // ── GALERIE + LIGHTBOX ──
   // Pour ajouter une photo : dépose le fichier dans le dossier du site
