@@ -1337,79 +1337,50 @@
   const canvas = document.getElementById('particles-canvas');
   if (canvas) {
     const ctx = canvas.getContext('2d');
-    // ── Réseau de particules interactif (inspiré de moni.com) ──
-    // Des points dérivent lentement et se relient entre eux ; quand la
-    // souris s'approche, des lignes se tracent vers le curseur ("grab").
-    let W, H, particles = [];
+    // ── Effet "Aura" : nappes de couleur floues qui respirent ──
+    // Des halos rouges/violets se déplacent lentement et se mélangent.
+    // La souris décale doucement les halos (parallaxe subtile).
+    let W, H;
     const hero = document.getElementById('accueil');
-    const mouse = { x: null, y: null };
-    const COLOR = '176,196,240';   // teinte des points/liens (bleu doux)
-    const LINK_DIST = 150;         // distance max de liaison entre points
-    const GRAB_DIST = 200;         // rayon d'attraction visuelle vers la souris
-    class Particle {
-      constructor() {
-        this.x = Math.random() * W;
-        this.y = Math.random() * H;
-        const a = Math.random() * Math.PI * 2;
-        this.vx = Math.cos(a) * 0.22;   // dérive très lente
-        this.vy = Math.sin(a) * 0.22;
-        this.r = Math.random() * 0.9 + 0.4;
-      }
-      update() {
-        this.x += this.vx; this.y += this.vy;
-        if (this.x < 0 || this.x > W) this.vx *= -1;
-        if (this.y < 0 || this.y > H) this.vy *= -1;
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(' + COLOR + ',0.9)';
-        ctx.fill();
-      }
-    }
+    const mouse = { x: 0.5, y: 0.5 };            // position relative (0→1)
+    // [couleur rgb, opacité max] — tricolore italien 🇮🇹
+    const BLOBS = [
+      ['0,140,69',    0.50],   // vert
+      ['245,245,240', 0.28],   // blanc (halo doux)
+      ['205,33,42',   0.50],   // rouge
+    ];
     function resize() {
       W = canvas.width = hero.offsetWidth;
       H = canvas.height = hero.offsetHeight;
-      const target = Math.min(120, Math.round((W * H) / 13000)); // densité ~ moni
-      particles = [];
-      for (let i = 0; i < target; i++) particles.push(new Particle());
     }
     resize();
     window.addEventListener('load', resize);
     window.addEventListener('resize', resize);
     hero.addEventListener('mousemove', e => {
       const rect = hero.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
+      mouse.x = (e.clientX - rect.left) / rect.width;
+      mouse.y = (e.clientY - rect.top) / rect.height;
     });
-    hero.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+    hero.addEventListener('mouseleave', () => { mouse.x = 0.5; mouse.y = 0.5; });
+    let t = 0, mx = 0.5, my = 0.5;
     function loop() {
+      // lissage du suivi souris pour une parallaxe fluide
+      mx += (mouse.x - mx) * 0.04;
+      my += (mouse.y - my) * 0.04;
       ctx.clearRect(0, 0, W, H);
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-        // liens entre points proches
-        for (let j = i + 1; j < particles.length; j++) {
-          const b = particles[j];
-          const dx = a.x - b.x, dy = a.y - b.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < LINK_DIST) {
-            ctx.strokeStyle = 'rgba(' + COLOR + ',' + (0.5 * (1 - d / LINK_DIST)).toFixed(3) + ')';
-            ctx.lineWidth = 0.5;
-            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-          }
-        }
-        // lien vers la souris (effet "grab")
-        if (mouse.x !== null) {
-          const dx = a.x - mouse.x, dy = a.y - mouse.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < GRAB_DIST) {
-            ctx.strokeStyle = 'rgba(' + COLOR + ',' + (1 - d / GRAB_DIST).toFixed(3) + ')';
-            ctx.lineWidth = 0.6;
-            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
-          }
-        }
-      }
-      for (const p of particles) { p.update(); p.draw(); }
+      ctx.globalCompositeOperation = 'lighter';   // les couleurs se superposent en lumière
+      BLOBS.forEach((b, i) => {
+        const px = W / 2 + Math.sin(t * 0.6 + i * 2.1) * W * 0.28 + (mx - 0.5) * W * 0.15;
+        const py = H / 2 + Math.cos(t * 0.5 + i * 1.7) * H * 0.32 + (my - 0.5) * H * 0.15;
+        const rad = Math.min(W, H) * (0.55 + 0.12 * Math.sin(t + i));
+        const g = ctx.createRadialGradient(px, py, 0, px, py, rad);
+        g.addColorStop(0, 'rgba(' + b[0] + ',' + b[1] + ')');
+        g.addColorStop(1, 'rgba(' + b[0] + ',0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      });
+      ctx.globalCompositeOperation = 'source-over';
+      t += 0.005;
       requestAnimationFrame(loop);
     }
     loop();
