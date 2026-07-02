@@ -416,6 +416,17 @@
     .recrutement-cta p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
 
     #galerie { background: var(--bg); }
+    /* ── SECTION LE QG ── */
+    #qg { background: var(--surface); }
+    .qg-wrap { max-width: 900px; margin: 0 auto; }
+    .qg-wrap img { width: 100%; display: block; border: 1px solid var(--border); cursor: pointer; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .qg-wrap img:hover { transform: scale(1.01); }
+    .qg-placeholder {
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      min-height: 260px; padding: 40px; border: 1px dashed var(--border-strong);
+      color: var(--text-dim); font-size: 14px; letter-spacing: 0.5px; background: var(--bg);
+    }
+
     .galerie-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
     .galerie-item {
       position: relative; overflow: hidden; aspect-ratio: 16/9;
@@ -752,6 +763,7 @@
     <li><a href="#histoire">Histoire</a></li>
     <li><a href="#membres">Membres</a></li>
     <li><a href="#galerie">Galerie</a></li>
+    <li><a href="#qg">Le QG</a></li>
     <li><a href="#recrutement">Recrutement</a></li>
     <li><a href="#evenements">Événements</a></li>
     <li><a href="#discord">Discord</a></li>
@@ -1211,6 +1223,15 @@
   <p class="section-desc">Des screens de nos meilleures sessions RP à Roxwood et Los Santos.</p>
   <div class="galerie-grid reveal-stagger" id="galerie-grid"></div>
   <p style="font-size:13px; color:var(--text-dim); margin-top:20px;">Envoyez vos plus beaux screens sur le Discord pour les voir apparaître ici !</p>
+</section>
+
+<section id="qg">
+  <div class="section-label">Notre repaire</div>
+  <h2 class="section-title">Le <em>QG</em></h2>
+  <p class="section-desc">C'est ici que la famille se réunit. Voici où nous trouver à Roxwood.</p>
+  <div class="qg-wrap reveal" id="qg-wrap">
+    <div class="qg-placeholder">📍 La position du QG arrive bientôt…</div>
+  </div>
 </section>
 
 <!-- LIGHTBOX -->
