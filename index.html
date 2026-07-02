@@ -1337,9 +1337,9 @@
   const canvas = document.getElementById('particles-canvas');
   if (canvas) {
     const ctx = canvas.getContext('2d');
-    // ── Effet "Aura" : nappes de couleur floues qui respirent ──
-    // Des halos rouges/violets se déplacent lentement et se mélangent.
-    // La souris décale doucement les halos (parallaxe subtile).
+    // ── Effet "Aura + Poussière d'or" ──
+    // Nappes de couleur tricolores qui respirent (parallaxe souris),
+    // ponctuées de fins éclats dorés qui montent et scintillent.
     let W, H;
     const hero = document.getElementById('accueil');
     const mouse = { x: 0.5, y: 0.5 };            // position relative (0→1)
@@ -1349,9 +1349,24 @@
       ['245,245,240', 0.28],   // blanc (halo doux)
       ['205,33,42',   0.50],   // rouge
     ];
+    const GOLD = '214,178,110';                  // teinte de la poussière d'or
+    let gold = [];
+    function mkGold(init) {
+      return {
+        x: Math.random() * W,
+        y: init ? Math.random() * H : H + 5,
+        s: Math.random() * 1.4 + 0.5,            // taille du grain
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: -(Math.random() * 0.45 + 0.18),      // monte doucement
+        ph: Math.random() * 7, sp: Math.random() * 0.05 + 0.02   // scintillement
+      };
+    }
     function resize() {
       W = canvas.width = hero.offsetWidth;
       H = canvas.height = hero.offsetHeight;
+      const n = Math.min(40, Math.round((W * H) / 30000));   // densité d'or (dosée)
+      gold = [];
+      for (let i = 0; i < n; i++) gold.push(mkGold(true));
     }
     resize();
     window.addEventListener('load', resize);
@@ -1368,6 +1383,7 @@
       mx += (mouse.x - mx) * 0.04;
       my += (mouse.y - my) * 0.04;
       ctx.clearRect(0, 0, W, H);
+      // 1) nappes de couleur (aura)
       ctx.globalCompositeOperation = 'lighter';   // les couleurs se superposent en lumière
       BLOBS.forEach((b, i) => {
         const px = W / 2 + Math.sin(t * 0.6 + i * 2.1) * W * 0.28 + (mx - 0.5) * W * 0.15;
@@ -1380,6 +1396,18 @@
         ctx.fillRect(0, 0, W, H);
       });
       ctx.globalCompositeOperation = 'source-over';
+      // 2) poussière d'or par-dessus
+      gold.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy; p.ph += p.sp;
+        if (p.y < -5) gold[i] = mkGold(false);
+        const tw = 0.35 + 0.55 * Math.abs(Math.sin(p.ph));   // scintillement
+        ctx.save();
+        ctx.globalAlpha = tw;
+        ctx.shadowBlur = 6; ctx.shadowColor = 'rgb(' + GOLD + ')';
+        ctx.fillStyle = 'rgb(' + GOLD + ')';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
       t += 0.005;
       requestAnimationFrame(loop);
     }
