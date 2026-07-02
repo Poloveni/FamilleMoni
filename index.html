@@ -184,8 +184,8 @@
       from { opacity: 0; transform: rotate(var(--rot,-6deg)) translateY(30px); }
       to   { opacity: 1; transform: rotate(var(--rot,-6deg)); }
     }
-    /* Sur petit écran, on masque les polaroïds pour garder le hero lisible */
-    @media (max-width: 1024px) { .hero-photos { display: none; } }
+    /* Sous 1200px, on masque les polaroïds pour garder le hero lisible */
+    @media (max-width: 1200px) { .hero-photos { display: none; } }
     .hero-tag {
       display: inline-flex; align-items: center; gap: 10px;
       font-size: 13px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 22px;
@@ -1443,9 +1443,14 @@
   // puis ajoute une ligne ci-dessous. Elles se placent automatiquement
   // en éventail (gauche/droite) et s'inclinent toutes seules.
   const HERO_PHOTOS = [
-    { src: "ladonna.png", caption: "La Donna" },
-    // { src: "photo2.png", caption: "Le Parrain" },
-    // { src: "photo3.png", caption: "Réunion de famille" },
+    { src: "ladonna.png",          caption: "La Donna" },
+    { src: "famille-villa.png",    caption: "À la villa",   w: 235 },
+    { src: "deux-hommes.png",      caption: "Les frères",   w: 215 },
+    { src: "duo-nuit.png",         caption: "Complices",    w: 210 },
+    { src: "famille-escaliers.png",caption: "Le clan",      w: 235 },
+    { src: "famille-balcon.png",   caption: "La Famiglia",  w: 235 },
+    // Ajoute d'autres photos ici (w = largeur optionnelle en px) :
+    // { src: "photo.png", caption: "Légende", w: 200 },
   ];
   // Emplacements pré-réglés (position, inclinaison, largeur) — jusqu'à 6 photos
   const HERO_SLOTS = [
@@ -1463,7 +1468,7 @@
       const s = HERO_SLOTS[i % HERO_SLOTS.length];
       const fig = document.createElement('figure');
       fig.className = 'hero-photo';
-      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + s.w + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
+      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + (p.w || s.w) + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
       fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy">' +
         (p.caption ? '<figcaption class="cap">' + p.caption + '</figcaption>' : '');
       wrap.appendChild(fig);
