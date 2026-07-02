@@ -418,9 +418,11 @@
     #galerie { background: var(--bg); }
     /* ── SECTION LE QG ── */
     #qg { background: var(--surface); }
-    .qg-wrap { max-width: 900px; margin: 0 auto; }
-    .qg-wrap img { width: 100%; display: block; border: 1px solid var(--border); cursor: pointer; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
-    .qg-wrap img:hover { transform: scale(1.01); }
+    .qg-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }
+    .qg-item { margin: 0; cursor: pointer; }
+    .qg-item img { width: 100%; display: block; border: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .qg-item:hover img { transform: scale(1.02); }
+    .qg-item figcaption { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
     .qg-placeholder {
       display: flex; align-items: center; justify-content: center; text-align: center;
       min-height: 260px; padding: 40px; border: 1px dashed var(--border-strong);
@@ -1229,9 +1231,7 @@
   <div class="section-label">Notre repaire</div>
   <h2 class="section-title">Le <em>QG</em></h2>
   <p class="section-desc">C'est ici que la famille se réunit. Voici où nous trouver à Roxwood.</p>
-  <div class="qg-wrap reveal" id="qg-wrap">
-    <div class="qg-placeholder">📍 La position du QG arrive bientôt…</div>
-  </div>
+  <div class="qg-wrap reveal" id="qg-wrap"></div>
 </section>
 
 <!-- LIGHTBOX -->
@@ -1669,6 +1669,27 @@
       ).join('');
       return '<div class="org-tier"><div class="org-rank">' + tier.rank + '</div><div class="org-nodes">' + nodes + '</div></div>';
     }).join('');
+  })();
+
+  // ── SECTION LE QG ──
+  // Ajoute/retire des photos ici (elles s'affichent côte à côte, clic = plein écran).
+  const QG_PHOTOS = [
+    { src: "qg-carte.webp", caption: "Position sur la carte" },
+    { src: "qg-vue.webp", caption: "Le QG — vue en jeu" },
+  ];
+  (function initQG() {
+    const wrap = document.getElementById('qg-wrap');
+    if (!wrap) return;
+    if (!QG_PHOTOS.length) {
+      wrap.innerHTML = '<div class="qg-placeholder">📍 La position du QG arrive bientôt…</div>';
+      return;
+    }
+    wrap.innerHTML = QG_PHOTOS.map((p, i) =>
+      '<figure class="qg-item" data-index="' + i + '"><img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy"><figcaption>' + (p.caption || '') + '</figcaption></figure>'
+    ).join('');
+    wrap.querySelectorAll('.qg-item').forEach(it => {
+      it.addEventListener('click', () => openLightbox(QG_PHOTOS, parseInt(it.dataset.index, 10)));
+    });
   })();
 
   // ── GALERIE + LIGHTBOX ──
