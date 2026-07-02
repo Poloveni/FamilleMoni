@@ -448,7 +448,6 @@
       });
       ctx.globalCompositeOperation = 'source-over';
     }
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { draw(); return; }
     (function loop() { draw(); t += 0.004; requestAnimationFrame(loop); })();
   })();
 </script>
