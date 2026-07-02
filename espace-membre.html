@@ -144,6 +144,18 @@
       <button class="btn ghost" style="width:auto;" onclick="doLogout()">Déconnexion</button>
     </div>
 
+    <!-- Écran affiché tant que le compte n'est pas validé -->
+    <div id="pending-screen" style="display:none;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:40px; margin-bottom:8px;">⏳</div>
+        <div class="section-t" style="margin-bottom:8px;">Compte en attente de validation</div>
+        <p style="color:var(--text-muted); font-size:14px; line-height:1.6; max-width:440px; margin:0 auto;">
+          Ton compte a bien été créé, mais il doit être <strong style="color:var(--text)">validé par un administrateur</strong> avant que tu puisses accéder à ton profil, aux événements et au serveur principal. Reviens un peu plus tard !
+        </p>
+      </div>
+    </div>
+
+    <div id="member-content">
     <div class="card">
       <div class="section-t">Mon profil</div>
       <div class="profil-grid">
@@ -172,6 +184,7 @@
       <div class="section-t">Événements — réservé aux membres</div>
       <div id="events-holder"><div class="locked">Chargement…</div></div>
     </div>
+    </div><!-- /member-content -->
   </div>
 
 </div>
@@ -277,6 +290,20 @@
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('member-screen').style.display = 'block';
     document.getElementById('who-email').textContent = user.email;
+
+    // Enregistre le compte (en attente par défaut) pour que l'admin le voie.
+    await sb.from('comptes').upsert({ id: user.id, email: user.email });
+    // Vérifie si le compte est validé par un admin.
+    const { data: compte } = await sb.from('comptes').select('approuve').eq('id', user.id).maybeSingle();
+    const approuve = compte && compte.approuve;
+
+    if (!approuve) {
+      document.getElementById('member-content').style.display = 'none';
+      document.getElementById('pending-screen').style.display = 'block';
+      return;
+    }
+    document.getElementById('pending-screen').style.display = 'none';
+    document.getElementById('member-content').style.display = 'block';
     await loadProfil();
     await loadEvents();
   }
