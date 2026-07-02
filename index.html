@@ -171,7 +171,7 @@
       border-radius: 3px; box-shadow: 0 18px 42px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4);
       transform: rotate(var(--rot, -6deg));
       transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.45s ease;
-      pointer-events: auto; opacity: 0;
+      pointer-events: auto; cursor: pointer; opacity: 0;
       animation: photoIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
     }
     .hero-photo img { display: block; width: 100%; height: auto; border-radius: 2px; }
@@ -1438,6 +1438,36 @@
     loop();
   }
 
+  // ── LIGHTBOX partagée (galerie + photos du hero) ──
+  // openLightbox(liste, index) ouvre n'importe quel set de photos en plein écran.
+  const openLightbox = (function () {
+    const lb = document.getElementById('lightbox');
+    if (!lb) return function () {};
+    const lbImg = document.getElementById('lb-img');
+    const lbCap = document.getElementById('lb-caption');
+    let items = [], idx = 0;
+    function show(i) {
+      idx = (i + items.length) % items.length;
+      const it = items[idx];
+      lbImg.src = it.src; lbImg.alt = it.caption || ''; lbCap.textContent = it.caption || '';
+    }
+    function close() { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); }
+    document.getElementById('lb-close').addEventListener('click', close);
+    document.getElementById('lb-prev').addEventListener('click', () => show(idx - 1));
+    document.getElementById('lb-next').addEventListener('click', () => show(idx + 1));
+    lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+    document.addEventListener('keydown', (e) => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') show(idx - 1);
+      else if (e.key === 'ArrowRight') show(idx + 1);
+    });
+    return function (list, i) {
+      items = list; show(i || 0);
+      lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false');
+    };
+  })();
+
   // ── PHOTOS "POLAROÏDS" DU HERO ──
   // Pour ajouter une photo : dépose le fichier dans le dossier du site,
   // puis ajoute une ligne ci-dessous. Elles se placent automatiquement
@@ -1471,6 +1501,7 @@
       fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + (p.w || s.w) + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
       fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy">' +
         (p.caption ? '<figcaption class="cap">' + p.caption + '</figcaption>' : '');
+      fig.addEventListener('click', () => openLightbox(HERO_PHOTOS, i));
       wrap.appendChild(fig);
     });
   })();
@@ -1499,34 +1530,9 @@
       </div>
     `).join('');
 
-    // Lightbox
-    const lb = document.getElementById('lightbox');
-    const lbImg = document.getElementById('lb-img');
-    const lbCap = document.getElementById('lb-caption');
-    let current = 0;
-
-    function show(i) {
-      current = (i + GALERIE.length) % GALERIE.length;
-      const g = GALERIE[current];
-      lbImg.src = g.src;
-      lbImg.alt = g.caption || '';
-      lbCap.textContent = g.caption || '';
-    }
-    function open(i) { show(i); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); }
-    function close() { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); }
-
+    // Clic sur une vignette → lightbox partagée
     grid.querySelectorAll('.galerie-item').forEach(item => {
-      item.addEventListener('click', () => open(parseInt(item.dataset.index, 10)));
-    });
-    document.getElementById('lb-close').addEventListener('click', close);
-    document.getElementById('lb-prev').addEventListener('click', () => show(current - 1));
-    document.getElementById('lb-next').addEventListener('click', () => show(current + 1));
-    lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
-    document.addEventListener('keydown', (e) => {
-      if (!lb.classList.contains('open')) return;
-      if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowLeft') show(current - 1);
-      else if (e.key === 'ArrowRight') show(current + 1);
+      item.addEventListener('click', () => openLightbox(GALERIE, parseInt(item.dataset.index, 10)));
     });
   })();
 
