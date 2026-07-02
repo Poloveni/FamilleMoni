@@ -185,6 +185,20 @@
       <div id="events-holder"><div class="locked">Chargement…</div></div>
     </div>
     </div><!-- /member-content -->
+
+    <!-- Ajout de photos à la galerie (ouvert à tout compte connecté) -->
+    <div class="card">
+      <div class="section-t">Ajouter une photo à la galerie</div>
+      <p class="hint" style="margin-bottom:14px;">Partage tes meilleurs screenshots RP — ils apparaissent aussitôt dans la galerie du site.</p>
+      <div class="file-row">
+        <label class="file-label" for="galerie-input">Choisir une image</label>
+        <input type="file" id="galerie-input" accept="image/*" onchange="onGalerieChosen(event)" />
+      </div>
+      <input type="text" id="galerie-caption" placeholder="Légende (optionnelle)" style="margin-top:12px;" />
+      <div id="galerie-preview" style="margin-top:12px;"></div>
+      <button class="btn green" style="margin-top:12px;" onclick="uploadGalerie()">↑ Publier dans la galerie</button>
+      <div class="msg" id="galerie-msg"></div>
+    </div>
   </div>
 
 </div>
@@ -347,6 +361,35 @@
     if (currentPhotoUrl) setAvatarPhoto(currentPhotoUrl + '?t=' + Date.now());
     toast('Profil enregistré !');
     showMsg('profil-msg', 'Ton profil est à jour. Ta photo apparaîtra sur le site.', true);
+  }
+
+  // ── Ajout d'une photo à la galerie ──
+  let galeriePendingFile = null;
+  function onGalerieChosen(e) {
+    const f = e.target.files[0];
+    galeriePendingFile = f || null;
+    const prev = document.getElementById('galerie-preview');
+    prev.innerHTML = f ? '<img src="' + URL.createObjectURL(f) + '" style="max-width:200px;border-radius:8px;" />' : '';
+  }
+  async function uploadGalerie() {
+    if (!currentUser) { showMsg('galerie-msg', 'Tu dois être connecté.', false); return; }
+    if (!galeriePendingFile) { showMsg('galerie-msg', 'Choisis d’abord une image.', false); return; }
+    hideMsg('galerie-msg');
+    const file = galeriePendingFile;
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = currentUser.id + '/' + Date.now() + '.' + ext;
+    const up = await sb.storage.from('galerie').upload(path, file, { cacheControl: '3600' });
+    if (up.error) { showMsg('galerie-msg', 'Erreur upload : ' + up.error.message, false); return; }
+    const pub = sb.storage.from('galerie').getPublicUrl(path);
+    const caption = document.getElementById('galerie-caption').value.trim();
+    const { error } = await sb.from('galerie_photos').insert({ url: pub.data.publicUrl, caption: caption, user_id: currentUser.id });
+    if (error) { showMsg('galerie-msg', 'Erreur : ' + error.message, false); return; }
+    galeriePendingFile = null;
+    document.getElementById('galerie-input').value = '';
+    document.getElementById('galerie-caption').value = '';
+    document.getElementById('galerie-preview').innerHTML = '';
+    toast('Photo publiée !');
+    showMsg('galerie-msg', 'Photo publiée ! Elle apparaît maintenant dans la galerie du site.', true);
   }
 
   async function loadEvents() {

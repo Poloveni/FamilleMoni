@@ -417,6 +417,15 @@
       pointer-events: none;
     }
     .galerie-item:hover::after { opacity: 1; transform: translateY(0); }
+    /* Bouton de suppression (visible uniquement pour l'admin connecté) */
+    .galerie-del {
+      position: absolute; top: 6px; right: 6px; z-index: 3;
+      width: 26px; height: 26px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(15,15,15,0.75); color: #fff; font-size: 16px; line-height: 1;
+      opacity: 0; transition: opacity 0.2s ease, background 0.2s ease;
+    }
+    .galerie-item:hover .galerie-del { opacity: 1; }
+    .galerie-del:hover { background: var(--red); }
     .galerie-empty {
       grid-column: 1 / -1; padding: 48px 24px; text-align: center;
       border: 1px dashed var(--border-strong); color: var(--text-dim);
@@ -1588,26 +1597,32 @@
     // { src: "screen2.png", caption: "Réunion au QG" },
   ];
 
-  (function initGalerie() {
+  // La galerie combine les photos "en dur" (GALERIE) + celles envoyées par
+  // les membres via l'espace membre (chargées depuis Supabase, voir #moni-supabase).
+  let galerieItems = GALERIE.slice();
+  function renderGalerie() {
     const grid = document.getElementById('galerie-grid');
     if (!grid) return;
-
-    if (!GALERIE.length) {
+    if (!galerieItems.length) {
       grid.innerHTML = '<div class="galerie-empty">Aucune photo pour le moment — envoyez vos screens sur le <span>Discord</span> !</div>';
       return;
     }
-
-    grid.innerHTML = GALERIE.map((g, i) => `
-      <div class="galerie-item${g.large ? ' large' : ''}" data-index="${i}" data-caption="${g.caption || ''}">
+    grid.innerHTML = galerieItems.map((g, i) => `
+      <div class="galerie-item${g.large ? ' large' : ''}" data-index="${i}" data-caption="${g.caption || ''}"${g.id ? ` data-photo-id="${g.id}"` : ''}>
         <img src="${g.src}" alt="${g.caption || 'Photo Famille Moni'}" loading="lazy" />
       </div>
     `).join('');
-
-    // Clic sur une vignette → lightbox partagée
     grid.querySelectorAll('.galerie-item').forEach(item => {
-      item.addEventListener('click', () => openLightbox(GALERIE, parseInt(item.dataset.index, 10)));
+      item.addEventListener('click', () => openLightbox(galerieItems, parseInt(item.dataset.index, 10)));
     });
-  })();
+  }
+  // Point d'entrée utilisé par le script Supabase pour injecter les photos des membres
+  window.addGaleriePhotos = function (items) {
+    if (!items || !items.length) return;
+    galerieItems = galerieItems.concat(items);
+    renderGalerie();
+  };
+  renderGalerie();
 
   // ── SUPABASE : voir le script dédié en fin de page (#moni-supabase) ──
 
@@ -1651,6 +1666,39 @@
       if (res.error || !res.data) return;
       res.data.forEach(function (p) { if (p.nom && p.photo_url) applyPhoto(p.nom, p.photo_url); });
     });
+
+    // Galerie : photos envoyées par les membres → injectées dans la galerie du site
+    function loadGalerie() {
+      sb.from('galerie_photos').select('*').order('created_at', { ascending: false }).then(function (res) {
+        if (res.error || !res.data || !res.data.length) return;
+        if (window.addGaleriePhotos) {
+          window.addGaleriePhotos(res.data.map(function (p) {
+            return { src: p.url, caption: p.caption || '', id: p.id };
+          }));
+        }
+        // Bouton de suppression pour l'admin uniquement
+        sb.auth.getSession().then(function (r) {
+          var session = r.data && r.data.session;
+          var isAdmin = session && session.user && session.user.email === 'syne@live.fr';
+          if (!isAdmin) return;
+          document.querySelectorAll('.galerie-item[data-photo-id]').forEach(function (el) {
+            if (el.querySelector('.galerie-del')) return;
+            var btn = document.createElement('button');
+            btn.className = 'galerie-del'; btn.innerHTML = '&times;'; btn.title = 'Supprimer cette photo';
+            btn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              if (!confirm('Supprimer définitivement cette photo de la galerie ?')) return;
+              sb.from('galerie_photos').delete().eq('id', el.dataset.photoId).then(function (d) {
+                if (d.error) { alert('Erreur : ' + d.error.message); return; }
+                el.remove();
+              });
+            });
+            el.appendChild(btn);
+          });
+        });
+      });
+    }
+    loadGalerie();
 
     // Événements : visibles uniquement pour les membres connectés
     var locked = document.getElementById('events-locked');
