@@ -1787,7 +1787,7 @@
           var approuve = c.data && c.data.approuve;
           toggleDiscord(!!approuve);
           if (!approuve) { if (locked) locked.style.display = 'flex'; if (grid) grid.style.display = 'none'; return; }
-        sb.from('evenements').select('*').order('ordre', { ascending: true }).then(function (ev) {
+        sb.from('evenements').select('*').order('ordre', { ascending: false }).then(function (ev) {
           if (ev.error) return;
           if (locked) locked.style.display = 'none';
           if (grid) {

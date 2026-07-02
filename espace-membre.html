@@ -394,7 +394,7 @@
 
   async function loadEvents() {
     const holder = document.getElementById('events-holder');
-    const { data, error } = await sb.from('evenements').select('*').order('ordre', { ascending: true });
+    const { data, error } = await sb.from('evenements').select('*').order('ordre', { ascending: false });
     if (error) { holder.innerHTML = '<div class="locked">Impossible de charger les événements.</div>'; return; }
     if (!data || !data.length) { holder.innerHTML = '<div class="locked">Aucun événement pour le moment.</div>'; return; }
     holder.innerHTML = '<div class="events-grid">' + data.map(e => `
