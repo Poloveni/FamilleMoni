@@ -432,6 +432,7 @@
     .event-time { font-size: 12px; color: var(--red); letter-spacing: 0.5px; }
     .event-time::before { content: '🕒 '; }
     .event-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+    .event-img { width: 100%; max-height: 200px; object-fit: cover; margin-top: 10px; border: 1px solid var(--border); display: block; cursor: pointer; }
     .event-type {
       display: inline-block; align-self: flex-start; font-size: 9px; letter-spacing: 1px;
       text-transform: uppercase; padding: 2px 8px; margin-top: 2px;
@@ -1477,7 +1478,9 @@
                 '</span><span class="event-month">' + (e.mois||'') + '</span></div><div class="event-body">' +
                 (e.type ? '<span class="event-type">' + e.type + '</span>' : '') +
                 '<div class="event-title">' + (e.titre||'') + '</div><div class="event-time">' + (e.heure||'') +
-                '</div><div class="event-desc">' + (e.texte||'') + '</div></div></div>';
+                '</div><div class="event-desc">' + (e.texte||'') + '</div>' +
+                (e.image_url ? '<img class="event-img" src="' + e.image_url + '" alt="" loading="lazy">' : '') +
+                '</div></div>';
             }).join('');
           }
         });
