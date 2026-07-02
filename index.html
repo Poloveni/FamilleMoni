@@ -158,6 +158,27 @@
     #back-to-top:hover { background: var(--red-dark); transform: translateY(-3px); }
     @media (max-width: 640px) { #back-to-top { bottom: 16px; right: 16px; } }
 
+    /* ── Bouton musique (couper / activer) ── */
+    #music-toggle {
+      position: fixed; bottom: 24px; left: 24px; z-index: 200;
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(15,15,15,0.82); color: var(--text); border: 1px solid var(--border);
+      cursor: pointer; font-size: 18px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      transition: background 0.25s ease, transform 0.2s ease, border-color 0.2s ease;
+    }
+    #music-toggle:hover { border-color: var(--red); transform: scale(1.07); }
+    #music-toggle.muted { color: var(--text-dim); }
+    /* petit halo qui pulse tant que la musique joue */
+    #music-toggle.playing::after {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 1px solid rgba(192,57,43,0.5); animation: musicPulse 1.8s ease-out infinite;
+    }
+    @keyframes musicPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
+    @media (max-width: 640px) { #music-toggle { bottom: 16px; left: 16px; width: 42px; height: 42px; } }
+    @media (prefers-reduced-motion: reduce) { #music-toggle.playing::after { animation: none; opacity: 0; } }
+
     #accueil {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
       text-align: center; padding: 100px 32px 60px; position: relative; overflow: hidden;
@@ -720,6 +741,10 @@
 
 <div id="progress-bar" style="position:fixed;top:0;left:0;height:2px;width:0%;background:var(--red);z-index:9999;transition:width 0.1s linear;box-shadow:0 0 8px rgba(192,57,43,0.8);"></div>
 <button id="back-to-top" aria-label="Retour en haut" title="Retour en haut">&#8593;</button>
+
+<!-- Musique d'ambiance (dépose ton fichier "musique.mp3" dans le dossier du site) -->
+<audio id="bg-music" src="musique.mp3" loop preload="auto"></audio>
+<button id="music-toggle" aria-label="Couper ou activer la musique" title="Musique"><span id="music-icon">&#128266;</span></button>
 <nav>
   <div class="logo">Famille <span>Moni</span></div>
   <ul class="nav-links" id="navLinks">
@@ -1323,6 +1348,43 @@
     if (navEl) navEl.classList.toggle('scrolled', window.scrollY > 20);
   });
   if (backTop) backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // ── MUSIQUE D'AMBIANCE (avec bouton couper / activer) ──
+  (function bgMusic() {
+    const audio = document.getElementById('bg-music');
+    const btn = document.getElementById('music-toggle');
+    const icon = document.getElementById('music-icon');
+    if (!audio || !btn) return;
+    audio.volume = 0.35;   // volume doux
+    // Préférence mémorisée d'une visite à l'autre (par défaut : musique activée)
+    let muted = false;
+    try { muted = localStorage.getItem('moni-music-muted') === '1'; } catch (e) {}
+    function render() {
+      audio.muted = muted;
+      icon.innerHTML = muted ? '&#128263;' : '&#128266;';   // 🔇 / 🔊
+      btn.classList.toggle('muted', muted);
+      btn.classList.toggle('playing', !muted && !audio.paused);
+      btn.title = muted ? 'Activer la musique' : 'Couper la musique';
+    }
+    function tryPlay() { const p = audio.play(); if (p) p.then(render).catch(() => {}); }
+    render();
+    tryPlay();
+    // Si le navigateur bloque le son au chargement, on lance au 1er geste
+    function firstGesture() {
+      tryPlay();
+      ['pointerdown', 'keydown', 'scroll'].forEach(ev => window.removeEventListener(ev, firstGesture));
+    }
+    ['pointerdown', 'keydown', 'scroll'].forEach(ev => window.addEventListener(ev, firstGesture, { passive: true }));
+    audio.addEventListener('playing', render);
+    audio.addEventListener('pause', render);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      muted = !muted;
+      try { localStorage.setItem('moni-music-muted', muted ? '1' : '0'); } catch (e2) {}
+      if (!muted) tryPlay();
+      render();
+    });
+  })();
 
   // ── SCROLL-SPY (menu actif) ──
   const spySections = document.querySelectorAll('section[id]');
