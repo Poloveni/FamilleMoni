@@ -178,6 +178,21 @@
 
     .divider { height: 1px; background: var(--border); margin: 28px 0; }
 
+    /* ── INSCRIPTIONS ── */
+    .msg { font-size: 13px; padding: 8px 12px; display: none; }
+    .msg.error { display: block; color: var(--red); background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3); }
+    .msg.ok { display: block; color: var(--green); background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); }
+    .insc-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      background: var(--surface); border: 1px solid var(--border); padding: 14px 18px; margin-bottom: 8px;
+    }
+    .insc-email { font-size: 14px; font-weight: 600; word-break: break-all; }
+    .insc-state { font-size: 12px; margin-top: 3px; }
+    .insc-state.attente { color: var(--orange); }
+    .insc-state.ok { color: var(--green); }
+    .insc-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .insc-count { font-size: 12px; color: var(--text-dim); }
+
     @media (max-width: 768px) {
       .admin-layout { grid-template-columns: 1fr; }
       .admin-sidebar { display: none; }
@@ -233,6 +248,10 @@
       <div class="sidebar-label">Organisation</div>
       <div class="sidebar-item" onclick="showPanel('membres', this)">
         <span class="sidebar-icon">👥</span> Membres
+      </div>
+      <div class="sidebar-label">Espace membre</div>
+      <div class="sidebar-item" onclick="showPanel('inscriptions', this)">
+        <span class="sidebar-icon">✅</span> Inscriptions
       </div>
       <div class="sidebar-label">Export</div>
       <div class="sidebar-item" onclick="showPanel('export', this)">
@@ -337,12 +356,36 @@
         </div>
       </div>
 
+      <!-- INSCRIPTIONS -->
+      <div class="panel" id="panel-inscriptions">
+        <div class="panel-title">Valider les <em>Inscriptions</em></div>
+        <div class="panel-desc">Approuve ou refuse les comptes créés sur l'espace membre. Tant qu'un compte n'est pas approuvé, la personne n'a accès à rien.</div>
+
+        <!-- connexion admin (Supabase) -->
+        <div id="insc-auth" style="display:none; max-width:380px;">
+          <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:16px;">
+            Connecte-toi avec ton <strong style="color:var(--text)">compte admin</strong> (le même que sur l'espace membre) pour gérer les inscriptions.
+          </p>
+          <label class="form-label">Email admin</label>
+          <input type="email" class="form-input" id="insc-email" placeholder="ton@email.com" style="margin-bottom:12px;" />
+          <label class="form-label">Mot de passe</label>
+          <input type="password" class="form-input" id="insc-pwd" placeholder="••••••••" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')inscLogin()" />
+          <button class="btn-save" onclick="inscLogin()">Se connecter</button>
+          <div class="msg" id="insc-msg" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- liste des inscriptions -->
+        <div id="insc-list" style="display:none;"></div>
+      </div>
+
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
   // Le mot de passe n'est plus stocké en clair : seule son empreinte SHA-256 figure ici.
   // Note : sur un site 100% statique, aucun mot de passe côté navigateur n'est vraiment
@@ -425,6 +468,73 @@
     document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
     document.getElementById('panel-' + id).classList.add('active');
     el.classList.add('active');
+    if (id === 'inscriptions') initInscriptions();
+  }
+
+  // ── INSCRIPTIONS (approbation des comptes, via Supabase) ──
+  const ADMIN_EMAIL = 'syne@live.fr';
+  const SB = (window.supabase && window.SUPABASE_URL)
+    ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY) : null;
+
+  async function initInscriptions() {
+    const authBox = document.getElementById('insc-auth');
+    const listBox = document.getElementById('insc-list');
+    if (!SB) { listBox.style.display = 'block'; listBox.innerHTML = '<p style="color:var(--red)">Supabase non chargé.</p>'; return; }
+    const { data: s } = await SB.auth.getSession();
+    const email = s.session && s.session.user.email;
+    if (email === ADMIN_EMAIL) {
+      authBox.style.display = 'none';
+      listBox.style.display = 'block';
+      renderInscriptions();
+    } else {
+      authBox.style.display = 'block';
+      listBox.style.display = 'none';
+    }
+  }
+
+  async function inscLogin() {
+    const email = document.getElementById('insc-email').value.trim();
+    const pwd = document.getElementById('insc-pwd').value;
+    const msg = document.getElementById('insc-msg');
+    const { data, error } = await SB.auth.signInWithPassword({ email, password: pwd });
+    if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
+    if (data.user.email !== ADMIN_EMAIL) {
+      msg.textContent = "Ce compte n'a pas les droits d'administration.";
+      msg.className = 'msg error';
+      await SB.auth.signOut();
+      return;
+    }
+    msg.className = 'msg';
+    initInscriptions();
+  }
+
+  async function renderInscriptions() {
+    const list = document.getElementById('insc-list');
+    const { data, error } = await SB.from('comptes').select('*').order('created_at', { ascending: false });
+    if (error) { list.innerHTML = '<p style="color:var(--red)">Erreur : ' + error.message + '</p>'; return; }
+    const enAttente = (data || []).filter(c => !c.approuve).length;
+    if (!data || !data.length) {
+      list.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres se connecteront sur l\'espace membre.</p>';
+      return;
+    }
+    list.innerHTML =
+      '<div class="insc-bar"><div class="insc-count">' + data.length + ' compte(s) — ' + enAttente + ' en attente</div>' +
+      '<button class="btn-add" style="margin:0;" onclick="renderInscriptions()">↻ Rafraîchir</button></div>' +
+      data.map(function (c) {
+        return '<div class="insc-row"><div>' +
+          '<div class="insc-email">' + (c.email || '(sans email)') + '</div>' +
+          '<div class="insc-state ' + (c.approuve ? 'ok' : 'attente') + '">' + (c.approuve ? '✅ Approuvé' : '⏳ En attente') + '</div>' +
+          '</div>' +
+          '<button class="' + (c.approuve ? 'btn-danger' : 'btn-save') + '" onclick="setApprouve(\'' + c.id + '\', ' + (!c.approuve) + ')">' +
+          (c.approuve ? 'Révoquer' : 'Approuver') + '</button></div>';
+      }).join('');
+  }
+
+  async function setApprouve(id, val) {
+    const { error } = await SB.from('comptes').update({ approuve: val }).eq('id', id);
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    showToast(val ? 'Compte approuvé !' : 'Accès révoqué.');
+    renderInscriptions();
   }
 
   function initAdmin() {
