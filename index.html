@@ -1761,7 +1761,7 @@
   (function discordLive() {
     document.querySelectorAll('.d-online[data-guild]').forEach(function (el) {
       const gid = el.getAttribute('data-guild');
-      fetch('https://discord.com/api/guilds/' + gid + '/widget.json')
+      fetch('https://discord.com/api/guilds/' + gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(d => { if (typeof d.presence_count === 'number') el.textContent = d.presence_count; })
         .catch(() => { /* widget non activé : on garde la valeur affichée */ });
@@ -1777,7 +1777,7 @@
     const countEl = document.getElementById('online-count');
     function esc(s) { return (s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
     function load() {
-      fetch('https://discord.com/api/guilds/' + gid + '/widget.json')
+      fetch('https://discord.com/api/guilds/' + gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(d => {
           const members = d.members || [];
