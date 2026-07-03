@@ -603,6 +603,21 @@
     .discord-note code { background: var(--surface2); padding: 1px 6px; color: var(--text-muted); font-size: 11px; }
     @media (max-width: 860px) { .discord-inner { grid-template-columns: 1fr; } }
 
+    /* ── MUR DES MEMBRES EN LIGNE ── */
+    .online-wall { max-width: 1000px; margin: 28px auto 0; background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
+    .online-wall-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 8px; }
+    .online-wall-title { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+    .online-wall-count { font-size: 13px; color: var(--text); font-weight: 600; }
+    .online-wall-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+    .online-member { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 66px; text-align: center; }
+    .online-avatar { position: relative; width: 46px; height: 46px; }
+    .online-avatar img { width: 46px; height: 46px; border-radius: 50%; display: block; background: var(--surface2); object-fit: cover; }
+    .online-avatar .st { position: absolute; bottom: 0; right: 0; width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--surface); }
+    .st.online { background: #3ba55d; } .st.idle { background: #faa61a; } .st.dnd { background: #ed4245; } .st.offline { background: #747f8d; }
+    .online-name { font-size: 10.5px; color: var(--text-muted); max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .online-voice { font-size: 9px; color: var(--text-dim); max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .online-empty { color: var(--text-dim); font-size: 13px; }
+
     #contact { background: var(--bg); text-align: center; }
     .contact-box {
       max-width: 520px; margin: 0 auto; background: var(--surface);
@@ -1331,6 +1346,14 @@
     </div>
 
   </div>
+
+  <div class="online-wall reveal" id="online-wall" data-guild="1450234264305008693">
+    <div class="online-wall-head">
+      <span class="online-wall-title"><span class="dot"></span> En ligne maintenant</span>
+      <span class="online-wall-count" id="online-count">—</span>
+    </div>
+    <div class="online-wall-grid" id="online-grid"><div class="online-empty">Chargement…</div></div>
+  </div>
 </section>
 
 <section id="contact">
@@ -1743,6 +1766,38 @@
         .then(d => { if (typeof d.presence_count === 'number') el.textContent = d.presence_count; })
         .catch(() => { /* widget non activé : on garde la valeur affichée */ });
     });
+  })();
+
+  // ── MUR DES MEMBRES EN LIGNE (via le widget Discord) ──
+  (function onlineWall() {
+    const wall = document.getElementById('online-wall');
+    if (!wall) return;
+    const gid = wall.getAttribute('data-guild');
+    const grid = document.getElementById('online-grid');
+    const countEl = document.getElementById('online-count');
+    function esc(s) { return (s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+    function load() {
+      fetch('https://discord.com/api/guilds/' + gid + '/widget.json')
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const members = d.members || [];
+          const chan = {};
+          (d.channels || []).forEach(c => { chan[c.id] = c.name; });
+          const n = (typeof d.presence_count === 'number') ? d.presence_count : members.length;
+          countEl.textContent = n + (n > 1 ? ' en ligne' : ' en ligne');
+          if (!members.length) { grid.innerHTML = '<div class="online-empty">Personne en ligne pour le moment.</div>'; return; }
+          grid.innerHTML = members.map(m => {
+            const st = (m.status === 'idle' || m.status === 'dnd' || m.status === 'online') ? m.status : 'online';
+            const voice = (m.channel_id && chan[m.channel_id]) ? '<div class="online-voice">&#128266; ' + esc(chan[m.channel_id]) + '</div>' : '';
+            const av = m.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
+            return '<div class="online-member"><div class="online-avatar"><img src="' + av + '" alt="" loading="lazy"><span class="st ' + st + '"></span></div>' +
+              '<div class="online-name">' + esc(m.username) + '</div>' + voice + '</div>';
+          }).join('');
+        })
+        .catch(() => { grid.innerHTML = '<div class="online-empty">Widget Discord non disponible — activez-le dans Paramètres du serveur &rsaquo; Widget.</div>'; });
+    }
+    load();
+    setInterval(load, 60000);   // rafraîchit chaque minute
   })();
 </script>
 
