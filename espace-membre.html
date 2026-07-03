@@ -402,7 +402,16 @@
     const { data, error } = await sb.from('evenements').select('*').order('ordre', { ascending: false });
     if (error) { holder.innerHTML = '<div class="locked">Impossible de charger les événements.</div>'; return; }
     if (!data || !data.length) { holder.innerHTML = '<div class="locked">Aucun événement pour le moment.</div>'; return; }
-    holder.innerHTML = '<div class="events-grid">' + data.map(e => `
+    // Participations (compteur + ma présence)
+    const { data: parts } = await sb.from('participations').select('event_id, user_id');
+    const counts = {}, mine = {};
+    (parts || []).forEach(p => {
+      counts[p.event_id] = (counts[p.event_id] || 0) + 1;
+      if (currentUser && p.user_id === currentUser.id) mine[p.event_id] = true;
+    });
+    holder.innerHTML = '<div class="events-grid">' + data.map(e => {
+      const c = counts[e.id] || 0, going = !!mine[e.id];
+      return `
       <div class="event-card">
         <div class="event-date"><span class="event-day">${e.jour||''}</span><span class="event-month">${e.mois||''}</span></div>
         <div>
@@ -410,8 +419,23 @@
           <div class="event-title">${e.titre||''}</div>
           <div class="event-time">${e.heure||''}</div>
           <div class="event-desc">${e.texte||''}</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;">
+            <button class="btn ${going ? 'ghost' : 'green'} rsvp-btn" data-ev="${e.id}" data-going="${going}" style="width:auto;padding:8px 16px;font-size:11px;">${going ? '✓ Je participe' : 'Je participe'}</button>
+            <span style="font-size:12px;color:var(--text-muted);">${c} participant${c > 1 ? 's' : ''}</span>
+          </div>
         </div>
-      </div>`).join('') + '</div>';
+      </div>`;
+    }).join('') + '</div>';
+    holder.querySelectorAll('.rsvp-btn').forEach(btn => btn.addEventListener('click', () => toggleRsvp(btn)));
+  }
+
+  async function toggleRsvp(btn) {
+    if (!currentUser) return;
+    const ev = btn.dataset.ev, going = btn.dataset.going === 'true';
+    btn.disabled = true;
+    if (going) await sb.from('participations').delete().eq('event_id', ev).eq('user_id', currentUser.id);
+    else await sb.from('participations').insert({ event_id: ev, user_id: currentUser.id });
+    await loadEvents();
   }
 
   // Session existante au chargement
