@@ -1776,16 +1776,27 @@
     const grid = document.getElementById('online-grid');
     const countEl = document.getElementById('online-count');
     function esc(s) { return (s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+    // Ne garder que les pseudos au format "Prénom Nom" (≥ 2 mots, lettres uniquement, sans chiffres),
+    // et exclure les bots. Ajoute un nom de bot dans BOTS si besoin.
+    const BOTS = ['bot moni', 'ticket tool', 'moni v2', 'famille moni bot web', 'moni'];
+    function looksLikeName(u) {
+      if (!u) return false;
+      const low = u.trim().toLowerCase();
+      if (BOTS.includes(low) || /\bbot\b/i.test(u)) return false;
+      const parts = u.trim().split(/\s+/);
+      if (parts.length < 2) return false;
+      return parts.every(p => /^[A-Za-zÀ-ÿ'’.\-]+$/.test(p));
+    }
     function load() {
       fetch('https://discord.com/api/guilds/' + gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(d => {
-          const members = d.members || [];
           const chan = {};
           (d.channels || []).forEach(c => { chan[c.id] = c.name; });
-          const n = (typeof d.presence_count === 'number') ? d.presence_count : members.length;
+          const members = (d.members || []).filter(m => looksLikeName(m.username));
+          const n = members.length;
           countEl.textContent = n + (n > 1 ? ' en ligne' : ' en ligne');
-          if (!members.length) { grid.innerHTML = '<div class="online-empty">Personne en ligne pour le moment.</div>'; return; }
+          if (!members.length) { grid.innerHTML = '<div class="online-empty">Aucun membre en ligne pour le moment.</div>'; return; }
           grid.innerHTML = members.map(m => {
             const st = (m.status === 'idle' || m.status === 'dnd' || m.status === 'online') ? m.status : 'online';
             const voice = (m.channel_id && chan[m.channel_id]) ? '<div class="online-voice">&#128266; ' + esc(chan[m.channel_id]) + '</div>' : '';
