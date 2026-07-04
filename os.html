@@ -238,7 +238,31 @@ const SVG = {
   musique:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',
   terminal:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg>',
   user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>',
+  calendrier:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+  mail:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  dossier:'<svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/><path d="M7 13h8"/></svg>',
+  settings:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L4 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>',
 };
+
+/* Données RP (facilement modifiables) */
+const EVENTS = [
+  { j:5,  m:'Réunion générale', d:'QG de Roxwood — 21h00', t:'Important' },
+  { j:12, m:'Soirée au bar',    d:'Roxwood — 22h00',        t:'Social' },
+  { j:19, m:'Session RP majeure', d:'Lieu sur Discord — 20h30', t:'RP' },
+  { j:26, m:'Journée recrutement', d:'Roxwood — 21h00',     t:'Recrutement' },
+];
+const MESSAGES = [
+  { from:'Lov Moni', rank:'La Donna', subj:'Bienvenue dans la famille', body:'Si tu lis ce message, c\'est que tu fais partie des nôtres. Ici, la loyauté n\'est pas un mot, c\'est une règle. Ne l\'oublie jamais.\n\n— La Donna' },
+  { from:'Raymond Carter', rank:'Braccio Destro', subj:'Réunion de ce soir', body:'Tout le monde au QG à 21h. Pas de retard, pas d\'excuse. On a des choses à régler.\n\n— Raymond' },
+  { from:'Karl Larsson', rank:'Baroni', subj:'Livraison', body:'La marchandise est arrivée. Discrétion totale sur les canaux. On en reparle en vocal.' },
+  { from:'Andrea Moni', rank:'Anziani', subj:'Bienvenue au petit', body:'Un nouveau a rejoint les Associati. Gardez un œil, formez-le bien. La famille grandit.' },
+];
+const DOCS = [
+  { title:'Le Code Moni', body:'I.  RP sérieux — pas de powergame, pas de metagame.\nII. Présence régulière sur le serveur.\nIII. Loyauté absolue : une fois Moni, toujours Moni.\nIV. Discrétion : ce qui se passe dans la famille reste dans la famille.\nV.  Respect — entre membres et envers les autres joueurs.' },
+  { title:'Hiérarchie', body:'La Donna — Cheffe de la famille.\nBraccio Destro — Bras droit.\nAnziani — Aînés / capitaines.\nBaroni — Barons (secteurs).\nCamerata — Camarades.\nVicino — Proches.\nSicario — Hommes de main.\nAssociati — Associés.' },
+  { title:'Affaires en cours', body:'• Consolidation du quartier de Roxwood.\n• Négociations en cours (confidentiel).\n• Recrutement sélectif — voir Journée recrutement.\n\n[ Le reste de ce dossier a été caviardé ]' },
+];
+const DISCORD_GUILD = '1450234264305008693';
 
 /* ══════════════ APPLIS ══════════════ */
 const APPS = {
@@ -259,12 +283,19 @@ const APPS = {
     return '<div class="breadcrumb">~ / <b>Notre QG</b> / Roxwood /</div><p>Le repaire de la famille. Clique pour agrandir.</p>'+
       '<div class="ph-grid" style="grid-template-columns:1fr 1fr">'+QG.map(p=>'<img src="'+p+'" alt="" loading="lazy" style="height:180px" onclick="openLB(this.src)">').join('')+'</div>';
   }},
-  discord:{ name:'Discord', icon:SVG.discord, w:460, h:320, body(){
-    return '<div class="breadcrumb">~ / <b>Discord</b> /</div><p>Rejoins la famille sur nos serveurs.</p>'+
-      '<a class="btn" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener">Serveur recrutement</a>'+
+  discord:{ name:'Discord', icon:SVG.discord, w:480, h:440, body(){
+    return '<div class="breadcrumb">~ / <b>Discord</b> / En ligne /</div>'+
+      '<div class="grp-title" style="margin-top:0">En ligne maintenant <span id="dlc" style="color:var(--muted)"></span></div>'+
+      '<div class="dl-grid" id="dl-grid"><span style="color:var(--dim);font-size:12px">Chargement…</span></div>'+
+      '<div class="grp-title">Rejoindre</div>'+
+      '<a class="btn" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener">Recrutement</a>'+
       '<a class="btn g" href="https://discord.gg/nM3ttEtYz" target="_blank" rel="noopener">Serveur principal</a>'+
-      '<p style="margin-top:16px">▶ Serveur FiveM :</p><a class="btn" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener">Se connecter au serveur</a>';
-  }},
+      '<a class="btn" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener">▶ FiveM</a>';
+  }, onOpen(win){ loadDiscord(win); } },
+  calendrier:{ name:'Calendrier', icon:SVG.calendrier, w:560, h:440, body(){ return calendarHTML(); } },
+  messages:{ name:'Messagerie', icon:SVG.mail, w:600, h:420, body(){ return messagesHTML(); } },
+  dossiers:{ name:'Dossiers', icon:SVG.dossier, w:560, h:420, body(){ return docsHTML(); } },
+  parametres:{ name:'Paramètres', icon:SVG.settings, w:420, h:440, desk:false, body(){ return settingsHTML(); } },
   musique:{ name:'Musique', icon:SVG.musique, w:320, h:340, body(){
     return '<div class="music-app"><div class="music-disc" id="disc"><div class="hole"></div></div>'+
       '<div style="font-weight:600;font-size:13px">Ambiance Moni</div>'+
