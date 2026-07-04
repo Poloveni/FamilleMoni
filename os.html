@@ -66,8 +66,9 @@
   .ctx-item:hover{background:rgba(255,255,255,.07)}
 
   /* ── ICÔNES BUREAU ── */
-  .desktop{position:fixed;top:48px;left:14px;z-index:10;display:flex;flex-direction:column;gap:6px}
-  .icon{width:88px;padding:12px 6px;border-radius:12px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:background .15s}
+  .desktop{position:fixed;inset:0;z-index:10;pointer-events:none}
+  .icon{position:absolute;pointer-events:auto;width:88px;padding:12px 6px;border-radius:12px;cursor:grab;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:background .15s}
+  .icon:active{cursor:grabbing}
   .icon:hover{background:rgba(255,255,255,.06)}
   .icon.active{background:rgba(212,178,110,.14)}
   .icon .glyph{width:46px;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--text)}
@@ -114,6 +115,21 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .music-disc .hole{width:26px;height:26px;border-radius:50%;background:var(--gold)}
   .music-btn{background:var(--gold);color:#1a1206;border:none;border-radius:50%;width:52px;height:52px;font-size:20px;cursor:pointer;margin-top:6px}
+  .radio-ctrl{display:flex;align-items:center;justify-content:center;gap:14px}
+  .radio-ctrl button:not(.music-btn){background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+  .radio-ctrl button:not(.music-btn):hover{color:var(--text)}
+  /* Mini-jeu */
+  .game{text-align:center}
+  .game-hud{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:10px}
+  .game-hud b{color:var(--gold)}
+  #g-canvas{background:#05070a;border:1px solid var(--border);border-radius:8px;max-width:100%;cursor:crosshair}
+  /* Widget bureau (horloge + citation) */
+  #widget{position:fixed;top:56px;right:16px;z-index:8;width:230px;background:rgba(20,22,28,.55);backdrop-filter:blur(8px);
+    border:1px solid var(--border);border-radius:14px;padding:16px 18px;text-align:right;pointer-events:none}
+  #widget .w-time{font-size:34px;font-weight:800;letter-spacing:1px;line-height:1}
+  #widget .w-date{font-size:11px;color:var(--muted);text-transform:capitalize;margin-top:2px}
+  #widget .w-quote{font-size:11px;color:var(--gold);font-style:italic;margin-top:12px;line-height:1.5;border-top:1px solid var(--border);padding-top:10px;transition:opacity .4s}
+  @media(max-width:640px){#widget{display:none}}
   /* fiche membre */
   .profile{text-align:center}
   .profile .pav{width:78px;height:78px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff}
@@ -255,6 +271,7 @@
 </div>
 
 <div class="desktop" id="desktop"></div>
+<div id="widget"><div class="w-time" id="w-time">--:--</div><div class="w-date" id="w-date"></div><div class="w-quote" id="w-quote"></div></div>
 <div class="dock" id="dock"></div>
 <div id="notifs"></div>
 <div class="hint">Double-clique une icône · glisse les fenêtres · clic droit sur le bureau pour le fond</div>
@@ -298,7 +315,23 @@ const SVG = {
   mail:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
   dossier:'<svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/><path d="M7 13h8"/></svg>',
   settings:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L4 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>',
+  jeu:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>',
 };
+
+/* Radio : ajoute d\'autres pistes ici (dépose le .mp3 dans le dossier) */
+const TRACKS = [
+  { title:'Ambiance Moni', src:'musique.mp3?v=3' },
+  // { title:'Autre titre', src:'piste2.mp3' },
+];
+const QUOTES = [
+  'Une fois Moni, toujours Moni.',
+  'Ce qui se passe dans la famille reste dans la famille.',
+  'La loyauté n\'est pas un mot, c\'est une règle.',
+  'Garde tes amis près de toi, et tes ennemis encore plus près.',
+  'La famille avant tout.',
+  'Le silence est d\'or, la discrétion est une arme.',
+  'On ne trahit pas les siens.',
+];
 
 /* Données RP (facilement modifiables) */
 const EVENTS = [
@@ -352,12 +385,19 @@ const APPS = {
   messages:{ name:'Messagerie', icon:SVG.mail, w:600, h:420, body(){ return messagesHTML(); } },
   dossiers:{ name:'Dossiers', icon:SVG.dossier, w:560, h:420, body(){ return docsHTML(); } },
   parametres:{ name:'Paramètres', icon:SVG.settings, w:420, h:440, desk:false, body(){ return settingsHTML(); } },
-  musique:{ name:'Musique', icon:SVG.musique, w:320, h:340, body(){
+  musique:{ name:'Radio', icon:SVG.musique, w:340, h:390, body(){
     return '<div class="music-app"><div class="music-disc" id="disc"><div class="hole"></div></div>'+
-      '<div style="font-weight:600;font-size:13px">Ambiance Moni</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Thème de la famille</div>'+
-      '<button class="music-btn" id="mbtn" onclick="toggleMusic()">▶</button></div>';
-  }},
+      '<div id="rtitle" style="font-weight:600;font-size:14px">—</div>'+
+      '<div id="rcount" style="font-size:11px;color:var(--muted);margin-bottom:16px">Radio Moni</div>'+
+      '<div class="radio-ctrl"><button onclick="radioPrev()" title="Précédent">⏮</button>'+
+      '<button class="music-btn" id="mbtn" onclick="radioToggle()">▶</button>'+
+      '<button onclick="radioNext()" title="Suivant">⏭</button></div></div>';
+  }, onOpen(){ radioRender(); } },
+  jeu:{ name:'Tir sur cible', icon:SVG.jeu, w:460, h:430, body(){
+    return '<div class="game"><div class="game-hud"><span>Score&nbsp;: <b id="g-score">0</b></span><span>Temps&nbsp;: <b id="g-time">30</b>s</span></div>'+
+      '<canvas id="g-canvas" width="418" height="290"></canvas>'+
+      '<button class="btn" id="g-start" style="margin-top:12px" onclick="gameStart()">Commencer</button></div>';
+  }, onOpen(win){ gameInit(win); } },
   terminal:{ name:'Terminal', icon:SVG.terminal, w:560, h:340, body(){ return '<div class="term" id="term"></div>'; },
     onOpen(win){ typeTerminal(win.querySelector('#term')); } },
 };
@@ -434,14 +474,23 @@ function makeResizable(win){
 
 /* ══════════════ ICÔNES BUREAU + MENU DÉMARRER ══════════════ */
 const desktop=document.getElementById('desktop');
+const ICONPOS = JSON.parse(localStorage.getItem('moni-icons')||'{}');
+let iconN=0;
 Object.keys(APPS).forEach(id=>{
   const app=APPS[id];
   if(app.desk===false) return;   // apps réservées au menu démarrer
   const ic=document.createElement('div'); ic.className='icon'; ic.id='ic-'+id;
   ic.innerHTML='<div class="glyph">'+app.icon+'</div><span>'+app.name+'</span>';
-  let t;
-  ic.addEventListener('click',()=>{ clearTimeout(t); t=setTimeout(()=>openApp(id),180); });
-  ic.addEventListener('dblclick',()=>{ clearTimeout(t); openApp(id); });
+  const pos=ICONPOS[id]||{x:14,y:52+iconN*84}; iconN++;
+  ic.style.left=pos.x+'px'; ic.style.top=pos.y+'px';
+  let sx,sy,ox,oy,moved=false,down=false;
+  ic.addEventListener('mousedown',e=>{ down=true;moved=false;sx=e.clientX;sy=e.clientY;ox=ic.offsetLeft;oy=ic.offsetTop; });
+  window.addEventListener('mousemove',e=>{ if(!down)return;
+    if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>5) moved=true;
+    if(moved){ ic.style.left=Math.max(0,Math.min(innerWidth-92,ox+e.clientX-sx))+'px'; ic.style.top=Math.max(44,Math.min(innerHeight-96,oy+e.clientY-sy))+'px'; } });
+  window.addEventListener('mouseup',()=>{ if(!down)return; down=false;
+    if(moved){ ICONPOS[id]={x:ic.offsetLeft,y:ic.offsetTop}; localStorage.setItem('moni-icons',JSON.stringify(ICONPOS)); }
+    else openApp(id); });
   desktop.appendChild(ic);
 });
 document.getElementById('sm-apps').innerHTML=Object.keys(APPS).map(id=>
@@ -473,12 +522,54 @@ const lb=document.getElementById('lb');
 function openLB(src){ document.getElementById('lb-img').src=src; lb.classList.add('open'); }
 lb.onclick=()=>lb.classList.remove('open');
 
-let bgm;
-function toggleMusic(){
-  if(!bgm){ bgm=new Audio('musique.mp3?v=3'); bgm.loop=true; bgm.volume=.4; }
-  const btn=document.getElementById('mbtn'), disc=document.getElementById('disc');
-  if(bgm.paused){ bgm.play().catch(()=>{}); if(btn)btn.textContent='❚❚'; if(disc)disc.classList.add('spin'); }
-  else{ bgm.pause(); if(btn)btn.textContent='▶'; if(disc)disc.classList.remove('spin'); }
+/* ── RADIO (multi-titres) ── */
+let radio, rIdx=0;
+function radioRender(){
+  const tt=document.getElementById('rtitle'), rc=document.getElementById('rcount'), btn=document.getElementById('mbtn'), disc=document.getElementById('disc');
+  if(!tt) return;
+  tt.textContent=TRACKS[rIdx].title;
+  rc.textContent=TRACKS.length>1 ? ('Piste '+(rIdx+1)+' / '+TRACKS.length) : 'Radio Moni';
+  const playing = radio && !radio.paused;
+  if(btn) btn.textContent = playing ? '❚❚' : '▶';
+  if(disc) disc.classList.toggle('spin', !!playing);
+}
+function radioPlay(){
+  if(!radio){ radio=new Audio(); radio.volume=.4; radio.addEventListener('ended',radioNext); radio.addEventListener('play',radioRender); radio.addEventListener('pause',radioRender); }
+  radio.src=TRACKS[rIdx].src; radio.play().catch(()=>{}); radioRender();
+}
+function radioToggle(){ if(!radio){ radioPlay(); return; } if(radio.paused) radio.play().catch(()=>{}); else radio.pause(); radioRender(); }
+function radioNext(){ rIdx=(rIdx+1)%TRACKS.length; radioPlay(); }
+function radioPrev(){ rIdx=(rIdx-1+TRACKS.length)%TRACKS.length; radioPlay(); }
+
+/* ── MINI-JEU : tir sur cible ── */
+let gWin, gActive=false, gScore=0, gTime=30, gTargets=[], gRaf, gTimerI, gSpawnI;
+function gameInit(win){ gWin=win; const c=win.querySelector('#g-canvas'); if(!c)return; const x=c.getContext('2d');
+  x.fillStyle='#05070a'; x.fillRect(0,0,c.width,c.height); x.fillStyle='#5b6272'; x.font='14px system-ui'; x.textAlign='center';
+  x.fillText('Clique « Commencer »', c.width/2, c.height/2); }
+function gameStart(){
+  const win=gWin; if(!win)return; const c=win.querySelector('#g-canvas'); if(!c)return; const x=c.getContext('2d');
+  gScore=0; gTime=30; gActive=true; gTargets=[];
+  win.querySelector('#g-score').textContent='0'; win.querySelector('#g-time').textContent='30';
+  const sb=win.querySelector('#g-start'); if(sb) sb.style.display='none';
+  clearInterval(gTimerI); clearInterval(gSpawnI); cancelAnimationFrame(gRaf);
+  gSpawnI=setInterval(()=>{ if(gActive && gTargets.length<4) gTargets.push({x:22+Math.random()*(c.width-44),y:22+Math.random()*(c.height-44),r:15+Math.random()*10}); }, 650);
+  gTimerI=setInterval(()=>{ gTime--; const te=win.querySelector('#g-time'); if(te)te.textContent=gTime; if(gTime<=0) gameEnd(); }, 1000);
+  c.onclick=(e)=>{ if(!gActive)return; const r=c.getBoundingClientRect(); const mx=(e.clientX-r.left)*(c.width/r.width), my=(e.clientY-r.top)*(c.height/r.height);
+    for(let i=gTargets.length-1;i>=0;i--){ const t=gTargets[i]; if(Math.hypot(mx-t.x,my-t.y)<t.r){ gTargets.splice(i,1); gScore++; const se=win.querySelector('#g-score'); if(se)se.textContent=gScore; beep(760,0.05); break; } } };
+  (function draw(){ if(!gActive || !document.body.contains(c)) return;
+    x.fillStyle='#05070a'; x.fillRect(0,0,c.width,c.height);
+    gTargets.forEach(t=>{ x.beginPath();x.arc(t.x,t.y,t.r,0,7);x.fillStyle='#c0392b';x.fill();
+      x.beginPath();x.arc(t.x,t.y,t.r*0.6,0,7);x.fillStyle='#f2f2f2';x.fill();
+      x.beginPath();x.arc(t.x,t.y,t.r*0.25,0,7);x.fillStyle='#c0392b';x.fill(); });
+    gRaf=requestAnimationFrame(draw); })();
+}
+function gameEnd(){ gActive=false; clearInterval(gTimerI); clearInterval(gSpawnI); cancelAnimationFrame(gRaf);
+  const win=gWin; if(!win)return; const c=win.querySelector('#g-canvas'); if(c){ const x=c.getContext('2d');
+    x.fillStyle='rgba(5,7,10,.86)'; x.fillRect(0,0,c.width,c.height);
+    x.fillStyle='#d4b26e'; x.font='bold 22px system-ui'; x.textAlign='center'; x.fillText('Score : '+gScore, c.width/2, c.height/2-6);
+    x.fillStyle='#9aa0b0'; x.font='13px system-ui'; x.fillText('Rejoue quand tu veux', c.width/2, c.height/2+20); }
+  const sb=win.querySelector('#g-start'); if(sb){ sb.style.display=''; sb.textContent='Rejouer'; }
+  notify('Tir sur cible','Partie terminée — score : '+gScore);
 }
 
 function typeTerminal(el){
@@ -500,8 +591,17 @@ function tick(){
   document.getElementById('clock').textContent=t; document.getElementById('date').textContent=dt;
   const lt=document.getElementById('lock-time'), ld=document.getElementById('lock-date');
   if(lt) lt.textContent=t; if(ld) ld.textContent=dt;
+  const wt=document.getElementById('w-time'), wd=document.getElementById('w-date');
+  if(wt) wt.textContent=t; if(wd) wd.textContent=dt;
 }
 tick(); setInterval(tick,1000);
+
+/* Citation du jour (widget bureau) */
+let qi=Math.floor(Math.random()*QUOTES.length);
+function showQuote(){ const q=document.getElementById('w-quote'); if(q) q.textContent='« '+QUOTES[qi]+' »'; }
+showQuote();
+setInterval(()=>{ const q=document.getElementById('w-quote'); if(!q)return; q.style.opacity='0';
+  setTimeout(()=>{ qi=(qi+1)%QUOTES.length; showQuote(); q.style.opacity='1'; },400); }, 9000);
 
 /* ══════════════ FOND RÉSEAU ══════════════ */
 (function net(){
