@@ -618,6 +618,20 @@
     .online-voice { font-size: 9px; color: var(--text-dim); max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .online-empty { color: var(--text-dim); font-size: 13px; }
 
+    /* ── SERVEUR FIVEM EN DIRECT ── */
+    .server-live { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+      max-width: 1000px; margin: 0 auto 24px; background: var(--surface); border: 1px solid var(--border); padding: 20px 24px; }
+    .server-state { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+    .server-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+    .server-dot.on { background: #3ba55d; box-shadow: 0 0 0 3px rgba(59,165,93,0.22); }
+    .server-dot.off { background: #ed4245; }
+    .server-name { font-size: 16px; font-weight: 700; margin-top: 8px; }
+    .server-players { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+    .server-join { flex-shrink: 0; background: var(--red); color: #fff; padding: 12px 22px; font-size: 13px; font-weight: 600;
+      letter-spacing: 0.5px; text-decoration: none; transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+    .server-join:hover { background: var(--red-dark); transform: translateY(-2px); }
+    @media (max-width: 560px) { .server-live { flex-direction: column; align-items: stretch; text-align: center; } .server-join { text-align: center; } .server-state { justify-content: center; } }
+
     #contact { background: var(--bg); text-align: center; }
     .contact-box {
       max-width: 520px; margin: 0 auto; background: var(--surface);
@@ -1285,6 +1299,16 @@
   <div class="section-label">Notre serveur</div>
   <h2 class="section-title">Le <em>Discord</em></h2>
   <p class="section-desc">La famille Moni, c'est deux serveurs : le <strong style="color:var(--text)">serveur principal</strong> pour la vie de la famille, et le serveur de <strong style="color:var(--text)">recrutement</strong> pour nous rejoindre.</p>
+
+  <div class="server-live reveal" id="server-live">
+    <div>
+      <div class="server-state" id="server-state"><span class="server-dot"></span> Vérification du serveur…</div>
+      <div class="server-name" id="server-name">Flashback FA — GTA RP</div>
+      <div class="server-players" id="server-players"></div>
+    </div>
+    <a class="server-join" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener noreferrer">&#9654; Se connecter au serveur</a>
+  </div>
+
   <div class="discord-inner reveal">
 
     <!-- SERVEUR PRINCIPAL — réservé aux membres -->
@@ -1809,6 +1833,35 @@
     }
     load();
     setInterval(load, 60000);   // rafraîchit chaque minute
+  })();
+
+  // ── STATUT DU SERVEUR FIVEM (via la fonction Edge fivem-status) ──
+  (function serverLive() {
+    const el = document.getElementById('server-live');
+    if (!el) return;
+    const base = (window.SUPABASE_URL || '').replace(/\/$/, '');
+    const state = document.getElementById('server-state');
+    const players = document.getElementById('server-players');
+    const name = document.getElementById('server-name');
+    if (!base) { state.innerHTML = '<span class="server-dot off"></span> Statut indisponible'; return; }
+    const url = base + '/functions/v1/fivem-status';
+    function load() {
+      fetch(url).then(r => r.json()).then(d => {
+        if (d && d.online) {
+          state.innerHTML = '<span class="server-dot on"></span> Serveur en ligne';
+          players.textContent = (d.clients || 0) + ' / ' + (d.maxclients || '?') + ' joueurs connectés';
+          if (d.hostname) name.textContent = d.hostname;
+        } else {
+          state.innerHTML = '<span class="server-dot off"></span> Serveur hors ligne';
+          players.textContent = '';
+        }
+      }).catch(() => {
+        state.innerHTML = '<span class="server-dot off"></span> Statut indisponible';
+        players.textContent = '';
+      });
+    }
+    load();
+    setInterval(load, 60000);
   })();
 </script>
 
