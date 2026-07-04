@@ -7,13 +7,16 @@ La fonction Edge `fivem-status` sert de relais entre le site et l'API FiveM
 
 Dans un terminal, à la racine du projet (là où tu as déjà déployé `sync-discord-events`) :
 
-```bash
-supabase functions deploy fivem-status --no-verify-jwt
-```
+**Méthode navigateur (recommandée, sans terminal) :** Dashboard Supabase → Edge Functions →
+« Deploy a new function » → « Via Editor » → nom `fivem-status` → colle le code → Deploy.
+**Laisse « Verify JWT » activé** : le site s'authentifie tout seul en envoyant la clé
+publique (anon) déjà présente dans `supabase-config.js`. Rien d'autre à régler.
 
-> `--no-verify-jwt` rend la fonction **publiquement appelable** — indispensable pour que
-> le site puisse récupérer le statut sans authentification. Elle ne fait que lire des
-> infos publiques du serveur, il n'y a aucun risque.
+**Méthode terminal (si tu as le CLI Supabase) :**
+
+```bash
+supabase functions deploy fivem-status
+```
 
 ## 2. (Optionnel) Changer de serveur plus tard
 
@@ -35,6 +38,7 @@ sans rien déployer.
 
 - **« Statut indisponible »** sur le site → la fonction n'est pas encore déployée, ou l'API
   FiveM a momentanément refusé l'appel. Réessaie / vérifie le déploiement.
-- Pour tester la fonction directement :
-  `https://<ton-projet>.supabase.co/functions/v1/fivem-status` dans le navigateur → doit
-  renvoyer un JSON `{ "online": true, "clients": .., "maxclients": .. }`.
+- Ouvrir l'URL de la fonction **directement** dans le navigateur affichera une erreur
+  d'autorisation (« Missing authorization header ») — **c'est normal** puisque « Verify JWT »
+  est activé. Le test valable, c'est **sur le site lui-même** (le panneau doit passer à
+  « Serveur en ligne »).

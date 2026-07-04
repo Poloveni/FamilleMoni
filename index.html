@@ -1845,8 +1845,10 @@
     const name = document.getElementById('server-name');
     if (!base) { state.innerHTML = '<span class="server-dot off"></span> Statut indisponible'; return; }
     const url = base + '/functions/v1/fivem-status';
+    const key = window.SUPABASE_KEY || '';
+    const headers = key ? { Authorization: 'Bearer ' + key, apikey: key } : {};
     function load() {
-      fetch(url).then(r => r.json()).then(d => {
+      fetch(url, { headers: headers }).then(r => r.json()).then(d => {
         if (d && d.online) {
           state.innerHTML = '<span class="server-dot on"></span> Serveur en ligne';
           players.textContent = (d.clients || 0) + ' / ' + (d.maxclients || '?') + ' joueurs connectés';
