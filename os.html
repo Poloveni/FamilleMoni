@@ -150,6 +150,57 @@
   #boot .bar{width:200px;height:3px;background:#1b1e26;border-radius:3px;overflow:hidden}
   #boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#fff,var(--red));animation:load 1.5s ease forwards}
   @keyframes load{to{width:100%}}
+  /* Discord live */
+  .dl-grid{display:flex;flex-wrap:wrap;gap:14px}
+  .dl-m{display:flex;flex-direction:column;align-items:center;gap:5px;width:62px;text-align:center}
+  .dl-av{position:relative;width:42px;height:42px}
+  .dl-av img{width:42px;height:42px;border-radius:50%;background:var(--panel2)}
+  .dl-av .s{position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--panel)}
+  .s.online{background:#3ba55d}.s.idle{background:#faa61a}.s.dnd{background:#ed4245}
+  .dl-n{font-size:10px;color:var(--muted);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Calendrier */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:700;text-transform:capitalize}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-grid .dow{font-size:10px;color:var(--dim);text-align:center;text-transform:uppercase;padding-bottom:4px}
+  .cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:7px;background:var(--panel2);position:relative}
+  .cal-cell.empty{background:transparent}
+  .cal-cell.today{outline:2px solid var(--gold);color:var(--gold);font-weight:700}
+  .cal-cell.ev{background:rgba(192,57,43,.25);color:#fff;cursor:default}
+  .cal-cell.ev::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--red)}
+  .cal-list{margin-top:16px}
+  .cal-ev{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+  .cal-ev:last-child{border:none}
+  .cal-day{width:34px;text-align:center;font-weight:800;color:var(--gold);flex:0 0 auto}
+  .cal-ev .t{font-size:9px;padding:2px 6px;border:1px solid var(--border);border-radius:20px;color:var(--muted)}
+  /* Messagerie & Dossiers */
+  .list-item{display:flex;gap:12px;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--panel2);transition:border-color .15s}
+  .list-item:hover{border-color:var(--gold)}
+  .li-av{width:36px;height:36px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:var(--panel)}
+  .li-from{font-size:12px;font-weight:600}.li-sub{font-size:12px;color:var(--muted)}.li-rank{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1px}
+  .reader{white-space:pre-wrap;font-size:13px;line-height:1.7;color:var(--text)}
+  .reader .rh{font-weight:700;font-size:15px;margin-bottom:4px}
+  .reader .rm{color:var(--muted);font-size:11px;margin-bottom:14px}
+  .back-link{color:var(--gold);cursor:pointer;font-size:12px;margin-bottom:14px;display:inline-block}
+  /* Paramètres */
+  .set-row{margin-bottom:20px}
+  .set-row .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .sw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+  .sw.on{border-color:#fff}
+  .wall-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .wall-btns button{padding:7px 12px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:8px;font-size:12px;cursor:pointer}
+  .wall-btns button:hover{border-color:var(--gold)}
+  .toggle{display:flex;align-items:center;justify-content:space-between;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer}
+  .toggle .sw-t{width:38px;height:20px;border-radius:20px;background:var(--dim);position:relative;transition:background .2s}
+  .toggle .sw-t i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+  .toggle.on .sw-t{background:var(--green)}.toggle.on .sw-t i{left:20px}
+  /* Notifications */
+  #notifs{position:fixed;right:16px;bottom:72px;z-index:1800;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+  .notif{background:rgba(20,22,28,.97);backdrop-filter:blur(10px);border:1px solid var(--border);border-left:3px solid var(--gold);
+    border-radius:10px;padding:12px 16px;max-width:300px;box-shadow:0 14px 40px rgba(0,0,0,.5);animation:notifIn .3s ease-out}
+  @keyframes notifIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+  .notif .nt{font-size:12.5px;font-weight:700;margin-bottom:3px}
+  .notif .nb{font-size:12px;color:var(--muted);line-height:1.5}
   .hint{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);z-index:5;text-align:center}
   @media(max-width:640px){
     .tb-center{display:none}
@@ -201,6 +252,7 @@
 
 <div class="desktop" id="desktop"></div>
 <div class="dock" id="dock"></div>
+<div id="notifs"></div>
 <div class="hint">Double-clique une icône · glisse les fenêtres · clic droit sur le bureau pour le fond</div>
 
 <div class="lb" id="lb"><img id="lb-img" src="" alt="" /></div>
@@ -329,6 +381,7 @@ function createWindow(id,title,icon,bodyHTML,w,h,onOpen){
   win.querySelector('.b-max').onclick=e=>{e.stopPropagation();maximize(win);};
   addDock(id,title,icon);
   if(APPS[id]) markIcon(id,true);
+  beep(520,0.07);
   if(onOpen) onOpen(win);
   return win;
 }
@@ -379,6 +432,7 @@ function makeResizable(win){
 const desktop=document.getElementById('desktop');
 Object.keys(APPS).forEach(id=>{
   const app=APPS[id];
+  if(app.desk===false) return;   // apps réservées au menu démarrer
   const ic=document.createElement('div'); ic.className='icon'; ic.id='ic-'+id;
   ic.innerHTML='<div class="glyph">'+app.icon+'</div><span>'+app.name+'</span>';
   let t;
@@ -459,11 +513,97 @@ tick(); setInterval(tick,1000);
     requestAnimationFrame(loop);})();
 })();
 
+/* ══════════════ PARAMÈTRES / SONS / NOTIFICATIONS ══════════════ */
+const settings = Object.assign({sound:true,notifs:true,accent:'#d4b26e'}, JSON.parse(localStorage.getItem('moni-settings')||'{}'));
+function saveSettings(){ localStorage.setItem('moni-settings',JSON.stringify(settings)); }
+function applyAccent(){ document.documentElement.style.setProperty('--gold', settings.accent); }
+applyAccent();
+let actx;
+function beep(freq,dur,type){
+  if(!settings.sound) return;
+  try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type=type||'sine'; o.frequency.value=freq; o.connect(g); g.connect(actx.destination);
+    g.gain.value=0.04; o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+dur); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+function notify(title, body){
+  if(!settings.notifs) return;
+  const c=document.getElementById('notifs');
+  const n=document.createElement('div'); n.className='notif';
+  n.innerHTML='<div class="nt">'+title+'</div><div class="nb">'+body+'</div>';
+  c.appendChild(n); beep(660,0.09);
+  setTimeout(()=>{ n.style.transition='opacity .4s'; n.style.opacity='0'; setTimeout(()=>n.remove(),400); }, 5200);
+}
+const ACCENTS=['#d4b26e','#c0392b','#0b8c45','#8a4ac4','#2d8fd4','#e08a2b'];
+function settingsHTML(){
+  return '<div class="breadcrumb">~ / <b>Paramètres</b> /</div>'+
+    '<div class="set-row"><div class="lbl">Couleur d\'accent</div><div class="swatches">'+
+      ACCENTS.map(c=>'<div class="sw'+(c===settings.accent?' on':'')+'" style="background:'+c+'" onclick="setAccent(\''+c+'\',this)"></div>').join('')+'</div></div>'+
+    '<div class="set-row"><div class="lbl">Fond d\'écran</div><div class="wall-btns">'+
+      '<button onclick="cycleWall()">Photo suivante</button><button onclick="resetWall()">Par défaut</button></div></div>'+
+    '<div class="set-row"><div class="lbl">Système</div>'+
+      '<div class="toggle'+(settings.sound?' on':'')+'" onclick="toggleSet(\'sound\',this)">Sons <div class="sw-t"><i></i></div></div>'+
+      '<div style="height:8px"></div>'+
+      '<div class="toggle'+(settings.notifs?' on':'')+'" onclick="toggleSet(\'notifs\',this)">Notifications <div class="sw-t"><i></i></div></div>'+
+    '</div>';
+}
+function setAccent(c,el){ settings.accent=c; saveSettings(); applyAccent();
+  el.parentElement.querySelectorAll('.sw').forEach(s=>s.classList.remove('on')); el.classList.add('on'); beep(600,0.06); }
+function toggleSet(k,el){ settings[k]=!settings[k]; saveSettings(); el.classList.toggle('on',settings[k]); if(k==='sound'&&settings.sound)beep(500,0.07); }
+
+/* ══════════════ DISCORD EN DIRECT ══════════════ */
+function looksName(u){ if(!u)return false; const p=u.trim().split(/\s+/); if(p.length<2)return false; if(/\bbot\b/i.test(u))return false; return p.every(x=>/^[A-Za-zÀ-ÿ'’.\-]+$/.test(x)); }
+function loadDiscord(win){
+  const grid=win.querySelector('#dl-grid'), cnt=win.querySelector('#dlc');
+  fetch('https://discord.com/api/guilds/'+DISCORD_GUILD+'/widget.json?_='+Date.now(),{cache:'no-store'})
+    .then(r=>r.ok?r.json():Promise.reject())
+    .then(d=>{
+      const ms=(d.members||[]).filter(m=>looksName(m.username));
+      if(cnt) cnt.textContent='· '+ms.length;
+      if(!ms.length){ grid.innerHTML='<span style="color:var(--dim);font-size:12px">Personne en ligne.</span>'; return; }
+      grid.innerHTML=ms.map(m=>{ const st=['online','idle','dnd'].includes(m.status)?m.status:'online';
+        return '<div class="dl-m"><div class="dl-av"><img src="'+(m.avatar_url||'')+'" alt=""><span class="s '+st+'"></span></div><div class="dl-n">'+m.username+'</div></div>'; }).join('');
+    }).catch(()=>{ grid.innerHTML='<span style="color:var(--dim);font-size:12px">Widget Discord indisponible.</span>'; });
+}
+
+/* ══════════════ CALENDRIER / MESSAGERIE / DOSSIERS ══════════════ */
+function calendarHTML(){
+  const now=new Date(), y=now.getFullYear(), mo=now.getMonth(), today=now.getDate();
+  const start=(new Date(y,mo,1).getDay()+6)%7; const days=new Date(y,mo+1,0).getDate();
+  const evDays=new Set(EVENTS.map(e=>e.j));
+  const moName=now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  let cells=''; ['Lu','Ma','Me','Je','Ve','Sa','Di'].forEach(d=>cells+='<div class="dow">'+d+'</div>');
+  for(let i=0;i<start;i++) cells+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=days;d++){ let cls='cal-cell'; if(d===today)cls+=' today'; if(evDays.has(d))cls+=' ev'; cells+='<div class="'+cls+'">'+d+'</div>'; }
+  const list=EVENTS.map(e=>'<div class="cal-ev"><div class="cal-day">'+e.j+'</div><div style="flex:1"><div style="font-weight:600;font-size:13px">'+e.m+'</div><div style="font-size:11px;color:var(--muted)">'+e.d+'</div></div><span class="t">'+e.t+'</span></div>').join('');
+  return '<div class="cal-head"><span>'+moName+'</span></div><div class="cal-grid">'+cells+'</div>'+
+    '<div class="grp-title">Prochains rendez-vous</div><div class="cal-list">'+list+'</div>';
+}
+function messagesHTML(){
+  return '<div class="breadcrumb">~ / <b>Messagerie</b> / Boîte de réception /</div>'+
+    MESSAGES.map((m,i)=>'<div class="list-item" onclick="openMsg('+i+',this)"><div class="li-av">'+ini(m.from)+'</div><div style="flex:1"><div class="li-from">'+m.from+' <span class="li-rank">'+m.rank+'</span></div><div class="li-sub">'+m.subj+'</div></div></div>').join('');
+}
+function openMsg(i,el){ const m=MESSAGES[i];
+  el.closest('.win-body').innerHTML='<span class="back-link" onclick="backTo(this,messagesHTML())">← Retour</span><div class="reader"><div class="rh">'+m.subj+'</div><div class="rm">De '+m.from+' · '+m.rank+'</div>'+m.body+'</div>'; }
+function docsHTML(){
+  return '<div class="breadcrumb">~ / <b>Dossiers</b> / Confidentiel /</div>'+
+    DOCS.map((d,i)=>'<div class="list-item" onclick="openDoc('+i+',this)"><div class="li-av" style="background:var(--red)">■</div><div style="flex:1"><div class="li-from">'+d.title+'</div><div class="li-sub">Dossier classé</div></div></div>').join('');
+}
+function openDoc(i,el){ const d=DOCS[i];
+  el.closest('.win-body').innerHTML='<span class="back-link" onclick="backTo(this,docsHTML())">← Retour</span><div class="reader"><div class="rh">'+d.title+'</div><div class="rm">Famille Moni — Confidentiel</div>'+d.body+'</div>'; }
+function backTo(el,html){ el.closest('.win-body').innerHTML=html; }
+
 /* ══════════════ SÉQUENCE LOCK → BOOT → BUREAU ══════════════ */
 document.getElementById('enter-btn').onclick=()=>{
+  beep(330,0.1); setTimeout(()=>beep(440,0.1),120); setTimeout(()=>beep(560,0.14),260);
   const lock=document.getElementById('lock'); lock.style.opacity='0'; setTimeout(()=>lock.remove(),500);
   const boot=document.getElementById('boot'); boot.style.display='flex';
-  setTimeout(()=>{ boot.style.opacity='0'; setTimeout(()=>boot.remove(),600); }, 1600);
+  setTimeout(()=>{ boot.style.opacity='0'; setTimeout(()=>boot.remove(),600);
+    setTimeout(()=>notify('Bienvenue','Système MONI OS prêt. Bonne session, la famille.'),900);
+    setTimeout(()=>notify('Rappel','Réunion ce soir au QG — 21h00.'),6000);
+  }, 1600);
 };
 </script>
 </body>
