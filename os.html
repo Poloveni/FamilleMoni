@@ -19,9 +19,8 @@
       radial-gradient(1200px 700px at 70% -10%, rgba(11,140,69,.10), transparent 60%),
       radial-gradient(1000px 700px at 10% 110%, rgba(192,57,43,.12), transparent 60%),
       #06070a;
-    overflow:hidden; user-select:none;
+    background-size:cover; background-position:center; overflow:hidden; user-select:none;
   }
-  /* fond de bureau : réseau discret */
   #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
 
   /* ── BARRE DU HAUT ── */
@@ -31,44 +30,51 @@
     background:rgba(10,11,14,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     border-bottom:1px solid var(--border);font-size:13px;
   }
-  .tb-left{display:flex;align-items:center;gap:18px}
-  .tb-logo{font-weight:800;letter-spacing:1px;display:flex;align-items:center;gap:7px}
-  .tb-logo b{color:var(--gold)}
-  .tb-menu{color:var(--muted);cursor:pointer;font-size:12px}
+  .tb-left{display:flex;align-items:center;gap:14px}
+  .start-btn{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:6px;border:1px solid transparent}
+  .start-btn:hover{border-color:var(--border)}
+  .start-btn b{color:var(--gold)}
+  .tb-menu{color:var(--muted);cursor:pointer;font-size:12px;text-decoration:none}
   .tb-menu:hover{color:var(--text)}
   .tb-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center;line-height:1.1}
   .tb-time{font-size:12px;font-weight:600}
-  .tb-date{font-size:10px;color:var(--muted)}
+  .tb-date{font-size:10px;color:var(--muted);text-transform:capitalize}
   .tb-right{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px}
   .tb-flag{width:22px;height:11px;border-radius:2px;overflow:hidden;display:flex;box-shadow:0 0 0 1px var(--border)}
   .tb-flag i{flex:1}.tb-flag .g{background:var(--green)}.tb-flag .w{background:#f2f2f2}.tb-flag .r{background:var(--red)}
 
+  /* ── MENU DÉMARRER ── */
+  #startmenu{position:fixed;left:12px;top:44px;z-index:1500;width:244px;background:rgba(20,22,28,.97);
+    backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;padding:10px;display:none;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  #startmenu.open{display:block;animation:winIn .15s}
+  .sm-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:8px 8px 4px}
+  .sm-item{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:13px}
+  .sm-item:hover{background:rgba(255,255,255,.06)}
+  .sm-item svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:1.7}
+  .sm-item.quit{color:#ff6b6b;margin-top:8px;padding-top:12px;border-top:1px solid var(--border)}
+  .sm-item.quit svg{stroke:#ff6b6b}
+
+  /* ── MENU CONTEXTUEL ── */
+  #ctx{position:fixed;z-index:1600;background:rgba(20,22,28,.98);border:1px solid var(--border);border-radius:10px;
+    padding:6px;display:none;min-width:196px;box-shadow:0 16px 40px rgba(0,0,0,.6)}
+  #ctx.open{display:block;animation:winIn .12s}
+  .ctx-item{padding:9px 12px;border-radius:7px;font-size:13px;cursor:pointer;display:flex;gap:9px;align-items:center}
+  .ctx-item:hover{background:rgba(255,255,255,.07)}
+
   /* ── ICÔNES BUREAU ── */
   .desktop{position:fixed;top:48px;left:14px;z-index:10;display:flex;flex-direction:column;gap:6px}
-  .icon{
-    width:88px;padding:12px 6px;border-radius:12px;cursor:pointer;text-align:center;
-    display:flex;flex-direction:column;align-items:center;gap:8px;transition:background .15s;
-  }
+  .icon{width:88px;padding:12px 6px;border-radius:12px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:background .15s}
   .icon:hover{background:rgba(255,255,255,.06)}
   .icon.active{background:rgba(212,178,110,.14)}
-  .icon .glyph{
-    width:46px;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--panel);
-    display:flex;align-items:center;justify-content:center;color:var(--text);
-  }
+  .icon .glyph{width:46px;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--text)}
   .icon .glyph svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7}
   .icon span{font-size:11px;color:var(--text);text-shadow:0 1px 3px #000}
 
   /* ── FENÊTRES ── */
-  .win{
-    position:fixed;z-index:100;min-width:300px;background:var(--panel);border:1px solid var(--border);
-    border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;
-    overflow:hidden;animation:winIn .18s ease-out;
-  }
+  .win{position:fixed;z-index:100;min-width:260px;min-height:160px;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;animation:winIn .18s ease-out}
   @keyframes winIn{from{opacity:0;transform:scale(.98) translateY(6px)}to{opacity:1;transform:none}}
-  .win-bar{
-    height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;
-    background:var(--panel2);border-bottom:1px solid var(--border);cursor:move;
-  }
+  .win-bar{height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;background:var(--panel2);border-bottom:1px solid var(--border);cursor:move}
   .win-title{font-size:12.5px;font-weight:600;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
   .win-title svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.7}
   .win-btns{display:flex;gap:8px}
@@ -76,6 +82,8 @@
   .b-min{background:#f0b429}.b-max{background:#3ba55d}.b-close{background:#ed4245}
   .win-body{flex:1;overflow:auto;padding:18px 20px}
   .win-body::-webkit-scrollbar{width:9px}.win-body::-webkit-scrollbar-thumb{background:#2a2e38;border-radius:6px}
+  .resize{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;z-index:2}
+  .resize::after{content:'';position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid var(--dim);border-bottom:2px solid var(--dim)}
 
   /* contenus */
   .breadcrumb{font-size:11px;color:var(--muted);margin-bottom:16px}
@@ -83,8 +91,7 @@
   .grp-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:18px 0 10px}
   .grp-title:first-child{margin-top:0}
   .files{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
-  .file{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;
-    display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s,border-color .15s;cursor:default}
+  .file{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s,border-color .15s;cursor:pointer}
   .file:hover{transform:translateY(-3px);border-color:var(--gold)}
   .file .av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
   .file .fn{font-size:12px;font-weight:600;line-height:1.2}
@@ -93,54 +100,83 @@
   .ph-grid img{width:100%;height:110px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border);transition:transform .2s}
   .ph-grid img:hover{transform:scale(1.03)}
   .win-body p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
-  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;text-decoration:none;
-    padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;margin:6px 8px 0 0;transition:.2s}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;margin:6px 8px 0 0;transition:.2s}
   .btn:hover{background:#a93226}.btn.g{background:var(--panel2);border:1px solid var(--border)}
   .term{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:13px;line-height:1.7;color:#8ff0a4;background:#05070a;border-radius:8px;padding:16px;min-height:220px;white-space:pre-wrap}
   .term .c{color:var(--gold)}.term .r{color:#ff6b6b}
   .music-app{text-align:center;padding:10px 0}
-  .music-disc{width:120px;height:120px;border-radius:50%;margin:0 auto 18px;background:
-    repeating-radial-gradient(circle at center,#111 0 6px,#1a1a1a 6px 8px);border:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center}
+  .music-disc{width:120px;height:120px;border-radius:50%;margin:0 auto 18px;background:repeating-radial-gradient(circle at center,#111 0 6px,#1a1a1a 6px 8px);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
   .music-disc.spin{animation:spin 4s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .music-disc .hole{width:26px;height:26px;border-radius:50%;background:var(--gold)}
   .music-btn{background:var(--gold);color:#1a1206;border:none;border-radius:50%;width:52px;height:52px;font-size:20px;cursor:pointer;margin-top:6px}
+  /* fiche membre */
+  .profile{text-align:center}
+  .profile .pav{width:78px;height:78px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff}
+  .profile .pname{font-size:19px;font-weight:700}
+  .profile .prank{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+  .dossier{margin-top:18px;text-align:left;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:6px 16px;font-size:12.5px}
+  .dossier .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--border)}
+  .dossier .row:last-child{border:none}
+  .dossier .k{color:var(--muted)}.dossier .v{text-align:right}
+  .stamp{margin-top:16px;text-align:center;font-size:10px;letter-spacing:2px;color:var(--red);border:1px dashed var(--red);border-radius:6px;padding:7px;text-transform:uppercase;opacity:.85}
   .lb{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;cursor:zoom-out}
   .lb.open{display:flex}.lb img{max-width:90%;max-height:90%;border-radius:6px}
 
   /* ── DOCK ── */
-  .dock{
-    position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:1000;
-    display:flex;gap:8px;padding:8px 10px;background:rgba(20,22,28,.8);backdrop-filter:blur(10px);
-    border:1px solid var(--border);border-radius:16px;min-height:52px;align-items:center;
-  }
+  .dock{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:8px;padding:8px 10px;
+    background:rgba(20,22,28,.8);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;min-height:52px;align-items:center;max-width:92vw;overflow-x:auto}
   .dock:empty{display:none}
-  .dock-item{width:40px;height:40px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:var(--text)}
+  .dock-item{width:40px;height:40px;flex:0 0 auto;border-radius:10px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:var(--text)}
   .dock-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
   .dock-item:hover{border-color:var(--gold)}
   .dock-item .dot{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold)}
 
+  /* ── ÉCRAN DE CONNEXION ── */
+  #lock{position:fixed;inset:0;z-index:6000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:radial-gradient(900px 600px at 50% 30%, rgba(212,178,110,.10), transparent 60%), #05060a;transition:opacity .5s}
+  .lock-time{font-size:66px;font-weight:800;letter-spacing:2px}
+  .lock-date{color:var(--muted);font-size:14px;text-transform:capitalize;margin-bottom:26px}
+  .lock-crest{width:70px;height:70px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--gold);margin-bottom:10px}
+  .lock-name{font-size:18px;font-weight:700;letter-spacing:1px}
+  .lock-sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:26px}
+  #enter-btn{background:var(--gold);color:#1a1206;border:none;border-radius:10px;padding:13px 30px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:transform .15s,box-shadow .2s}
+  #enter-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(212,178,110,.3)}
+
   /* boot */
-  #boot{position:fixed;inset:0;z-index:5000;background:#06070a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .6s}
+  #boot{position:fixed;inset:0;z-index:5000;background:#06070a;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .6s}
   #boot .logo{font-size:34px;font-weight:800;letter-spacing:3px}
   #boot .logo b{color:var(--gold)}
   #boot .bar{width:200px;height:3px;background:#1b1e26;border-radius:3px;overflow:hidden}
-  #boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#fff,var(--red));animation:load 1.6s ease forwards}
+  #boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#fff,var(--red));animation:load 1.5s ease forwards}
   @keyframes load{to{width:100%}}
-  .hint{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);z-index:5}
-  @media(max-width:640px){.tb-center{display:none}.win{left:12px!important;right:12px!important;width:auto!important}}
+  .hint{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);z-index:5;text-align:center}
+  @media(max-width:640px){
+    .tb-center{display:none}
+    .win{left:10px!important;right:10px!important;width:auto!important;top:48px!important}
+    .desktop{gap:2px}.icon{width:74px}
+    .lock-time{font-size:48px}
+  }
 </style>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
 
+<!-- ÉCRAN DE CONNEXION -->
+<div id="lock">
+  <div class="lock-time" id="lock-time">--:--</div>
+  <div class="lock-date" id="lock-date"></div>
+  <div class="lock-crest">M</div>
+  <div class="lock-name">Famille Moni</div>
+  <div class="lock-sub">Roxwood · Flashback FA</div>
+  <button id="enter-btn">Entrer dans la famille</button>
+</div>
+
 <div id="boot"><div class="logo">MONI <b>OS</b></div><div class="bar"><i></i></div></div>
 
 <div class="topbar">
   <div class="tb-left">
-    <div class="tb-logo">MONI <b>OS</b></div>
+    <div class="start-btn" id="start-btn">MONI <b>OS</b></div>
     <a class="tb-menu" href="index.html">← Retour au site</a>
   </div>
   <div class="tb-center"><div class="tb-time" id="clock">--:--</div><div class="tb-date" id="date"></div></div>
@@ -150,9 +186,22 @@
   </div>
 </div>
 
+<div id="startmenu">
+  <div class="sm-title">Applications</div>
+  <div id="sm-apps"></div>
+  <div class="sm-item quit" onclick="location.href='index.html'">
+    <svg viewBox="0 0 24 24"><path d="M12 4v8M7 7a8 8 0 1 0 10 0"/></svg> Quitter (retour au site)
+  </div>
+</div>
+
+<div id="ctx">
+  <div class="ctx-item" onclick="cycleWall()">🖼️ Changer le fond d'écran</div>
+  <div class="ctx-item" onclick="resetWall()">↺ Fond par défaut</div>
+</div>
+
 <div class="desktop" id="desktop"></div>
 <div class="dock" id="dock"></div>
-<div class="hint">Double-clique une icône pour ouvrir · glisse les fenêtres par leur barre</div>
+<div class="hint">Double-clique une icône · glisse les fenêtres · clic droit sur le bureau pour le fond</div>
 
 <div class="lb" id="lb"><img id="lb-img" src="" alt="" /></div>
 
@@ -167,11 +216,20 @@ const ORG = [
   { rank:'Vicino', color:'#888888', members:['Tommy Dane'] },
   { rank:'Associati', color:'#777777', members:['Allesandro Moretti','Bass Carter','Dayon Reas','Javier Silva','Javier Cruz Silva','Jiji Goose','Tony Moncini'] },
 ];
+const ROLE_DESC = {
+  'La Donna':'Cheffe de la famille. Autorité suprême, dernier mot sur toutes les décisions.',
+  'Braccio Destro':'Bras droit de la Donna. Relaie les ordres et supervise les opérations.',
+  'Anziani':'Aîné respecté, capitaine de la famille.',
+  'Baroni':'Baron — gère un secteur (drogue, armes, blanchiment, événements).',
+  'Camerata':'Camarade de confiance, membre éprouvé.',
+  'Vicino':'Proche de la famille, en voie d\'ascension.',
+  'Associati':'Associé — membre de la famille Moni.',
+};
 const PHOTOS = ['ladonna.webp','famille-villa.webp','deux-hommes.webp','duo-nuit.webp','famille-escaliers.webp','famille-balcon.webp'];
 const QG = ['qg-carte.webp','qg-vue.webp'];
+const WALLS = ['famille-villa.webp','famille-balcon.webp','famille-escaliers.webp','qg-vue.webp','duo-nuit.webp','ladonna.webp'];
 const ini = n => n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
-/* icônes SVG */
 const SVG = {
   famille:'<svg viewBox="0 0 24 24"><path d="M3 7h5l2 2h11v10H3z"/></svg>',
   galerie:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m3 17 5-4 4 3 3-2 6 4"/></svg>',
@@ -179,15 +237,16 @@ const SVG = {
   discord:'<svg viewBox="0 0 24 24"><path d="M7 8a13 13 0 0 1 10 0M6 17a13 13 0 0 0 12 0M8 12h.01M16 12h.01M7 16l-1 3 3-1M17 16l1 3-3-1"/></svg>',
   musique:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',
   terminal:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg>',
+  user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>',
 };
 
 /* ══════════════ APPLIS ══════════════ */
 const APPS = {
   famille:{ name:'Famille', icon:SVG.famille, w:640, h:460, body(){
-    let h='<div class="breadcrumb">~ / <b>Famille Moni</b> / Membres /</div>';
+    let h='<div class="breadcrumb">~ / <b>Famille Moni</b> / Membres / <span style="color:var(--dim)">(clique un membre)</span></div>';
     ORG.forEach(t=>{
       h+='<div class="grp-title">'+t.rank+'</div><div class="files">';
-      h+=t.members.map(m=>'<div class="file"><div class="av" style="background:'+t.color+(t.color==='#d4b26e'?';color:#1a1206':'')+'">'+ini(m)+'</div><div class="fn">'+m+'</div><div class="fr" style="color:'+t.color+'">'+t.rank+'</div></div>').join('');
+      h+=t.members.map(m=>'<div class="file" onclick="openMember(\''+m+'\',\''+t.rank+'\',\''+t.color+'\')"><div class="av" style="background:'+t.color+(t.color==='#d4b26e'?';color:#1a1206':'')+'">'+ini(m)+'</div><div class="fn">'+m+'</div><div class="fr" style="color:'+t.color+'">'+t.rank+'</div></div>').join('');
       h+='</div>';
     });
     return h;
@@ -197,16 +256,14 @@ const APPS = {
       PHOTOS.map(p=>'<img src="'+p+'" alt="" loading="lazy" onclick="openLB(this.src)">').join('')+'</div>';
   }},
   qg:{ name:'Notre QG', icon:SVG.qg, w:620, h:440, body(){
-    return '<div class="breadcrumb">~ / <b>Notre QG</b> / Roxwood /</div>'+
-      '<p>Le repaire de la famille à Roxwood. Clique pour agrandir.</p><div class="ph-grid" style="grid-template-columns:1fr 1fr">'+
-      QG.map(p=>'<img src="'+p+'" alt="" loading="lazy" style="height:180px" onclick="openLB(this.src)">').join('')+'</div>';
+    return '<div class="breadcrumb">~ / <b>Notre QG</b> / Roxwood /</div><p>Le repaire de la famille. Clique pour agrandir.</p>'+
+      '<div class="ph-grid" style="grid-template-columns:1fr 1fr">'+QG.map(p=>'<img src="'+p+'" alt="" loading="lazy" style="height:180px" onclick="openLB(this.src)">').join('')+'</div>';
   }},
-  discord:{ name:'Discord', icon:SVG.discord, w:460, h:300, body(){
-    return '<div class="breadcrumb">~ / <b>Discord</b> /</div>'+
-      '<p>Rejoins la famille sur nos serveurs Discord.</p>'+
+  discord:{ name:'Discord', icon:SVG.discord, w:460, h:320, body(){
+    return '<div class="breadcrumb">~ / <b>Discord</b> /</div><p>Rejoins la famille sur nos serveurs.</p>'+
       '<a class="btn" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener">Serveur recrutement</a>'+
       '<a class="btn g" href="https://discord.gg/nM3ttEtYz" target="_blank" rel="noopener">Serveur principal</a>'+
-      '<p style="margin-top:16px">▶ Serveur FiveM : <a class="btn" style="margin-top:8px" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener">Se connecter</a></p>';
+      '<p style="margin-top:16px">▶ Serveur FiveM :</p><a class="btn" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener">Se connecter au serveur</a>';
   }},
   musique:{ name:'Musique', icon:SVG.musique, w:320, h:340, body(){
     return '<div class="music-app"><div class="music-disc" id="disc"><div class="hole"></div></div>'+
@@ -214,92 +271,119 @@ const APPS = {
       '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Thème de la famille</div>'+
       '<button class="music-btn" id="mbtn" onclick="toggleMusic()">▶</button></div>';
   }},
-  terminal:{ name:'Terminal', icon:SVG.terminal, w:560, h:340, body(){
-    return '<div class="term" id="term"></div>';
-  }, onOpen(win){ typeTerminal(win.querySelector('#term')); } },
+  terminal:{ name:'Terminal', icon:SVG.terminal, w:560, h:340, body(){ return '<div class="term" id="term"></div>'; },
+    onOpen(win){ typeTerminal(win.querySelector('#term')); } },
 };
 
-/* ══════════════ GESTION FENÊTRES ══════════════ */
-let z = 100;
-const openWins = {};
-const dock = document.getElementById('dock');
+/* ══════════════ FENÊTRES ══════════════ */
+let z=100; const openWins={}; const dock=document.getElementById('dock');
 
-function openApp(id){
-  const app = APPS[id];
-  if(!app) return;
-  if(openWins[id]){ focusWin(openWins[id]); openWins[id].style.display='flex'; return; }
-  const win = document.createElement('div');
-  win.className='win';
-  const W = Math.min(app.w, innerWidth-40), H = Math.min(app.h, innerHeight-120);
+function createWindow(id,title,icon,bodyHTML,w,h,onOpen){
+  if(openWins[id]){ focusWin(openWins[id]); openWins[id].style.display='flex'; return openWins[id]; }
+  const win=document.createElement('div'); win.className='win';
+  const W=Math.min(w,innerWidth-40), H=Math.min(h,innerHeight-120);
   win.style.width=W+'px'; win.style.height=H+'px';
-  win.style.left=Math.max(20,(innerWidth-W)/2 + (Object.keys(openWins).length*26)%120 - 60)+'px';
-  win.style.top =Math.max(52,(innerHeight-H)/2 - 20 + (Object.keys(openWins).length*20)%80)+'px';
+  const off=Object.keys(openWins).length*26;
+  win.style.left=Math.max(20,(innerWidth-W)/2+(off%120)-60)+'px';
+  win.style.top=Math.max(52,(innerHeight-H)/2-20+(off%80))+'px';
   win.style.zIndex=++z;
-  win.innerHTML =
-    '<div class="win-bar"><div class="win-title">'+app.icon.replace(/width="24" height="24"|viewBox/,'viewBox')+' '+app.name+'</div>'+
-    '<div class="win-btns"><button class="b-min" title="Réduire"></button><button class="b-max"></button><button class="b-close" title="Fermer"></button></div></div>'+
-    '<div class="win-body">'+app.body()+'</div>';
-  document.body.appendChild(win);
-  openWins[id]=win;
+  win.innerHTML='<div class="win-bar"><div class="win-title">'+icon+' '+title+'</div>'+
+    '<div class="win-btns"><button class="b-min" title="Réduire"></button><button class="b-max" title="Agrandir"></button><button class="b-close" title="Fermer"></button></div></div>'+
+    '<div class="win-body">'+bodyHTML+'</div><div class="resize"></div>';
+  document.body.appendChild(win); openWins[id]=win;
   win.addEventListener('mousedown',()=>focusWin(win));
-  makeDraggable(win);
-  win.querySelector('.b-close').onclick=e=>{e.stopPropagation();closeApp(id);};
+  makeDraggable(win); makeResizable(win);
+  win.querySelector('.b-close').onclick=e=>{e.stopPropagation();closeWin(id);};
   win.querySelector('.b-min').onclick=e=>{e.stopPropagation();win.style.display='none';};
   win.querySelector('.b-max').onclick=e=>{e.stopPropagation();maximize(win);};
-  addDock(id,app);
-  markIcon(id,true);
-  if(app.onOpen) app.onOpen(win);
+  addDock(id,title,icon);
+  if(APPS[id]) markIcon(id,true);
+  if(onOpen) onOpen(win);
+  return win;
 }
-function closeApp(id){
-  if(openWins[id]) openWins[id].remove();
-  delete openWins[id];
-  const d=document.getElementById('dock-'+id); if(d) d.remove();
-  markIcon(id,false);
-  if(id==='musique'){ const a=document.getElementById('bgm'); }
+function openApp(id){ const a=APPS[id]; if(!a)return; createWindow(id,a.name,a.icon,a.body(),a.w,a.h,a.onOpen); }
+function openMember(name,rank,color){
+  let s=0; for(const c of name) s=(s*31+c.charCodeAt(0))%9973;
+  const mat='MN-'+(1000+s%9000);
+  const html='<div class="profile"><div class="pav" style="background:'+color+(color==='#d4b26e'?';color:#1a1206':'')+'">'+ini(name)+'</div>'+
+    '<div class="pname">'+name+'</div><div class="prank" style="color:'+color+'">'+rank+'</div>'+
+    '<div class="dossier">'+
+      '<div class="row"><span class="k">Matricule</span><span class="v">'+mat+'</span></div>'+
+      '<div class="row"><span class="k">Grade</span><span class="v" style="color:'+color+'">'+rank+'</span></div>'+
+      '<div class="row"><span class="k">Quartier</span><span class="v">Roxwood</span></div>'+
+      '<div class="row"><span class="k">Statut</span><span class="v" style="color:#3ba55d">Actif</span></div>'+
+      '<div class="row"><span class="k">Rôle</span><span class="v" style="max-width:180px">'+(ROLE_DESC[rank]||'Membre de la famille.')+'</span></div>'+
+    '</div><div class="stamp">Famille Moni — Confidentiel</div></div>';
+  createWindow('m-'+name.replace(/\s+/g,''), name, SVG.user, html, 380, 430);
 }
+function closeWin(id){ if(openWins[id])openWins[id].remove(); delete openWins[id]; const d=document.getElementById('dock-'+id); if(d)d.remove(); if(APPS[id])markIcon(id,false); }
 function focusWin(win){ win.style.zIndex=++z; win.style.display='flex'; }
 function maximize(win){
   if(win.dataset.max){ win.style.cssText=win.dataset.prev; win.dataset.max=''; }
   else{ win.dataset.prev=win.style.cssText; win.dataset.max='1';
     win.style.left='14px';win.style.top='46px';win.style.width=(innerWidth-28)+'px';win.style.height=(innerHeight-70)+'px'; }
 }
-function addDock(id,app){
+function addDock(id,name,icon){
   if(document.getElementById('dock-'+id)) return;
-  const el=document.createElement('div'); el.className='dock-item'; el.id='dock-'+id; el.title=app.name;
-  el.innerHTML=app.icon+'<span class="dot"></span>';
-  el.onclick=()=>{ const w=openWins[id]; if(w){ w.style.display==='none'?focusWin(w):focusWin(w); } };
+  const el=document.createElement('div'); el.className='dock-item'; el.id='dock-'+id; el.title=name;
+  el.innerHTML=icon+'<span class="dot"></span>';
+  el.onclick=()=>{ const w=openWins[id]; if(w) focusWin(w); };
   dock.appendChild(el);
 }
 function markIcon(id,on){ const ic=document.getElementById('ic-'+id); if(ic) ic.classList.toggle('active',on); }
-
 function makeDraggable(win){
   const bar=win.querySelector('.win-bar'); let sx,sy,ox,oy,drag=false;
-  bar.addEventListener('mousedown',e=>{ if(e.target.tagName==='BUTTON')return; drag=true; sx=e.clientX;sy=e.clientY;
-    ox=win.offsetLeft;oy=win.offsetTop; document.body.style.cursor='move'; });
-  window.addEventListener('mousemove',e=>{ if(!drag)return;
-    win.style.left=Math.max(0,Math.min(innerWidth-60,ox+e.clientX-sx))+'px';
-    win.style.top =Math.max(40,Math.min(innerHeight-40,oy+e.clientY-sy))+'px'; });
+  bar.addEventListener('mousedown',e=>{ if(e.target.tagName==='BUTTON')return; drag=true; sx=e.clientX;sy=e.clientY;ox=win.offsetLeft;oy=win.offsetTop;document.body.style.cursor='move'; });
+  window.addEventListener('mousemove',e=>{ if(!drag)return; win.style.left=Math.max(0,Math.min(innerWidth-60,ox+e.clientX-sx))+'px'; win.style.top=Math.max(40,Math.min(innerHeight-40,oy+e.clientY-sy))+'px'; });
   window.addEventListener('mouseup',()=>{ drag=false; document.body.style.cursor=''; });
 }
+function makeResizable(win){
+  const h=win.querySelector('.resize'); if(!h)return; let rs=false,sx,sy,sw,sh;
+  h.addEventListener('mousedown',e=>{ e.stopPropagation();rs=true;sx=e.clientX;sy=e.clientY;sw=win.offsetWidth;sh=win.offsetHeight;document.body.style.cursor='nwse-resize'; });
+  window.addEventListener('mousemove',e=>{ if(!rs)return; win.style.width=Math.max(260,sw+e.clientX-sx)+'px'; win.style.height=Math.max(160,sh+e.clientY-sy)+'px'; });
+  window.addEventListener('mouseup',()=>{ rs=false;document.body.style.cursor=''; });
+}
 
-/* ══════════════ ICÔNES BUREAU ══════════════ */
+/* ══════════════ ICÔNES BUREAU + MENU DÉMARRER ══════════════ */
 const desktop=document.getElementById('desktop');
 Object.keys(APPS).forEach(id=>{
   const app=APPS[id];
   const ic=document.createElement('div'); ic.className='icon'; ic.id='ic-'+id;
   ic.innerHTML='<div class="glyph">'+app.icon+'</div><span>'+app.name+'</span>';
-  ic.addEventListener('dblclick',()=>openApp(id));
-  let t; ic.addEventListener('click',()=>{ /* simple clic = ouvre aussi (plus accessible) */ clearTimeout(t); t=setTimeout(()=>openApp(id),180); });
-  ic.addEventListener('dblclick',()=>clearTimeout(t));
+  let t;
+  ic.addEventListener('click',()=>{ clearTimeout(t); t=setTimeout(()=>openApp(id),180); });
+  ic.addEventListener('dblclick',()=>{ clearTimeout(t); openApp(id); });
   desktop.appendChild(ic);
 });
+document.getElementById('sm-apps').innerHTML=Object.keys(APPS).map(id=>
+  '<div class="sm-item" onclick="openApp(\''+id+'\');closeMenus()">'+APPS[id].icon+' '+APPS[id].name+'</div>').join('');
 
-/* ══════════════ LIGHTBOX ══════════════ */
+const startBtn=document.getElementById('start-btn'), startMenu=document.getElementById('startmenu');
+startBtn.onclick=e=>{ e.stopPropagation(); startMenu.classList.toggle('open'); };
+startMenu.onclick=e=>e.stopPropagation();
+function closeMenus(){ startMenu.classList.remove('open'); document.getElementById('ctx').classList.remove('open'); }
+
+/* ══════════════ MENU CONTEXTUEL + FOND D'ÉCRAN ══════════════ */
+const ctx=document.getElementById('ctx');
+document.addEventListener('contextmenu',e=>{
+  if(e.target.closest('.win')||e.target.closest('.topbar')||e.target.closest('.dock')||e.target.closest('#startmenu')) return;
+  e.preventDefault(); ctx.style.left=Math.min(e.clientX,innerWidth-206)+'px'; ctx.style.top=Math.min(e.clientY,innerHeight-110)+'px'; ctx.classList.add('open');
+});
+document.addEventListener('click',closeMenus);
+let wallIdx=parseInt(localStorage.getItem('moni-wall')); if(isNaN(wallIdx))wallIdx=-1;
+function applyWall(i){
+  if(i<0){ document.body.style.backgroundImage=''; }
+  else{ document.body.style.backgroundImage='linear-gradient(rgba(6,7,10,.74),rgba(6,7,10,.82)), url("'+WALLS[i%WALLS.length]+'")'; }
+}
+function cycleWall(){ wallIdx=(wallIdx+1)%WALLS.length; localStorage.setItem('moni-wall',wallIdx); applyWall(wallIdx); }
+function resetWall(){ wallIdx=-1; localStorage.removeItem('moni-wall'); applyWall(-1); }
+if(wallIdx>=0) applyWall(wallIdx);
+
+/* ══════════════ LIGHTBOX / MUSIQUE / TERMINAL ══════════════ */
 const lb=document.getElementById('lb');
 function openLB(src){ document.getElementById('lb-img').src=src; lb.classList.add('open'); }
 lb.onclick=()=>lb.classList.remove('open');
 
-/* ══════════════ MUSIQUE ══════════════ */
 let bgm;
 function toggleMusic(){
   if(!bgm){ bgm=new Audio('musique.mp3?v=3'); bgm.loop=true; bgm.volume=.4; }
@@ -308,33 +392,25 @@ function toggleMusic(){
   else{ bgm.pause(); if(btn)btn.textContent='▶'; if(disc)disc.classList.remove('spin'); }
 }
 
-/* ══════════════ TERMINAL ══════════════ */
 function typeTerminal(el){
-  const lines=[
-    '<span class="c">moni@roxwood</span>:~$ ./bienvenue.sh',
-    '',
-    'Initialisation du système MONI OS...',
-    'Chargement de la famille .................. <span class="c">OK</span>',
-    'Connexion à Roxwood ....................... <span class="c">OK</span>',
-    'Vérification de la loyauté ................ <span class="c">100%</span>',
-    '',
-    'Née de la Famiglia Moncini d\'Italie, la famille Moni',
-    'bâtit à Roxwood l\'empire discret que son père a laissé.',
-    '',
-    '<span class="c">></span> Une fois Moni, toujours Moni.',
-    '<span class="r">></span> Ce qui se passe dans la famille reste dans la famille.',
-    '',
-    '<span class="c">moni@roxwood</span>:~$ _',
-  ];
+  const lines=['<span class="c">moni@roxwood</span>:~$ ./bienvenue.sh','',
+    'Initialisation du système MONI OS...','Chargement de la famille .................. <span class="c">OK</span>',
+    'Connexion à Roxwood ....................... <span class="c">OK</span>','Vérification de la loyauté ................ <span class="c">100%</span>','',
+    'Née de la Famiglia Moncini d\'Italie, la famille Moni','bâtit à Roxwood l\'empire discret que son père a laissé.','',
+    '<span class="c">></span> Une fois Moni, toujours Moni.','<span class="r">></span> Ce qui se passe dans la famille reste dans la famille.','',
+    '<span class="c">moni@roxwood</span>:~$ _'];
   el.innerHTML=''; let i=0;
-  (function next(){ if(i>=lines.length)return; el.innerHTML+=(i?'\n':'')+lines[i]; i++; setTimeout(next, lines[i-1]===''?90:260); })();
+  (function next(){ if(i>=lines.length)return; el.innerHTML+=(i?'\n':'')+lines[i]; i++; setTimeout(next, lines[i-1]===''?90:240); })();
 }
 
-/* ══════════════ HORLOGE ══════════════ */
+/* ══════════════ HORLOGE (barre + lock) ══════════════ */
 function tick(){
   const d=new Date();
-  document.getElementById('clock').textContent=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('date').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const t=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const dt=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('clock').textContent=t; document.getElementById('date').textContent=dt;
+  const lt=document.getElementById('lock-time'), ld=document.getElementById('lock-date');
+  if(lt) lt.textContent=t; if(ld) ld.textContent=dt;
 }
 tick(); setInterval(tick,1000);
 
@@ -352,8 +428,12 @@ tick(); setInterval(tick,1000);
     requestAnimationFrame(loop);})();
 })();
 
-/* ══════════════ BOOT ══════════════ */
-setTimeout(()=>{ const b=document.getElementById('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),600); }, 1700);
+/* ══════════════ SÉQUENCE LOCK → BOOT → BUREAU ══════════════ */
+document.getElementById('enter-btn').onclick=()=>{
+  const lock=document.getElementById('lock'); lock.style.opacity='0'; setTimeout(()=>lock.remove(),500);
+  const boot=document.getElementById('boot'); boot.style.display='flex';
+  setTimeout(()=>{ boot.style.opacity='0'; setTimeout(()=>boot.remove(),600); }, 1600);
+};
 </script>
 </body>
 </html>
