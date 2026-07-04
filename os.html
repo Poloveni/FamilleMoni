@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MONI OS — Famille Moni</title>
+<link rel="icon" type="image/jpeg" href="logo.jpg" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0b0e; --panel:#14161c; --panel2:#1b1e26; --border:rgba(255,255,255,.09);
+    --text:#eceef2; --muted:#9aa0b0; --dim:#5b6272;
+    --red:#c0392b; --green:#0b8c45; --gold:#d4b26e;
+  }
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--text);
+    background:
+      radial-gradient(1200px 700px at 70% -10%, rgba(11,140,69,.10), transparent 60%),
+      radial-gradient(1000px 700px at 10% 110%, rgba(192,57,43,.12), transparent 60%),
+      #06070a;
+    overflow:hidden; user-select:none;
+  }
+  /* fond de bureau : réseau discret */
+  #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+
+  /* ── BARRE DU HAUT ── */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;height:36px;z-index:1000;
+    display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+    background:rgba(10,11,14,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);font-size:13px;
+  }
+  .tb-left{display:flex;align-items:center;gap:18px}
+  .tb-logo{font-weight:800;letter-spacing:1px;display:flex;align-items:center;gap:7px}
+  .tb-logo b{color:var(--gold)}
+  .tb-menu{color:var(--muted);cursor:pointer;font-size:12px}
+  .tb-menu:hover{color:var(--text)}
+  .tb-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center;line-height:1.1}
+  .tb-time{font-size:12px;font-weight:600}
+  .tb-date{font-size:10px;color:var(--muted)}
+  .tb-right{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px}
+  .tb-flag{width:22px;height:11px;border-radius:2px;overflow:hidden;display:flex;box-shadow:0 0 0 1px var(--border)}
+  .tb-flag i{flex:1}.tb-flag .g{background:var(--green)}.tb-flag .w{background:#f2f2f2}.tb-flag .r{background:var(--red)}
+
+  /* ── ICÔNES BUREAU ── */
+  .desktop{position:fixed;top:48px;left:14px;z-index:10;display:flex;flex-direction:column;gap:6px}
+  .icon{
+    width:88px;padding:12px 6px;border-radius:12px;cursor:pointer;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:8px;transition:background .15s;
+  }
+  .icon:hover{background:rgba(255,255,255,.06)}
+  .icon.active{background:rgba(212,178,110,.14)}
+  .icon .glyph{
+    width:46px;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--panel);
+    display:flex;align-items:center;justify-content:center;color:var(--text);
+  }
+  .icon .glyph svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7}
+  .icon span{font-size:11px;color:var(--text);text-shadow:0 1px 3px #000}
+
+  /* ── FENÊTRES ── */
+  .win{
+    position:fixed;z-index:100;min-width:300px;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;
+    overflow:hidden;animation:winIn .18s ease-out;
+  }
+  @keyframes winIn{from{opacity:0;transform:scale(.98) translateY(6px)}to{opacity:1;transform:none}}
+  .win-bar{
+    height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;
+    background:var(--panel2);border-bottom:1px solid var(--border);cursor:move;
+  }
+  .win-title{font-size:12.5px;font-weight:600;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+  .win-title svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.7}
+  .win-btns{display:flex;gap:8px}
+  .win-btns button{width:13px;height:13px;border-radius:50%;border:none;cursor:pointer}
+  .b-min{background:#f0b429}.b-max{background:#3ba55d}.b-close{background:#ed4245}
+  .win-body{flex:1;overflow:auto;padding:18px 20px}
+  .win-body::-webkit-scrollbar{width:9px}.win-body::-webkit-scrollbar-thumb{background:#2a2e38;border-radius:6px}
+
+  /* contenus */
+  .breadcrumb{font-size:11px;color:var(--muted);margin-bottom:16px}
+  .breadcrumb b{color:var(--gold);font-weight:600}
+  .grp-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:18px 0 10px}
+  .grp-title:first-child{margin-top:0}
+  .files{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+  .file{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s,border-color .15s;cursor:default}
+  .file:hover{transform:translateY(-3px);border-color:var(--gold)}
+  .file .av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+  .file .fn{font-size:12px;font-weight:600;line-height:1.2}
+  .file .fr{font-size:10px}
+  .ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .ph-grid img{width:100%;height:110px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border);transition:transform .2s}
+  .ph-grid img:hover{transform:scale(1.03)}
+  .win-body p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;text-decoration:none;
+    padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;margin:6px 8px 0 0;transition:.2s}
+  .btn:hover{background:#a93226}.btn.g{background:var(--panel2);border:1px solid var(--border)}
+  .term{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:13px;line-height:1.7;color:#8ff0a4;background:#05070a;border-radius:8px;padding:16px;min-height:220px;white-space:pre-wrap}
+  .term .c{color:var(--gold)}.term .r{color:#ff6b6b}
+  .music-app{text-align:center;padding:10px 0}
+  .music-disc{width:120px;height:120px;border-radius:50%;margin:0 auto 18px;background:
+    repeating-radial-gradient(circle at center,#111 0 6px,#1a1a1a 6px 8px);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center}
+  .music-disc.spin{animation:spin 4s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .music-disc .hole{width:26px;height:26px;border-radius:50%;background:var(--gold)}
+  .music-btn{background:var(--gold);color:#1a1206;border:none;border-radius:50%;width:52px;height:52px;font-size:20px;cursor:pointer;margin-top:6px}
+  .lb{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;cursor:zoom-out}
+  .lb.open{display:flex}.lb img{max-width:90%;max-height:90%;border-radius:6px}
+
+  /* ── DOCK ── */
+  .dock{
+    position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:1000;
+    display:flex;gap:8px;padding:8px 10px;background:rgba(20,22,28,.8);backdrop-filter:blur(10px);
+    border:1px solid var(--border);border-radius:16px;min-height:52px;align-items:center;
+  }
+  .dock:empty{display:none}
+  .dock-item{width:40px;height:40px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:var(--text)}
+  .dock-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
+  .dock-item:hover{border-color:var(--gold)}
+  .dock-item .dot{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold)}
+
+  /* boot */
+  #boot{position:fixed;inset:0;z-index:5000;background:#06070a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .6s}
+  #boot .logo{font-size:34px;font-weight:800;letter-spacing:3px}
+  #boot .logo b{color:var(--gold)}
+  #boot .bar{width:200px;height:3px;background:#1b1e26;border-radius:3px;overflow:hidden}
+  #boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#fff,var(--red));animation:load 1.6s ease forwards}
+  @keyframes load{to{width:100%}}
+  .hint{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);z-index:5}
+  @media(max-width:640px){.tb-center{display:none}.win{left:12px!important;right:12px!important;width:auto!important}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<div id="boot"><div class="logo">MONI <b>OS</b></div><div class="bar"><i></i></div></div>
+
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">MONI <b>OS</b></div>
+    <a class="tb-menu" href="index.html">← Retour au site</a>
+  </div>
+  <div class="tb-center"><div class="tb-time" id="clock">--:--</div><div class="tb-date" id="date"></div></div>
+  <div class="tb-right">
+    <span id="tray-online">● en ligne</span>
+    <div class="tb-flag"><i class="g"></i><i class="w"></i><i class="r"></i></div>
+  </div>
+</div>
+
+<div class="desktop" id="desktop"></div>
+<div class="dock" id="dock"></div>
+<div class="hint">Double-clique une icône pour ouvrir · glisse les fenêtres par leur barre</div>
+
+<div class="lb" id="lb"><img id="lb-img" src="" alt="" /></div>
+
+<script>
+/* ══════════════ DONNÉES ══════════════ */
+const ORG = [
+  { rank:'La Donna', color:'#d4b26e', members:['Lov Moni'] },
+  { rank:'Braccio Destro', color:'#c0392b', members:['Raymond Carter'] },
+  { rank:'Anziani', color:'#c07a2b', members:['Andrea Moni'] },
+  { rank:'Baroni', color:'#5a7a2b', members:['Karl Larsson','Oscar Santo'] },
+  { rank:'Camerata', color:'#5a7a2b', members:['Ezio Spallow','James Mendoza'] },
+  { rank:'Vicino', color:'#888888', members:['Tommy Dane'] },
+  { rank:'Associati', color:'#777777', members:['Allesandro Moretti','Bass Carter','Dayon Reas','Javier Silva','Javier Cruz Silva','Jiji Goose','Tony Moncini'] },
+];
+const PHOTOS = ['ladonna.webp','famille-villa.webp','deux-hommes.webp','duo-nuit.webp','famille-escaliers.webp','famille-balcon.webp'];
+const QG = ['qg-carte.webp','qg-vue.webp'];
+const ini = n => n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+/* icônes SVG */
+const SVG = {
+  famille:'<svg viewBox="0 0 24 24"><path d="M3 7h5l2 2h11v10H3z"/></svg>',
+  galerie:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m3 17 5-4 4 3 3-2 6 4"/></svg>',
+  qg:'<svg viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  discord:'<svg viewBox="0 0 24 24"><path d="M7 8a13 13 0 0 1 10 0M6 17a13 13 0 0 0 12 0M8 12h.01M16 12h.01M7 16l-1 3 3-1M17 16l1 3-3-1"/></svg>',
+  musique:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',
+  terminal:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg>',
+};
+
+/* ══════════════ APPLIS ══════════════ */
+const APPS = {
+  famille:{ name:'Famille', icon:SVG.famille, w:640, h:460, body(){
+    let h='<div class="breadcrumb">~ / <b>Famille Moni</b> / Membres /</div>';
+    ORG.forEach(t=>{
+      h+='<div class="grp-title">'+t.rank+'</div><div class="files">';
+      h+=t.members.map(m=>'<div class="file"><div class="av" style="background:'+t.color+(t.color==='#d4b26e'?';color:#1a1206':'')+'">'+ini(m)+'</div><div class="fn">'+m+'</div><div class="fr" style="color:'+t.color+'">'+t.rank+'</div></div>').join('');
+      h+='</div>';
+    });
+    return h;
+  }},
+  galerie:{ name:'Galerie', icon:SVG.galerie, w:600, h:440, body(){
+    return '<div class="breadcrumb">~ / <b>Galerie</b> /</div><div class="ph-grid">'+
+      PHOTOS.map(p=>'<img src="'+p+'" alt="" loading="lazy" onclick="openLB(this.src)">').join('')+'</div>';
+  }},
+  qg:{ name:'Notre QG', icon:SVG.qg, w:620, h:440, body(){
+    return '<div class="breadcrumb">~ / <b>Notre QG</b> / Roxwood /</div>'+
+      '<p>Le repaire de la famille à Roxwood. Clique pour agrandir.</p><div class="ph-grid" style="grid-template-columns:1fr 1fr">'+
+      QG.map(p=>'<img src="'+p+'" alt="" loading="lazy" style="height:180px" onclick="openLB(this.src)">').join('')+'</div>';
+  }},
+  discord:{ name:'Discord', icon:SVG.discord, w:460, h:300, body(){
+    return '<div class="breadcrumb">~ / <b>Discord</b> /</div>'+
+      '<p>Rejoins la famille sur nos serveurs Discord.</p>'+
+      '<a class="btn" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener">Serveur recrutement</a>'+
+      '<a class="btn g" href="https://discord.gg/nM3ttEtYz" target="_blank" rel="noopener">Serveur principal</a>'+
+      '<p style="margin-top:16px">▶ Serveur FiveM : <a class="btn" style="margin-top:8px" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener">Se connecter</a></p>';
+  }},
+  musique:{ name:'Musique', icon:SVG.musique, w:320, h:340, body(){
+    return '<div class="music-app"><div class="music-disc" id="disc"><div class="hole"></div></div>'+
+      '<div style="font-weight:600;font-size:13px">Ambiance Moni</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Thème de la famille</div>'+
+      '<button class="music-btn" id="mbtn" onclick="toggleMusic()">▶</button></div>';
+  }},
+  terminal:{ name:'Terminal', icon:SVG.terminal, w:560, h:340, body(){
+    return '<div class="term" id="term"></div>';
+  }, onOpen(win){ typeTerminal(win.querySelector('#term')); } },
+};
+
+/* ══════════════ GESTION FENÊTRES ══════════════ */
+let z = 100;
+const openWins = {};
+const dock = document.getElementById('dock');
+
+function openApp(id){
+  const app = APPS[id];
+  if(!app) return;
+  if(openWins[id]){ focusWin(openWins[id]); openWins[id].style.display='flex'; return; }
+  const win = document.createElement('div');
+  win.className='win';
+  const W = Math.min(app.w, innerWidth-40), H = Math.min(app.h, innerHeight-120);
+  win.style.width=W+'px'; win.style.height=H+'px';
+  win.style.left=Math.max(20,(innerWidth-W)/2 + (Object.keys(openWins).length*26)%120 - 60)+'px';
+  win.style.top =Math.max(52,(innerHeight-H)/2 - 20 + (Object.keys(openWins).length*20)%80)+'px';
+  win.style.zIndex=++z;
+  win.innerHTML =
+    '<div class="win-bar"><div class="win-title">'+app.icon.replace(/width="24" height="24"|viewBox/,'viewBox')+' '+app.name+'</div>'+
+    '<div class="win-btns"><button class="b-min" title="Réduire"></button><button class="b-max"></button><button class="b-close" title="Fermer"></button></div></div>'+
+    '<div class="win-body">'+app.body()+'</div>';
+  document.body.appendChild(win);
+  openWins[id]=win;
+  win.addEventListener('mousedown',()=>focusWin(win));
+  makeDraggable(win);
+  win.querySelector('.b-close').onclick=e=>{e.stopPropagation();closeApp(id);};
+  win.querySelector('.b-min').onclick=e=>{e.stopPropagation();win.style.display='none';};
+  win.querySelector('.b-max').onclick=e=>{e.stopPropagation();maximize(win);};
+  addDock(id,app);
+  markIcon(id,true);
+  if(app.onOpen) app.onOpen(win);
+}
+function closeApp(id){
+  if(openWins[id]) openWins[id].remove();
+  delete openWins[id];
+  const d=document.getElementById('dock-'+id); if(d) d.remove();
+  markIcon(id,false);
+  if(id==='musique'){ const a=document.getElementById('bgm'); }
+}
+function focusWin(win){ win.style.zIndex=++z; win.style.display='flex'; }
+function maximize(win){
+  if(win.dataset.max){ win.style.cssText=win.dataset.prev; win.dataset.max=''; }
+  else{ win.dataset.prev=win.style.cssText; win.dataset.max='1';
+    win.style.left='14px';win.style.top='46px';win.style.width=(innerWidth-28)+'px';win.style.height=(innerHeight-70)+'px'; }
+}
+function addDock(id,app){
+  if(document.getElementById('dock-'+id)) return;
+  const el=document.createElement('div'); el.className='dock-item'; el.id='dock-'+id; el.title=app.name;
+  el.innerHTML=app.icon+'<span class="dot"></span>';
+  el.onclick=()=>{ const w=openWins[id]; if(w){ w.style.display==='none'?focusWin(w):focusWin(w); } };
+  dock.appendChild(el);
+}
+function markIcon(id,on){ const ic=document.getElementById('ic-'+id); if(ic) ic.classList.toggle('active',on); }
+
+function makeDraggable(win){
+  const bar=win.querySelector('.win-bar'); let sx,sy,ox,oy,drag=false;
+  bar.addEventListener('mousedown',e=>{ if(e.target.tagName==='BUTTON')return; drag=true; sx=e.clientX;sy=e.clientY;
+    ox=win.offsetLeft;oy=win.offsetTop; document.body.style.cursor='move'; });
+  window.addEventListener('mousemove',e=>{ if(!drag)return;
+    win.style.left=Math.max(0,Math.min(innerWidth-60,ox+e.clientX-sx))+'px';
+    win.style.top =Math.max(40,Math.min(innerHeight-40,oy+e.clientY-sy))+'px'; });
+  window.addEventListener('mouseup',()=>{ drag=false; document.body.style.cursor=''; });
+}
+
+/* ══════════════ ICÔNES BUREAU ══════════════ */
+const desktop=document.getElementById('desktop');
+Object.keys(APPS).forEach(id=>{
+  const app=APPS[id];
+  const ic=document.createElement('div'); ic.className='icon'; ic.id='ic-'+id;
+  ic.innerHTML='<div class="glyph">'+app.icon+'</div><span>'+app.name+'</span>';
+  ic.addEventListener('dblclick',()=>openApp(id));
+  let t; ic.addEventListener('click',()=>{ /* simple clic = ouvre aussi (plus accessible) */ clearTimeout(t); t=setTimeout(()=>openApp(id),180); });
+  ic.addEventListener('dblclick',()=>clearTimeout(t));
+  desktop.appendChild(ic);
+});
+
+/* ══════════════ LIGHTBOX ══════════════ */
+const lb=document.getElementById('lb');
+function openLB(src){ document.getElementById('lb-img').src=src; lb.classList.add('open'); }
+lb.onclick=()=>lb.classList.remove('open');
+
+/* ══════════════ MUSIQUE ══════════════ */
+let bgm;
+function toggleMusic(){
+  if(!bgm){ bgm=new Audio('musique.mp3?v=3'); bgm.loop=true; bgm.volume=.4; }
+  const btn=document.getElementById('mbtn'), disc=document.getElementById('disc');
+  if(bgm.paused){ bgm.play().catch(()=>{}); if(btn)btn.textContent='❚❚'; if(disc)disc.classList.add('spin'); }
+  else{ bgm.pause(); if(btn)btn.textContent='▶'; if(disc)disc.classList.remove('spin'); }
+}
+
+/* ══════════════ TERMINAL ══════════════ */
+function typeTerminal(el){
+  const lines=[
+    '<span class="c">moni@roxwood</span>:~$ ./bienvenue.sh',
+    '',
+    'Initialisation du système MONI OS...',
+    'Chargement de la famille .................. <span class="c">OK</span>',
+    'Connexion à Roxwood ....................... <span class="c">OK</span>',
+    'Vérification de la loyauté ................ <span class="c">100%</span>',
+    '',
+    'Née de la Famiglia Moncini d\'Italie, la famille Moni',
+    'bâtit à Roxwood l\'empire discret que son père a laissé.',
+    '',
+    '<span class="c">></span> Une fois Moni, toujours Moni.',
+    '<span class="r">></span> Ce qui se passe dans la famille reste dans la famille.',
+    '',
+    '<span class="c">moni@roxwood</span>:~$ _',
+  ];
+  el.innerHTML=''; let i=0;
+  (function next(){ if(i>=lines.length)return; el.innerHTML+=(i?'\n':'')+lines[i]; i++; setTimeout(next, lines[i-1]===''?90:260); })();
+}
+
+/* ══════════════ HORLOGE ══════════════ */
+function tick(){
+  const d=new Date();
+  document.getElementById('clock').textContent=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('date').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+}
+tick(); setInterval(tick,1000);
+
+/* ══════════════ FOND RÉSEAU ══════════════ */
+(function net(){
+  const c=document.getElementById('bg-canvas'),x=c.getContext('2d');let W,H,ps=[];
+  function rs(){W=c.width=innerWidth;H=c.height=innerHeight;ps=[];const n=Math.min(70,Math.round(W*H/22000));
+    for(let i=0;i<n;i++)ps.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25});}
+  rs();addEventListener('resize',rs);
+  (function loop(){x.clearRect(0,0,W,H);
+    for(let i=0;i<ps.length;i++){const a=ps[i];a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>W)a.vx*=-1;if(a.y<0||a.y>H)a.vy*=-1;
+      for(let j=i+1;j<ps.length;j++){const b=ps[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);
+        if(d<120){x.strokeStyle='rgba(180,180,190,'+(.14*(1-d/120))+')';x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();}}
+      x.fillStyle='rgba(200,200,210,.5)';x.beginPath();x.arc(a.x,a.y,1,0,7);x.fill();}
+    requestAnimationFrame(loop);})();
+})();
+
+/* ══════════════ BOOT ══════════════ */
+setTimeout(()=>{ const b=document.getElementById('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),600); }, 1700);
+</script>
+</body>
+</html>
