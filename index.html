@@ -917,15 +917,15 @@
       <div class="hierarchie-item rang-3">
         <div class="rang-badge">III</div>
         <div class="rang-info">
-          <div class="rang-name">Anziani</div>
-          <div class="rang-desc">Aînés — Capitaines</div>
+          <div class="rang-name">Consigliere</div>
+          <div class="rang-desc">Conseiller — Capitaines</div>
         </div>
       </div>
       <div class="hierarchie-item rang-4">
         <div class="rang-badge">IV</div>
         <div class="rang-info">
-          <div class="rang-name">Eredi</div>
-          <div class="rang-desc">Héritiers — Lieutenants</div>
+          <div class="rang-name">Anziani</div>
+          <div class="rang-desc">Aînés — Lieutenants</div>
         </div>
       </div>
       <div class="hierarchie-item rang-5">
@@ -938,8 +938,8 @@
       <div class="hierarchie-item rang-6">
         <div class="rang-badge">VI</div>
         <div class="rang-info">
-          <div class="rang-name">Camerata</div>
-          <div class="rang-desc">Camarades</div>
+          <div class="rang-name">Fedeli</div>
+          <div class="rang-desc">Fidèle — Gradé</div>
         </div>
       </div>
       <div class="hierarchie-item rang-7">
@@ -1064,13 +1064,13 @@
         <div class="card-front">
           <div class="avatar">ES</div>
           <div class="membre-name">Ezio Spallow</div>
-          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Camerata</div>
+          <div class="membre-role" style="color:#c07a2b;font-size:10px;">Anziani</div>
           
           <div class="card-hint">Cliquer pour détails</div>
         </div>
         <div class="card-back">
           <div class="back-initiales">ES</div>
-          <div class="back-rang" style="color:#5a7a2b;">Camerata</div>
+          <div class="back-rang" style="color:#c07a2b;">Anziani</div>
           <div>Ezio Spallow</div>
           <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
         </div>
@@ -1081,13 +1081,13 @@
         <div class="card-front">
           <div class="avatar">JM</div>
           <div class="membre-name">James Mendoza</div>
-          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Camerata</div>
+          <div class="membre-role" style="color:#5a7a2b;font-size:10px;">Fedeli</div>
           
           <div class="card-hint">Cliquer pour détails</div>
         </div>
         <div class="card-back">
           <div class="back-initiales">JM</div>
-          <div class="back-rang" style="color:#5a7a2b;">Camerata</div>
+          <div class="back-rang" style="color:#5a7a2b;">Fedeli</div>
           <div>James Mendoza</div>
           <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
         </div>
@@ -1217,13 +1217,13 @@
         <div class="card-front">
           <div class="avatar">TM</div>
           <div class="membre-name">Tony Moncini</div>
-          <div class="membre-role" style="color:#555555;font-size:10px;">Associati</div>
+          <div class="membre-role" style="color:#b5651d;font-size:10px;">Consigliere</div>
           
           <div class="card-hint">Cliquer pour détails</div>
         </div>
         <div class="card-back">
           <div class="back-initiales">TM</div>
-          <div class="back-rang" style="color:#555555;">Associati</div>
+          <div class="back-rang" style="color:#b5651d;">Consigliere</div>
           <div>Tony Moncini</div>
           <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">Famille Moni · Roxwood</div>
         </div>
@@ -1693,11 +1693,12 @@
   const ORGANIGRAMME = [
     { rank: 'La Donna',       color: '#d4b26e', donna: true, members: ['Lov Moni'] },
     { rank: 'Braccio Destro', color: '#c0392b', members: ['Raymond Carter'] },
-    { rank: 'Anziani',        color: '#c07a2b', members: ['Andrea Moni'] },
+    { rank: 'Consigliere',    color: '#b5651d', members: ['Tony Moncini'] },
+    { rank: 'Anziani',        color: '#c07a2b', members: ['Andrea Moni', 'Ezio Spallow'] },
     { rank: 'Baroni',         color: '#5a7a2b', members: ['Karl Larsson', 'Oscar Santo'] },
-    { rank: 'Camerata',       color: '#5a7a2b', members: ['Ezio Spallow', 'James Mendoza'] },
+    { rank: 'Fedeli',       color: '#5a7a2b', members: ['James Mendoza'] },
     { rank: 'Vicino',         color: '#888888', members: ['Tommy Dane'] },
-    { rank: 'Associati',      color: '#777777', members: ['Allesandro Moretti', 'Bass Carter', 'Dayon Reas', 'Javier Silva', 'Javier Cruz Silva', 'Jiji Goose', 'Tony Moncini'] },
+    { rank: 'Associati',      color: '#777777', members: ['Allesandro Moretti', 'Bass Carter', 'Dayon Reas', 'Javier Silva', 'Javier Cruz Silva', 'Jiji Goose'] },
   ];
   (function initOrganigramme() {
     const tree = document.getElementById('org-tree');
