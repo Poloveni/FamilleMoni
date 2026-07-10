@@ -4,21 +4,41 @@
 window.SUPABASE_URL = 'https://prwdtdmdkhzwfyivaepw.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_qgN4fRX9eVdKn3SWAjtmhw_F00rlqXz';
 
-// Liste officielle des 15 membres (nom -> rang), pour le choix du personnage.
+// ══════════════════════════════════════════════════════════════════
+//  SOURCE UNIQUE DE VÉRITÉ pour les membres et les rangs.
+//  → Modifie UNIQUEMENT ce fichier pour ajouter/retirer un membre ou
+//    changer un rang : la page d'accueil (cartes + organigramme +
+//    compteur) et l'espace membre se mettent à jour automatiquement.
+// ══════════════════════════════════════════════════════════════════
+
+// Les rangs, du plus haut au plus bas, avec leur couleur d'affichage.
+window.MONI_RANGS = [
+  { nom: 'La Donna',       color: '#d4b26e', desc: 'Chef' },
+  { nom: 'Braccio Destro', color: '#c0392b', desc: 'Bras Droit — Co-Lead' },
+  { nom: 'Consigliere',    color: '#b5651d', desc: 'Conseiller — Capitaines' },
+  { nom: 'Anziani',        color: '#c07a2b', desc: 'Aînés — Lieutenants' },
+  { nom: 'Baroni',         color: '#5a7a2b', desc: 'Barons — Gérants drogue, armes, blanchiment, opérations, événements…' },
+  { nom: 'Fedeli',         color: '#5a7a2b', desc: 'Fidèle — Gradé' },
+  { nom: 'Vicino',         color: '#888888', desc: 'Proches' },
+  { nom: 'Sicario',        color: '#777777', desc: 'Hommes de main — Membres confirmés' },
+  { nom: 'Associati',      color: '#777777', desc: 'Associés — Membres' }
+];
+
+// Liste officielle des membres (nom -> rang).
 window.MONI_MEMBRES = [
   { nom: 'Lov Moni',           rang: 'La Donna' },
-  { nom: 'Bass Carter',        rang: 'Braccio Destro' },
   { nom: 'Raymond Carter',     rang: 'Braccio Destro' },
+  { nom: 'Tony Moncini',       rang: 'Consigliere' },
   { nom: 'Andrea Moni',        rang: 'Anziani' },
+  { nom: 'Ezio Spallow',       rang: 'Anziani' },
   { nom: 'Karl Larsson',       rang: 'Baroni' },
   { nom: 'Oscar Santo',        rang: 'Baroni' },
-  { nom: 'Ezio Spallow',       rang: 'Camerata' },
-  { nom: 'James Mendoza',      rang: 'Camerata' },
+  { nom: 'James Mendoza',      rang: 'Fedeli' },
   { nom: 'Tommy Dane',         rang: 'Vicino' },
   { nom: 'Allesandro Moretti', rang: 'Associati' },
+  { nom: 'Bass Carter',        rang: 'Associati' },
   { nom: 'Dayon Reas',         rang: 'Associati' },
   { nom: 'Javier Silva',       rang: 'Associati' },
   { nom: 'Javier Cruz Silva',  rang: 'Associati' },
-  { nom: 'Jiji Goose',         rang: 'Associati' },
-  { nom: 'Tony Moncini',       rang: 'Associati' }
+  { nom: 'Jiji Goose',         rang: 'Associati' }
 ];

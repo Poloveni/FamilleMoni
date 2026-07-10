@@ -209,9 +209,10 @@
   <div class="login-box">
     <div class="login-logo">Famille <span>Moni</span></div>
     <div class="login-sub">Accès Administrateur</div>
-    <input type="password" id="pwd-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')doLogin()" />
+    <input type="email" id="login-email" placeholder="Email admin" autocomplete="username" />
+    <input type="password" id="pwd-input" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
     <button onclick="doLogin()">Connexion</button>
-    <div class="login-error" id="login-error">Mot de passe incorrect.</div>
+    <div class="login-error" id="login-error">Identifiants incorrects.</div>
   </div>
 </div>
 
@@ -236,12 +237,6 @@
         <span class="sidebar-icon">📊</span> Dashboard
       </div>
       <div class="sidebar-label">Contenu</div>
-      <div class="sidebar-item" onclick="showPanel('actualites', this)">
-        <span class="sidebar-icon">📰</span> Actualités
-      </div>
-      <div class="sidebar-item" onclick="showPanel('evenements', this)">
-        <span class="sidebar-icon">📅</span> Événements
-      </div>
       <div class="sidebar-item" onclick="showPanel('hero', this)">
         <span class="sidebar-icon">🏠</span> Page d'accueil
       </div>
@@ -272,12 +267,8 @@
             <div class="dash-card-label">Membres</div>
           </div>
           <div class="dash-card">
-            <div class="dash-card-num" id="dash-actus">3</div>
-            <div class="dash-card-label">Actualités</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-events">4</div>
-            <div class="dash-card-label">Événements</div>
+            <div class="dash-card-num">Discord</div>
+            <div class="dash-card-label">Événements (sync auto)</div>
           </div>
           <div class="dash-card">
             <div class="dash-card-num">Roxwood</div>
@@ -286,9 +277,12 @@
         </div>
         <div class="divider"></div>
         <p style="font-size:13px;color:var(--text-muted);line-height:1.7;">
-          Utilisez le menu à gauche pour modifier les <strong style="color:var(--text)">actualités</strong>, 
-          les <strong style="color:var(--text)">membres</strong> et les textes de la <strong style="color:var(--text)">page d'accueil</strong>.
-          Une fois vos modifications faites, allez dans <strong style="color:var(--text)">Exporter</strong> pour récupérer le code à uploader sur GitHub.
+          ⚠️ <strong style="color:var(--text)">Important :</strong> ce panneau est un brouillon local. Les modifications de
+          <strong style="color:var(--text)">membres</strong> et de la <strong style="color:var(--text)">page d'accueil</strong>
+          ne sont visibles par les visiteurs qu'après export (menu <strong style="color:var(--text)">Exporter</strong>),
+          collage du code dans le fichier du site, puis publication (publier.bat).<br>
+          Les <strong style="color:var(--text)">événements</strong> se gèrent directement sur Discord (synchronisation automatique)
+          et les <strong style="color:var(--text)">inscriptions</strong> sont validées ici, en direct.
         </p>
         <div style="margin-top:24px;">
           <button class="btn-danger" onclick="resetData()">↻ Réinitialiser depuis le contenu du site</button>
@@ -296,26 +290,6 @@
             Efface les modifications locales non exportées et recharge la liste officielle des membres, actus et textes.
           </p>
         </div>
-      </div>
-
-      <!-- ACTUALITÉS -->
-      <div class="panel" id="panel-actualites">
-        <div class="panel-title">Gérer les <em>Actualités</em></div>
-        <div class="panel-desc">Modifiez, ajoutez ou supprimez les actualités affichées sur le site.</div>
-        <button class="btn-add" onclick="addActu()">+ Ajouter une actualité</button>
-        <div class="actu-admin-list" id="actu-list"></div>
-        <div class="divider"></div>
-        <button class="btn-save" onclick="saveActus()">✓ Enregistrer les actualités</button>
-      </div>
-
-      <!-- ÉVÉNEMENTS -->
-      <div class="panel" id="panel-evenements">
-        <div class="panel-title">Gérer les <em>Événements</em></div>
-        <div class="panel-desc">Ajoutez, modifiez ou supprimez les événements à venir affichés sur le site.</div>
-        <button class="btn-add" onclick="addEvent()">+ Ajouter un événement</button>
-        <div class="actu-admin-list" id="event-list"></div>
-        <div class="divider"></div>
-        <button class="btn-save" onclick="saveEvents()">✓ Enregistrer les événements</button>
       </div>
 
       <!-- HERO -->
@@ -347,10 +321,10 @@
       <!-- EXPORT -->
       <div class="panel" id="panel-export">
         <div class="panel-title">Exporter le <em>Site</em></div>
-        <div class="panel-desc">Récupérez les données à intégrer dans votre index.html pour mettre à jour le site sur GitHub.</div>
+        <div class="panel-desc">Le site lit la liste des membres dans supabase-config.js. Copiez le bloc ci-dessous, collez-le à la place du bloc window.MONI_MEMBRES existant dans ce fichier, puis publiez avec publier.bat.</div>
         <div class="export-box">
-          <h3>📋 Données JSON exportées</h3>
-          <p>Copiez ce JSON et envoyez-le à Claude pour qu'il mette à jour automatiquement votre index.html.</p>
+          <h3>📋 Code prêt à coller dans supabase-config.js</h3>
+          <p>Cartes, organigramme et compteur de la page d'accueil se mettront à jour automatiquement.</p>
           <button class="copy-btn" onclick="exportData()">Copier les données</button>
           <pre id="export-preview" style="margin-top:16px;font-size:11px;color:var(--text-muted);background:var(--surface2);padding:16px;overflow:auto;max-height:300px;white-space:pre-wrap;display:none;"></pre>
         </div>
@@ -387,17 +361,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-  // Le mot de passe n'est plus stocké en clair : seule son empreinte SHA-256 figure ici.
-  // Note : sur un site 100% statique, aucun mot de passe côté navigateur n'est vraiment
-  // sécurisé — mais au moins il n'est plus lisible directement dans le code source.
-  const PASSWORD_HASH = 'd0a88eca2303f7ac7530fedb6aba66ab55c317c50c16d81b2870ad31ac9f3a78';
-  async function sha256(str) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
+  // Connexion : via le compte Supabase admin (vérifié côté serveur, rien de
+  // secret dans le code source). Le compte admin est le même que sur l'espace membre.
 
   // Version des données : si le cache local est plus ancien, on repart du contenu du site.
-  const DATA_VERSION = 3;
+  const DATA_VERSION = 4;
 
   const RANGS = [
     'La Donna','Braccio Destro','Consigliere','Anziani','Baroni','Fedeli','Vicino','Sicario','Associati'
@@ -408,34 +376,8 @@
       sub: "Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui.",
       btn: "Rejoindre le Discord"
     },
-    membres: [
-      { nom: "Lov Moni", rang: "La Donna" },
-      { nom: "Raymond Carter", rang: "Braccio Destro" },
-      { nom: "Andrea Moni", rang: "Anziani" },
-      { nom: "Karl Larsson", rang: "Baroni" },
-      { nom: "Oscar Santo", rang: "Baroni" },
-      { nom: "Ezio Spallow", rang: "Anziani" },
-      { nom: "James Mendoza", rang: "Fedeli" },
-      { nom: "Bass Carter", rang: "Associati" },
-      { nom: "Tommy Dane", rang: "Vicino" },
-      { nom: "Allesandro Moretti", rang: "Associati" },
-      { nom: "Dayon Reas", rang: "Associati" },
-      { nom: "Javier Silva", rang: "Associati" },
-      { nom: "Javier Cruz Silva", rang: "Associati" },
-      { nom: "Jiji Goose", rang: "Associati" },
-      { nom: "Tony Moncini", rang: "Consigliere" }
-    ],
-    actus: [
-      { date: "Juin 29", titre: "Site officiel en ligne", texte: "Le site de la Famille Moni est maintenant en ligne. Bienvenue !", badge: "Nouveau" },
-      { date: "Juin 26", titre: "Réunion au QG", texte: "Tous les membres sont convoqués ce soir. Soyez à l'heure.", badge: "Important" },
-      { date: "Juin 18", titre: "Incident à Roxwood", texte: "Restez vigilants, des inconnus ont été vus rôder dans notre quartier.", badge: "Alerte" }
-    ],
-    events: [
-      { jour: "05", mois: "Juil", titre: "Réunion générale", heure: "21h00 — QG de Roxwood", texte: "Point mensuel de la famille. Présence de tous les membres attendue.", type: "Important" },
-      { jour: "12", mois: "Juil", titre: "Soirée au bar", heure: "22h00 — Roxwood", texte: "Détente entre membres autour d'un verre. Ambiance et bonne humeur.", type: "Social" },
-      { jour: "19", mois: "Juil", titre: "Session RP majeure", heure: "20h30 — Lieu communiqué sur Discord", texte: "Grosse opération prévue. Restez discrets, les détails suivront.", type: "RP" },
-      { jour: "26", mois: "Juil", titre: "Journée recrutement", heure: "21h00 — Roxwood", texte: "Entretiens des nouvelles recrues. Faites passer le mot.", type: "Recrutement" }
-    ]
+    // Membres chargés depuis supabase-config.js (source unique de vérité)
+    membres: (window.MONI_MEMBRES || []).map(m => ({ nom: m.nom, rang: m.rang }))
   };
 
   // Charger depuis localStorage seulement si la version du cache est à jour
@@ -443,25 +385,48 @@
   const saved = localStorage.getItem('moni-admin-data');
   if (saved && savedVer >= DATA_VERSION) { try { data = JSON.parse(saved); } catch(e) {} }
 
-  async function doLogin() {
-    const val = document.getElementById('pwd-input').value;
-    if (await sha256(val) === PASSWORD_HASH) {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-screen').style.display = 'block';
-      initAdmin();
-    } else {
-      const err = document.getElementById('login-error');
-      err.style.display = 'block';
-      document.getElementById('pwd-input').value = '';
-      setTimeout(() => err.style.display = 'none', 3000);
-    }
+  function loginFail(msg) {
+    const err = document.getElementById('login-error');
+    err.textContent = msg || 'Identifiants incorrects.';
+    err.style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+    setTimeout(() => err.style.display = 'none', 4000);
   }
 
-  function doLogout() {
+  function enterAdmin() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    initAdmin();
+  }
+
+  async function doLogin() {
+    if (!SB) { loginFail('Connexion Supabase indisponible.'); return; }
+    const email = document.getElementById('login-email').value.trim();
+    const pwd = document.getElementById('pwd-input').value;
+    if (!email || !pwd) { loginFail('Email et mot de passe requis.'); return; }
+    const { data: d, error } = await SB.auth.signInWithPassword({ email, password: pwd });
+    if (error) { loginFail('Identifiants incorrects.'); return; }
+    if (d.user.email !== ADMIN_EMAIL) {
+      await SB.auth.signOut();
+      loginFail("Ce compte n'a pas les droits d'administration.");
+      return;
+    }
+    enterAdmin();
+  }
+
+  async function doLogout() {
+    if (SB) await SB.auth.signOut();
     document.getElementById('admin-screen').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('pwd-input').value = '';
   }
+
+  // Déjà connecté (session en cours) ? On entre directement.
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!SB) return;
+    const { data: d } = await SB.auth.getSession();
+    if (d.session && d.session.user.email === ADMIN_EMAIL) enterAdmin();
+  });
 
   function showPanel(id, el) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -538,18 +503,13 @@
   }
 
   function initAdmin() {
-    if (!data.events) data.events = [];
     renderMembres();
-    renderActus();
-    renderEvents();
     renderHero();
     updateDash();
   }
 
   function updateDash() {
     document.getElementById('dash-membres').textContent = data.membres.length;
-    document.getElementById('dash-actus').textContent = data.actus.length;
-    document.getElementById('dash-events').textContent = (data.events || []).length;
   }
 
   // ── HERO ──
@@ -594,127 +554,6 @@
     saveData(); showToast('Membres sauvegardés !'); updateDash();
   }
 
-  // ── ACTUS ──
-  function renderActus() {
-    const list = document.getElementById('actu-list');
-    list.innerHTML = data.actus.map((a, i) => `
-      <div class="actu-admin-item">
-        <div class="actu-admin-header">
-          <div class="actu-admin-num">Actualité ${i+1}</div>
-          <button class="btn-danger" onclick="removeActu(${i})">✕ Supprimer</button>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Date</label>
-            <input type="text" class="form-input" value="${a.date}" placeholder="ex: Juil 01" onchange="data.actus[${i}].date=this.value" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Badge</label>
-            <select class="form-select" onchange="data.actus[${i}].badge=this.value">
-              <option value="" ${a.badge===''?'selected':''}>Aucun</option>
-              <option value="Nouveau" ${a.badge==='Nouveau'?'selected':''}>Nouveau</option>
-              <option value="Important" ${a.badge==='Important'?'selected':''}>Important</option>
-              <option value="Alerte" ${a.badge==='Alerte'?'selected':''}>Alerte</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Titre</label>
-          <input type="text" class="form-input" value="${a.titre}" placeholder="Titre de l'actualité" onchange="data.actus[${i}].titre=this.value" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Texte</label>
-          <textarea class="form-textarea" placeholder="Contenu de l'actualité" onchange="data.actus[${i}].texte=this.value">${a.texte}</textarea>
-        </div>
-      </div>
-    `).join('');
-  }
-  function addActu() {
-    data.actus.unshift({ date: "", titre: "", texte: "", badge: "" });
-    renderActus(); updateDash();
-  }
-  function removeActu(i) {
-    if (confirm('Supprimer cette actualité ?')) { data.actus.splice(i, 1); renderActus(); updateDash(); }
-  }
-  function saveActus() {
-    document.querySelectorAll('#actu-list .actu-admin-item').forEach((item, i) => {
-      if (data.actus[i]) {
-        const inputs = item.querySelectorAll('input, textarea, select');
-        data.actus[i].date = inputs[0].value;
-        data.actus[i].badge = inputs[1].value;
-        data.actus[i].titre = inputs[2].value;
-        data.actus[i].texte = inputs[3].value;
-      }
-    });
-    saveData(); showToast('Actualités sauvegardées !'); updateDash();
-  }
-
-  // ── ÉVÉNEMENTS ──
-  const EVENT_TYPES = ['Important','Social','RP','Recrutement','Autre'];
-  function renderEvents() {
-    const list = document.getElementById('event-list');
-    list.innerHTML = (data.events || []).map((e, i) => `
-      <div class="actu-admin-item">
-        <div class="actu-admin-header">
-          <div class="actu-admin-num">Événement ${i+1}</div>
-          <button class="btn-danger" onclick="removeEvent(${i})">✕ Supprimer</button>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Jour</label>
-            <input type="text" class="form-input" value="${e.jour||''}" placeholder="ex: 05" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Mois</label>
-            <input type="text" class="form-input" value="${e.mois||''}" placeholder="ex: Juil" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Titre</label>
-          <input type="text" class="form-input" value="${e.titre||''}" placeholder="Titre de l'événement" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Heure / Lieu</label>
-            <input type="text" class="form-input" value="${e.heure||''}" placeholder="ex: 21h00 — Roxwood" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Type</label>
-            <select class="form-select">
-              ${EVENT_TYPES.map(t => `<option value="${t}" ${e.type===t?'selected':''}>${t}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea class="form-textarea" placeholder="Détails de l'événement">${e.texte||''}</textarea>
-        </div>
-      </div>
-    `).join('');
-  }
-  function addEvent() {
-    if (!data.events) data.events = [];
-    data.events.push({ jour: "", mois: "", titre: "", heure: "", texte: "", type: "Important" });
-    renderEvents(); updateDash();
-  }
-  function removeEvent(i) {
-    if (confirm('Supprimer cet événement ?')) { data.events.splice(i, 1); renderEvents(); updateDash(); }
-  }
-  function saveEvents() {
-    document.querySelectorAll('#event-list .actu-admin-item').forEach((item, i) => {
-      if (data.events[i]) {
-        const f = item.querySelectorAll('input, select, textarea');
-        data.events[i].jour  = f[0].value;
-        data.events[i].mois  = f[1].value;
-        data.events[i].titre = f[2].value;
-        data.events[i].heure = f[3].value;
-        data.events[i].type  = f[4].value;
-        data.events[i].texte = f[5].value;
-      }
-    });
-    saveData(); showToast('Événements sauvegardés !'); updateDash();
-  }
-
   // ── SAVE / EXPORT ──
   function saveData() {
     localStorage.setItem('moni-admin-data', JSON.stringify(data));
@@ -730,12 +569,20 @@
   }
 
   function exportData() {
-    const json = JSON.stringify(data, null, 2);
+    const NL = '\n';
+    const bloc =
+      '// Liste officielle des membres (nom -> rang).' + NL +
+      'window.MONI_MEMBRES = [' + NL +
+      data.membres.map(m => "  { nom: '" + String(m.nom).replace(/'/g, "\\'") + "', rang: '" + m.rang + "' }").join(',' + NL) +
+      NL + '];';
+    const txt = bloc + NL + NL +
+      "/* Textes de la page d'accueil (à reporter dans index.html si modifiés) :" + NL +
+      JSON.stringify(data.hero, null, 2) + NL + '*/';
     const preview = document.getElementById('export-preview');
-    preview.textContent = json;
+    preview.textContent = txt;
     preview.style.display = 'block';
-    navigator.clipboard.writeText(json).then(() => {
-      showToast('Données copiées ! Envoyez-les à Claude pour mettre à jour le site.');
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast('Code copié ! Colle le bloc window.MONI_MEMBRES dans supabase-config.js, puis publie.');
     });
   }
 
