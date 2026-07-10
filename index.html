@@ -17,7 +17,7 @@
   <meta property="og:site_name" content="Famille Moni" />
   <meta property="og:title" content="La Famille Moni — Roxwood GTA RP" />
   <meta property="og:description" content="Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui. Flashback FA — GTA RP." />
-  <meta property="og:image" content="https://poloveni.github.io/FamilleMoni/hero-bg.png" />
+  <meta property="og:image" content="https://poloveni.github.io/FamilleMoni/hero-og.jpg" />
   <meta property="og:url" content="https://poloveni.github.io/FamilleMoni/" />
   <meta property="og:locale" content="fr_FR" />
 
@@ -25,7 +25,20 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="La Famille Moni — Roxwood GTA RP" />
   <meta name="twitter:description" content="Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui." />
-  <meta name="twitter:image" content="https://poloveni.github.io/FamilleMoni/hero-bg.png" />
+  <meta name="twitter:image" content="https://poloveni.github.io/FamilleMoni/hero-og.jpg" />
+
+  <link rel="canonical" href="https://poloveni.github.io/FamilleMoni/" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Famille Moni",
+    "alternateName": "Famiglia Moncini",
+    "url": "https://poloveni.github.io/FamilleMoni/",
+    "logo": "https://poloveni.github.io/FamilleMoni/icon-512.png",
+    "description": "La Famille Moni — organisation RP née de la Famiglia Moncini, active à Roxwood sur Flashback FA (GTA RP)."
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet" />
@@ -259,7 +272,7 @@
     .hero-tag img { height: 24px; width: 24px; object-fit: cover; border-radius: 2px; }
     h1 {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(56px, 10vw, 90px); font-weight: 900; line-height: 1;
+      font-size: clamp(42px, 10vw, 90px); font-weight: 900; line-height: 1;
       letter-spacing: -1px; margin-bottom: 20px;
     }
     h1 em { font-style: italic; color: var(--red); }
@@ -725,8 +738,8 @@
       .histoire-inner { grid-template-columns: 1fr; }
       .recrutement-inner { grid-template-columns: 1fr; }
     }
-    @media (max-width: 640px) {
-      nav { padding: 0 20px; }
+    /* Le menu passe en burger dès 900px : 11 liens ne tiennent pas en dessous */
+    @media (max-width: 900px) {
       .nav-links { display: none; }
       .nav-links.open {
         display: flex; flex-direction: column; gap: 0; position: absolute; top: 60px;
@@ -734,12 +747,15 @@
       }
       .nav-links.open a { padding: 12px 24px; }
       .nav-burger { display: block; }
+    }
+    @media (max-width: 640px) {
+      nav { padding: 0 20px; }
       section { padding: 60px 20px; }
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
       .stat:nth-child(2) { border-right: none; }
       .stat:nth-child(3) { border-right: 1px solid var(--border); border-top: 1px solid var(--border); }
       .stat:nth-child(4) { border-right: none; border-top: 1px solid var(--border); }
-      .galerie-placeholder { grid-template-columns: 1fr; }
+      .galerie-grid { grid-template-columns: 1fr; }
       .galerie-item.large { grid-column: span 1; }
       footer { padding: 20px; flex-direction: column; text-align: center; }
       .contact-box { padding: 32px 20px; }
@@ -774,7 +790,7 @@
 <button id="back-to-top" aria-label="Retour en haut" title="Retour en haut">&#8593;</button>
 
 <!-- Musique d'ambiance (dépose ton fichier "musique.mp3" dans le dossier du site) -->
-<audio id="bg-music" src="musique.mp3?v=3" loop preload="none"></audio>
+<audio id="bg-music" src="musique.m4a?v=4" loop preload="none"></audio>
 <button id="music-toggle" aria-label="Couper ou activer la musique" title="Musique"><span id="music-icon">&#128266;</span></button>
 <nav>
   <div class="logo">Famille <span>Moni</span></div>

@@ -1,5 +1,5 @@
 /* Service Worker — Famille Moni (PWA) */
-const CACHE = 'moni-v2';
+const CACHE = 'moni-v3';
 const CORE = [
   './', './index.html', './os.html', './espace-membre.html',
   './logo.jpg', './hero-bg.webp', './icon-192.png', './icon-512.png',
