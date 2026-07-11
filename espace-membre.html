@@ -113,7 +113,9 @@
     .kpi {
       position: relative; overflow: hidden; background: var(--panel); border: 1px solid var(--border);
       border-radius: 14px; padding: 20px 20px 18px;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s, box-shadow 0.25s;
     }
+    .kpi:hover { transform: translateY(-3px); border-color: var(--border2); box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
     .kpi::before { content: ''; position: absolute; top: -40px; left: -40px; width: 120px; height: 120px; border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--kc, var(--red)); }
     .kpi-label { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); position: relative; }
     .kpi-num { font-size: 30px; font-weight: 700; margin-top: 8px; position: relative; letter-spacing: -0.5px; }
@@ -127,7 +129,14 @@
     .goal-head .val { color: var(--muted); }
     .goal-head .val b { color: var(--text); }
     .goal-bar { height: 14px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--border); overflow: hidden; position: relative; }
-    .goal-bar > span { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--red)); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .goal-bar > span { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--red)); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); overflow: hidden; }
+    .goal-bar > span::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%);
+      animation: shimmer 2.6s linear infinite;
+    }
+    @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+    @media (prefers-reduced-motion: reduce) { .goal-bar > span::after { animation: none; } }
     .goal-pct { text-align: right; font-size: 11px; color: var(--dim); margin-top: 7px; }
 
     /* Blocs / graphiques */
@@ -686,6 +695,187 @@
   const BD_DROGUES = ['cannabis', 'carte prépayée', 'b-magic', 'pochon de mexicana', 'ecstasy', 'tranq', 'cocaïne'];
   const DONUT_COLORS = ['#e0503f', '#d4b26e', '#2ecc71', '#5865f2', '#faa61a', '#9b59b6', '#1abc9c'];
 
+  // ══ MOTEUR GRAPHIQUE CANVAS ══
+  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lastCharts = { bars: null, donut: null };
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  // Compteur animé (les chiffres "défilent" jusqu'à leur valeur)
+  function countUp(el, target, fmt, ms) {
+    if (!el) return;
+    fmt = fmt || (v => Math.round(v).toLocaleString('fr-FR'));
+    if (REDUCED) { el.innerHTML = fmt(target); return; }
+    const t0 = performance.now(); ms = ms || 950;
+    (function step(now) {
+      const p = Math.min(1, (now - t0) / ms);
+      el.innerHTML = fmt(target * easeOut(p));
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function makeCanvas(container, h) {
+    container.innerHTML = '';
+    const w = Math.max(280, container.clientWidth - 2);
+    const dpr = window.devicePixelRatio || 1;
+    const cv = document.createElement('canvas');
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    container.appendChild(cv);
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return { cv, ctx, w, h };
+  }
+  function roundTopRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, Math.max(0.01, h));
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+  }
+
+  // Graphique en barres lumineuses + ligne de quota
+  function drawBarChart(container, data, quota) {
+    lastCharts.bars = { container, data, quota };
+    const { cv, ctx, w, h } = makeCanvas(container, 250);
+    const padB = 26, padT = 22;
+    const zone = h - padB - padT;
+    const maxV = Math.max(quota, ...data.map(d => d.value), 1);
+    const n = data.length;
+    const gap = Math.min(14, Math.max(5, w / n * 0.25));
+    const bw = Math.min(38, (w - 12 - gap * (n - 1)) / n);
+    const x0 = (w - (bw * n + gap * (n - 1))) / 2;
+    let hoverIdx = -1;
+    function render(p) {
+      ctx.clearRect(0, 0, w, h);
+      const qy = padT + zone * (1 - quota / maxV);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(212,178,110,0.4)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, qy); ctx.lineTo(w, qy); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(212,178,110,0.75)'; ctx.font = '600 9px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText('QUOTA ' + quota, w - 4, qy - 5);
+      ctx.restore();
+      data.forEach((d, i) => {
+        const x = x0 + i * (bw + gap);
+        const bh = Math.max(2, zone * (d.value / maxV) * p);
+        const y = padT + zone - bh;
+        const done = d.value >= quota;
+        const grad = ctx.createLinearGradient(0, y, 0, y + bh);
+        if (done) { grad.addColorStop(0, '#3ee88a'); grad.addColorStop(1, '#12673a'); }
+        else if (i === 0) { grad.addColorStop(0, '#ecc987'); grad.addColorStop(1, '#7d5f28'); }
+        else { grad.addColorStop(0, '#f0604c'); grad.addColorStop(1, '#6e2118'); }
+        ctx.save();
+        ctx.shadowColor = done ? 'rgba(46,204,113,0.55)' : (i === 0 ? 'rgba(212,178,110,0.55)' : 'rgba(224,80,63,0.45)');
+        ctx.shadowBlur = hoverIdx === i ? 22 : 10;
+        ctx.fillStyle = grad;
+        roundTopRect(ctx, x, y, bw, bh, 5);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = 'rgba(255,255,255,0.14)';
+        roundTopRect(ctx, x, y, bw, Math.min(4, bh), 5); ctx.fill();
+        ctx.fillStyle = hoverIdx === i ? '#fff' : 'rgba(238,240,244,0.85)';
+        ctx.font = '600 10px Inter, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(Math.round(d.value * p), x + bw / 2, y - 6);
+        ctx.fillStyle = hoverIdx === i ? 'rgba(238,240,244,0.95)' : 'rgba(139,145,160,0.9)';
+        ctx.font = '600 8.5px Inter, sans-serif';
+        const lbl = d.label.length > 8 ? d.label.slice(0, 7) + '…' : d.label;
+        ctx.fillText(lbl.toUpperCase(), x + bw / 2, h - 10);
+      });
+    }
+    if (REDUCED) render(1);
+    else {
+      const t0 = performance.now();
+      (function anim(now) {
+        const p = Math.min(1, (now - t0) / 900);
+        render(easeOut(p));
+        if (p < 1) requestAnimationFrame(anim);
+      })(t0);
+    }
+    cv.addEventListener('mousemove', e => {
+      const r = cv.getBoundingClientRect();
+      const mx = e.clientX - r.left;
+      const idx = Math.floor((mx - x0) / (bw + gap));
+      const inBar = idx >= 0 && idx < n && (mx - x0) - idx * (bw + gap) <= bw;
+      const ni = inBar ? idx : -1;
+      if (ni !== hoverIdx) {
+        hoverIdx = ni; render(1);
+        cv.title = ni >= 0 ? data[ni].full + ' — ' + data[ni].value + ' ventes' : '';
+      }
+    });
+    cv.addEventListener('mouseleave', () => { if (hoverIdx !== -1) { hoverIdx = -1; render(1); } });
+  }
+
+  // Donut animé avec halo + total au centre
+  function drawDonut(container, parts) {
+    lastCharts.donut = { container, parts };
+    container.innerHTML = '';
+    const wrap = document.createElement('div'); wrap.className = 'donut-wrap';
+    const cvBox = document.createElement('div');
+    const leg = document.createElement('div'); leg.className = 'legend';
+    wrap.appendChild(cvBox); wrap.appendChild(leg);
+    container.appendChild(wrap);
+    const size = 210;
+    const dpr = window.devicePixelRatio || 1;
+    const cv = document.createElement('canvas');
+    cv.width = size * dpr; cv.height = size * dpr;
+    cv.style.width = size + 'px'; cv.style.height = size + 'px';
+    cvBox.appendChild(cv);
+    const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    const total = parts.reduce((t, p) => t + p.val, 0);
+    leg.innerHTML = parts.map((p, i) =>
+      '<div class="leg"><span class="dot" style="background:' + DONUT_COLORS[i % DONUT_COLORS.length] + '"></span>' +
+      escT(p.nom) + '<b>' + p.val.toLocaleString('fr-FR') + '</b></div>').join('');
+    const cx = size / 2, cy = size / 2, R = size / 2 - 16, LW = 26;
+    function render(p) {
+      ctx.clearRect(0, 0, size, size);
+      const sweepEnd = -Math.PI / 2 + Math.PI * 2 * p;
+      let acc = -Math.PI / 2;
+      parts.forEach((s, i) => {
+        const seg = Math.PI * 2 * (s.val / total);
+        const start = acc, end = Math.min(acc + seg, sweepEnd);
+        acc += seg;
+        if (end <= start) return;
+        ctx.save();
+        ctx.strokeStyle = DONUT_COLORS[i % DONUT_COLORS.length];
+        ctx.lineWidth = LW;
+        ctx.shadowColor = DONUT_COLORS[i % DONUT_COLORS.length];
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, start + 0.015, end - 0.015);
+        ctx.stroke();
+        ctx.restore();
+      });
+      ctx.fillStyle = '#eef0f4';
+      ctx.font = '700 24px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(Math.round(total * p).toLocaleString('fr-FR'), cx, cy - 8);
+      ctx.fillStyle = 'rgba(139,145,160,0.9)'; ctx.font = '600 9px Inter, sans-serif';
+      ctx.fillText('UNITÉS EN STOCK', cx, cy + 14);
+    }
+    if (REDUCED) render(1);
+    else {
+      const t0 = performance.now();
+      (function anim(now) {
+        const p = Math.min(1, (now - t0) / 1000);
+        render(easeOut(p));
+        if (p < 1) requestAnimationFrame(anim);
+      })(t0);
+    }
+  }
+
+  // Redessine les graphiques quand la fenêtre change de taille
+  let rsTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(rsTimer);
+    rsTimer = setTimeout(() => {
+      if (lastCharts.bars) drawBarChart(lastCharts.bars.container, lastCharts.bars.data, lastCharts.bars.quota);
+      if (lastCharts.donut) drawDonut(lastCharts.donut.container, lastCharts.donut.parts);
+    }, 200);
+  });
+
   async function loadBotDashboards() {
     const elC = document.getElementById('bd-classement');
     if (!elC || !currentUser) return;
@@ -738,57 +928,35 @@
     const drogueTotal = BD_DROGUES.reduce((t, d) => t + (st[d] || 0), 0);
 
     // ── VUE D'ENSEMBLE : KPIs ──
-    document.getElementById('kpi-ventes').textContent = totalVentes.toLocaleString('fr-FR');
+    countUp(document.getElementById('kpi-ventes'), totalVentes);
     document.getElementById('kpi-ventes-foot').textContent = ids.length + ' membre' + (ids.length > 1 ? 's' : '') + ' actif' + (ids.length > 1 ? 's' : '') + ' cette semaine';
-    document.getElementById('kpi-coffre').textContent = fmtArgent(st['argent sale']);
+    countUp(document.getElementById('kpi-coffre'), st['argent sale'] || 0, v => fmtArgent(Math.round(v)));
     document.getElementById('kpi-coffre-foot').textContent = 'argent propre : ' + fmtArgent(st['argent']);
-    document.getElementById('kpi-quotas').innerHTML = nbOk + '<small> / ' + nbMembres + '</small>';
-    document.getElementById('kpi-drogue').textContent = drogueTotal.toLocaleString('fr-FR');
+    countUp(document.getElementById('kpi-quotas'), nbOk, v => Math.round(v) + '<small> / ' + nbMembres + '</small>');
+    countUp(document.getElementById('kpi-drogue'), drogueTotal);
 
     // ── Objectif collectif ──
     const objectif = quotaVente * nbMembres;
     const pctGoal = objectif ? Math.min(100, Math.round(totalVentes / objectif * 100)) : 0;
     document.getElementById('goal-val').innerHTML = '<b>' + totalVentes.toLocaleString('fr-FR') + '</b> / ' + objectif.toLocaleString('fr-FR') + ' ventes';
     document.getElementById('goal-fill').style.width = pctGoal + '%';
-    document.getElementById('goal-pct').textContent = pctGoal + '%';
+    countUp(document.getElementById('goal-pct'), pctGoal, v => Math.round(v) + '%');
 
     // ── Graphique : ventes par membre (barres) ──
     const chartV = document.getElementById('chart-ventes');
     if (!ids.length) chartV.innerHTML = '<div class="locked">Aucune vente enregistrée cette semaine.</div>';
     else {
-      const maxV = Math.max(quotaVente, ids.length ? joueurs[ids[0]].ventes : 0);
-      chartV.innerHTML = '<div class="bars">' + ids.slice(0, 15).map((id, i) => {
-        const v = Math.round(joueurs[id].ventes);
-        const h = Math.max(2, Math.round(v / maxV * 100));
+      drawBarChart(chartV, ids.slice(0, 15).map(id => {
         const nom = nomDe[id] || '#' + String(id).slice(-4);
-        const prenom = nom.split(/\s+/)[0];
-        const cls = v >= quotaVente ? ' done' : (i === 0 ? ' top1' : '');
-        return '<div class="bar-w" title="' + escT(nom) + ' — ' + v + ' ventes">' +
-          '<div class="bar-val">' + v + '</div>' +
-          '<div class="bar' + cls + '" style="height:' + h + '%"></div>' +
-          '<div class="bar-lbl">' + escT(prenom) + '</div></div>';
-      }).join('') + '</div>';
+        return { label: nom.split(/\s+/)[0], full: nom, value: Math.round(joueurs[id].ventes) };
+      }), quotaVente);
     }
 
     // ── Graphique : donut du stock de drogue ──
     const chartD = document.getElementById('chart-drogue');
     const parts = BD_DROGUES.map(d => ({ nom: cap(d), val: st[d] || 0 })).filter(p => p.val > 0).sort((a, b) => b.val - a.val);
     if (!parts.length) chartD.innerHTML = '<div class="locked">Aucune drogue en stock actuellement.</div>';
-    else {
-      const total = parts.reduce((t, p) => t + p.val, 0);
-      let acc = 0;
-      const segs = parts.map((p, i) => {
-        const from = acc / total * 360; acc += p.val;
-        const to = acc / total * 360;
-        return DONUT_COLORS[i % DONUT_COLORS.length] + ' ' + from.toFixed(1) + 'deg ' + to.toFixed(1) + 'deg';
-      }).join(', ');
-      chartD.innerHTML = '<div class="donut-wrap">' +
-        '<div class="donut" style="background:conic-gradient(' + segs + ');"></div>' +
-        '<div class="legend">' + parts.map((p, i) =>
-          '<div class="leg"><span class="dot" style="background:' + DONUT_COLORS[i % DONUT_COLORS.length] + '"></span>' +
-          escT(p.nom) + '<b>' + p.val.toLocaleString('fr-FR') + '</b></div>'
-        ).join('') + '</div></div>';
-    }
+    else drawDonut(chartD, parts);
 
     // ── CLASSEMENT (tableau complet) ──
     elC.innerHTML = !ids.length
@@ -901,32 +1069,64 @@
 </script>
 
 <script>
-  // ── Fond animé "Aura tricolore" (discret) ──
-  (function memberAura() {
+  // ── Fond étoilé animé (étoiles + éclats rouge/or + nappes de lumière) ──
+  (function starfield() {
     const c = document.getElementById('member-canvas');
     if (!c) return;
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const ctx = c.getContext('2d');
-    let W, H;
-    const BLOBS = [['0,140,69', 0.22], ['245,245,240', 0.10], ['205,33,42', 0.22]];
-    function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+    let W, H, stars = [];
+    const COLORS = ['rgba(238,240,244,', 'rgba(224,80,63,', 'rgba(212,178,110,', 'rgba(88,101,242,'];
+    function mk(init) {
+      const big = Math.random() < 0.12;
+      return {
+        x: Math.random() * W,
+        y: init ? Math.random() * H : H + 4,
+        r: big ? Math.random() * 1.8 + 1.2 : Math.random() * 1.1 + 0.4,
+        vy: -(Math.random() * 0.16 + 0.03),
+        vx: (Math.random() - 0.5) * 0.05,
+        col: big ? COLORS[1 + Math.floor(Math.random() * 3)] : COLORS[0],
+        ph: Math.random() * 7,
+        sp: Math.random() * 0.03 + 0.008,
+        big
+      };
+    }
+    function resize() {
+      W = c.width = window.innerWidth;
+      H = c.height = window.innerHeight;
+      const n = Math.min(140, Math.round(W * H / 14000));
+      stars = [];
+      for (let i = 0; i < n; i++) stars.push(mk(true));
+    }
     resize();
     window.addEventListener('resize', resize);
+    const BLOBS = [['205,33,42', 0.10], ['212,178,110', 0.07]];
     let t = 0;
     function draw() {
       ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
       BLOBS.forEach((b, i) => {
-        const px = W / 2 + Math.sin(t * 0.6 + i * 2.1) * W * 0.3;
-        const py = H / 2 + Math.cos(t * 0.5 + i * 1.7) * H * 0.34;
-        const rad = Math.max(W, H) * (0.5 + 0.12 * Math.sin(t + i));
-        const g = ctx.createRadialGradient(px, py, 0, px, py, rad);
+        const px = W * (0.3 + 0.4 * Math.sin(t * 0.4 + i * 2.4));
+        const py = H * (0.35 + 0.3 * Math.cos(t * 0.3 + i * 1.6));
+        const g = ctx.createRadialGradient(px, py, 0, px, py, Math.max(W, H) * 0.5);
         g.addColorStop(0, 'rgba(' + b[0] + ',' + b[1] + ')');
         g.addColorStop(1, 'rgba(' + b[0] + ',0)');
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
       });
+      stars.forEach((s, i) => {
+        s.x += s.vx; s.y += s.vy; s.ph += s.sp;
+        if (s.y < -4) stars[i] = mk(false);
+        const a = (s.big ? 0.55 : 0.4) * (0.45 + 0.55 * Math.abs(Math.sin(s.ph)));
+        ctx.save();
+        if (s.big) { ctx.shadowBlur = 8; ctx.shadowColor = s.col + '0.9)'; }
+        ctx.fillStyle = s.col + a.toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
       ctx.globalCompositeOperation = 'source-over';
     }
+    if (reduced) { draw(); return; }
     (function loop() { draw(); t += 0.004; requestAnimationFrame(loop); })();
   })();
 </script>
