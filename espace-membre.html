@@ -48,12 +48,13 @@
     h1 span { color: var(--red); }
     .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
     label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px; }
-    input, select {
+    input, select, textarea {
       width: 100%; padding: 11px 14px; background: var(--surface2);
       border: 1px solid var(--border); color: var(--text); font-size: 14px;
       font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; margin-bottom: 16px;
     }
-    input:focus, select:focus { border-color: var(--red); }
+    textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+    input:focus, select:focus, textarea:focus { border-color: var(--red); }
     select option { background: var(--surface2); }
     .btn {
       width: 100%; padding: 12px; background: var(--red); color: #fff; font-size: 12px;
@@ -182,6 +183,12 @@
           <select id="nom-select"></select>
           <label>Rang</label>
           <input type="text" id="rang-input" readonly />
+          <label>Spécialité <span style="text-transform:none;color:var(--text-dim);">(optionnel)</span></label>
+          <input type="text" id="spec-input" maxlength="60" placeholder="ex : Négociations, logistique, muscle…" />
+          <label>Citation <span style="text-transform:none;color:var(--text-dim);">(optionnel)</span></label>
+          <input type="text" id="citation-input" maxlength="120" placeholder="Ta phrase fétiche, en RP" />
+          <label>Bio du personnage <span style="text-transform:none;color:var(--text-dim);">(optionnel)</span></label>
+          <textarea id="bio-input" maxlength="500" placeholder="L'histoire de ton personnage en quelques lignes — elle s'affichera sur sa fiche, sur le site."></textarea>
           <button class="btn green" onclick="saveProfil()">✓ Enregistrer mon profil</button>
           <div class="msg" id="profil-msg"></div>
         </div>
@@ -343,6 +350,9 @@
       }
       if (data.photo_url) { currentPhotoUrl = data.photo_url; setAvatarPhoto(data.photo_url + '?t=' + Date.now()); }
       else setAvatarInitials(data.nom);
+      document.getElementById('spec-input').value = data.specialite || '';
+      document.getElementById('citation-input').value = data.citation || '';
+      document.getElementById('bio-input').value = data.bio || '';
     }
   }
 
@@ -365,7 +375,13 @@
     }
 
     // 2) enregistrer le profil
-    const row = { id: currentUser.id, nom, rang, photo_url: currentPhotoUrl, updated_at: new Date().toISOString() };
+    const row = {
+      id: currentUser.id, nom, rang, photo_url: currentPhotoUrl,
+      specialite: document.getElementById('spec-input').value.trim() || null,
+      citation: document.getElementById('citation-input').value.trim() || null,
+      bio: document.getElementById('bio-input').value.trim() || null,
+      updated_at: new Date().toISOString()
+    };
     const { error } = await sb.from('profils').upsert(row);
     if (error) { showMsg('profil-msg', 'Erreur : ' + error.message, false); return; }
     if (currentPhotoUrl) setAvatarPhoto(currentPhotoUrl + '?t=' + Date.now());
