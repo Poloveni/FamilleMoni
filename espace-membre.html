@@ -136,7 +136,6 @@
       animation: shimmer 2.6s linear infinite;
     }
     @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-    @media (prefers-reduced-motion: reduce) { .goal-bar > span::after { animation: none; } }
     .goal-pct { text-align: right; font-size: 11px; color: var(--dim); margin-top: 7px; }
 
     /* Blocs / graphiques */
@@ -696,7 +695,8 @@
   const DONUT_COLORS = ['#e0503f', '#d4b26e', '#2ecc71', '#5865f2', '#faa61a', '#9b59b6', '#1abc9c'];
 
   // ══ MOTEUR GRAPHIQUE CANVAS ══
-  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Animations forcées pour tout le monde (choix du proprio), quel que soit le réglage système.
+  const REDUCED = false;
   const lastCharts = { bars: null, donut: null };
   function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
@@ -1073,7 +1073,7 @@
   (function starfield() {
     const c = document.getElementById('member-canvas');
     if (!c) return;
-    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = false; // animations forcées
     const ctx = c.getContext('2d');
     let W, H, stars = [];
     const COLORS = ['rgba(238,240,244,', 'rgba(224,80,63,', 'rgba(212,178,110,', 'rgba(88,101,242,'];
