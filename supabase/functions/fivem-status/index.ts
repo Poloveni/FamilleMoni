@@ -29,13 +29,25 @@ function json(body: unknown, status = 200): Response {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
-    const r = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${CFX}`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; FamilleMoni/1.0)",
-        "Accept": "application/json",
-      },
-    });
-    if (!r.ok) return json({ online: false, error: `http ${r.status}` });
+    // L'API FiveM a changé de domaine (frontend.cfx-services.net) ;
+    // on garde l'ancien domaine en secours au cas où.
+    const ENDPOINTS = [
+      `https://frontend.cfx-services.net/api/servers/single/${CFX}`,
+      `https://servers-frontend.fivem.net/api/servers/single/${CFX}`,
+    ];
+    let r: Response | null = null;
+    for (const url of ENDPOINTS) {
+      try {
+        r = await fetch(url, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; FamilleMoni/1.0)",
+            "Accept": "application/json",
+          },
+        });
+        if (r.ok) break;
+      } catch (_e) { r = null; }
+    }
+    if (!r || !r.ok) return json({ online: false, error: `http ${r ? r.status : "unreachable"}` });
 
     const d = await r.json();
     const D = (d && d.Data) || {};

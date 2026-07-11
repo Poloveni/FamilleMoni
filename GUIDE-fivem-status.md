@@ -9,8 +9,10 @@ Dans un terminal, à la racine du projet (là où tu as déjà déployé `sync-d
 
 **Méthode navigateur (recommandée, sans terminal) :** Dashboard Supabase → Edge Functions →
 « Deploy a new function » → « Via Editor » → nom `fivem-status` → colle le code → Deploy.
-**Laisse « Verify JWT » activé** : le site s'authentifie tout seul en envoyant la clé
-publique (anon) déjà présente dans `supabase-config.js`. Rien d'autre à régler.
+**Désactive « Verify JWT »** (dans les réglages de la fonction) : le site utilise une clé
+publique nouvelle génération (`sb_publishable_…`) qui n'est pas un JWT — avec la
+vérification activée, l'appel serait refusé. La fonction ne renvoie que des données
+publiques (statut du serveur), il n'y a donc aucun risque.
 
 **Méthode terminal (si tu as le CLI Supabase) :**
 
@@ -36,9 +38,12 @@ sans rien déployer.
 
 ## En cas de souci
 
-- **« Statut indisponible »** sur le site → la fonction n'est pas encore déployée, ou l'API
-  FiveM a momentanément refusé l'appel. Réessaie / vérifie le déploiement.
-- Ouvrir l'URL de la fonction **directement** dans le navigateur affichera une erreur
-  d'autorisation (« Missing authorization header ») — **c'est normal** puisque « Verify JWT »
-  est activé. Le test valable, c'est **sur le site lui-même** (le panneau doit passer à
-  « Serveur en ligne »).
+- **« Statut indisponible »** sur le site → la fonction n'est pas déployée (l'URL directe
+  affiche `{"code":"NOT_FOUND"...}`), ou « Verify JWT » est resté activé. Vérifie les deux.
+- **« Serveur hors ligne » alors qu'il est en ligne** → l'API FiveM a peut-être encore
+  changé d'adresse (elle est passée de `servers-frontend.fivem.net` à
+  `frontend.cfx-services.net` en 2026). Teste les deux URL dans ton navigateur avec le
+  code du serveur.
+- Test rapide : ouvre l'URL de la fonction directement dans ton navigateur
+  (`https://<ton-projet>.supabase.co/functions/v1/fivem-status`). Avec « Verify JWT »
+  désactivé, tu dois voir du JSON avec `"online": true`.
