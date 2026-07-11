@@ -4,6 +4,9 @@
 window.SUPABASE_URL = 'https://prwdtdmdkhzwfyivaepw.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_qgN4fRX9eVdKn3SWAjtmhw_F00rlqXz';
 
+// Objectif hebdomadaire de ventes par membre (dashboard Business de l'espace membre).
+window.MONI_QUOTA_DROGUE = 200;
+
 // ══════════════════════════════════════════════════════════════════
 //  SOURCE UNIQUE DE VÉRITÉ pour les membres et les rangs.
 //  → Modifie UNIQUEMENT ce fichier pour ajouter/retirer un membre ou

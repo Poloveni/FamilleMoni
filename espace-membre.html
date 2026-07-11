@@ -107,6 +107,23 @@
     .event-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
     .event-type { display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px; background: rgba(192,57,43,0.15); color: var(--red); margin-bottom: 4px; }
 
+    /* ── Dashboard Business ── */
+    .vd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    .vd-stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+    .vd-stat { background: var(--surface2); border: 1px solid var(--border); padding: 14px; text-align: center; }
+    .vd-stat-num { font-size: 22px; font-weight: 700; }
+    .vd-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 4px; }
+    .vd-progress { height: 8px; background: var(--bg); border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .vd-progress > span { position: absolute; top: 0; bottom: 0; left: 0; background: var(--red); transition: width 0.4s ease; }
+    .vd-progress.done > span { background: var(--green); }
+    .vd-progress-txt { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+    .vd-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .vd-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); padding: 8px; border-bottom: 1px solid var(--border-strong); }
+    .vd-table td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .vd-del { width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer; background: var(--surface2); color: var(--text-muted); font-size: 14px; line-height: 1; }
+    .vd-del:hover { background: var(--red); color: #fff; }
+    @media (max-width: 640px) { .vd-grid { grid-template-columns: 1fr; } .vd-stats3 { grid-template-columns: 1fr; } }
+
     .toast {
       position: fixed; bottom: 24px; right: 24px; z-index: 999;
       background: var(--green); color: #fff; padding: 12px 20px; font-size: 13px;
@@ -198,6 +215,30 @@
     <div class="divider"></div>
 
     <div class="card">
+      <div class="section-t">💊 Business de la semaine</div>
+      <p class="hint" style="margin-bottom:18px;">Objectif : <b id="vd-quota" style="color:var(--text);">200</b> ventes par membre, du lundi au dimanche. Déclare tes ventes et l'argent sale que tu déposes au coffre de la famille.</p>
+      <div class="vd-grid">
+        <div>
+          <label>Ventes de drogue à déclarer</label>
+          <input type="number" id="vd-qte" min="0" step="1" placeholder="ex : 25" />
+          <label>Argent sale déposé au coffre ($)</label>
+          <input type="number" id="vd-argent" min="0" step="1" placeholder="ex : 15000" />
+          <button class="btn green" onclick="declarerVente()">✓ Déclarer</button>
+          <div class="msg" id="vd-msg"></div>
+        </div>
+        <div id="vd-moi"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-t">La famille cette semaine</div>
+      <div id="vd-famille"><div class="locked">Chargement…</div></div>
+      <div class="divider"></div>
+      <div class="section-t">Mes dernières déclarations</div>
+      <div id="vd-hist"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card">
       <div class="section-t">Événements — réservé aux membres</div>
       <div id="events-holder"><div class="locked">Chargement…</div></div>
     </div>
@@ -230,6 +271,7 @@
   let currentUser = null;
   let pendingFile = null;
   let currentPhotoUrl = null;
+  let currentNom = '';
 
   // Remplir le select des noms
   (function fillNoms() {
@@ -337,6 +379,120 @@
     document.getElementById('member-content').style.display = 'block';
     await loadProfil();
     await loadEvents();
+    loadVentes();
+  }
+
+  // ── DASHBOARD BUSINESS (ventes de drogue + coffre) ──
+  const QUOTA_DROGUE = window.MONI_QUOTA_DROGUE || 200;
+  function escT(s) { return String(s == null ? '' : s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+  function fmtArgent(n) { return '$' + Number(n || 0).toLocaleString('fr-FR'); }
+  // Lundi 00h00 de la semaine en cours (le quota repart à zéro chaque lundi)
+  function debutSemaineISO() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.toISOString();
+  }
+
+  async function loadVentes() {
+    const fam = document.getElementById('vd-famille');
+    const hist = document.getElementById('vd-hist');
+    const moi = document.getElementById('vd-moi');
+    if (!fam || !currentUser) return;
+    document.getElementById('vd-quota').textContent = QUOTA_DROGUE;
+    const { data, error } = await sb.from('declarations')
+      .select('*')
+      .gte('created_at', debutSemaineISO())
+      .order('created_at', { ascending: false });
+    if (error) {
+      fam.innerHTML = '<div class="locked">Dashboard indisponible — exécute dashboard-ventes.sql dans Supabase. (' + escT(error.message) + ')</div>';
+      return;
+    }
+    const rows = data || [];
+
+    // Agrégats par personnage
+    const parNom = {};
+    let coffre = 0, totalVentes = 0;
+    rows.forEach(r => {
+      const n = r.nom || '(sans personnage)';
+      parNom[n] = parNom[n] || { ventes: 0, argent: 0 };
+      parNom[n].ventes += r.quantite || 0;
+      parNom[n].argent += r.argent_sale || 0;
+      coffre += r.argent_sale || 0;
+      totalVentes += r.quantite || 0;
+    });
+    // Tous les membres officiels apparaissent, même à zéro
+    (window.MONI_MEMBRES || []).forEach(m => { parNom[m.nom] = parNom[m.nom] || { ventes: 0, argent: 0 }; });
+    const noms = Object.keys(parNom).sort((a, b) => (parNom[b].ventes - parNom[a].ventes) || a.localeCompare(b));
+    const nbOk = noms.filter(n => parNom[n].ventes >= QUOTA_DROGUE).length;
+
+    fam.innerHTML =
+      '<div class="vd-stats3">' +
+        '<div class="vd-stat"><div class="vd-stat-num">' + totalVentes + '</div><div class="vd-stat-label">Ventes famille</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">' + fmtArgent(coffre) + '</div><div class="vd-stat-label">Coffre (argent sale)</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num">' + nbOk + ' / ' + noms.length + '</div><div class="vd-stat-label">Quotas atteints</div></div>' +
+      '</div>' +
+      '<table class="vd-table"><thead><tr><th>Membre</th><th style="width:36%;">Ventes / ' + QUOTA_DROGUE + '</th><th>Coffre</th></tr></thead><tbody>' +
+      noms.map(n => {
+        const v = parNom[n];
+        const pct = Math.min(100, Math.round(v.ventes / QUOTA_DROGUE * 100));
+        const done = v.ventes >= QUOTA_DROGUE;
+        return '<tr><td>' + (done ? '✅ ' : '') + escT(n) + '</td>' +
+          '<td><div class="vd-progress' + (done ? ' done' : '') + '"><span style="width:' + pct + '%"></span></div>' +
+          '<div class="vd-progress-txt">' + v.ventes + ' vente' + (v.ventes > 1 ? 's' : '') + ' (' + pct + '%)</div></td>' +
+          '<td>' + fmtArgent(v.argent) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+
+    // Ma progression
+    let mesVentes = 0, monArgent = 0;
+    const mes = rows.filter(r => r.user_id === currentUser.id);
+    mes.forEach(r => { mesVentes += r.quantite || 0; monArgent += r.argent_sale || 0; });
+    const monPct = Math.min(100, Math.round(mesVentes / QUOTA_DROGUE * 100));
+    if (moi) moi.innerHTML =
+      '<div class="vd-stat" style="text-align:left;">' +
+        '<div class="vd-stat-label" style="margin-bottom:6px;">Ma progression cette semaine</div>' +
+        '<div class="vd-stat-num">' + mesVentes + ' <span style="font-size:13px;color:var(--text-dim);font-weight:400;">/ ' + QUOTA_DROGUE + ' ventes</span></div>' +
+        '<div class="vd-progress' + (mesVentes >= QUOTA_DROGUE ? ' done' : '') + '" style="margin:10px 0;"><span style="width:' + monPct + '%"></span></div>' +
+        '<div style="font-size:13px;color:var(--text-muted);">Argent sale déposé : <b style="color:var(--text);">' + fmtArgent(monArgent) + '</b></div>' +
+        (mesVentes >= QUOTA_DROGUE ? '<div style="margin-top:8px;color:var(--green);font-size:13px;">✅ Quota atteint — la Donna est fière de toi.</div>' : '') +
+      '</div>';
+
+    // Historique perso (8 dernières lignes de la semaine)
+    if (hist) {
+      hist.innerHTML = !mes.length
+        ? '<div class="hint">Aucune déclaration cette semaine.</div>'
+        : '<table class="vd-table"><tbody>' + mes.slice(0, 8).map(r =>
+            '<tr><td>' + new Date(r.created_at).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }) + ' ' +
+            new Date(r.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</td>' +
+            '<td>' + (r.quantite ? r.quantite + ' vente' + (r.quantite > 1 ? 's' : '') : '—') + '</td>' +
+            '<td>' + (r.argent_sale ? fmtArgent(r.argent_sale) : '—') + '</td>' +
+            '<td style="text-align:right;"><button class="vd-del" title="Supprimer cette déclaration" onclick="supprimerDeclaration(\'' + r.id + '\')">&times;</button></td></tr>'
+          ).join('') + '</tbody></table>';
+    }
+  }
+
+  async function declarerVente() {
+    if (!currentUser) return;
+    if (!currentNom) { showMsg('vd-msg', 'Choisis d\'abord ton personnage dans « Mon profil » et enregistre.', false); return; }
+    const q = parseInt(document.getElementById('vd-qte').value, 10) || 0;
+    const a = parseInt(document.getElementById('vd-argent').value, 10) || 0;
+    if (q < 0 || a < 0) { showMsg('vd-msg', 'Les valeurs négatives sont interdites.', false); return; }
+    if (q === 0 && a === 0) { showMsg('vd-msg', 'Indique au moins des ventes ou un montant déposé.', false); return; }
+    hideMsg('vd-msg');
+    const { error } = await sb.from('declarations').insert({ user_id: currentUser.id, nom: currentNom, quantite: q, argent_sale: a });
+    if (error) { showMsg('vd-msg', 'Erreur : ' + error.message, false); return; }
+    document.getElementById('vd-qte').value = '';
+    document.getElementById('vd-argent').value = '';
+    toast('Déclaration enregistrée !');
+    loadVentes();
+  }
+
+  async function supprimerDeclaration(id) {
+    if (!confirm('Supprimer cette déclaration ?')) return;
+    const { error } = await sb.from('declarations').delete().eq('id', id);
+    if (error) { toast('Erreur : ' + error.message); return; }
+    toast('Déclaration supprimée.');
+    loadVentes();
   }
 
   async function loadProfil() {
@@ -344,6 +500,7 @@
     if (error) { console.warn(error); }
     if (data) {
       if (data.nom) {
+        currentNom = data.nom;
         document.getElementById('nom-select').value = data.nom;
         const m = window.MONI_MEMBRES.find(x => x.nom === data.nom);
         document.getElementById('rang-input').value = m ? m.rang : (data.rang || '');
@@ -384,6 +541,7 @@
     };
     const { error } = await sb.from('profils').upsert(row);
     if (error) { showMsg('profil-msg', 'Erreur : ' + error.message, false); return; }
+    currentNom = nom;
     if (currentPhotoUrl) setAvatarPhoto(currentPhotoUrl + '?t=' + Date.now());
     toast('Profil enregistré !');
     showMsg('profil-msg', 'Ton profil est à jour. Ta photo apparaîtra sur le site.', true);
