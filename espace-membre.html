@@ -162,6 +162,21 @@
       <div class="switch" id="auth-switch">
         Pas encore de compte ? <a onclick="setMode('signup')">Créer un compte</a>
       </div>
+      <div class="switch" style="margin-top:10px;">
+        <a onclick="motDePasseOublie()">Mot de passe oublié ?</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOUVEAU MOT DE PASSE (après clic sur le lien reçu par email) -->
+  <div id="reset-screen" style="display:none;">
+    <div class="card narrow">
+      <h1>Nouveau <span>mot de passe</span></h1>
+      <div class="sub">Choisis ton nouveau mot de passe (8 caractères minimum).</div>
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="new-password" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')validerNouveauMdp()" />
+      <button class="btn green" onclick="validerNouveauMdp()">✓ Enregistrer mon nouveau mot de passe</button>
+      <div class="msg" id="reset-msg"></div>
     </div>
   </div>
 
@@ -636,6 +651,43 @@
     else await sb.from('participations').insert({ event_id: ev, user_id: currentUser.id });
     await loadEvents();
   }
+
+  // ── MOT DE PASSE OUBLIÉ ──
+  // Envoie un email avec un lien ; au retour sur la page, l'événement
+  // PASSWORD_RECOVERY affiche le formulaire de nouveau mot de passe.
+  async function motDePasseOublie() {
+    const email = document.getElementById('email').value.trim();
+    if (!email) { showMsg('auth-msg', "Écris d'abord ton email dans le champ ci-dessus, puis reclique sur « Mot de passe oublié ? ».", false); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://poloveni.github.io/FamilleMoni/espace-membre.html'
+    });
+    if (error) { showMsg('auth-msg', 'Erreur : ' + error.message, false); return; }
+    showMsg('auth-msg', '📬 Email envoyé à ' + email + ' ! Clique le lien dedans pour choisir un nouveau mot de passe (regarde aussi les spams).', true);
+  }
+
+  function showResetForm() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('member-screen').style.display = 'none';
+    document.getElementById('reset-screen').style.display = 'block';
+  }
+
+  async function validerNouveauMdp() {
+    const pwd = document.getElementById('new-password').value;
+    if (pwd.length < 8) { showMsg('reset-msg', '8 caractères minimum.', false); return; }
+    const { error } = await sb.auth.updateUser({ password: pwd });
+    if (error) { showMsg('reset-msg', 'Erreur : ' + error.message, false); return; }
+    document.getElementById('reset-screen').style.display = 'none';
+    document.getElementById('new-password').value = '';
+    toast('Mot de passe changé !');
+    const { data } = await sb.auth.getSession();
+    if (data.session) onLogged(data.session.user);
+    else document.getElementById('auth-screen').style.display = 'block';
+  }
+
+  // Détecte le retour depuis le lien de l'email de réinitialisation
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') showResetForm();
+  });
 
   // Session existante au chargement
   (async function init() {
