@@ -516,6 +516,16 @@
       .lightbox-nav.next { right: 10px; }
     }
 
+    /* ── ACTUALITÉS (annonces Discord) ── */
+    #actualites { background: var(--surface); }
+    .actu-list { display: flex; flex-direction: column; max-width: 760px; }
+    .actu-item { display: flex; gap: 18px; align-items: flex-start; padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .actu-item:last-child { border-bottom: none; }
+    .actu-date { font-size: 12px; color: var(--text-dim); min-width: 64px; padding-top: 3px; }
+    .actu-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); margin-top: 7px; flex-shrink: 0; }
+    .actu-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .actu-body p { font-size: 13px; color: var(--text-muted); line-height: 1.6; white-space: pre-line; }
+
     /* ── ÉVÉNEMENTS ── */
     #evenements { background: var(--bg); }
     .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
@@ -819,6 +829,7 @@
     <li><a href="#qg">Notre QG</a></li>
     <li><a href="#recrutement">Recrutement</a></li>
     <li><a href="#evenements">Événements</a></li>
+    <li><a href="#actualites" id="nav-actus" style="display:none;">Annonces</a></li>
     <li><a href="#discord">Discord</a></li>
     <li><a href="#contact">Nous contacter</a></li>
     <li><a href="os.html" style="color:var(--gold,#d4b26e);">Moni OS</a></li>
@@ -1000,6 +1011,13 @@
     <a href="espace-membre.html" class="btn-red">Accéder à l'espace membre</a>
   </div>
   <div class="events-grid" id="events-grid" style="display:none;"></div>
+</section>
+
+<section id="actualites" style="display:none;">
+  <div class="section-label">Annonces</div>
+  <h2 class="section-title">Les <em>actualités</em></h2>
+  <p class="section-desc">Les dernières annonces de la famille, directement depuis le Discord.</p>
+  <div class="actu-list" id="actu-list"></div>
 </section>
 
 <section id="discord">
@@ -1723,6 +1741,23 @@
       });
     }
     loadGalerie();
+
+    // Actualités : annonces Discord synchronisées par le bot (lecture publique)
+    sb.from('bot_annonces').select('*').order('ts', { ascending: false }).limit(6).then(function (res) {
+      var sec = document.getElementById('actualites');
+      if (!sec || res.error || !res.data || !res.data.length) return;
+      var list = document.getElementById('actu-list');
+      list.innerHTML = res.data.map(function (a) {
+        var d = new Date(a.ts);
+        return '<div class="actu-item"><div class="actu-date">' +
+          d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
+          '</div><div class="actu-dot"></div><div class="actu-body"><h4>' + esc(a.auteur || 'Annonce') +
+          '</h4><p>' + esc(a.texte || '') + '</p></div></div>';
+      }).join('');
+      sec.style.display = '';
+      var nav = document.getElementById('nav-actus');
+      if (nav) nav.style.display = '';
+    });
 
     // Événements : visibles uniquement pour les membres connectés
     var locked = document.getElementById('events-locked');

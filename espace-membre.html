@@ -193,6 +193,27 @@
     .cd-timer { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--amber); }
     .cd-me { color: var(--gold); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(212,178,110,0.4); border-radius: 5px; padding: 1px 6px; }
 
+    /* ── Mode TV ── */
+    #tv-exit {
+      position: fixed; top: 14px; right: 16px; z-index: 60; display: none;
+      background: var(--panel); border: 1px solid var(--border2); border-radius: 999px;
+      padding: 9px 18px; font-size: 12px; cursor: pointer; color: var(--muted);
+    }
+    #tv-exit:hover { color: var(--text); border-color: var(--red); }
+    body.tv-mode #tv-exit { display: block; }
+    body.tv-mode .sb-nav { display: none; }
+    body.tv-mode .dash { margin-left: 0; padding: 30px 52px 40px; }
+    body.tv-mode .dash-title { font-size: 44px; }
+    body.tv-mode .dash-sub { font-size: 15px; }
+    body.tv-mode .kpi-num { font-size: 44px; }
+    body.tv-mode .kpi-label { font-size: 12px; }
+    body.tv-mode .vd-table { font-size: 16px; }
+    body.tv-mode .vd-stat-num { font-size: 30px; }
+    body.tv-mode .bloc-t { font-size: 17px; }
+    body.tv-mode .feed-item { font-size: 15px; }
+    body.tv-mode .cd-row { font-size: 16px; }
+    body.tv-mode .braq-num { font-size: 32px; }
+
     /* Profil */
     .profil-grid { display: grid; grid-template-columns: 170px 1fr; gap: 28px; align-items: start; }
     .avatar-big {
@@ -295,11 +316,14 @@
 
     <div class="sb-group req-approve">Pilotage</div>
     <a class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico">📊</span><span class="lbl">Vue d'ensemble</span></a>
+    <a class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico">⭐</span><span class="lbl">Ma semaine</span></a>
     <a class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico">💊</span><span class="lbl">Classement</span></a>
     <a class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico">🏦</span><span class="lbl">Le coffre</span></a>
     <a class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico">🔫</span><span class="lbl">Armurerie</span></a>
     <a class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico">🧾</span><span class="lbl">Taxes</span></a>
     <a class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico">🚨</span><span class="lbl">Braquages</span></a>
+    <a class="sb-item req-approve" data-panel="palmares" data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico">🏆</span><span class="lbl">Palmarès</span></a>
+    <a class="sb-item req-approve" id="tv-btn"><span class="ico">📺</span><span class="lbl">Mode TV</span></a>
 
     <div class="sb-group">Perso</div>
     <a class="sb-item req-approve" data-panel="events" data-title="Les &lt;em&gt;événements&lt;/em&gt;"><span class="ico">📅</span><span class="lbl">Événements</span></a>
@@ -398,6 +422,16 @@
       <div class="bloc"><div id="bd-taxes"><div class="locked">Chargement…</div></div></div>
     </div>
 
+    <!-- MA SEMAINE -->
+    <div class="panel" id="panel-moi">
+      <div id="bd-moi"><div class="locked">Chargement…</div></div>
+    </div>
+
+    <!-- PALMARÈS -->
+    <div class="panel" id="panel-palmares">
+      <div class="bloc"><div id="bd-palmares"><div class="locked">Chargement…</div></div></div>
+    </div>
+
     <!-- BRAQUAGES & COOLDOWNS -->
     <div class="panel" id="panel-braquages">
       <div class="bloc" style="margin-bottom:14px;">
@@ -465,6 +499,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="tv-exit" onclick="stopTV()">✕ Quitter le mode TV</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
@@ -1005,7 +1040,7 @@
   async function loadBotDashboards() {
     const elC = document.getElementById('bd-classement');
     if (!elC || !currentUser) return;
-    const [meta, stats, mapping, stocks, armes, taxes, histoQ, braqQ, cdQ, ventesQ] = await Promise.all([
+    const [meta, stats, mapping, stocks, armes, taxes, histoQ, braqQ, cdQ, ventesQ, bilansQ] = await Promise.all([
       sb.from('bot_meta').select('*'),
       sb.from('bot_stats').select('*'),
       sb.from('bot_user_mapping').select('*'),
@@ -1016,6 +1051,7 @@
       sb.from('bot_braquages').select('*'),
       sb.from('bot_cooldowns').select('*'),
       sb.from('bot_ventes').select('*'),
+      sb.from('bot_bilans').select('*'),
     ]);
     const err = meta.error || stats.error || mapping.error || stocks.error || armes.error || taxes.error;
     if (err) {
@@ -1026,7 +1062,7 @@
     (meta.data || []).forEach(m => { metaMap[m.key] = m.value; });
     if (!metaMap.last_sync) {
       const waitMsg = '<div class="locked">⏳ En attente de la première synchronisation du bot Moni — le module sync-supabase.js doit être installé sur le bot (voir GUIDE-SYNC-SITE.md).</div>';
-      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'bd-taxes', 'chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns'].forEach(id => {
+      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'bd-taxes', 'chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns', 'bd-moi', 'bd-palmares'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = waitMsg;
       });
@@ -1228,7 +1264,105 @@
           }).join('');
       startCdTicker();
     }
+
+    // ── MA SEMAINE (vue perso) ──
+    const elMoi = document.getElementById('bd-moi');
+    if (elMoi) {
+      const monId = Object.keys(nomDe).find(k => nomDe[k] === currentNom) || null;
+      if (!monId) {
+        elMoi.innerHTML = '<div class="bloc"><div class="locked">Choisis ton personnage dans « Mon profil » pour voir ta semaine. Si c\'est déjà fait, demande à un haut gradé de vérifier ton mapping dans le bot.</div></div>';
+      } else {
+        const jm = joueurs[monId] || { ventes: 0, recolte: 0, activites: 0, detail: [] };
+        const vM = Math.round(jm.ventes);
+        const rangM = ids.indexOf(monId);
+        const salaireM = Number(metaMap.salaire_par_vente || 30) || 30;
+        const bonusM = (rangM >= 0 && rangM < 3 && vM > 0) ? [30000, 20000, 15000][rangM] : 0;
+        const pctM = Math.min(100, Math.round(vM / quotaVente * 100));
+        const mesCd = ((cdQ && cdQ.data) || []).filter(c => c.user_id === monId && new Date(c.expires_at) > new Date());
+        const mesVentes = vRows.filter(x => x.discord_id === monId && x.confirmed)
+          .sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6);
+        elMoi.innerHTML =
+          '<div class="kpis">' +
+            '<div class="kpi" style="--kc:#e0503f;"><div class="kpi-label">Mes ventes</div><div class="kpi-num">' + vM + '<small> / ' + quotaVente + '</small></div><div class="kpi-foot">' + (vM >= quotaVente ? '✅ quota atteint, la Donna est fière' : (quotaVente - vM) + ' restantes cette semaine') + '</div></div>' +
+            '<div class="kpi" style="--kc:#d4b26e;"><div class="kpi-label">Ma paie estimée</div><div class="kpi-num" style="color:var(--gold);">' + fmtArgent(vM * salaireM + bonusM) + '</div><div class="kpi-foot">' + (bonusM ? 'dont bonus podium ' + fmtArgent(bonusM) : salaireM + ' $ par vente') + '</div></div>' +
+            '<div class="kpi" style="--kc:#5865f2;"><div class="kpi-label">Mon rang</div><div class="kpi-num">' + (rangM >= 0 ? '#' + (rangM + 1) : '—') + '</div><div class="kpi-foot">sur ' + ids.length + ' membres actifs</div></div>' +
+            '<div class="kpi" style="--kc:#2ecc71;"><div class="kpi-label">Récolte · activités</div><div class="kpi-num">' + Math.round(jm.recolte) + ' <small>· ' + Math.round(jm.activites) + '</small></div><div class="kpi-foot" title="' + escT(jm.detail.join(', ')) + '">' + escT(jm.detail.slice(0, 2).join(', ') || 'aucune activité') + '</div></div>' +
+          '</div>' +
+          '<div class="goal"><div class="goal-head"><b>🎯 Ma progression</b><span class="val"><b>' + vM + '</b> / ' + quotaVente + ' ventes</span></div>' +
+          '<div class="goal-bar"><span style="width:' + pctM + '%"></span></div><div class="goal-pct">' + pctM + '%</div></div>' +
+          '<div class="grid2">' +
+            '<div class="bloc"><div class="bloc-t">⏱ Mes cooldowns</div>' +
+            (!mesCd.length ? '<div class="hint">Aucun — tout est disponible ! 🟢</div>' :
+              mesCd.map(c => '<div class="cd-row"><span>' + escT(BD_ACTIVITES[c.action] || c.action) + '</span><span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>').join('')) +
+            '</div>' +
+            '<div class="bloc"><div class="bloc-t">💵 Mes dernières ventes confirmées</div>' +
+            (!mesVentes.length ? '<div class="hint">Aucune vente confirmée cette semaine.</div>' :
+              mesVentes.map(x => '<div class="cd-row"><span>' + Number(x.quantite).toLocaleString('fr-FR') + '× ' + escT(cap(x.item)) + '</span><span style="margin-left:auto;color:var(--gold);font-weight:600;">' + fmtArgent(x.montant) + '</span></div>').join('')) +
+            '</div>' +
+          '</div>';
+        if (mesCd.length) startCdTicker();
+      }
+    }
+
+    // ── PALMARÈS (bilans hebdo archivés) ──
+    const elP = document.getElementById('bd-palmares');
+    if (elP) {
+      const bilRows = (bilansQ && bilansQ.data) || [];
+      if (!bilRows.length) {
+        elP.innerHTML = '<div class="locked">Le palmarès se remplira semaine après semaine, dès que le bot tournera avec la dernière version du module de synchronisation.</div>';
+      } else {
+        const parSem = {};
+        bilRows.forEach(b => {
+          const s2 = parSem[b.semaine] = parSem[b.semaine] || { total: 0, best: null };
+          s2.total += b.ventes || 0;
+          if (!s2.best || (b.ventes || 0) > s2.best.ventes) s2.best = b;
+        });
+        const semaines = Object.keys(parSem).sort().reverse();
+        const record = bilRows.reduce((r, b) => ((b.ventes || 0) > (r ? r.ventes : -1) ? b : r), null);
+        elP.innerHTML =
+          '<div class="vd-stats3">' +
+            '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--gold);">' + escT(nomDe[record.user_id] || 'Membre #' + String(record.user_id).slice(-4)) + '</div><div class="vd-stat-label">🏆 Record all-time</div></div>' +
+            '<div class="vd-stat"><div class="vd-stat-num">' + Math.round(record.ventes) + '</div><div class="vd-stat-label">ventes en une semaine</div></div>' +
+            '<div class="vd-stat"><div class="vd-stat-num">' + semaines.length + '</div><div class="vd-stat-label">semaine' + (semaines.length > 1 ? 's' : '') + ' archivée' + (semaines.length > 1 ? 's' : '') + '</div></div>' +
+          '</div>' +
+          '<table class="vd-table"><thead><tr><th>Semaine du</th><th>🥇 Meilleur vendeur</th><th>Ses ventes</th><th>Total famille</th></tr></thead><tbody>' +
+          semaines.map((s2, i2) => {
+            const w2 = parSem[s2];
+            return '<tr><td>' + new Date(s2 + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
+              (i2 === 0 ? ' <span style="color:var(--green);font-size:10px;">(en cours)</span>' : '') + '</td>' +
+              '<td>' + escT(nomDe[w2.best.user_id] || 'Membre #' + String(w2.best.user_id).slice(-4)) + '</td>' +
+              '<td>' + Math.round(w2.best.ventes) + '</td><td>' + Math.round(w2.total) + '</td></tr>';
+          }).join('') + '</tbody></table>';
+      }
+    }
   }
+
+  // ── MODE TV (plein écran auto-défilant) ──
+  let tvRot = null, tvRef = null, tvIdx = 0;
+  const TV_PANELS = ['apercu', 'business', 'coffre', 'braquages', 'armurerie', 'taxes'];
+  function startTV() {
+    document.body.classList.add('tv-mode');
+    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    tvIdx = 0;
+    showPanel(TV_PANELS[0]);
+    clearInterval(tvRot); clearInterval(tvRef);
+    tvRot = setInterval(() => { tvIdx = (tvIdx + 1) % TV_PANELS.length; showPanel(TV_PANELS[tvIdx]); }, 14000);
+    tvRef = setInterval(() => loadBotDashboards(), 120000);
+  }
+  function stopTV() {
+    if (!document.body.classList.contains('tv-mode')) return;
+    document.body.classList.remove('tv-mode');
+    clearInterval(tvRot); clearInterval(tvRef); tvRot = tvRef = null;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    showPanel('apercu');
+  }
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) stopTV();
+  });
+  (function tvInit() {
+    const btn = document.getElementById('tv-btn');
+    if (btn) btn.addEventListener('click', () => { if (isApproved) startTV(); else toast('Compte en attente de validation.'); });
+  })();
 
   // ── MOT DE PASSE OUBLIÉ ──
   async function motDePasseOublie() {
