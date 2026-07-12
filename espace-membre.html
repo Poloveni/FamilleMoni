@@ -174,6 +174,25 @@
     .locked { font-size: 13px; color: var(--dim); padding: 14px 0; }
     .hint { font-size: 12px; color: var(--dim); margin-top: 6px; }
 
+    /* Fil d'activité */
+    .feed { max-height: 280px; overflow-y: auto; padding-right: 4px; }
+    .feed-item { display: flex; align-items: baseline; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; position: relative; top: -1px; }
+    .feed-item b { color: var(--text); font-weight: 600; }
+    .feed-time { color: var(--dim); margin-left: auto; white-space: nowrap; font-size: 11px; }
+
+    /* Braquages & cooldowns */
+    .braq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .braq-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+    .braq-name { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .braq-num { font-size: 24px; font-weight: 700; }
+    .braq-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-top: 4px; }
+    .cd-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .cd-row:last-child { border-bottom: none; }
+    .cd-timer { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--amber); }
+    .cd-me { color: var(--gold); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(212,178,110,0.4); border-radius: 5px; padding: 1px 6px; }
+
     /* Profil */
     .profil-grid { display: grid; grid-template-columns: 170px 1fr; gap: 28px; align-items: start; }
     .avatar-big {
@@ -280,6 +299,7 @@
     <a class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico">🏦</span><span class="lbl">Le coffre</span></a>
     <a class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico">🔫</span><span class="lbl">Armurerie</span></a>
     <a class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico">🧾</span><span class="lbl">Taxes</span></a>
+    <a class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico">🚨</span><span class="lbl">Braquages</span></a>
 
     <div class="sb-group">Perso</div>
     <a class="sb-item req-approve" data-panel="events" data-title="Les &lt;em&gt;événements&lt;/em&gt;"><span class="ico">📅</span><span class="lbl">Événements</span></a>
@@ -323,6 +343,7 @@
         <div class="kpi" style="--kc:#2ecc71;"><div class="kpi-label">Argent sale au coffre</div><div class="kpi-num" id="kpi-coffre" style="color:var(--green);">—</div><div class="kpi-foot" id="kpi-coffre-foot"></div></div>
         <div class="kpi" style="--kc:#d4b26e;"><div class="kpi-label">Quotas atteints</div><div class="kpi-num" id="kpi-quotas">—</div><div class="kpi-foot">objectif : <span id="vd-quota">200</span> ventes / membre</div></div>
         <div class="kpi" style="--kc:#5865f2;"><div class="kpi-label">Drogue à vendre</div><div class="kpi-num" id="kpi-drogue" style="color:var(--red);">—</div><div class="kpi-foot">unités en stock au coffre</div></div>
+        <div class="kpi" style="--kc:#faa61a;"><div class="kpi-label">Chiffre d'affaires</div><div class="kpi-num" id="kpi-ca" style="color:var(--gold);">—</div><div class="kpi-foot" id="kpi-ca-foot">ventes confirmées · 7 jours</div></div>
       </div>
 
       <div class="goal">
@@ -342,6 +363,17 @@
         <div class="bloc">
           <div class="bloc-t">Stock de drogue par produit</div>
           <div id="chart-drogue"><div class="locked">Chargement…</div></div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px;">
+        <div class="bloc">
+          <div class="bloc-t">💰 Évolution de l'argent sale au coffre <small>(7 derniers jours)</small></div>
+          <div id="chart-coffre"><div class="locked">Chargement…</div></div>
+        </div>
+        <div class="bloc">
+          <div class="bloc-t">📜 Dernière activité du coffre</div>
+          <div id="feed-coffre" class="feed"><div class="locked">Chargement…</div></div>
         </div>
       </div>
     </div>
@@ -364,6 +396,18 @@
     <!-- TAXES -->
     <div class="panel" id="panel-taxes">
       <div class="bloc"><div id="bd-taxes"><div class="locked">Chargement…</div></div></div>
+    </div>
+
+    <!-- BRAQUAGES & COOLDOWNS -->
+    <div class="panel" id="panel-braquages">
+      <div class="bloc" style="margin-bottom:14px;">
+        <div class="bloc-t">🚨 Braquages disponibles <small>(fenêtre glissante de 7 jours)</small></div>
+        <div id="bd-braquages"><div class="locked">Chargement…</div></div>
+      </div>
+      <div class="bloc">
+        <div class="bloc-t">⏱ Cooldowns en cours <small>(comptes à rebours en direct)</small></div>
+        <div id="bd-cooldowns"><div class="locked">Chargement…</div></div>
+      </div>
     </div>
 
     <!-- ÉVÉNEMENTS -->
@@ -866,6 +910,87 @@
     }
   }
 
+  // Courbe animée (aire + ligne lumineuse) — évolution de l'argent sale
+  function drawLineChart(container, pts) {
+    lastCharts.line = { container, pts };
+    const { cv, ctx, w, h } = makeCanvas(container, 240);
+    const padL = 8, padR = 10, padT = 26, padB = 14;
+    const xs = pts.map(p => p.t), ys = pts.map(p => p.y);
+    const tMin = Math.min.apply(null, xs), tMax = Math.max.apply(null, xs);
+    const yMin = Math.min.apply(null, ys), yMax = Math.max.apply(null, ys);
+    const spanT = Math.max(1, tMax - tMin), spanY = Math.max(1, yMax - yMin);
+    const X = t => padL + (t - tMin) / spanT * (w - padL - padR);
+    const Y = v => padT + (1 - (v - yMin) / spanY) * (h - padT - padB);
+    function render(p) {
+      ctx.clearRect(0, 0, w, h);
+      const nVis = Math.max(2, Math.ceil(pts.length * p));
+      const vis = pts.slice(0, nVis);
+      ctx.beginPath();
+      ctx.moveTo(X(vis[0].t), h - padB);
+      vis.forEach(pt => ctx.lineTo(X(pt.t), Y(pt.y)));
+      ctx.lineTo(X(vis[vis.length - 1].t), h - padB);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, padT, 0, h - padB);
+      grad.addColorStop(0, 'rgba(46,204,113,0.30)');
+      grad.addColorStop(1, 'rgba(46,204,113,0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.save();
+      ctx.beginPath();
+      vis.forEach((pt, i) => i ? ctx.lineTo(X(pt.t), Y(pt.y)) : ctx.moveTo(X(pt.t), Y(pt.y)));
+      ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(46,204,113,0.6)'; ctx.shadowBlur = 9;
+      ctx.stroke();
+      ctx.restore();
+      const last = vis[vis.length - 1];
+      ctx.save();
+      ctx.fillStyle = '#2ecc71'; ctx.shadowColor = '#2ecc71'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(X(last.t), Y(last.y), 4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = 'rgba(238,240,244,0.92)'; ctx.font = '700 12px Inter, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(fmtArgent(Math.round(last.y)), padL + 2, 14);
+      ctx.fillStyle = 'rgba(139,145,160,0.8)'; ctx.font = '600 9px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText('max ' + fmtArgent(yMax), w - 4, 14);
+    }
+    if (REDUCED) render(1);
+    else {
+      const t0 = performance.now();
+      (function anim(now) {
+        const p = Math.min(1, (now - t0) / 1100);
+        render(easeOut(p));
+        if (p < 1) requestAnimationFrame(anim);
+      })(t0);
+    }
+  }
+
+  // « il y a X min / h / j »
+  function timeAgo(ts) {
+    const s = Math.max(0, (Date.now() - new Date(ts).getTime()) / 1000);
+    if (s < 60) return "à l'instant";
+    if (s < 3600) return 'il y a ' + Math.floor(s / 60) + ' min';
+    if (s < 86400) return 'il y a ' + Math.floor(s / 3600) + ' h';
+    return 'il y a ' + Math.floor(s / 86400) + ' j';
+  }
+
+  // Comptes à rebours des cooldowns (tick chaque seconde)
+  let cdTimer = null;
+  function startCdTicker() {
+    clearInterval(cdTimer);
+    cdTimer = setInterval(() => {
+      let alive = false;
+      document.querySelectorAll('[data-cd]').forEach(el => {
+        const left = new Date(el.dataset.cd).getTime() - Date.now();
+        if (left <= 0) { el.textContent = '🟢 Disponible !'; el.style.color = 'var(--green)'; }
+        else {
+          alive = true;
+          const hh = Math.floor(left / 3600000), mm = Math.floor(left % 3600000 / 60000), ss = Math.floor(left % 60000 / 1000);
+          el.textContent = (hh ? hh + ' h ' : '') + String(mm).padStart(2, '0') + ' min ' + String(ss).padStart(2, '0') + ' s';
+        }
+      });
+      if (!alive) clearInterval(cdTimer);
+    }, 1000);
+  }
+
   // Redessine les graphiques quand la fenêtre change de taille
   let rsTimer = null;
   window.addEventListener('resize', () => {
@@ -873,19 +998,24 @@
     rsTimer = setTimeout(() => {
       if (lastCharts.bars) drawBarChart(lastCharts.bars.container, lastCharts.bars.data, lastCharts.bars.quota);
       if (lastCharts.donut) drawDonut(lastCharts.donut.container, lastCharts.donut.parts);
+      if (lastCharts.line) drawLineChart(lastCharts.line.container, lastCharts.line.pts);
     }, 200);
   });
 
   async function loadBotDashboards() {
     const elC = document.getElementById('bd-classement');
     if (!elC || !currentUser) return;
-    const [meta, stats, mapping, stocks, armes, taxes] = await Promise.all([
+    const [meta, stats, mapping, stocks, armes, taxes, histoQ, braqQ, cdQ, ventesQ] = await Promise.all([
       sb.from('bot_meta').select('*'),
       sb.from('bot_stats').select('*'),
       sb.from('bot_user_mapping').select('*'),
       sb.from('bot_stocks').select('*'),
       sb.from('bot_armurerie').select('*'),
       sb.from('bot_taxes').select('*'),
+      sb.from('bot_stock_history').select('*'),
+      sb.from('bot_braquages').select('*'),
+      sb.from('bot_cooldowns').select('*'),
+      sb.from('bot_ventes').select('*'),
     ]);
     const err = meta.error || stats.error || mapping.error || stocks.error || armes.error || taxes.error;
     if (err) {
@@ -896,7 +1026,7 @@
     (meta.data || []).forEach(m => { metaMap[m.key] = m.value; });
     if (!metaMap.last_sync) {
       const waitMsg = '<div class="locked">⏳ En attente de la première synchronisation du bot Moni — le module sync-supabase.js doit être installé sur le bot (voir GUIDE-SYNC-SITE.md).</div>';
-      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'bd-taxes', 'chart-ventes', 'chart-drogue'].forEach(id => {
+      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'bd-taxes', 'chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = waitMsg;
       });
@@ -966,17 +1096,21 @@
           '<div class="vd-stat"><div class="vd-stat-num">' + nbOk + ' / ' + nbMembres + '</div><div class="vd-stat-label">Quotas atteints</div></div>' +
           '<div class="vd-stat"><div class="vd-stat-num">' + ids.length + '</div><div class="vd-stat-label">Membres actifs</div></div>' +
         '</div>' +
-        '<table class="vd-table"><thead><tr><th>Membre</th><th style="width:32%;">Ventes / ' + quotaVente + '</th><th>Récolte</th><th>Activités</th></tr></thead><tbody>' +
-        ids.map(id => {
+        '<table class="vd-table"><thead><tr><th>Membre</th><th style="width:28%;">Ventes / ' + quotaVente + '</th><th>Récolte</th><th>Activités</th><th>Paie estimée</th></tr></thead><tbody>' +
+        ids.map((id, idx) => {
           const j = joueurs[id];
           const v = Math.round(j.ventes);
           const pct = Math.min(100, Math.round(v / quotaVente * 100));
           const done = v >= quotaVente;
+          const salaire = Number(metaMap.salaire_par_vente || 30) || 30;
+          const bonus = (idx < 3 && v > 0) ? [30000, 20000, 15000][idx] : 0;
+          const medaille = (idx < 3 && v > 0) ? ' ' + ['🥇', '🥈', '🥉'][idx] : '';
           return '<tr><td>' + (done ? '✅ ' : '') + escT(nomDe[id] || 'Membre #' + String(id).slice(-4)) + '</td>' +
             '<td><div class="vd-progress' + (done ? ' done' : '') + '"><span style="width:' + pct + '%"></span></div>' +
             '<div class="vd-progress-txt">' + v + ' (' + pct + '%)</div></td>' +
             '<td>' + Math.round(j.recolte) + '</td>' +
-            '<td title="' + escT(j.detail.join(', ')) + '">' + Math.round(j.activites) + '</td></tr>';
+            '<td title="' + escT(j.detail.join(', ')) + '">' + Math.round(j.activites) + '</td>' +
+            '<td style="color:var(--gold);font-weight:600;" title="' + v + ' ventes × ' + salaire + ' $' + (bonus ? ' + bonus ' + bonus.toLocaleString('fr-FR') + ' $' : '') + '">' + fmtArgent(v * salaire + bonus) + medaille + '</td></tr>';
         }).join('') + '</tbody></table>';
 
     // ── COFFRE ──
@@ -1025,6 +1159,75 @@
             '<td>' + new Date(t.echeance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td>' +
             '<td>' + badge + '</td></tr>';
         }).join('') + '</tbody></table>';
+
+    // ── CHIFFRE D'AFFAIRES (ventes confirmées depuis lundi) ──
+    const vRows = (ventesQ && ventesQ.data) || [];
+    const lundi = new Date(); lundi.setHours(0, 0, 0, 0); lundi.setDate(lundi.getDate() - ((lundi.getDay() + 6) % 7));
+    const confirmees = vRows.filter(v => v.confirmed && new Date(v.ts) >= lundi);
+    const ca = confirmees.reduce((t, v) => t + (v.montant || 0), 0);
+    const caUnites = confirmees.reduce((t, v) => t + (v.quantite || 0), 0);
+    countUp(document.getElementById('kpi-ca'), ca, x => fmtArgent(Math.round(x)));
+    if (caUnites) document.getElementById('kpi-ca-foot').textContent =
+      caUnites.toLocaleString('fr-FR') + ' unités · ' + fmtArgent(Math.round(ca / caUnites)) + ' / unité en moyenne';
+
+    // ── COURBE DU COFFRE (argent sale) ──
+    const chartC = document.getElementById('chart-coffre');
+    const hRows = (histoQ && histoQ.data) || [];
+    const argentPts = hRows.filter(r => r.item === 'argent sale')
+      .map(r => ({ t: new Date(r.ts).getTime(), y: r.stock_apres || 0 }))
+      .sort((a, b) => a.t - b.t);
+    if (chartC) {
+      if (argentPts.length < 2) chartC.innerHTML = '<div class="locked">Pas encore assez de données pour tracer la courbe.</div>';
+      else drawLineChart(chartC, argentPts);
+    }
+
+    // ── FIL D'ACTIVITÉ DU COFFRE ──
+    const feed = document.getElementById('feed-coffre');
+    if (feed) {
+      const rows = hRows.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 25);
+      feed.innerHTML = !rows.length ? '<div class="locked">Aucun mouvement enregistré.</div>' :
+        rows.map(r => {
+          const depot = r.action === 'depose';
+          return '<div class="feed-item"><span class="feed-dot" style="background:' + (depot ? 'var(--green)' : 'var(--red)') + '"></span>' +
+            '<span><b>' + escT(r.joueur) + '</b> a ' + (depot ? 'déposé' : 'retiré') + ' <b>' + Number(r.quantite).toLocaleString('fr-FR') + '×</b> ' + escT(cap(r.item)) + '</span>' +
+            '<span class="feed-time">' + timeAgo(r.ts) + '</span></div>';
+        }).join('');
+    }
+
+    // ── BRAQUAGES DISPONIBLES (fenêtre 7 jours) ──
+    const elB = document.getElementById('bd-braquages');
+    if (elB) {
+      let limits = {};
+      try { limits = JSON.parse(metaMap.braquage_limits || '{}'); } catch (e) {}
+      if (!Object.keys(limits).length) limits = { fleeca: 6, braq_armurerie: 6, bijouterie: 1, pinebank: 1 };
+      const bRows = (braqQ && braqQ.data) || [];
+      const used = {};
+      bRows.forEach(b => { used[b.action] = (used[b.action] || 0) + 1; });
+      elB.innerHTML = '<div class="braq-grid">' + Object.keys(limits).map(k => {
+        const total = limits[k], u = used[k] || 0, dispo = Math.max(0, total - u);
+        return '<div class="braq-card"><div class="braq-name">' + (dispo > 0 ? '🟢' : '🔴') + ' ' + escT(BD_ACTIVITES[k] || k) + '</div>' +
+          '<div class="braq-num" style="color:' + (dispo > 0 ? 'var(--green)' : 'var(--red)') + ';">' + dispo + '<span style="font-size:13px;color:var(--dim);"> / ' + total + '</span></div>' +
+          '<div class="braq-lbl">restants cette semaine</div></div>';
+      }).join('') + '</div>';
+    }
+
+    // ── COOLDOWNS EN DIRECT ──
+    const elCd = document.getElementById('bd-cooldowns');
+    if (elCd) {
+      const cds = ((cdQ && cdQ.data) || []).filter(c => new Date(c.expires_at) > new Date())
+        .sort((a, b) => new Date(a.expires_at) - new Date(b.expires_at));
+      const monDiscord = Object.keys(nomDe).find(k => nomDe[k] === currentNom) || null;
+      elCd.innerHTML = !cds.length
+        ? '<div class="hint">Aucun cooldown en cours — tout est disponible ! 🟢</div>'
+        : cds.map(c => {
+            const moi = monDiscord && c.user_id === monDiscord;
+            return '<div class="cd-row"><span><b>' + escT(nomDe[c.user_id] || 'Membre #' + String(c.user_id).slice(-4)) + '</b></span>' +
+              (moi ? '<span class="cd-me">toi</span>' : '') +
+              '<span style="color:var(--muted);">· ' + escT(BD_ACTIVITES[c.action] || c.action) + '</span>' +
+              '<span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>';
+          }).join('');
+      startCdTicker();
+    }
   }
 
   // ── MOT DE PASSE OUBLIÉ ──
