@@ -37,7 +37,13 @@ function parseDate(text: string): Date | null {
   let an = now.getFullYear();
   const diff = mois - (now.getMonth() + 1);
   if (diff < -6) an++; else if (diff > 6) an--;
-  return new Date(an, mois - 1, jour, heure, minute);
+  // L'heure écrite dans le message est l'heure de PARIS ; le serveur tourne en UTC.
+  // On convertit donc vers l'instant UTC correspondant (été/hiver géré automatiquement).
+  const utcGuess = new Date(Date.UTC(an, mois - 1, jour, heure, minute));
+  const parisLocal = new Date(utcGuess.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  const utcLocal = new Date(utcGuess.toLocaleString("en-US", { timeZone: "UTC" }));
+  const offsetMs = parisLocal.getTime() - utcLocal.getTime();
+  return new Date(utcGuess.getTime() - offsetMs);
 }
 
 Deno.serve(async () => {
