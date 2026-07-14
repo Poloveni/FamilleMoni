@@ -1,17 +1,11 @@
 // ════════════════════════════════════════════════════════════
-//  Fonction Edge Supabase — discord-presence-bot
-//  Commande /presence sur Discord : publie une présence formatée
-//  dans le salon des présences, qui apparaît ensuite sur le
-//  planning du site (via sync-discord-presences).
+//  Fonction Edge Supabase — discord-presence-bot (v2 : modale)
+//  /presence sur Discord → une FENÊTRE s'ouvre (titre, date,
+//  heure, détails) → publie la présence formatée dans le salon
+//  → synchronisation immédiate vers le planning du site.
 //
 //  Secrets requis : DISCORD_BOT_TOKEN, PRESENCES_CHANNEL_ID,
 //                   DISCORD_APP_ID, DISCORD_PUBLIC_KEY, DISCORD_GUILD_ID.
-//
-//  Mise en service :
-//   1. Ouvrir une fois l'URL de la fonction avec ?setup à la fin
-//      → enregistre la commande /presence sur le serveur.
-//   2. Coller l'URL de la fonction dans le portail développeur
-//      Discord → General Information → INTERACTIONS ENDPOINT URL.
 // ════════════════════════════════════════════════════════════
 
 const TOKEN      = Deno.env.get("DISCORD_BOT_TOKEN") ?? "";
@@ -46,30 +40,27 @@ function json(body: unknown): Response {
 Deno.serve(async (req) => {
   const url = new URL(req.url);
 
-  // ── Enregistrement (une seule fois) de la commande /presence ──
+  // ── Enregistrement (une seule fois) des commandes /presence et /annuler ──
   if (req.method === "GET" && url.searchParams.has("setup")) {
-    if (!APP_ID || !GUILD_ID || !TOKEN) return new Response("Secrets manquants (DISCORD_APP_ID / DISCORD_GUILD_ID / DISCORD_BOT_TOKEN).", { status: 500 });
-    const cmd = {
-      name: "presence",
-      description: "Publier une présence sur le planning de la famille",
-      options: [
-        { type: 3, name: "titre",  description: "Titre (ex : Descente au QG)",            required: true },
-        { type: 3, name: "date",   description: "Date au format JJ/MM (ex : 18/07)",      required: true },
-        { type: 3, name: "heure",  description: "Heure (ex : 21h00)",                     required: true },
-        { type: 3, name: "details", description: "Détails supplémentaires (optionnel)",   required: false },
-      ],
-    };
-    const r = await fetch(`https://discord.com/api/v10/applications/${APP_ID}/guilds/${GUILD_ID}/commands`, {
-      method: "POST",
-      headers: { Authorization: `Bot ${TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify(cmd),
-    });
-    return new Response(`Enregistrement de /presence : HTTP ${r.status} — ${(await r.text()).slice(0, 300)}`);
+    if (!APP_ID || !GUILD_ID || !TOKEN) return new Response("Secrets manquants.", { status: 500 });
+    const cmds = [
+      { name: "presence", description: "Publier une présence sur le planning de la famille" },
+      { name: "annuler", description: "Annuler une présence (la retire aussi du site)" },
+    ];
+    const resultats: string[] = [];
+    for (const cmd of cmds) {
+      const r = await fetch("https://discord.com/api/v10/applications/" + APP_ID + "/guilds/" + GUILD_ID + "/commands", {
+        method: "POST",
+        headers: { Authorization: "Bot " + TOKEN, "Content-Type": "application/json" },
+        body: JSON.stringify(cmd),
+      });
+      resultats.push("/" + cmd.name + " : HTTP " + r.status);
+    }
+    return new Response("Enregistrement — " + resultats.join(" | "));
   }
 
   if (req.method !== "POST") return new Response("discord-presence-bot OK");
 
-  // ── Interactions Discord (signature obligatoire) ──
   const body = await req.text();
   if (!(await signatureValide(req, body))) {
     return new Response("invalid request signature", { status: 401 });
@@ -79,38 +70,105 @@ Deno.serve(async (req) => {
   // PING de vérification de Discord
   if (inter.type === 1) return json({ type: 1 });
 
-  // Commande /presence
+  // /presence → ouvre la fenêtre modale
   if (inter.type === 2 && inter.data?.name === "presence") {
-    const opts: Record<string, string> = {};
-    for (const o of (inter.data.options ?? [])) opts[o.name] = String(o.value ?? "").trim();
+    return json({
+      type: 9,
+      data: {
+        custom_id: "presence_modal",
+        title: "📋 Nouvelle présence",
+        components: [
+          { type: 1, components: [{ type: 4, custom_id: "titre", label: "Titre", style: 1, required: true, max_length: 90, placeholder: "Descente au QG" }] },
+          { type: 1, components: [{ type: 4, custom_id: "date", label: "Date (JJ/MM)", style: 1, required: true, max_length: 5, placeholder: "18/07" }] },
+          { type: 1, components: [{ type: 4, custom_id: "heure", label: "Heure", style: 1, required: true, max_length: 6, placeholder: "21h30" }] },
+          { type: 1, components: [{ type: 4, custom_id: "details", label: "Détails (optionnel)", style: 2, required: false, max_length: 300, placeholder: "Rendez-vous au garage, tenue sombre…" }] },
+        ],
+      },
+    });
+  }
 
-    if (!/^\d{1,2}\/\d{1,2}$/.test(opts.date ?? "")) {
-      return json({ type: 4, data: { content: "❌ Date invalide. Format attendu : JJ/MM (ex : 18/07).", flags: 64 } });
+  // /annuler → liste déroulante des présences à venir
+  if (inter.type === 2 && inter.data?.name === "annuler") {
+    const rm = await fetch("https://discord.com/api/v10/channels/" + CHANNEL + "/messages?limit=50", {
+      headers: { Authorization: "Bot " + TOKEN },
+    });
+    if (!rm.ok) return json({ type: 4, data: { content: "❌ Impossible de lire le salon des présences.", flags: 64 } });
+    const msgs = await rm.json();
+    const options: any[] = [];
+    for (const m of msgs as any[]) {
+      const text = String(m.content || "");
+      const dm = text.match(/(\d{1,2})\/(\d{1,2})/);
+      const hm = text.match(/(\d{1,2})\s*[hH]\s*(\d{2})?/);
+      if (!dm) continue;
+      const titre = (text.split("\n").map((l: string) => l.trim()).filter(Boolean)[0] || "Présence").replace(/[*_`#]/g, "").slice(0, 70);
+      options.push({
+        label: (titre + " (" + dm[0] + (hm ? " à " + hm[0].replace(/\s+/g, "") : "") + ")").slice(0, 100),
+        value: String(m.id),
+      });
+      if (options.length >= 25) break;
     }
-    if (!/^\d{1,2}\s*[hH]\s*\d{0,2}$/.test(opts.heure ?? "")) {
-      return json({ type: 4, data: { content: "❌ Heure invalide. Format attendu : 21h ou 21h30.", flags: 64 } });
+    if (!options.length) return json({ type: 4, data: { content: "Aucune présence trouvée dans le salon.", flags: 64 } });
+    return json({
+      type: 4,
+      data: {
+        content: "🗑 Quelle présence veux-tu annuler ? (supprimée de Discord ET du site)",
+        flags: 64,
+        components: [{ type: 1, components: [{ type: 3, custom_id: "annule_select", placeholder: "Choisis la présence à annuler…", options }] }],
+      },
+    });
+  }
+
+  // Choix dans la liste → suppression du message + synchro du site
+  if (inter.type === 3 && inter.data?.custom_id === "annule_select") {
+    const msgId = inter.data.values?.[0];
+    const del = await fetch("https://discord.com/api/v10/channels/" + CHANNEL + "/messages/" + msgId, {
+      method: "DELETE",
+      headers: { Authorization: "Bot " + TOKEN },
+    });
+    if (!del.ok) {
+      return json({ type: 7, data: { content: "❌ Suppression impossible (HTTP " + del.status + "). Pour supprimer les présences écrites par des membres, le bot a besoin de la permission « Gérer les messages » dans le salon.", components: [] } });
+    }
+    try {
+      // @ts-ignore API spécifique Supabase Edge
+      EdgeRuntime.waitUntil(fetch(SYNC_URL).catch(() => {}));
+    } catch { /* la synchro auto passera dans les 5 min */ }
+    return json({ type: 7, data: { content: "✅ Présence annulée — supprimée de Discord et du planning du site.", components: [] } });
+  }
+
+  // Envoi de la fenêtre → publication dans le salon
+  if (inter.type === 5 && inter.data?.custom_id === "presence_modal") {
+    const vals: Record<string, string> = {};
+    for (const row of (inter.data.components ?? [])) {
+      const c = row.components?.[0];
+      if (c?.custom_id) vals[c.custom_id] = String(c.value ?? "").trim();
+    }
+
+    if (!/^\d{1,2}\/\d{1,2}$/.test(vals.date ?? "")) {
+      return json({ type: 4, data: { content: "❌ Date invalide (« " + (vals.date ?? "") + " »). Format attendu : JJ/MM, par exemple 18/07. Refais /presence.", flags: 64 } });
+    }
+    if (!/^\d{1,2}\s*[hH]\s*\d{0,2}$/.test(vals.heure ?? "")) {
+      return json({ type: 4, data: { content: "❌ Heure invalide (« " + (vals.heure ?? "") + " »). Format attendu : 21h ou 21h30. Refais /presence.", flags: 64 } });
     }
 
     const user = inter.member?.nick || inter.member?.user?.global_name || inter.member?.user?.username || "un membre";
-    const message = `📋 ${opts.titre}\n🗓 ${opts.date} à ${opts.heure}` +
-      (opts.details ? `\n${opts.details}` : "") +
-      `\n— proposée par ${user}`;
+    const message = "📋 " + vals.titre + "\n🗓 " + vals.date + " à " + vals.heure +
+      (vals.details ? "\n" + vals.details : "") +
+      "\n— proposée par " + user;
 
-    const r = await fetch(`https://discord.com/api/v10/channels/${CHANNEL}/messages`, {
+    const r = await fetch("https://discord.com/api/v10/channels/" + CHANNEL + "/messages", {
       method: "POST",
-      headers: { Authorization: `Bot ${TOKEN}`, "Content-Type": "application/json" },
+      headers: { Authorization: "Bot " + TOKEN, "Content-Type": "application/json" },
       body: JSON.stringify({ content: message }),
     });
 
     if (!r.ok) {
-      return json({ type: 4, data: { content: `❌ Impossible de publier (HTTP ${r.status}). Le bot a-t-il la permission « Envoyer des messages » dans le salon des présences ?`, flags: 64 } });
+      return json({ type: 4, data: { content: "❌ Impossible de publier (HTTP " + r.status + "). Le bot a-t-il la permission « Envoyer des messages » dans le salon ?", flags: 64 } });
     }
 
-    // Synchronisation immédiate vers le site (en tâche de fond)
     try {
-      // @ts-ignore : API spécifique à l'environnement Supabase Edge
+      // @ts-ignore API spécifique Supabase Edge
       EdgeRuntime.waitUntil(fetch(SYNC_URL).catch(() => {}));
-    } catch { /* pas grave : la synchro auto passera dans les 5 min */ }
+    } catch { /* la synchro auto passera dans les 5 min */ }
 
     return json({ type: 4, data: { content: "✅ Présence publiée ! Elle apparaît sur le planning du site dans quelques secondes.", flags: 64 } });
   }

@@ -818,7 +818,7 @@
     });
     ((pres && pres.data) || []).forEach(p => {
       if (!p.date_evt) return;
-      calItems.push({ kind: 'pr', d: new Date(p.date_evt), titre: p.titre || 'Présence', texte: p.texte || '', auteur: p.auteur || '' });
+      calItems.push({ kind: 'pr', d: new Date(p.date_evt), titre: p.titre || 'Présence', texte: p.texte || '', auteur: p.auteur || '', reactions: p.reactions || null });
     });
     renderCal();
   }
@@ -885,9 +885,18 @@
     const quand = it.d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) +
       ' à ' + String(it.d.getHours()).padStart(2, '0') + 'h' + String(it.d.getMinutes()).padStart(2, '0');
     if (it.kind === 'pr') {
+      let reacHtml = '';
+      if (it.reactions) {
+        const bloc = (emo, lbl, arr) => (arr && arr.length)
+          ? '<div style="margin-top:7px;font-size:12.5px;color:var(--muted);">' + emo + ' <b style="color:var(--text);">' + lbl + ' (' + arr.length + ')</b> : ' + arr.map(escT).join(', ') + '</div>'
+          : '';
+        reacHtml = bloc('✅', 'Présents', it.reactions.oui) + bloc('❌', 'Absents', it.reactions.non) + bloc('❓', 'Incertains', it.reactions.incertain);
+        reacHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">' +
+          (reacHtml || '<span class="hint">Personne n\'a encore réagi sur Discord.</span>') + '</div>';
+      }
       box.innerHTML = '<div class="cal-card pr"><h3>🟢 ' + escT(it.titre) + '</h3>' +
         '<div class="meta">' + escT(quand) + (it.auteur ? ' · posté par ' + escT(it.auteur) : '') + '</div>' +
-        '<p>' + escT(it.texte) + '</p></div>';
+        '<p>' + escT(it.texte) + '</p>' + reacHtml + '</div>';
     } else {
       box.innerHTML = '<div class="cal-card"><h3>🔴 ' + escT(it.titre) + (it.type ? ' <span style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;">· ' + escT(it.type) + '</span>' : '') + '</h3>' +
         '<div class="meta">' + escT(quand) + '</div>' +

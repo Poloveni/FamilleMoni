@@ -63,13 +63,32 @@ Deno.serve(async () => {
     const d = parseDate(text);
     if (!d) continue;
     const premiere = (m.content || "").split("\n").map((l: string) => l.trim()).filter(Boolean)[0] || "Présence";
-    rows.push({
+    rows.push(<any>{
       id: String(m.id),
       auteur: m.author?.global_name || m.author?.username || "",
       titre: premiere.replace(/[*_`#]/g, "").slice(0, 90),
       texte: text.replace(/[*_`#]/g, "").slice(0, 400),
       date_evt: d.toISOString(),
     });
+  }
+
+  // Réactions ✅ ❌ ❓ (uniquement pour les présences récentes ou à venir,
+  // pour limiter les appels à l'API Discord)
+  const EMOJIS: [string, string][] = [["oui", "%E2%9C%85"], ["non", "%E2%9D%8C"], ["incertain", "%E2%9D%93"]];
+  for (const row of rows) {
+    if (new Date(row.date_evt).getTime() < Date.now() - 2 * 86400000) { row.reactions = null; continue; }
+    const reac: Record<string, string[]> = { oui: [], non: [], incertain: [] };
+    for (const [cle, emo] of EMOJIS) {
+      const rr = await fetch(
+        "https://discord.com/api/v10/channels/" + CHANNEL + "/messages/" + row.id + "/reactions/" + emo + "?limit=100",
+        { headers: { Authorization: "Bot " + TOKEN } },
+      );
+      if (rr.ok) {
+        const users = await rr.json();
+        reac[cle] = (users as any[]).filter((u) => !u.bot).map((u) => u.global_name || u.username);
+      }
+    }
+    row.reactions = reac;
   }
 
   const sb = createClient(SB_URL, SB_KEY);
