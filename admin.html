@@ -246,7 +246,7 @@
         <span class="sidebar-icon">👥</span> Membres
       </div>
       <div class="sidebar-label">Espace membre</div>
-      <div class="sidebar-item" onclick="showPanel('inscriptions', this)">
+      <div class="sidebar-item" id="side-inscriptions" onclick="showPanel('inscriptions', this)">
         <span class="sidebar-icon">✅</span> Inscriptions
       </div>
       <div class="sidebar-label">Export</div>
@@ -262,19 +262,47 @@
       <div class="panel active" id="panel-dashboard">
         <div class="panel-title">Bienvenue, <em>Donna</em> 👑</div>
         <div class="panel-desc">Gérez le contenu du site de la Famille Moni depuis ce panneau.</div>
-        <div class="dash-grid">
+        <!-- Alerte : comptes en attente de validation -->
+        <div id="dash-alerte" onclick="showPanel('inscriptions', document.getElementById('side-inscriptions'))"
+             style="display:none;cursor:pointer;align-items:center;gap:12px;background:rgba(230,126,34,0.10);border:1px solid rgba(230,126,34,0.45);padding:14px 18px;margin-bottom:18px;">
+          <span style="font-size:18px;">⏳</span>
+          <b id="dash-alerte-txt" style="color:#e67e22;font-size:14px;"></b>
+          <span style="margin-left:auto;font-size:12px;color:var(--text-muted);">Cliquer pour valider →</span>
+        </div>
+
+        <div class="dash-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
           <div class="dash-card">
-            <div class="dash-card-num" id="dash-membres">15</div>
-            <div class="dash-card-label">Membres</div>
+            <div class="dash-card-num" id="dash-membres">—</div>
+            <div class="dash-card-label">Membres officiels</div>
           </div>
           <div class="dash-card">
-            <div class="dash-card-num">Discord</div>
-            <div class="dash-card-label">Événements (sync auto)</div>
+            <div class="dash-card-num" id="dash-comptes">—</div>
+            <div class="dash-card-label">Comptes inscrits</div>
           </div>
           <div class="dash-card">
-            <div class="dash-card-num">Roxwood</div>
-            <div class="dash-card-label">Quartier</div>
+            <div class="dash-card-num" id="dash-attente" style="color:#e67e22;">—</div>
+            <div class="dash-card-label">En attente</div>
           </div>
+          <div class="dash-card">
+            <div class="dash-card-num" id="dash-presences">—</div>
+            <div class="dash-card-label">Présences à venir</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-num" id="dash-galerie">—</div>
+            <div class="dash-card-label">Photos galerie</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-num" id="dash-sync" style="font-size:16px;line-height:1.4;padding-top:8px;">—</div>
+            <div class="dash-card-label">Sync bot Moni</div>
+          </div>
+        </div>
+
+        <!-- Accès rapides -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
+          <a class="btn-add" style="text-decoration:none;margin:0;" href="index.html" target="_blank">🌐 Voir le site</a>
+          <a class="btn-add" style="text-decoration:none;margin:0;" href="espace-membre.html" target="_blank">📊 Espace membre</a>
+          <a class="btn-add" style="text-decoration:none;margin:0;" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">📈 Stats de visite</a>
+          <a class="btn-add" style="text-decoration:none;margin:0;" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">🗄 Base de données</a>
         </div>
         <div class="divider"></div>
         <p style="font-size:13px;color:var(--text-muted);line-height:1.7;">
@@ -507,10 +535,50 @@
     renderMembres();
     renderHero();
     updateDash();
+    updateDashLive();
   }
 
   function updateDash() {
     document.getElementById('dash-membres').textContent = data.membres.length;
+  }
+
+  // Statistiques en direct depuis Supabase (chaque bloc échoue en silence si indisponible)
+  async function updateDashLive() {
+    if (!SB) return;
+    try {
+      const { data: comptes } = await SB.from('comptes').select('approuve');
+      if (comptes) {
+        document.getElementById('dash-comptes').textContent = comptes.length;
+        const att = comptes.filter(c => !c.approuve).length;
+        document.getElementById('dash-attente').textContent = att;
+        const alerte = document.getElementById('dash-alerte');
+        if (att > 0) {
+          document.getElementById('dash-alerte-txt').textContent =
+            att + ' compte' + (att > 1 ? 's' : '') + ' en attente de validation';
+          alerte.style.display = 'flex';
+        } else {
+          alerte.style.display = 'none';
+        }
+      }
+    } catch (e) {}
+    try {
+      const { data: pres } = await SB.from('bot_presences').select('date_evt');
+      if (pres) document.getElementById('dash-presences').textContent =
+        pres.filter(p => p.date_evt && new Date(p.date_evt) > new Date()).length;
+    } catch (e) {}
+    try {
+      const { data: gal } = await SB.from('galerie_photos').select('id');
+      if (gal) document.getElementById('dash-galerie').textContent = gal.length;
+    } catch (e) {}
+    try {
+      const { data: meta } = await SB.from('bot_meta').select('value').eq('key', 'last_sync').maybeSingle();
+      if (meta && meta.value) {
+        const min = Math.max(0, Math.round((Date.now() - new Date(meta.value).getTime()) / 60000));
+        document.getElementById('dash-sync').textContent = min < 1 ? "à l'instant" : 'il y a ' + min + ' min';
+      } else {
+        document.getElementById('dash-sync').textContent = 'en attente';
+      }
+    } catch (e) {}
   }
 
   // ── HERO ──

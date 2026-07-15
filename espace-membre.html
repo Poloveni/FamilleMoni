@@ -370,6 +370,7 @@
 
     <div class="sb-group">Système</div>
     <a class="sb-item" href="index.html"><span class="ico">🏠</span><span class="lbl">Retour au site</span></a>
+    <a class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico">🛠</span><span class="lbl">Panel admin</span></a>
 
     <div class="sb-foot">
       <div class="sb-user">Connecté : <b id="who-email"></b></div>
@@ -681,6 +682,9 @@
     document.getElementById('reset-screen').style.display = 'none';
     document.getElementById('member-screen').style.display = 'block';
     document.getElementById('who-email').textContent = user.email;
+    // Lien Panel admin : visible uniquement pour l'administratrice
+    const sbAdmin = document.getElementById('sb-admin');
+    if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
 
     await sb.from('comptes').upsert({ id: user.id, email: user.email });
     const { data: compte } = await sb.from('comptes').select('approuve').eq('id', user.id).maybeSingle();
