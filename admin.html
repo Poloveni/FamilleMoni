@@ -5,384 +5,332 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Famille Moni</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --red: #c0392b; --red-dark: #a93226;
-      --bg: #0f0f0f; --surface: #161616; --surface2: #1e1e1e;
-      --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.14);
-      --text: #f0f0f0; --text-muted: #888; --text-dim: #555;
-      --green: #27ae60; --orange: #e67e22;
+      --bg: #0b0c10; --panel: #12141b; --panel2: #1a1d27;
+      --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.14);
+      --text: #eef0f4; --muted: #8b91a0; --dim: #565c6b;
+      --red: #e0503f; --red-deep: #c0392b; --gold: #d4b26e;
+      --green: #2ecc71; --amber: #e67e22;
     }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; font-size: 14px;
+      background-image:
+        radial-gradient(900px 500px at 85% -10%, rgba(192,57,43,0.10), transparent 60%),
+        radial-gradient(700px 500px at -10% 110%, rgba(212,178,110,0.07), transparent 60%);
+      background-attachment: fixed;
+    }
+    a { color: inherit; }
+    #admin-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.5; }
 
-    /* ── LOGIN ── */
-    #login-screen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    }
+    /* ═══ LOGIN ═══ */
+    #login-screen { position: relative; z-index: 1; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
     .login-box {
-      background: var(--surface); border: 1px solid var(--border);
-      padding: 48px 40px; width: 360px; text-align: center;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 40px;
+      width: 100%; max-width: 400px; box-shadow: 0 24px 60px rgba(0,0,0,0.45);
     }
-    .login-logo { font-size: 18px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
-    .login-logo span { color: var(--red); }
-    .login-sub { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 36px; }
-    .login-box input {
-      width: 100%; padding: 12px 16px; background: var(--surface2);
-      border: 1px solid var(--border); color: var(--text); font-size: 14px;
-      font-family: 'Inter', sans-serif; margin-bottom: 12px; outline: none;
-      transition: border-color 0.2s;
+    .login-box h1 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; margin-bottom: 4px; }
+    .login-box h1 span { color: var(--red); }
+    .login-sub { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 26px; }
+    label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%; padding: 11px 14px; background: var(--panel2);
+      border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px;
+      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; margin-bottom: 14px;
     }
-    .login-box input:focus { border-color: var(--red); }
-    .login-box button {
-      width: 100%; padding: 12px; background: var(--red); color: #fff;
-      font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
-      border: none; cursor: pointer; font-family: 'Inter', sans-serif;
-      transition: background 0.2s;
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    input:focus, select:focus, textarea:focus { border-color: var(--red); }
+    select option { background: var(--panel2); }
+    .btn {
+      padding: 12px 20px; background: var(--red-deep); color: #fff; font-size: 12px;
+      letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 10px; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-weight: 600; transition: background 0.2s, transform 0.2s;
     }
-    .login-box button:hover { background: var(--red-dark); }
-    .login-error { font-size: 12px; color: var(--red); margin-top: 12px; display: none; }
+    .btn:hover { background: #a93226; transform: translateY(-1px); }
+    .btn.full { width: 100%; }
+    .btn.green { background: #1f8a4d; }
+    .btn.green:hover { background: #1a7642; }
+    .btn.ghost { background: transparent; border: 1px solid var(--border2); color: var(--text); }
+    .btn.ghost:hover { background: var(--panel2); }
+    .btn.danger { background: transparent; border: 1px solid rgba(224,80,63,0.5); color: var(--red); }
+    .btn.danger:hover { background: rgba(224,80,63,0.12); }
+    .login-error {
+      display: none; margin-top: 14px; font-size: 13px; color: #ff7a6e; border-radius: 8px;
+      background: rgba(192,57,43,0.12); border: 1px solid rgba(192,57,43,0.35); padding: 10px 12px;
+    }
 
-    /* ── ADMIN ── */
-    #admin-screen { display: none; }
-    .admin-nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 60px; background: var(--surface);
-      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+    /* ═══ DASHBOARD : SIDEBAR + MAIN ═══ */
+    #admin-screen { display: none; position: relative; z-index: 1; }
+    .sb-nav {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 232px; z-index: 10;
+      background: rgba(14,15,20,0.92); backdrop-filter: blur(8px);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 20px 12px 14px; overflow-y: auto;
     }
-    .admin-nav .logo { font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
-    .admin-nav .logo span { color: var(--red); }
-    .admin-badge {
-      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 3px 10px; background: rgba(192,57,43,0.15); color: var(--red);
-      border: 1px solid rgba(192,57,43,0.3);
+    .sb-logo { padding: 0 10px 18px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+    .sb-logo .t1 { font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+    .sb-logo .t1 span { color: var(--red); }
+    .sb-logo .t2 {
+      display: inline-block; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: #1a1206; background: var(--gold); border-radius: 5px; padding: 2px 8px; margin-top: 6px; font-weight: 700;
     }
-    .logout-btn {
-      font-size: 12px; color: var(--text-muted); background: none;
-      border: 1px solid var(--border); padding: 6px 14px; cursor: pointer;
-      font-family: 'Inter', sans-serif; transition: color 0.2s, border-color 0.2s;
+    .sb-group { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); padding: 14px 10px 6px; }
+    .sb-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px;
+      font-size: 13px; color: var(--muted); cursor: pointer; border: 1px solid transparent;
+      transition: background 0.15s, color 0.15s; text-decoration: none; margin-bottom: 2px; position: relative;
     }
-    .logout-btn:hover { color: var(--text); border-color: var(--border-strong); }
+    .sb-item:hover { background: var(--panel2); color: var(--text); }
+    .sb-item.active { background: rgba(192,57,43,0.14); color: #fff; border-color: rgba(192,57,43,0.35); }
+    .sb-item .ico { width: 18px; text-align: center; }
+    .sb-badge {
+      margin-left: auto; min-width: 18px; height: 18px; border-radius: 9px; background: var(--amber);
+      color: #fff; font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; padding: 0 5px;
+    }
+    .sb-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--border); }
+    .sb-user { font-size: 11px; color: var(--dim); margin-bottom: 8px; word-break: break-all; }
+    .sb-out { color: var(--red); font-size: 12.5px; cursor: pointer; display: flex; gap: 10px; align-items: center; padding: 8px 0; }
+    .sb-out:hover { color: #ff7a6e; }
 
-    .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+    .dash { margin-left: 232px; padding: 30px 34px 60px; min-height: 100vh; }
+    .dash-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+    .dash-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; }
+    .dash-title em { font-style: normal; color: var(--red); }
+    .dash-sub { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 
-    /* ── SIDEBAR ── */
-    .admin-sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; }
-    .sidebar-label {
-      font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px;
-      padding: 0 20px; margin-bottom: 8px; margin-top: 20px;
-    }
-    .sidebar-label:first-child { margin-top: 0; }
-    .sidebar-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 20px; font-size: 13px; color: var(--text-muted);
-      cursor: pointer; transition: color 0.2s, background 0.2s; border-left: 2px solid transparent;
-    }
-    .sidebar-item:hover { color: var(--text); background: var(--surface2); }
-    .sidebar-item.active { color: var(--text); border-left-color: var(--red); background: var(--surface2); }
-    .sidebar-icon { font-size: 15px; width: 20px; text-align: center; }
-
-    /* ── CONTENT ── */
-    .admin-content { padding: 32px; overflow-y: auto; }
     .panel { display: none; }
-    .panel.active { display: block; }
-    .panel-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-    .panel-title em { font-style: normal; color: var(--red); }
-    .panel-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+    .panel.active { display: block; animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-    /* ── CARDS DASHBOARD ── */
-    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .dash-card {
-      background: var(--surface); border: 1px solid var(--border); padding: 24px;
-    }
-    .dash-card-num { font-size: 32px; font-weight: 600; color: var(--red); }
-    .dash-card-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+    .bloc { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+    .bloc + .bloc { margin-top: 14px; }
+    .bloc-t { font-size: 13.5px; font-weight: 600; margin-bottom: 16px; }
+    .hint { font-size: 12px; color: var(--dim); }
 
-    /* ── FORMS ── */
-    .form-group { margin-bottom: 20px; }
-    .form-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-    .form-input, .form-textarea, .form-select {
-      width: 100%; padding: 10px 14px; background: var(--surface2);
-      border: 1px solid var(--border); color: var(--text); font-size: 14px;
-      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
+    /* KPI cards */
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .kpi {
+      position: relative; overflow: hidden; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 18px 16px;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s, box-shadow 0.25s;
     }
-    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--red); }
-    .form-textarea { min-height: 100px; resize: vertical; }
-    .form-select option { background: var(--surface2); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .kpi:hover { transform: translateY(-3px); border-color: var(--border2); box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+    .kpi::before { content: ''; position: absolute; top: -40px; left: -40px; width: 110px; height: 110px; border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--kc, var(--red)); }
+    .kpi-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); position: relative; }
+    .kpi-num { font-size: 28px; font-weight: 700; margin-top: 7px; position: relative; letter-spacing: -0.5px; }
+    .kpi-num.small { font-size: 15px; padding-top: 8px; }
 
-    /* ── BUTTONS ── */
-    .btn-save {
-      padding: 10px 24px; background: var(--green); color: #fff; font-size: 12px;
-      letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; transition: opacity 0.2s;
+    /* Alerte inscriptions */
+    .alerte {
+      display: none; cursor: pointer; align-items: center; gap: 12px; border-radius: 12px;
+      background: rgba(230,126,34,0.10); border: 1px solid rgba(230,126,34,0.45);
+      padding: 15px 18px; margin-bottom: 18px; transition: background 0.2s;
     }
-    .btn-save:hover { opacity: 0.85; }
-    .btn-danger {
-      padding: 8px 16px; background: transparent; color: var(--red); font-size: 12px;
-      letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(192,57,43,0.4);
-      cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;
-    }
-    .btn-danger:hover { background: rgba(192,57,43,0.1); }
-    .btn-add {
-      padding: 10px 20px; background: transparent; color: var(--text); font-size: 12px;
-      letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--border-strong);
-      cursor: pointer; font-family: 'Inter', sans-serif; transition: border-color 0.2s;
-      margin-bottom: 24px;
-    }
-    .btn-add:hover { border-color: var(--text-muted); }
+    .alerte:hover { background: rgba(230,126,34,0.18); }
+    .alerte b { color: var(--amber); font-size: 14px; }
+    .alerte .fleche { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
 
-    /* ── MEMBRE LIST ── */
-    .membre-list { display: flex; flex-direction: column; gap: 8px; }
-    .membre-row {
-      display: grid; grid-template-columns: 1fr 1fr auto;
-      gap: 12px; align-items: center;
-      background: var(--surface); border: 1px solid var(--border); padding: 14px 16px;
+    /* Liens rapides */
+    .liens { display: flex; gap: 10px; flex-wrap: wrap; }
+    .lien {
+      display: flex; align-items: center; gap: 8px; text-decoration: none;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      padding: 13px 18px; font-size: 13px; color: var(--muted);
+      transition: transform 0.2s, border-color 0.2s, color 0.2s;
     }
-    .membre-row input, .membre-row select {
-      padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none;
-      width: 100%; transition: border-color 0.2s;
-    }
-    .membre-row input:focus, .membre-row select:focus { border-color: var(--red); }
-    .membre-row select option { background: var(--surface2); }
+    .lien:hover { transform: translateY(-2px); border-color: var(--red); color: var(--text); }
 
-    /* ── ACTU LIST ── */
-    .actu-admin-list { display: flex; flex-direction: column; gap: 12px; }
-    .actu-admin-item {
-      background: var(--surface); border: 1px solid var(--border); padding: 20px;
-    }
-    .actu-admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .actu-admin-num { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+    /* Membres */
+    .membre-row { display: grid; grid-template-columns: 1fr 200px 44px; gap: 10px; margin-bottom: 10px; align-items: center; }
+    .membre-row input, .membre-row select { margin-bottom: 0; }
+    .membre-row .btn.danger { padding: 11px 0; }
 
-    /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: 24px; right: 24px; z-index: 999;
-      background: var(--green); color: #fff; padding: 12px 20px;
-      font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    }
-    .toast.show { opacity: 1; }
-
-    /* ── EXPORT ── */
-    .export-box {
-      background: var(--surface); border: 1px solid var(--border); padding: 24px; margin-top: 24px;
-    }
-    .export-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-    .export-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
-    .copy-btn {
-      padding: 10px 20px; background: var(--red); color: #fff; font-size: 12px;
-      letter-spacing: 1px; text-transform: uppercase; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; transition: background 0.2s;
-    }
-    .copy-btn:hover { background: var(--red-dark); }
-
-    .divider { height: 1px; background: var(--border); margin: 28px 0; }
-
-    /* ── INSCRIPTIONS ── */
-    .msg { font-size: 13px; padding: 8px 12px; display: none; }
-    .msg.error { display: block; color: var(--red); background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3); }
-    .msg.ok { display: block; color: var(--green); background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); }
+    /* Inscriptions */
+    .insc-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+    .insc-count { font-size: 12px; color: var(--dim); }
     .insc-row {
       display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      background: var(--surface); border: 1px solid var(--border); padding: 14px 18px; margin-bottom: 8px;
+      background: var(--panel2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 8px;
     }
     .insc-email { font-size: 14px; font-weight: 600; word-break: break-all; }
     .insc-state { font-size: 12px; margin-top: 3px; }
-    .insc-state.attente { color: var(--orange); }
+    .insc-state.attente { color: var(--amber); }
     .insc-state.ok { color: var(--green); }
-    .insc-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-    .insc-count { font-size: 12px; color: var(--text-dim); }
 
-    @media (max-width: 768px) {
-      .admin-layout { grid-template-columns: 1fr; }
-      .admin-sidebar { display: none; }
-      .dash-grid { grid-template-columns: 1fr 1fr; }
-      .form-row { grid-template-columns: 1fr; }
+    /* Export */
+    .export-pre {
+      display: none; margin-top: 16px; font-size: 11px; color: var(--muted);
+      background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; overflow: auto; max-height: 320px; white-space: pre-wrap;
+      font-family: ui-monospace, monospace;
+    }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: #1f8a4d; color: #fff; padding: 12px 20px; font-size: 13px; border-radius: 10px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .toast.show { opacity: 1; }
+
+    /* Mobile */
+    @media (max-width: 860px) {
+      .sb-nav { position: fixed; top: 0; bottom: auto; width: 100%; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 8px 10px; overflow-x: auto; overflow-y: hidden; }
+      .sb-logo { border: none; padding: 0 10px 0 4px; margin: 0; flex-shrink: 0; }
+      .sb-logo .t2 { display: none; }
+      .sb-group { display: none; }
+      .sb-item { flex-shrink: 0; padding: 8px 10px; }
+      .sb-item .lbl { display: none; }
+      .sb-item .ico { width: auto; font-size: 16px; }
+      .sb-foot { margin: 0; padding: 0 0 0 6px; border: none; flex-shrink: 0; }
+      .sb-user { display: none; }
+      .dash { margin-left: 0; padding: 76px 16px 50px; }
       .membre-row { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
+<canvas id="admin-canvas"></canvas>
 
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">Famille <span>Moni</span></div>
-    <div class="login-sub">Accès Administrateur</div>
-    <input type="email" id="login-email" placeholder="Email admin" autocomplete="username" />
-    <input type="password" id="pwd-input" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
-    <button onclick="doLogin()">Connexion</button>
+    <h1>Famille <span>Moni</span></h1>
+    <div class="login-sub">Accès administrateur</div>
+    <label>Email admin</label>
+    <input type="email" id="login-email" placeholder="ton@email.com" autocomplete="username" />
+    <label>Mot de passe</label>
+    <input type="password" id="pwd-input" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="btn full" onclick="doLogin()">Connexion</button>
     <div class="login-error" id="login-error">Identifiants incorrects.</div>
   </div>
 </div>
 
 <!-- ADMIN -->
 <div id="admin-screen">
-  <div class="admin-nav">
-    <div style="display:flex;align-items:center;gap:16px;">
-      <div class="logo">Famille <span>Moni</span></div>
-      <div class="admin-badge">Admin</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <a href="index.html" target="_blank" style="font-size:12px;color:var(--text-muted);text-decoration:none;">Voir le site ↗</a>
-      <button class="logout-btn" onclick="doLogout()">Déconnexion</button>
-    </div>
-  </div>
 
-  <div class="admin-layout">
-    <!-- SIDEBAR -->
-    <div class="admin-sidebar">
-      <div class="sidebar-label">Vue générale</div>
-      <div class="sidebar-item active" onclick="showPanel('dashboard', this)">
-        <span class="sidebar-icon">📊</span> Dashboard
-      </div>
-      <div class="sidebar-label">Contenu</div>
-      <div class="sidebar-item" onclick="showPanel('hero', this)">
-        <span class="sidebar-icon">🏠</span> Page d'accueil
-      </div>
-      <div class="sidebar-label">Organisation</div>
-      <div class="sidebar-item" onclick="showPanel('membres', this)">
-        <span class="sidebar-icon">👥</span> Membres
-      </div>
-      <div class="sidebar-label">Espace membre</div>
-      <div class="sidebar-item" id="side-inscriptions" onclick="showPanel('inscriptions', this)">
-        <span class="sidebar-icon">✅</span> Inscriptions
-      </div>
-      <div class="sidebar-label">Export</div>
-      <div class="sidebar-item" onclick="showPanel('export', this)">
-        <span class="sidebar-icon">💾</span> Exporter
-      </div>
+  <aside class="sb-nav">
+    <div class="sb-logo">
+      <div class="t1">Famille <span>Moni</span></div>
+      <span class="t2">Admin</span>
     </div>
 
-    <!-- CONTENT -->
-    <div class="admin-content">
+    <div class="sb-group">Pilotage</div>
+    <a class="sb-item active" data-panel="dashboard" data-title="Bienvenue, &lt;em&gt;Donna&lt;/em&gt; 👑" data-sub="Vue d'ensemble du site et de la famille." onclick="showPanel('dashboard', this)"><span class="ico">📊</span><span class="lbl">Dashboard</span></a>
 
-      <!-- DASHBOARD -->
-      <div class="panel active" id="panel-dashboard">
-        <div class="panel-title">Bienvenue, <em>Donna</em> 👑</div>
-        <div class="panel-desc">Gérez le contenu du site de la Famille Moni depuis ce panneau.</div>
-        <!-- Alerte : comptes en attente de validation -->
-        <div id="dash-alerte" onclick="showPanel('inscriptions', document.getElementById('side-inscriptions'))"
-             style="display:none;cursor:pointer;align-items:center;gap:12px;background:rgba(230,126,34,0.10);border:1px solid rgba(230,126,34,0.45);padding:14px 18px;margin-bottom:18px;">
-          <span style="font-size:18px;">⏳</span>
-          <b id="dash-alerte-txt" style="color:#e67e22;font-size:14px;"></b>
-          <span style="margin-left:auto;font-size:12px;color:var(--text-muted);">Cliquer pour valider →</span>
-        </div>
+    <div class="sb-group">Contenu</div>
+    <a class="sb-item" data-panel="hero" data-title="Page d'&lt;em&gt;accueil&lt;/em&gt;" data-sub="Les textes principaux du site public." onclick="showPanel('hero', this)"><span class="ico">🏠</span><span class="lbl">Page d'accueil</span></a>
+    <a class="sb-item" data-panel="membres" data-title="Les &lt;em&gt;membres&lt;/em&gt;" data-sub="La liste officielle : noms et rangs." onclick="showPanel('membres', this)"><span class="ico">👥</span><span class="lbl">Membres</span></a>
 
-        <div class="dash-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-membres">—</div>
-            <div class="dash-card-label">Membres officiels</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-comptes">—</div>
-            <div class="dash-card-label">Comptes inscrits</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-attente" style="color:#e67e22;">—</div>
-            <div class="dash-card-label">En attente</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-presences">—</div>
-            <div class="dash-card-label">Présences à venir</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-galerie">—</div>
-            <div class="dash-card-label">Photos galerie</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-num" id="dash-sync" style="font-size:16px;line-height:1.4;padding-top:8px;">—</div>
-            <div class="dash-card-label">Sync bot Moni</div>
-          </div>
-        </div>
+    <div class="sb-group">Espace membre</div>
+    <a class="sb-item" id="side-inscriptions" data-panel="inscriptions" data-title="Les &lt;em&gt;inscriptions&lt;/em&gt;" data-sub="Approuve ou refuse les comptes créés sur l'espace membre." onclick="showPanel('inscriptions', this)"><span class="ico">✅</span><span class="lbl">Inscriptions</span><span class="sb-badge" id="badge-attente"></span></a>
 
-        <!-- Accès rapides -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
-          <a class="btn-add" style="text-decoration:none;margin:0;" href="index.html" target="_blank">🌐 Voir le site</a>
-          <a class="btn-add" style="text-decoration:none;margin:0;" href="espace-membre.html" target="_blank">📊 Espace membre</a>
-          <a class="btn-add" style="text-decoration:none;margin:0;" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">📈 Stats de visite</a>
-          <a class="btn-add" style="text-decoration:none;margin:0;" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">🗄 Base de données</a>
+    <div class="sb-group">Export</div>
+    <a class="sb-item" data-panel="export" data-title="&lt;em&gt;Exporter&lt;/em&gt;" data-sub="Récupère le code à coller dans supabase-config.js." onclick="showPanel('export', this)"><span class="ico">💾</span><span class="lbl">Exporter</span></a>
+
+    <div class="sb-group">Système</div>
+    <a class="sb-item" href="index.html" target="_blank"><span class="ico">🌐</span><span class="lbl">Voir le site</span></a>
+    <a class="sb-item" href="espace-membre.html" target="_blank"><span class="ico">📈</span><span class="lbl">Espace membre</span></a>
+
+    <div class="sb-foot">
+      <div class="sb-user">Connectée : <b id="who-email"></b></div>
+      <div class="sb-out" onclick="doLogout()"><span class="ico">⏻</span><span class="lbl">Déconnexion</span></div>
+    </div>
+  </aside>
+
+  <main class="dash">
+    <div class="dash-head">
+      <div>
+        <div class="dash-title" id="dash-titre">Bienvenue, <em>Donna</em> 👑</div>
+        <div class="dash-sub" id="dash-soustitre">Vue d'ensemble du site et de la famille.</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="alerte" id="dash-alerte" onclick="showPanel('inscriptions', document.getElementById('side-inscriptions'))">
+        <span style="font-size:18px;">⏳</span>
+        <b id="dash-alerte-txt"></b>
+        <span class="fleche">Cliquer pour valider →</span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi" style="--kc:#e0503f;"><div class="kpi-label">Membres officiels</div><div class="kpi-num" id="dash-membres">—</div></div>
+        <div class="kpi" style="--kc:#5865f2;"><div class="kpi-label">Comptes inscrits</div><div class="kpi-num" id="dash-comptes">—</div></div>
+        <div class="kpi" style="--kc:#e67e22;"><div class="kpi-label">En attente</div><div class="kpi-num" id="dash-attente" style="color:var(--amber);">—</div></div>
+        <div class="kpi" style="--kc:#2ecc71;"><div class="kpi-label">Présences à venir</div><div class="kpi-num" id="dash-presences">—</div></div>
+        <div class="kpi" style="--kc:#d4b26e;"><div class="kpi-label">Photos galerie</div><div class="kpi-num" id="dash-galerie">—</div></div>
+        <div class="kpi" style="--kc:#9b59b6;"><div class="kpi-label">Sync bot Moni</div><div class="kpi-num small" id="dash-sync">—</div></div>
+      </div>
+
+      <div class="bloc">
+        <div class="bloc-t">🔗 Accès rapides</div>
+        <div class="liens">
+          <a class="lien" href="index.html" target="_blank">🌐 Voir le site</a>
+          <a class="lien" href="espace-membre.html" target="_blank">📊 Espace membre</a>
+          <a class="lien" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">📈 Stats de visite</a>
+          <a class="lien" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">🗄 Base de données</a>
         </div>
-        <div class="divider"></div>
-        <p style="font-size:13px;color:var(--text-muted);line-height:1.7;">
-          ⚠️ <strong style="color:var(--text)">Important :</strong> ce panneau est un brouillon local. Les modifications de
-          <strong style="color:var(--text)">membres</strong> et de la <strong style="color:var(--text)">page d'accueil</strong>
-          ne sont visibles par les visiteurs qu'après export (menu <strong style="color:var(--text)">Exporter</strong>),
-          collage du code dans le fichier du site, puis publication (publier.bat).<br>
-          Les <strong style="color:var(--text)">événements</strong> se gèrent directement sur Discord (synchronisation automatique)
-          et les <strong style="color:var(--text)">inscriptions</strong> sont validées ici, en direct.
+      </div>
+
+      <div class="bloc">
+        <div class="bloc-t">⚠️ Comment fonctionnent les modifications</div>
+        <p class="hint" style="line-height:1.7;">
+          Les <b style="color:var(--text);">inscriptions</b> se valident ici, en direct. Les <b style="color:var(--text);">événements, présences et annonces</b>
+          se gèrent sur Discord (synchronisation automatique). Les modifications de <b style="color:var(--text);">membres</b> et de la
+          <b style="color:var(--text);">page d'accueil</b> sont un brouillon local : passe par <b style="color:var(--text);">Exporter</b>,
+          colle le code dans le fichier du site, puis publie (publier.bat).
         </p>
-        <div style="margin-top:24px;">
-          <button class="btn-danger" onclick="resetData()">↻ Réinitialiser depuis le contenu du site</button>
-          <p style="font-size:12px;color:var(--text-dim);margin-top:10px;line-height:1.6;">
-            Efface les modifications locales non exportées et recharge la liste officielle des membres, actus et textes.
-          </p>
-        </div>
+        <button class="btn danger" style="margin-top:16px;" onclick="resetData()">↻ Réinitialiser le brouillon</button>
       </div>
-
-      <!-- HERO -->
-      <div class="panel" id="panel-hero">
-        <div class="panel-title">Page d'<em>Accueil</em></div>
-        <div class="panel-desc">Modifiez le texte principal affiché sur la page d'accueil.</div>
-        <div class="form-group">
-          <label class="form-label">Sous-titre du hero</label>
-          <input type="text" class="form-input" id="hero-sub" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Texte du bouton principal</label>
-          <input type="text" class="form-input" id="hero-btn" />
-        </div>
-        <div class="divider"></div>
-        <button class="btn-save" onclick="saveHero()">✓ Enregistrer l'accueil</button>
-      </div>
-
-      <!-- MEMBRES -->
-      <div class="panel" id="panel-membres">
-        <div class="panel-title">Gérer les <em>Membres</em></div>
-        <div class="panel-desc">Ajoutez, modifiez ou supprimez des membres. Le rang est mis à jour automatiquement.</div>
-        <button class="btn-add" onclick="addMembre()">+ Ajouter un membre</button>
-        <div class="membre-list" id="membre-list"></div>
-        <div class="divider"></div>
-        <button class="btn-save" onclick="saveMembres()">✓ Enregistrer les membres</button>
-      </div>
-
-      <!-- EXPORT -->
-      <div class="panel" id="panel-export">
-        <div class="panel-title">Exporter le <em>Site</em></div>
-        <div class="panel-desc">Le site lit la liste des membres dans supabase-config.js. Copiez le bloc ci-dessous, collez-le à la place du bloc window.MONI_MEMBRES existant dans ce fichier, puis publiez avec publier.bat.</div>
-        <div class="export-box">
-          <h3>📋 Code prêt à coller dans supabase-config.js</h3>
-          <p>Cartes, organigramme et compteur de la page d'accueil se mettront à jour automatiquement.</p>
-          <button class="copy-btn" onclick="exportData()">Copier les données</button>
-          <pre id="export-preview" style="margin-top:16px;font-size:11px;color:var(--text-muted);background:var(--surface2);padding:16px;overflow:auto;max-height:300px;white-space:pre-wrap;display:none;"></pre>
-        </div>
-      </div>
-
-      <!-- INSCRIPTIONS -->
-      <div class="panel" id="panel-inscriptions">
-        <div class="panel-title">Valider les <em>Inscriptions</em></div>
-        <div class="panel-desc">Approuve ou refuse les comptes créés sur l'espace membre. Tant qu'un compte n'est pas approuvé, la personne n'a accès à rien.</div>
-
-        <!-- connexion admin (Supabase) -->
-        <div id="insc-auth" style="display:none; max-width:380px;">
-          <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:16px;">
-            Connecte-toi avec ton <strong style="color:var(--text)">compte admin</strong> (le même que sur l'espace membre) pour gérer les inscriptions.
-          </p>
-          <label class="form-label">Email admin</label>
-          <input type="email" class="form-input" id="insc-email" placeholder="ton@email.com" style="margin-bottom:12px;" />
-          <label class="form-label">Mot de passe</label>
-          <input type="password" class="form-input" id="insc-pwd" placeholder="••••••••" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')inscLogin()" />
-          <button class="btn-save" onclick="inscLogin()">Se connecter</button>
-          <div class="msg" id="insc-msg" style="margin-top:12px;"></div>
-        </div>
-
-        <!-- liste des inscriptions -->
-        <div id="insc-list" style="display:none;"></div>
-      </div>
-
     </div>
-  </div>
+
+    <!-- PAGE D'ACCUEIL -->
+    <div class="panel" id="panel-hero">
+      <div class="bloc" style="max-width:640px;">
+        <label>Sous-titre du hero</label>
+        <input type="text" id="hero-sub" />
+        <label>Texte du bouton principal</label>
+        <input type="text" id="hero-btn" />
+        <button class="btn green" onclick="saveHero()">✓ Enregistrer l'accueil</button>
+      </div>
+    </div>
+
+    <!-- MEMBRES -->
+    <div class="panel" id="panel-membres">
+      <div class="bloc">
+        <button class="btn ghost" style="margin-bottom:16px;" onclick="addMembre()">+ Ajouter un membre</button>
+        <div id="membre-list"></div>
+        <button class="btn green" style="margin-top:8px;" onclick="saveMembres()">✓ Enregistrer les membres</button>
+      </div>
+    </div>
+
+    <!-- INSCRIPTIONS -->
+    <div class="panel" id="panel-inscriptions">
+      <div class="bloc">
+        <div id="insc-list"><div class="hint">Chargement…</div></div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="panel" id="panel-export">
+      <div class="bloc">
+        <div class="bloc-t">📋 Code prêt à coller dans supabase-config.js</div>
+        <p class="hint" style="margin-bottom:16px;">
+          Le site lit la liste des membres dans <b style="color:var(--text);">supabase-config.js</b>. Copie le bloc ci-dessous,
+          colle-le à la place du bloc <code style="color:var(--gold);">window.MONI_MEMBRES</code> existant, puis publie avec publier.bat.
+        </p>
+        <button class="btn" onclick="exportData()">Copier les données</button>
+        <pre class="export-pre" id="export-preview"></pre>
+      </div>
+    </div>
+
+  </main>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -390,12 +338,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-  // Connexion : via le compte Supabase admin (vérifié côté serveur, rien de
-  // secret dans le code source). Le compte admin est le même que sur l'espace membre.
-
-  // Version des données : si le cache local est plus ancien, on repart du contenu du site.
+  // Connexion : via le compte Supabase admin (vérifié côté serveur).
   const DATA_VERSION = 4;
-
   const RANGS = [
     'La Donna','Braccio Destro','Consigliere','Anziani','Baroni','Fedeli','Vicino','Sicario','Associati'
   ];
@@ -409,10 +353,13 @@
     membres: (window.MONI_MEMBRES || []).map(m => ({ nom: m.nom, rang: m.rang }))
   };
 
-  // Charger depuis localStorage seulement si la version du cache est à jour
   const savedVer = parseInt(localStorage.getItem('moni-admin-version') || '0', 10);
   const saved = localStorage.getItem('moni-admin-data');
   if (saved && savedVer >= DATA_VERSION) { try { data = JSON.parse(saved); } catch(e) {} }
+
+  const ADMIN_EMAIL = 'syne@live.fr';
+  const SB = (window.supabase && window.SUPABASE_URL)
+    ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY) : null;
 
   function loginFail(msg) {
     const err = document.getElementById('login-error');
@@ -422,9 +369,10 @@
     setTimeout(() => err.style.display = 'none', 4000);
   }
 
-  function enterAdmin() {
+  function enterAdmin(email) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
+    if (email) document.getElementById('who-email').textContent = email;
     initAdmin();
   }
 
@@ -440,7 +388,7 @@
       loginFail("Ce compte n'a pas les droits d'administration.");
       return;
     }
-    enterAdmin();
+    enterAdmin(d.user.email);
   }
 
   async function doLogout() {
@@ -450,76 +398,44 @@
     document.getElementById('pwd-input').value = '';
   }
 
-  // Déjà connecté (session en cours) ? On entre directement.
   window.addEventListener('DOMContentLoaded', async () => {
     if (!SB) return;
     const { data: d } = await SB.auth.getSession();
-    if (d.session && d.session.user.email === ADMIN_EMAIL) enterAdmin();
+    if (d.session && d.session.user.email === ADMIN_EMAIL) enterAdmin(d.session.user.email);
   });
 
   function showPanel(id, el) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sb-item[data-panel]').forEach(s => s.classList.remove('active'));
     document.getElementById('panel-' + id).classList.add('active');
-    el.classList.add('active');
-    if (id === 'inscriptions') initInscriptions();
-  }
-
-  // ── INSCRIPTIONS (approbation des comptes, via Supabase) ──
-  const ADMIN_EMAIL = 'syne@live.fr';
-  const SB = (window.supabase && window.SUPABASE_URL)
-    ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY) : null;
-
-  async function initInscriptions() {
-    const authBox = document.getElementById('insc-auth');
-    const listBox = document.getElementById('insc-list');
-    if (!SB) { listBox.style.display = 'block'; listBox.innerHTML = '<p style="color:var(--red)">Supabase non chargé.</p>'; return; }
-    const { data: s } = await SB.auth.getSession();
-    const email = s.session && s.session.user.email;
-    if (email === ADMIN_EMAIL) {
-      authBox.style.display = 'none';
-      listBox.style.display = 'block';
-      renderInscriptions();
-    } else {
-      authBox.style.display = 'block';
-      listBox.style.display = 'none';
+    if (el) {
+      el.classList.add('active');
+      if (el.dataset.title) document.getElementById('dash-titre').innerHTML = el.dataset.title.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      if (el.dataset.sub) document.getElementById('dash-soustitre').textContent = el.dataset.sub;
     }
+    if (id === 'inscriptions') renderInscriptions();
   }
 
-  async function inscLogin() {
-    const email = document.getElementById('insc-email').value.trim();
-    const pwd = document.getElementById('insc-pwd').value;
-    const msg = document.getElementById('insc-msg');
-    const { data, error } = await SB.auth.signInWithPassword({ email, password: pwd });
-    if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
-    if (data.user.email !== ADMIN_EMAIL) {
-      msg.textContent = "Ce compte n'a pas les droits d'administration.";
-      msg.className = 'msg error';
-      await SB.auth.signOut();
-      return;
-    }
-    msg.className = 'msg';
-    initInscriptions();
-  }
-
+  // ── INSCRIPTIONS (approbation des comptes) ──
   async function renderInscriptions() {
     const list = document.getElementById('insc-list');
-    const { data, error } = await SB.from('comptes').select('*').order('created_at', { ascending: false });
-    if (error) { list.innerHTML = '<p style="color:var(--red)">Erreur : ' + error.message + '</p>'; return; }
-    const enAttente = (data || []).filter(c => !c.approuve).length;
-    if (!data || !data.length) {
-      list.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres se connecteront sur l\'espace membre.</p>';
+    if (!SB) { list.innerHTML = '<p class="hint">Supabase non chargé.</p>'; return; }
+    const { data: comptes, error } = await SB.from('comptes').select('*').order('created_at', { ascending: false });
+    if (error) { list.innerHTML = '<p style="color:var(--red);font-size:13px;">Erreur : ' + error.message + '</p>'; return; }
+    const enAttente = (comptes || []).filter(c => !c.approuve).length;
+    if (!comptes || !comptes.length) {
+      list.innerHTML = '<p class="hint">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres s\'inscriront sur l\'espace membre.</p>';
       return;
     }
     list.innerHTML =
-      '<div class="insc-bar"><div class="insc-count">' + data.length + ' compte(s) — ' + enAttente + ' en attente</div>' +
-      '<button class="btn-add" style="margin:0;" onclick="renderInscriptions()">↻ Rafraîchir</button></div>' +
-      data.map(function (c) {
+      '<div class="insc-bar"><div class="insc-count">' + comptes.length + ' compte(s) — ' + enAttente + ' en attente</div>' +
+      '<button class="btn ghost" style="padding:9px 16px;" onclick="renderInscriptions()">↻ Rafraîchir</button></div>' +
+      comptes.map(function (c) {
         return '<div class="insc-row"><div>' +
           '<div class="insc-email">' + (c.email || '(sans email)') + '</div>' +
           '<div class="insc-state ' + (c.approuve ? 'ok' : 'attente') + '">' + (c.approuve ? '✅ Approuvé' : '⏳ En attente') + '</div>' +
           '</div>' +
-          '<button class="' + (c.approuve ? 'btn-danger' : 'btn-save') + '" onclick="setApprouve(\'' + c.id + '\', ' + (!c.approuve) + ')">' +
+          '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:10px 16px;" onclick="setApprouve(\'' + c.id + '\', ' + (!c.approuve) + ')">' +
           (c.approuve ? 'Révoquer' : 'Approuver') + '</button></div>';
       }).join('');
   }
@@ -529,6 +445,7 @@
     if (error) { showToast('Erreur : ' + error.message); return; }
     showToast(val ? 'Compte approuvé !' : 'Accès révoqué.');
     renderInscriptions();
+    updateDashLive();
   }
 
   function initAdmin() {
@@ -552,12 +469,15 @@
         const att = comptes.filter(c => !c.approuve).length;
         document.getElementById('dash-attente').textContent = att;
         const alerte = document.getElementById('dash-alerte');
+        const badge = document.getElementById('badge-attente');
         if (att > 0) {
           document.getElementById('dash-alerte-txt').textContent =
             att + ' compte' + (att > 1 ? 's' : '') + ' en attente de validation';
           alerte.style.display = 'flex';
+          badge.textContent = att; badge.style.display = 'flex';
         } else {
           alerte.style.display = 'none';
+          badge.style.display = 'none';
         }
       }
     } catch (e) {}
@@ -581,7 +501,7 @@
     } catch (e) {}
   }
 
-  // ── HERO ──
+  // ── PAGE D'ACCUEIL ──
   function renderHero() {
     document.getElementById('hero-sub').value = data.hero.sub;
     document.getElementById('hero-btn').value = data.hero.btn;
@@ -601,7 +521,7 @@
         <select onchange="data.membres[${i}].rang=this.value">
           ${RANGS.map(r => `<option value="${r}" ${m.rang===r?'selected':''}>${r}</option>`).join('')}
         </select>
-        <button class="btn-danger" onclick="removeMembre(${i})">✕</button>
+        <button class="btn danger" onclick="removeMembre(${i})">✕</button>
       </div>
     `).join('');
   }
@@ -613,7 +533,6 @@
     if (confirm('Supprimer ce membre ?')) { data.membres.splice(i, 1); renderMembres(); updateDash(); }
   }
   function saveMembres() {
-    // Sync depuis les inputs
     document.querySelectorAll('.membre-row').forEach((row, i) => {
       if (data.membres[i]) {
         data.membres[i].nom = row.querySelector('input').value;
@@ -660,6 +579,69 @@
     t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
   }
+</script>
+
+<script>
+  // ── Fond étoilé animé (discret) ──
+  (function starfield() {
+    const c = document.getElementById('admin-canvas');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    let W, H, stars = [];
+    const COLORS = ['rgba(238,240,244,', 'rgba(224,80,63,', 'rgba(212,178,110,', 'rgba(88,101,242,'];
+    function mk(init) {
+      const big = Math.random() < 0.12;
+      return {
+        x: Math.random() * W,
+        y: init ? Math.random() * H : H + 4,
+        r: big ? Math.random() * 1.8 + 1.2 : Math.random() * 1.1 + 0.4,
+        vy: -(Math.random() * 0.16 + 0.03),
+        vx: (Math.random() - 0.5) * 0.05,
+        col: big ? COLORS[1 + Math.floor(Math.random() * 3)] : COLORS[0],
+        ph: Math.random() * 7,
+        sp: Math.random() * 0.03 + 0.008,
+        big
+      };
+    }
+    function resize() {
+      W = c.width = window.innerWidth;
+      H = c.height = window.innerHeight;
+      const n = Math.min(120, Math.round(W * H / 16000));
+      stars = [];
+      for (let i = 0; i < n; i++) stars.push(mk(true));
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    const BLOBS = [['205,33,42', 0.10], ['212,178,110', 0.07]];
+    let t = 0;
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      BLOBS.forEach((b, i) => {
+        const px = W * (0.3 + 0.4 * Math.sin(t * 0.4 + i * 2.4));
+        const py = H * (0.35 + 0.3 * Math.cos(t * 0.3 + i * 1.6));
+        const g = ctx.createRadialGradient(px, py, 0, px, py, Math.max(W, H) * 0.5);
+        g.addColorStop(0, 'rgba(' + b[0] + ',' + b[1] + ')');
+        g.addColorStop(1, 'rgba(' + b[0] + ',0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      });
+      stars.forEach((s, i) => {
+        s.x += s.vx; s.y += s.vy; s.ph += s.sp;
+        if (s.y < -4) stars[i] = mk(false);
+        const a = (s.big ? 0.55 : 0.4) * (0.45 + 0.55 * Math.abs(Math.sin(s.ph)));
+        ctx.save();
+        if (s.big) { ctx.shadowBlur = 8; ctx.shadowColor = s.col + '0.9)'; }
+        ctx.fillStyle = s.col + a.toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+      ctx.globalCompositeOperation = 'source-over';
+      t += 0.004;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
 </script>
 </body>
 </html>
