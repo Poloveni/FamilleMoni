@@ -1806,8 +1806,8 @@
     }
     loadGalerie();
 
-    // Actualités : annonces Discord synchronisées par le bot (lecture publique)
-    sb.from('bot_annonces').select('*').order('ts', { ascending: false }).limit(6).then(function (res) {
+    // Actualités désactivées (en attente d'un salon d'annonces dédié).
+    if (false) sb.from('bot_annonces').select('*').order('ts', { ascending: false }).limit(6).then(function (res) {
       var sec = document.getElementById('actualites');
       if (!sec || res.error || !res.data || !res.data.length) return;
       var list = document.getElementById('actu-list');

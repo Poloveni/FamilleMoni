@@ -17,6 +17,3 @@ jobs:
     steps:
       - name: Synchroniser les présences
         run: curl -s --max-time 30 https://prwdtdmdkhzwfyivaepw.supabase.co/functions/v1/sync-discord-presences
-
-      - name: Synchroniser les annonces
-        run: curl -s --max-time 30 https://prwdtdmdkhzwfyivaepw.supabase.co/functions/v1/sync-discord-annonces
