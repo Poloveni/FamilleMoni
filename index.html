@@ -805,6 +805,70 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
     }
+
+    /* ═══════════════════════════════════════════════════════════
+       REFONTE VISUELLE — calque moderne (palette bleu-nuit,
+       arrondis, halos lumineux), aligné sur les dashboards.
+       ═══════════════════════════════════════════════════════════ */
+    :root { --bg: #0b0c10; --surface: #12141b; --surface2: #1a1d27; }
+    body {
+      background-image:
+        radial-gradient(900px 500px at 85% -10%, rgba(192,57,43,0.10), transparent 60%),
+        radial-gradient(700px 500px at -10% 110%, rgba(212,178,110,0.07), transparent 60%);
+      background-attachment: fixed;
+    }
+    nav { background: rgba(14,15,20,0.9); }
+    nav.scrolled { background: rgba(11,12,16,0.97); }
+    .hero-tag { border-radius: 999px; }
+    .btn-red, .btn-white, .btn-ghost, .server-join, .discord-cta-btn { border-radius: 10px; }
+
+    /* Barre de stats → cartes lumineuses */
+    .stats-bar { background: transparent; border: none; gap: 14px; padding: 26px 40px 0; max-width: 1200px; margin: 0 auto; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border) !important;
+      border-radius: 14px; position: relative; overflow: hidden;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s;
+    }
+    .stat:hover { transform: translateY(-3px); border-color: var(--border-strong) !important; }
+    .stat::before {
+      content: ''; position: absolute; top: -40px; left: -40px; width: 110px; height: 110px;
+      border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--red);
+    }
+    .stat:nth-child(2)::before { background: #d4b26e; }
+    .stat:nth-child(3)::before { background: #5865f2; }
+    .stat:nth-child(4)::before { background: #2ecc71; }
+    .stat-num, .stat-label { position: relative; }
+
+    /* Cartes arrondies partout */
+    .valeurs-grid { gap: 14px; background: transparent; }
+    .valeur-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .valeur-card:hover { background: var(--surface2); }
+    .valeur-icon { border-radius: 10px; }
+    .membre-card, .event-card, .discord-card, .discord-stat, .recrutement-cta,
+    .contact-box, .online-wall, .server-live, .histoire-quote, .qg-placeholder,
+    .events-locked, .events-empty, .galerie-empty, .org-node { border-radius: 14px; }
+    .hierarchie-list { gap: 8px; }
+    .hierarchie-item { border-radius: 12px; }
+    .rang-badge { border-radius: 9px; }
+    .badge, .event-type, .chef-badge, .discord-role, .fiche-spec { border-radius: 6px; }
+    .event-date { border-radius: 10px; }
+    .event-img { border-radius: 10px; }
+
+    /* Galerie & images */
+    .galerie-grid { gap: 10px; }
+    .galerie-item { border-radius: 12px; }
+    .galerie-item::after { border-radius: 0 0 12px 12px; }
+    .qg-item img { border-radius: 12px; }
+    #histoire picture img { border-radius: 14px; }
+    .lightbox img { border-radius: 12px; }
+    .lightbox-close, .lightbox-nav { border-radius: 10px; }
+    .fiche-card { border-radius: 16px; }
+    .fiche-close { border-radius: 9px; }
+    #back-to-top { border-radius: 12px; }
+    .discord-widget-wrap { border-radius: 12px; overflow: hidden; }
+    .actu-item { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; background: var(--surface2); }
+    .actu-list .actu-item:last-child { border-bottom: 1px solid var(--border); }
+    footer { background: var(--surface); }
   </style>
   <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
