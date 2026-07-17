@@ -1016,8 +1016,18 @@
         ctx.fillText(Math.round(d.value * p), x + bw / 2, y - 6);
         ctx.fillStyle = hoverIdx === i ? 'rgba(238,240,244,0.95)' : 'rgba(139,145,160,0.9)';
         ctx.font = '600 8.5px Inter, sans-serif';
-        const lbl = d.label.length > 8 ? d.label.slice(0, 7) + '…' : d.label;
-        ctx.fillText(lbl.toUpperCase(), x + bw / 2, h - 10);
+        // Étiquette : les noms à deux mots (homonymes) s'écrivent sur deux lignes
+        // au lieu d'être tronqués, pour rester lisibles.
+        const mots = d.label.split(/\s+/);
+        const cx = x + bw / 2;
+        if (mots.length >= 2) {
+          ctx.fillText(mots[0].toUpperCase(), cx, h - 17);
+          const l2 = mots.slice(1).join(' ');
+          ctx.fillText((l2.length > 9 ? l2.slice(0, 8) + '…' : l2).toUpperCase(), cx, h - 8);
+        } else {
+          const l = mots[0] || '';
+          ctx.fillText((l.length > 9 ? l.slice(0, 8) + '…' : l).toUpperCase(), cx, h - 10);
+        }
       });
     }
     if (REDUCED) render(1);
