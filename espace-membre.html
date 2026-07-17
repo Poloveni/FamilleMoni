@@ -1267,9 +1267,22 @@
     const chartV = document.getElementById('chart-ventes');
     if (!ids.length) chartV.innerHTML = '<div class="locked">Aucune vente enregistrée cette semaine.</div>';
     else {
-      drawBarChart(chartV, ids.slice(0, 15).map(id => {
+      const barIds = ids.slice(0, 15);
+      // Étiquettes courtes qui désambiguïsent les prénoms identiques
+      // (ex : deux « Javier » → « Javier Silva » et « Javier Cruz »).
+      const prenoms = {};
+      barIds.forEach(id => {
+        const p = (nomDe[id] || '').split(/\s+/)[0];
+        prenoms[p] = (prenoms[p] || 0) + 1;
+      });
+      function shortLabel(nom) {
+        const mots = nom.split(/\s+/);
+        if (prenoms[mots[0]] > 1 && mots[1]) return mots[0] + ' ' + mots[1];
+        return mots[0];
+      }
+      drawBarChart(chartV, barIds.map(id => {
         const nom = nomDe[id] || '#' + String(id).slice(-4);
-        return { label: nom.split(/\s+/)[0], full: nom, value: Math.round(joueurs[id].ventes) };
+        return { label: shortLabel(nom), full: nom, value: Math.round(joueurs[id].ventes) };
       }), quotaVente);
     }
 
