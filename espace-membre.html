@@ -1241,8 +1241,9 @@
     document.getElementById('bd-sync').innerHTML = 'Données du <b>bot Moni</b> · actualisé il y a ' + (minAgo < 1 ? "moins d'une minute" : minAgo + ' min');
 
     // Agrégats
+    const NOM_FIX = window.MONI_NOM_FIX || {};
     const nomDe = {};
-    (mapping.data || []).forEach(m => { nomDe[m.discord_id] = m.game_name; });
+    (mapping.data || []).forEach(m => { nomDe[m.discord_id] = NOM_FIX[m.discord_id] || m.game_name; });
     const joueurs = {};
     (stats.data || []).forEach(s => {
       const j = joueurs[s.user_id] = joueurs[s.user_id] || { ventes: 0, recolte: 0, activites: 0, detail: [] };

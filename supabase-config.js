@@ -7,6 +7,12 @@ window.SUPABASE_KEY = 'sb_publishable_qgN4fRX9eVdKn3SWAjtmhw_F00rlqXz';
 // Objectif hebdomadaire de ventes par membre (dashboard Business de l'espace membre).
 window.MONI_QUOTA_DROGUE = 200;
 
+// Corrections de noms par identifiant Discord (quand deux joueurs ont le même
+// pseudo dans le bot). Clé = discord_id, valeur = nom à afficher sur le site.
+window.MONI_NOM_FIX = {
+  '1166846164155519000': 'Javier Cruz Silva'
+};
+
 // ══════════════════════════════════════════════════════════════════
 //  SOURCE UNIQUE DE VÉRITÉ pour les membres et les rangs.
 //  → Modifie UNIQUEMENT ce fichier pour ajouter/retirer un membre ou
