@@ -1242,8 +1242,10 @@
 
     // Agrégats
     const NOM_FIX = window.MONI_NOM_FIX || {};
+    // Capitalise proprement chaque mot ("javier silva" → "Javier Silva")
+    const titleCase = s => String(s || '').toLowerCase().replace(/(^|[\s'-])([a-zà-ÿ])/g, (m, sep, c) => sep + c.toUpperCase());
     const nomDe = {};
-    (mapping.data || []).forEach(m => { nomDe[m.discord_id] = NOM_FIX[m.discord_id] || m.game_name; });
+    (mapping.data || []).forEach(m => { nomDe[m.discord_id] = NOM_FIX[m.discord_id] || titleCase(m.game_name); });
     const joueurs = {};
     (stats.data || []).forEach(s => {
       const j = joueurs[s.user_id] = joueurs[s.user_id] || { ventes: 0, recolte: 0, activites: 0, detail: [] };
