@@ -279,18 +279,15 @@
 
 <div class="lb" id="lb"><img id="lb-img" src="" alt="" /></div>
 
+<script src="supabase-config.js"></script>
 <script>
 /* ══════════════ DONNÉES ══════════════ */
-const ORG = [
-  { rank:'La Donna', color:'#d4b26e', members:['Lov Moni'] },
-  { rank:'Braccio Destro', color:'#c0392b', members:['Raymond Carter'] },
-  { rank:'Consigliere', color:'#b5651d', members:['Tony Moncini'] },
-  { rank:'Anziani', color:'#c07a2b', members:['Andrea Moni','Ezio Spallow'] },
-  { rank:'Baroni', color:'#5a7a2b', members:['Karl Larsson','Oscar Santo'] },
-  { rank:'Fedeli', color:'#5a7a2b', members:['James Mendoza'] },
-  { rank:'Vicino', color:'#888888', members:['Tommy Dane'] },
-  { rank:'Associati', color:'#777777', members:['Allesandro Moretti','Bass Carter','Dayon Reas','Javier Silva','Javier Cruz Silva','Jiji Goose'] },
-];
+// Membres et rangs : générés depuis supabase-config.js (source unique de vérité).
+const ORG = (window.MONI_RANGS || []).map(r => ({
+  rank: r.nom,
+  color: r.color,
+  members: (window.MONI_MEMBRES || []).filter(m => m.rang === r.nom).map(m => m.nom),
+})).filter(t => t.members.length);
 const ROLE_DESC = {
   'La Donna':'Cheffe de la famille. Autorité suprême, dernier mot sur toutes les décisions.',
   'Braccio Destro':'Bras droit de la Donna. Relaie les ordres et supervise les opérations.',
@@ -324,7 +321,7 @@ const SVG = {
 
 /* Radio : ajoute d\'autres pistes ici (dépose le .mp3 dans le dossier) */
 const TRACKS = [
-  { title:'Ambiance Moni', src:'musique.mp3?v=3' },
+  { title:'Ambiance Moni', src:'musique.m4a?v=4' },
   // { title:'Autre titre', src:'piste2.mp3' },
 ];
 const QUOTES = [
@@ -348,7 +345,7 @@ const MESSAGES = [
   { from:'Lov Moni', rank:'La Donna', subj:'Bienvenue dans la famille', body:'Si tu lis ce message, c\'est que tu fais partie des nôtres. Ici, la loyauté n\'est pas un mot, c\'est une règle. Ne l\'oublie jamais.\n\n— La Donna' },
   { from:'Raymond Carter', rank:'Braccio Destro', subj:'Réunion de ce soir', body:'Tout le monde au QG à 21h. Pas de retard, pas d\'excuse. On a des choses à régler.\n\n— Raymond' },
   { from:'Karl Larsson', rank:'Baroni', subj:'Livraison', body:'La marchandise est arrivée. Discrétion totale sur les canaux. On en reparle en vocal.' },
-  { from:'Andrea Moni', rank:'Anziani', subj:'Bienvenue au petit', body:'Un nouveau a rejoint les Associati. Gardez un œil, formez-le bien. La famille grandit.' },
+  { from:'Ezio Spallow', rank:'Anziani', subj:'Bienvenue au petit', body:'Un nouveau a rejoint les Associati. Gardez un œil, formez-le bien. La famille grandit.' },
 ];
 const DOCS = [
   { title:'Le Code Moni', body:'I.  RP sérieux — pas de powergame, pas de metagame.\nII. Présence régulière sur le serveur.\nIII. Loyauté absolue : une fois Moni, toujours Moni.\nIV. Discrétion : ce qui se passe dans la famille reste dans la famille.\nV.  Respect — entre membres et envers les autres joueurs.' },
