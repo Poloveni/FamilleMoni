@@ -33,19 +33,19 @@ window.MONI_RANGS = [
   { nom: 'Associati',      color: '#777777', desc: 'Associés — Membres' }
 ];
 
-// Liste officielle des membres (nom -> rang). — Mise à jour 10/07/2026
+// Liste officielle des membres (nom -> rang). — Mise à jour 14/07/2026
 window.MONI_MEMBRES = [
   { nom: 'Lov Moni',           rang: 'La Donna' },
   { nom: 'Raymond Carter',     rang: 'Braccio Destro' },
-  { nom: 'Tony Moncini',       rang: 'Consigliere' },
   { nom: 'Ezio Spallow',       rang: 'Anziani' },
   { nom: 'Oscar Santo',        rang: 'Baroni' },
   { nom: 'James Mendoza',      rang: 'Fedeli' },
-  { nom: 'Tommy Dane',         rang: 'Vicino' },
+  { nom: 'Tommy Dane',         rang: 'Fedeli' },
   { nom: 'Allesandro Moretti', rang: 'Associati' },
   { nom: 'Bass Carter',        rang: 'Associati' },
   { nom: 'Dayon Reas',         rang: 'Associati' },
   { nom: 'Javier Silva',       rang: 'Associati' },
   { nom: 'Javier Cruz Silva',  rang: 'Associati' },
-  { nom: 'Soso Moni',          rang: 'Associati' }
+  { nom: 'Valentino Romano',   rang: 'Associati' },
+  { nom: 'Tiago Rodrigues',    rang: 'Associati' }
 ];
