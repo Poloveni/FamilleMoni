@@ -1377,15 +1377,23 @@
             '<td>' + badge + '</td></tr>';
         }).join('') + '</tbody></table>';
 
-    // ── CHIFFRE D'AFFAIRES (ventes confirmées depuis lundi) ──
+    // ── CHIFFRE D'AFFAIRES (depuis lundi) ──
+    // Source principale : montants des ventes confirmées ; si le bot ne les
+    // renseigne pas (colonne vide), on somme les DÉPÔTS d'argent sale au coffre.
     const vRows = (ventesQ && ventesQ.data) || [];
+    const hRowsCA = (histoQ && histoQ.data) || [];
     const lundi = new Date(); lundi.setHours(0, 0, 0, 0); lundi.setDate(lundi.getDate() - ((lundi.getDay() + 6) % 7));
     const confirmees = vRows.filter(v => v.confirmed && new Date(v.ts) >= lundi);
-    const ca = confirmees.reduce((t, v) => t + (v.montant || 0), 0);
+    const caMontants = confirmees.reduce((t, v) => t + (v.montant || 0), 0);
+    const caDepots = hRowsCA
+      .filter(r => r.item === 'argent sale' && r.action === 'depose' && new Date(r.ts) >= lundi)
+      .reduce((t, r) => t + (r.quantite || 0), 0);
+    const ca = caMontants > 0 ? caMontants : caDepots;
     const caUnites = confirmees.reduce((t, v) => t + (v.quantite || 0), 0);
     countUp(document.getElementById('kpi-ca'), ca, x => fmtArgent(Math.round(x)));
-    if (caUnites) document.getElementById('kpi-ca-foot').textContent =
-      caUnites.toLocaleString('fr-FR') + ' unités · ' + fmtArgent(Math.round(ca / caUnites)) + ' / unité en moyenne';
+    document.getElementById('kpi-ca-foot').textContent = caMontants > 0
+      ? caUnites.toLocaleString('fr-FR') + ' unités · ' + fmtArgent(Math.round(ca / Math.max(1, caUnites))) + ' / unité en moyenne'
+      : 'argent sale déposé au coffre · depuis lundi';
 
     // ── COURBE DU COFFRE (argent sale) ──
     const chartC = document.getElementById('chart-coffre');
