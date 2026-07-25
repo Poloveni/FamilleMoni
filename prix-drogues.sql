@@ -26,7 +26,7 @@ create policy "Admin modifie" on public.prix_drogues for update to authenticated
 
 -- Produits de départ (prix à définir dans l'espace membre)
 insert into public.prix_drogues (item, prix) values
-  ('cannabis', 0), ('carte prépayée', 0), ('b-magic', 0), ('pochon de mexicana', 0),
+  ('cannabis', 0), ('b-magic', 0), ('pochon de mexicana', 0),
   ('ecstasy', 0), ('tranq', 0), ('cocaïne', 0), ('pochon de sporex', 0)
 on conflict (item) do nothing;
 
