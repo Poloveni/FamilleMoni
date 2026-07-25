@@ -357,6 +357,7 @@
     <a class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico">⭐</span><span class="lbl">Ma semaine</span></a>
     <a class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico">💊</span><span class="lbl">Classement</span></a>
     <a class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico">🏦</span><span class="lbl">Le coffre</span></a>
+    <a class="sb-item req-approve" data-panel="prix" data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico">🏷</span><span class="lbl">Prix drogues</span></a>
     <a class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico">🔫</span><span class="lbl">Armurerie</span></a>
     <a class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico">🧾</span><span class="lbl">Taxes</span></a>
     <a class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico">🚨</span><span class="lbl">Braquages</span></a>
@@ -449,6 +450,14 @@
     <!-- COFFRE -->
     <div class="panel" id="panel-coffre">
       <div class="bloc"><div id="bd-coffre"><div class="locked">Chargement…</div></div></div>
+    </div>
+
+    <!-- PRIX DES DROGUES -->
+    <div class="panel" id="panel-prix">
+      <div class="bloc">
+        <div class="bloc-t">🏷 Prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div id="bd-prix"><div class="locked">Chargement…</div></div>
+      </div>
     </div>
 
     <!-- ARMURERIE -->
@@ -700,6 +709,7 @@
     await loadProfil();
     loadEvents();
     loadBotDashboards();
+    loadPrix();
   }
 
   async function loadProfil() {
@@ -1552,6 +1562,63 @@
     const btn = document.getElementById('tv-btn');
     if (btn) btn.addEventListener('click', () => { if (isApproved) startTV(); else toast('Compte en attente de validation.'); });
   })();
+
+  // ── PRIX DES DROGUES (lecture : famille · édition : admin) ──
+  async function loadPrix() {
+    const box = document.getElementById('bd-prix');
+    if (!box || !currentUser) return;
+    const estAdmin = currentUser.email === 'syne@live.fr';
+    const [prixQ, stocksQ] = await Promise.all([
+      sb.from('prix_drogues').select('*').order('item'),
+      sb.from('bot_stocks').select('*'),
+    ]);
+    if (prixQ.error) {
+      box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
+      return;
+    }
+    const rows = prixQ.data || [];
+    const st = {};
+    ((stocksQ && stocksQ.data) || []).forEach(s => { st[s.item] = s.quantite || 0; });
+    // Date de dernière mise à jour
+    const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
+    const majEl = document.getElementById('prix-maj');
+    if (majEl && maj) majEl.textContent = ' · mis à jour le ' + new Date(maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+    let totalValeur = 0;
+    box.innerHTML =
+      '<table class="vd-table"><thead><tr><th>Produit</th><th>Prix / unité</th><th>Stock au coffre</th><th>Valeur du stock</th></tr></thead><tbody>' +
+      rows.map(r => {
+        const stock = st[r.item] || 0;
+        const valeur = stock * (r.prix || 0);
+        totalValeur += valeur;
+        const prixCell = estAdmin
+          ? '<input type="number" min="0" step="1" class="prix-input" data-item="' + escT(r.item) + '" value="' + (r.prix || 0) + '" style="width:110px;margin-bottom:0;padding:8px 10px;" />'
+          : '<b style="color:var(--gold);">' + fmtArgent(r.prix || 0) + '</b>';
+        return '<tr><td>' + escT(cap(r.item)) + '</td><td>' + prixCell + '</td>' +
+          '<td>' + stock.toLocaleString('fr-FR') + '</td>' +
+          '<td style="color:var(--green);font-weight:600;">' + fmtArgent(Math.round(valeur)) + '</td></tr>';
+      }).join('') +
+      '<tr><td colspan="3" style="text-align:right;color:var(--muted);font-weight:600;">💰 Valeur totale du stock</td>' +
+      '<td style="color:var(--green);font-weight:700;font-size:15px;">' + fmtArgent(Math.round(totalValeur)) + '</td></tr>' +
+      '</tbody></table>' +
+      (estAdmin
+        ? '<button class="btn green" style="margin-top:16px;" onclick="savePrix()">💾 Enregistrer les prix</button><div class="msg" id="prix-msg"></div>'
+        : '<div class="hint" style="margin-top:12px;">Les prix sont fixés par la Donna.</div>');
+  }
+
+  async function savePrix() {
+    if (!currentUser || currentUser.email !== 'syne@live.fr') return;
+    hideMsg('prix-msg');
+    const lignes = [...document.querySelectorAll('.prix-input')].map(inp => ({
+      item: inp.dataset.item,
+      prix: Math.max(0, parseFloat(inp.value) || 0),
+      updated_at: new Date().toISOString(),
+    }));
+    const { error } = await sb.from('prix_drogues').upsert(lignes);
+    if (error) { showMsg('prix-msg', 'Erreur : ' + error.message, false); return; }
+    toast('Prix enregistrés !');
+    loadPrix();
+  }
 
   // ── MOT DE PASSE OUBLIÉ ──
   async function motDePasseOublie() {
