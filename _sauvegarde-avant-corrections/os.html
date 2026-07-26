@@ -4,22 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MONI OS — Famille Moni</title>
-<meta name="description" content="MONI OS — le bureau interne de la Famille Moni : fiches des membres, galerie, planning. Accès réservé." />
-<!-- Gadget interne : tout le contenu est généré en JS derrière un écran de
-     verrouillage. Google n'indexerait qu'une page vide, on lui demande de passer. -->
-<meta name="robots" content="noindex, follow" />
-<link rel="canonical" href="https://poloveni.github.io/FamilleMoni/os.html" />
-<link rel="icon" href="favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/jpeg" href="logo.jpg" />
 <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#0a0b0e" />
+<meta name="theme-color" content="#0f0f0f" />
 <link rel="apple-touch-icon" href="icon-192.png" />
-<script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   :root{
     --bg:#0a0b0e; --panel:#14161c; --panel2:#1b1e26; --border:rgba(255,255,255,.09);
-    --text:#eceef2; --muted:#9aa0b0; --dim:#8b93a5;
+    --text:#eceef2; --muted:#9aa0b0; --dim:#5b6272;
     --red:#c0392b; --green:#0b8c45; --gold:#d4b26e;
   }
   html,body{height:100%}
@@ -288,13 +283,6 @@
 <script>
 /* ══════════════ DONNÉES ══════════════ */
 // Membres et rangs : générés depuis supabase-config.js (source unique de vérité).
-// Neutralise le HTML d'un texte (base de données, Discord, nom de membre).
-// Sans ça, un nom contenant une apostrophe ou un chevron casse la page.
-function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g, c => (
-  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-// Variante pour un texte inséré DANS une chaîne JavaScript d'attribut onclick.
-function escJs(t){ return String(t==null?'':t).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
 const ORG = (window.MONI_RANGS || []).map(r => ({
   rank: r.nom,
   color: r.color,
@@ -372,7 +360,7 @@ const APPS = {
     let h='<div class="breadcrumb">~ / <b>Famille Moni</b> / Membres / <span style="color:var(--dim)">(clique un membre)</span></div>';
     ORG.forEach(t=>{
       h+='<div class="grp-title">'+t.rank+'</div><div class="files">';
-      h+=t.members.map(m=>'<div class="file" onclick="openMember(\''+escJs(m)+'\',\''+escJs(t.rank)+'\',\''+escJs(t.color)+'\')"><div class="av" style="background:'+t.color+(t.color==='#d4b26e'?';color:#1a1206':'')+'">'+esc(ini(m))+'</div><div class="fn">'+esc(m)+'</div><div class="fr" style="color:'+t.color+'">'+esc(t.rank)+'</div></div>').join('');
+      h+=t.members.map(m=>'<div class="file" onclick="openMember(\''+m+'\',\''+t.rank+'\',\''+t.color+'\')"><div class="av" style="background:'+t.color+(t.color==='#d4b26e'?';color:#1a1206':'')+'">'+ini(m)+'</div><div class="fn">'+m+'</div><div class="fr" style="color:'+t.color+'">'+t.rank+'</div></div>').join('');
       h+='</div>';
     });
     return h;
@@ -457,13 +445,7 @@ function openMember(name,rank,color){
     '</div><div class="stamp">Famille Moni — Confidentiel</div></div>';
   createWindow('m-'+name.replace(/\s+/g,''), name, SVG.user, html, 380, 430);
 }
-function closeWin(id){
-  const w=openWins[id];
-  if(w){ if(w._cleanup) w._cleanup(); w.remove(); }
-  delete openWins[id];
-  const d=document.getElementById('dock-'+id); if(d)d.remove();
-  if(APPS[id])markIcon(id,false);
-}
+function closeWin(id){ if(openWins[id])openWins[id].remove(); delete openWins[id]; const d=document.getElementById('dock-'+id); if(d)d.remove(); if(APPS[id])markIcon(id,false); }
 function focusWin(win){ win.style.zIndex=++z; win.style.display='flex'; }
 function maximize(win){
   if(win.dataset.max){ win.style.cssText=win.dataset.prev; win.dataset.max=''; }
@@ -478,32 +460,17 @@ function addDock(id,name,icon){
   dock.appendChild(el);
 }
 function markIcon(id,on){ const ic=document.getElementById('ic-'+id); if(ic) ic.classList.toggle('active',on); }
-// Les écouteurs posés sur window sont mémorisés dans win._cleanup pour être
-// retirés à la fermeture de la fenêtre (sinon ils s'accumulent indéfiniment).
-function suivreFenetre(win, fn){
-  (win._suivis = win._suivis || []).push(fn);
-  if(!win._cleanup){
-    win._cleanup = () => {
-      win._suivis.forEach(([ev,h]) => window.removeEventListener(ev,h));
-      win._suivis.length = 0;
-    };
-  }
-}
 function makeDraggable(win){
   const bar=win.querySelector('.win-bar'); let sx,sy,ox,oy,drag=false;
   bar.addEventListener('mousedown',e=>{ if(e.target.tagName==='BUTTON')return; drag=true; sx=e.clientX;sy=e.clientY;ox=win.offsetLeft;oy=win.offsetTop;document.body.style.cursor='move'; });
-  const move=e=>{ if(!drag)return; win.style.left=Math.max(0,Math.min(innerWidth-60,ox+e.clientX-sx))+'px'; win.style.top=Math.max(40,Math.min(innerHeight-40,oy+e.clientY-sy))+'px'; };
-  const up=()=>{ drag=false; document.body.style.cursor=''; };
-  window.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
-  suivreFenetre(win,['mousemove',move]); suivreFenetre(win,['mouseup',up]);
+  window.addEventListener('mousemove',e=>{ if(!drag)return; win.style.left=Math.max(0,Math.min(innerWidth-60,ox+e.clientX-sx))+'px'; win.style.top=Math.max(40,Math.min(innerHeight-40,oy+e.clientY-sy))+'px'; });
+  window.addEventListener('mouseup',()=>{ drag=false; document.body.style.cursor=''; });
 }
 function makeResizable(win){
   const h=win.querySelector('.resize'); if(!h)return; let rs=false,sx,sy,sw,sh;
   h.addEventListener('mousedown',e=>{ e.stopPropagation();rs=true;sx=e.clientX;sy=e.clientY;sw=win.offsetWidth;sh=win.offsetHeight;document.body.style.cursor='nwse-resize'; });
-  const move=e=>{ if(!rs)return; win.style.width=Math.max(260,sw+e.clientX-sx)+'px'; win.style.height=Math.max(160,sh+e.clientY-sy)+'px'; };
-  const up=()=>{ rs=false;document.body.style.cursor=''; };
-  window.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
-  suivreFenetre(win,['mousemove',move]); suivreFenetre(win,['mouseup',up]);
+  window.addEventListener('mousemove',e=>{ if(!rs)return; win.style.width=Math.max(260,sw+e.clientX-sx)+'px'; win.style.height=Math.max(160,sh+e.clientY-sy)+'px'; });
+  window.addEventListener('mouseup',()=>{ rs=false;document.body.style.cursor=''; });
 }
 
 /* ══════════════ ICÔNES BUREAU + MENU DÉMARRER ══════════════ */
@@ -640,21 +607,15 @@ setInterval(()=>{ const q=document.getElementById('w-quote'); if(!q)return; q.st
 /* ══════════════ FOND RÉSEAU ══════════════ */
 (function net(){
   const c=document.getElementById('bg-canvas'),x=c.getContext('2d');let W,H,ps=[];
-  const REDUIT = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 35 particules au lieu de 70 : le coût des liaisons est quadratique,
-  // diviser le nombre par 2 divise le travail par image par 4.
-  function rs(){W=c.width=innerWidth;H=c.height=innerHeight;ps=[];const n=Math.min(35,Math.round(W*H/44000));
+  function rs(){W=c.width=innerWidth;H=c.height=innerHeight;ps=[];const n=Math.min(70,Math.round(W*H/22000));
     for(let i=0;i<n;i++)ps.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25});}
   rs();addEventListener('resize',rs);
-  function loop(){x.clearRect(0,0,W,H);
+  (function loop(){x.clearRect(0,0,W,H);
     for(let i=0;i<ps.length;i++){const a=ps[i];a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>W)a.vx*=-1;if(a.y<0||a.y>H)a.vy*=-1;
       for(let j=i+1;j<ps.length;j++){const b=ps[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);
         if(d<120){x.strokeStyle='rgba(180,180,190,'+(.14*(1-d/120))+')';x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();}}
       x.fillStyle='rgba(200,200,210,.5)';x.beginPath();x.arc(a.x,a.y,1,0,7);x.fill();}
-    if(!REDUIT && !document.hidden) requestAnimationFrame(loop);}
-  loop();
-  // L'animation s'arrête quand l'onglet passe en arrière-plan, et repart au retour.
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && !REDUIT) requestAnimationFrame(loop); });
+    requestAnimationFrame(loop);})();
 })();
 
 /* ══════════════ PARAMÈTRES / SONS / NOTIFICATIONS ══════════════ */
@@ -676,7 +637,7 @@ function notify(title, body){
   if(!settings.notifs) return;
   const c=document.getElementById('notifs');
   const n=document.createElement('div'); n.className='notif';
-  n.innerHTML='<div class="nt">'+esc(title)+'</div><div class="nb">'+esc(body)+'</div>';
+  n.innerHTML='<div class="nt">'+title+'</div><div class="nb">'+body+'</div>';
   c.appendChild(n); beep(660,0.09);
   setTimeout(()=>{ n.style.transition='opacity .4s'; n.style.opacity='0'; setTimeout(()=>n.remove(),400); }, 5200);
 }
@@ -708,7 +669,7 @@ function loadDiscord(win){
       if(cnt) cnt.textContent='· '+ms.length;
       if(!ms.length){ grid.innerHTML='<span style="color:var(--dim);font-size:12px">Personne en ligne.</span>'; return; }
       grid.innerHTML=ms.map(m=>{ const st=['online','idle','dnd'].includes(m.status)?m.status:'online';
-        return '<div class="dl-m"><div class="dl-av"><img src="'+esc(m.avatar_url||'')+'" alt="" loading="lazy" decoding="async"><span class="s '+st+'"></span></div><div class="dl-n">'+esc(m.username)+'</div></div>'; }).join('');
+        return '<div class="dl-m"><div class="dl-av"><img src="'+(m.avatar_url||'')+'" alt=""><span class="s '+st+'"></span></div><div class="dl-n">'+m.username+'</div></div>'; }).join('');
     }).catch(()=>{ grid.innerHTML='<span style="color:var(--dim);font-size:12px">Widget Discord indisponible.</span>'; });
 }
 

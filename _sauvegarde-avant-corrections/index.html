@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Famille Moni — Roxwood GTA RP</title>
   <meta name="description" content="La Famille Moni — organisation RP née de la Famiglia Moncini, active à Roxwood sur Flashback FA (GTA RP). Hiérarchie, membres, recrutement." />
-  <link rel="icon" href="favicon.ico" sizes="32x32" />
-  <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192" />
+  <meta name="theme-color" content="#c0392b" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0b0c10" />
+  <meta name="theme-color" content="#0f0f0f" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 
@@ -18,9 +18,6 @@
   <meta property="og:title" content="La Famille Moni — Roxwood GTA RP" />
   <meta property="og:description" content="Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui. Flashback FA — GTA RP." />
   <meta property="og:image" content="https://poloveni.github.io/FamilleMoni/hero-og.jpg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="La Famille Moni — Roxwood, Flashback FA" />
   <meta property="og:url" content="https://poloveni.github.io/FamilleMoni/" />
   <meta property="og:locale" content="fr_FR" />
 
@@ -44,16 +41,12 @@
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="dns-prefetch" href="https://gc.zgo.at" />
-  <link rel="preload" as="image" href="hero-bg.webp" fetchpriority="high" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,700;0,900;1,900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --red: #e35d4c;        /* rouge lisible en petit texte (contraste 5,5) */
-      --red-solid: #c0392b;  /* rouge dense, pour les fonds de boutons */
+      --red: #c0392b;
       --red-dark: #a93226;
       --bg: #0f0f0f;
       --surface: #161616;
@@ -62,7 +55,7 @@
       --border-strong: rgba(255,255,255,0.14);
       --text: #f0f0f0;
       --text-muted: #888;
-      --text-dim: #8a8a8a;
+      --text-dim: #555;
     }
 
     html { scroll-behavior: smooth; }
@@ -167,14 +160,13 @@
     }
     .nav-links a.active { color: var(--text); }
     .nav-links a.active::after { transform: scaleX(1); }
-    .nav-burger { display: none; cursor: pointer; color: var(--text); font-size: 22px;
-      background: none; border: 0; padding: 10px; line-height: 1; font-family: inherit; }
+    .nav-burger { display: none; cursor: pointer; color: var(--text); font-size: 22px; }
 
     /* ── BOUTON RETOUR EN HAUT ── */
     #back-to-top {
       position: fixed; bottom: 24px; right: 24px; z-index: 200;
       width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
-      background: var(--red-solid); color: #fff; border: none; cursor: pointer; font-size: 20px;
+      background: var(--red); color: #fff; border: none; cursor: pointer; font-size: 20px;
       opacity: 0; pointer-events: none; transform: translateY(12px);
       transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1), background 0.25s ease;
       box-shadow: 0 6px 18px rgba(0,0,0,0.4);
@@ -273,10 +265,10 @@
     .hero-tag {
       display: inline-flex; align-items: center; gap: 10px;
       font-size: 13px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 22px;
-      border: 1px solid #b06ee0; color: #b06ee0;
+      border: 1px solid #7b2fa8; color: #7b2fa8;
       margin-bottom: 24px; cursor: pointer; transition: background 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1); text-decoration: none;
     }
-    .hero-tag:hover { background: rgba(176,110,224,0.15); transform: scale(1.04); }
+    .hero-tag:hover { background: rgba(123,47,168,0.15); transform: scale(1.04); }
     .hero-tag img { height: 24px; width: 24px; object-fit: cover; border-radius: 2px; }
     h1 {
       font-family: 'Playfair Display', Georgia, serif;
@@ -287,7 +279,7 @@
     .hero-sub { font-size: 16px; color: var(--text-muted); max-width: 420px; margin: 0 auto 36px; line-height: 1.7; }
     .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .btn-red {
-      padding: 12px 28px; background: var(--red-solid); color: #fff; font-size: 12px;
+      padding: 12px 28px; background: var(--red); color: #fff; font-size: 12px;
       letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer;
       text-decoration: none; display: inline-block; transition: background 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease;
     }
@@ -338,6 +330,7 @@
     .valeur-card {
       background: var(--bg); padding: 32px 28px;
       transition: background 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+      will-change: transform;
     }
     .valeur-card:hover {
       background: var(--surface);
@@ -366,6 +359,7 @@
     .membre-card {
       background: var(--surface); border: 1px solid var(--border); padding: 24px 16px;
       text-align: center; transition: border-color 0.35s ease, background 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+      will-change: transform;
     }
     .membre-card:hover {
       border-color: var(--red); background: var(--surface2);
@@ -388,7 +382,7 @@
     .membre-role { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
     .chef-badge {
       display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 2px 7px; background: var(--red-solid); color: #fff; margin-top: 6px;
+      padding: 2px 7px; background: var(--red); color: #fff; margin-top: 6px;
     }
 
     /* ── HIÉRARCHIE ── */
@@ -442,7 +436,7 @@
     #qg { background: var(--surface); }
     .qg-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }
     .qg-item { margin: 0; cursor: pointer; }
-    .qg-item img { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .qg-item img { width: 100%; display: block; border: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
     .qg-item:hover img { transform: scale(1.02); }
     .qg-item figcaption { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
     .qg-placeholder {
@@ -481,7 +475,7 @@
       opacity: 0; transition: opacity 0.2s ease, background 0.2s ease;
     }
     .galerie-item:hover .galerie-del { opacity: 1; }
-    .galerie-del:hover { background: var(--red-solid); }
+    .galerie-del:hover { background: var(--red); }
     .galerie-empty {
       grid-column: 1 / -1; padding: 48px 24px; text-align: center;
       border: 1px dashed var(--border-strong); color: var(--text-dim);
@@ -494,10 +488,9 @@
       position: fixed; inset: 0; z-index: 9998;
       background: rgba(8,8,8,0.94); backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
     }
-    .lightbox.open { opacity: 1; pointer-events: auto; visibility: visible; transition-delay: 0s; }
+    .lightbox.open { opacity: 1; pointer-events: auto; }
     .lightbox img {
       max-width: 90vw; max-height: 82vh; object-fit: contain;
       border: 1px solid var(--border-strong); box-shadow: 0 20px 60px rgba(0,0,0,0.6);
@@ -524,6 +517,14 @@
     }
 
     /* ── ACTUALITÉS (annonces Discord) ── */
+    #actualites { background: var(--surface); }
+    .actu-list { display: flex; flex-direction: column; max-width: 760px; }
+    .actu-item { display: flex; gap: 18px; align-items: flex-start; padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .actu-item:last-child { border-bottom: none; }
+    .actu-date { font-size: 12px; color: var(--text-dim); min-width: 64px; padding-top: 3px; }
+    .actu-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); margin-top: 7px; flex-shrink: 0; }
+    .actu-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .actu-body p { font-size: 13px; color: var(--text-muted); line-height: 1.6; white-space: pre-line; }
 
     /* ── ÉVÉNEMENTS ── */
     #evenements { background: var(--bg); }
@@ -638,7 +639,7 @@
     .server-dot.off { background: #ed4245; }
     .server-name { font-size: 16px; font-weight: 700; margin-top: 8px; }
     .server-players { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
-    .server-join { flex-shrink: 0; background: var(--red-solid); color: #fff; padding: 12px 22px; font-size: 13px; font-weight: 600;
+    .server-join { flex-shrink: 0; background: var(--red); color: #fff; padding: 12px 22px; font-size: 13px; font-weight: 600;
       letter-spacing: 0.5px; text-decoration: none; transition: background 0.2s, transform 0.2s; white-space: nowrap; }
     .server-join:hover { background: var(--red-dark); transform: translateY(-2px); }
     @media (max-width: 560px) { .server-live { flex-direction: column; align-items: stretch; text-align: center; } .server-join { text-align: center; } .server-state { justify-content: center; } }
@@ -700,10 +701,9 @@
       position: fixed; inset: 0; z-index: 9997; padding: 20px;
       background: rgba(8,8,8,0.9); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; visibility: hidden;
-      transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
     }
-    .fiche-overlay.open { opacity: 1; pointer-events: auto; visibility: visible; transition-delay: 0s; }
+    .fiche-overlay.open { opacity: 1; pointer-events: auto; }
     .fiche-card {
       background: var(--surface); border: 1px solid var(--border-strong);
       max-width: 440px; width: 100%; max-height: 85vh; overflow-y: auto;
@@ -756,6 +756,8 @@
     .hierarchie-item.visible-item { opacity: 1; transform: translateX(0); }
 
     /* ── PARALLAX ── */
+    .hero-grid { will-change: transform; }
+    .hero-glow { will-change: transform; }
 
     @media (max-width: 768px) {
       .histoire-inner { grid-template-columns: 1fr; }
@@ -864,6 +866,8 @@
     .fiche-close { border-radius: 9px; }
     #back-to-top { border-radius: 12px; }
     .discord-widget-wrap { border-radius: 12px; overflow: hidden; }
+    .actu-item { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; background: var(--surface2); }
+    .actu-list .actu-item:last-child { border-bottom: 1px solid var(--border); }
     footer { background: var(--surface); }
   </style>
   <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
@@ -889,13 +893,13 @@
     <li><a href="#qg">Notre QG</a></li>
     <li><a href="#recrutement">Recrutement</a></li>
     <li><a href="#evenements">Événements</a></li>
+    <li><a href="#actualites" id="nav-actus" style="display:none;">Annonces</a></li>
     <li><a href="#discord">Discord</a></li>
     <li><a href="#contact">Nous contacter</a></li>
     <li><a href="os.html" style="color:var(--gold,#d4b26e);">Moni OS</a></li>
     <li><a href="espace-membre.html" style="color:var(--red);">Espace membre</a></li>
   </ul>
-  <button type="button" class="nav-burger" id="burger" onclick="toggleMenu()"
-          aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks">&#9776;</button>
+  <div class="nav-burger" id="burger" onclick="toggleMenu()" aria-label="Menu">&#9776;</div>
 </nav>
 
 <section id="accueil">
@@ -904,7 +908,7 @@
   <div class="hero-glow"></div>
   <div class="hero-content">
     <a href="https://flashbackfa.fr/" target="_blank" rel="noopener noreferrer" class="hero-tag">
-      <img src="logo-48.jpg" alt="" width="24" height="24" decoding="async">
+      <img src="logo.jpg" alt="Flashback FA">
       Flashback FA &mdash; GTA RP
     </a>
     <h1>La Famille<br><em>Moni</em></h1>
@@ -936,7 +940,7 @@
     </div>
     <picture>
       <source srcset="histoire.webp" type="image/webp">
-      <img src="histoire.jpg" alt="L'histoire de la Famille Moni — de la Famiglia Moncini d'Italie à Roxwood" loading="lazy" decoding="async" width="1920" height="1080" style="width:100%; height:auto; border: 1px solid var(--border); display: block;">
+      <img src="histoire.jpg" alt="L'histoire de la Famille Moni — de la Famiglia Moncini d'Italie à Roxwood" loading="lazy" style="width:100%; border: 1px solid var(--border); display: block;">
     </picture>
   </div>
 </section>
@@ -1071,6 +1075,13 @@
     <a href="espace-membre.html" class="btn-red">Accéder à l'espace membre</a>
   </div>
   <div class="events-grid" id="events-grid" style="display:none;"></div>
+</section>
+
+<section id="actualites" style="display:none;">
+  <div class="section-label">Annonces</div>
+  <h2 class="section-title">Les <em>actualités</em></h2>
+  <p class="section-desc">Les dernières annonces de la famille, directement depuis le Discord.</p>
+  <div class="actu-list" id="actu-list"></div>
 </section>
 
 <section id="discord">
@@ -1212,8 +1223,7 @@
         var chef = m.rang === 'La Donna';
         var r = RANGS[rangIndex[m.rang]] || {};
         var color = chef ? '#ffffff' : (r.color || '#777777');
-        return '<div class="membre-card' + (chef ? ' chef' : '') + '" data-nom="' + escHTML(m.nom) + '"' +
-          ' role="button" tabindex="0" aria-label="Voir la fiche de ' + escHTML(m.nom) + '">' +
+        return '<div class="membre-card' + (chef ? ' chef' : '') + '" data-nom="' + escHTML(m.nom) + '">' +
           '<div class="avatar">' + initials(m.nom) + '</div>' +
           '<div class="membre-name">' + escHTML(m.nom) + '</div>' +
           '<div class="membre-role" style="color:' + color + ';font-size:10px;">' + escHTML(m.rang) + '</div>' +
@@ -1222,11 +1232,7 @@
           '</div>';
       }).join('');
       grid.querySelectorAll('.membre-card').forEach(function (card) {
-        function ouvrir() { openFiche(card.getAttribute('data-nom')); }
-        card.addEventListener('click', ouvrir);
-        card.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); }
-        });
+        card.addEventListener('click', function () { openFiche(card.getAttribute('data-nom')); });
       });
     }
 
@@ -1272,49 +1278,22 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   })();
 
-  // ── ANIMATIONS RÉDUITES ──
-  // La règle CSS @media (prefers-reduced-motion) ne peut rien contre le JavaScript :
-  // on lit la préférence système ici pour couper aussi les animations pilotées en JS.
-  const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   // ── NAV BURGER ──
-  function toggleMenu() {
-    const links = document.getElementById('navLinks');
-    const ouvert = links.classList.toggle('open');
-    const b = document.getElementById('burger');
-    if (b) {
-      b.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
-      b.setAttribute('aria-label', ouvert ? 'Fermer le menu' : 'Ouvrir le menu');
-    }
-  }
+  function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
   document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-      document.getElementById('navLinks').classList.remove('open');
-      const b = document.getElementById('burger');
-      if (b) { b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', 'Ouvrir le menu'); }
-    });
+    link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
   });
 
   // ── BARRE DE PROGRESSION + RETOUR EN HAUT ──
   const bar = document.getElementById('progress-bar');
   const backTop = document.getElementById('back-to-top');
   const navEl = document.querySelector('nav');
-  // La hauteur de la page est mise en cache : la relire à chaque scroll
-  // forçait le navigateur à recalculer toute la mise en page (saccades).
-  let hauteurTotale = document.body.scrollHeight - window.innerHeight;
-  window.addEventListener('resize', () => { hauteurTotale = document.body.scrollHeight - window.innerHeight; }, { passive: true });
-  window.addEventListener('load', () => { hauteurTotale = document.body.scrollHeight - window.innerHeight; });
-  let scrollEnAttente = false;
   window.addEventListener('scroll', () => {
-    if (scrollEnAttente) return;
-    scrollEnAttente = true;
-    requestAnimationFrame(() => {
-      scrollEnAttente = false;
-      bar.style.width = (hauteurTotale > 0 ? (window.scrollY / hauteurTotale * 100) : 0) + '%';
-      if (backTop) backTop.classList.toggle('show', window.scrollY > 500);
-      if (navEl) navEl.classList.toggle('scrolled', window.scrollY > 20);
-    });
-  }, { passive: true });
+    const total = document.body.scrollHeight - window.innerHeight;
+    bar.style.width = (window.scrollY / total * 100) + '%';
+    if (backTop) backTop.classList.toggle('show', window.scrollY > 500);
+    if (navEl) navEl.classList.toggle('scrolled', window.scrollY > 20);
+  });
   if (backTop) backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
   // ── MUSIQUE D'AMBIANCE (avec bouton couper / activer) ──
@@ -1324,14 +1303,9 @@
     const icon = document.getElementById('music-icon');
     if (!audio || !btn) return;
     audio.volume = 0.35;   // volume doux
-    // Préférence mémorisée d'une visite à l'autre.
-    // Par défaut la musique est COUPÉE : le fichier ne se télécharge donc pas
-    // (3,3 Mo) tant que le visiteur ne l'a pas demandé en cliquant sur le bouton.
-    let muted = true;
-    try {
-      const pref = localStorage.getItem('moni-music-muted');
-      if (pref !== null) muted = (pref === '1');
-    } catch (e) {}
+    // Préférence mémorisée d'une visite à l'autre (par défaut : musique activée)
+    let muted = false;
+    try { muted = localStorage.getItem('moni-music-muted') === '1'; } catch (e) {}
     function render() {
       audio.muted = muted;
       icon.innerHTML = muted ? '&#128263;' : '&#128266;';   // 🔇 / 🔊
@@ -1341,15 +1315,13 @@
     }
     function tryPlay() { const p = audio.play(); if (p) p.then(render).catch(() => {}); }
     render();
-    // La musique ne démarre qu'au 1er vrai geste (clic ou touche), et seulement
-    // si le visiteur l'avait laissée active lors d'une visite précédente.
-    // Le défilement a été retiré : ce n'est pas une activation utilisateur pour
-    // Chrome et Safari, on téléchargeait donc 3,3 Mo sans même que le son démarre.
+    // La musique (7 Mo) ne se télécharge et ne démarre qu'au 1er geste,
+    // et seulement si elle n'a pas été coupée lors d'une visite précédente.
     function firstGesture() {
       if (!muted) tryPlay();
-      ['pointerdown', 'keydown'].forEach(ev => window.removeEventListener(ev, firstGesture));
+      ['pointerdown', 'keydown', 'scroll'].forEach(ev => window.removeEventListener(ev, firstGesture));
     }
-    ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, firstGesture, { passive: true }));
+    ['pointerdown', 'keydown', 'scroll'].forEach(ev => window.addEventListener(ev, firstGesture, { passive: true }));
     audio.addEventListener('playing', render);
     audio.addEventListener('pause', render);
     btn.addEventListener('click', (e) => {
@@ -1426,10 +1398,7 @@
   // ── EFFET TYPING ──
   const typingEl = document.getElementById('hero-sub-text');
   const typingText = "Née de la Famiglia Moncini d\'Italie, la famille Moni bâtit à Roxwood l\'empire discret que son père a laissé derrière lui.";
-  if (typingEl && REDUIT) {
-    typingEl.textContent = typingText;
-    typingEl.classList.remove('typing-text');
-  } else if (typingEl) {
+  if (typingEl) {
     typingEl.textContent = '';
     let i = 0;
     setTimeout(() => {
@@ -1446,8 +1415,7 @@
 
   // ── PARALLAX HERO ──
   const heroGrid = document.querySelector('.hero-grid');
-  if (!REDUIT) document.addEventListener('mousemove', (e) => {
-    if (window.scrollY > window.innerHeight) return;   // hero hors écran : rien à animer
+  document.addEventListener('mousemove', (e) => {
     const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
     const dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
     if (heroGrid) heroGrid.style.transform = `translate(${dx * 10}px, ${dy * 10}px)`;
@@ -1498,18 +1466,7 @@
     });
     hero.addEventListener('mouseleave', () => { mouse.x = 0.5; mouse.y = 0.5; });
     let t = 0, mx = 0.5, my = 0.5;
-    // On n'anime que si le hero est réellement à l'écran : sinon on brûle
-    // du processeur (et de la batterie) pour un décor que personne ne voit.
-    let visible = true, rafId = null;
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(es => {
-        visible = es[0].isIntersecting;
-        if (visible && rafId === null) rafId = requestAnimationFrame(loop);
-        if (!visible && rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-      }, { threshold: 0 }).observe(hero);
-    }
     function loop() {
-      rafId = null;
       // lissage du suivi souris pour une parallaxe fluide
       mx += (mouse.x - mx) * 0.04;
       my += (mouse.y - my) * 0.04;
@@ -1540,10 +1497,9 @@
         ctx.restore();
       });
       t += 0.005;
-      if (visible) rafId = requestAnimationFrame(loop);
+      requestAnimationFrame(loop);
     }
-    if (!REDUIT) { rafId = requestAnimationFrame(loop); }
-    else { ctx.clearRect(0, 0, W, H); }   // décor figé si animations réduites
+    loop();
   }
 
   // ── LIGHTBOX partagée (galerie + photos du hero) ──
@@ -1607,7 +1563,7 @@
       const fig = document.createElement('figure');
       fig.className = 'hero-photo';
       fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + (p.w || s.w) + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
-      fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy" decoding="async">' +
+      fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy">' +
         (p.caption ? '<figcaption class="cap">' + p.caption + '</figcaption>' : '');
       fig.addEventListener('click', () => openLightbox(HERO_PHOTOS, i));
       wrap.appendChild(fig);
@@ -1651,7 +1607,7 @@
       return;
     }
     wrap.innerHTML = QG_PHOTOS.map((p, i) =>
-      '<figure class="qg-item" data-index="' + i + '"><img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy" decoding="async"><figcaption>' + (p.caption || '') + '</figcaption></figure>'
+      '<figure class="qg-item" data-index="' + i + '"><img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy"><figcaption>' + (p.caption || '') + '</figcaption></figure>'
     ).join('');
     wrap.querySelectorAll('.qg-item').forEach(it => {
       it.addEventListener('click', () => openLightbox(QG_PHOTOS, parseInt(it.dataset.index, 10)));
@@ -1742,17 +1698,14 @@
             const st = (m.status === 'idle' || m.status === 'dnd' || m.status === 'online') ? m.status : 'online';
             const voice = (m.channel_id && chan[m.channel_id]) ? '<div class="online-voice">&#128266; ' + esc(chan[m.channel_id]) + '</div>' : '';
             const av = m.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
-            return '<div class="online-member"><div class="online-avatar"><img src="' + av + '" alt="" loading="lazy" decoding="async"><span class="st ' + st + '"></span></div>' +
+            return '<div class="online-member"><div class="online-avatar"><img src="' + av + '" alt="" loading="lazy"><span class="st ' + st + '"></span></div>' +
               '<div class="online-name">' + esc(m.username) + '</div>' + voice + '</div>';
           }).join('');
         })
         .catch(() => { grid.innerHTML = '<div class="online-empty">Widget Discord non disponible — activez-le dans Paramètres du serveur &rsaquo; Widget.</div>'; });
     }
     load();
-    // Rafraîchit chaque minute, mais uniquement si l'onglet est visible :
-    // sinon un onglet oublié interrogeait Discord 60 fois par heure pour rien.
-    setInterval(() => { if (!document.hidden) load(); }, 60000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+    setInterval(load, 60000);   // rafraîchit chaque minute
   })();
 
   // ── STATUT DU SERVEUR FIVEM (via la fonction Edge fivem-status) ──
@@ -1783,8 +1736,7 @@
       });
     }
     load();
-    setInterval(() => { if (!document.hidden) load(); }, 60000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+    setInterval(load, 60000);
   })();
 </script>
 
@@ -1855,6 +1807,21 @@
     loadGalerie();
 
     // Actualités désactivées (en attente d'un salon d'annonces dédié).
+    if (false) sb.from('bot_annonces').select('*').order('ts', { ascending: false }).limit(6).then(function (res) {
+      var sec = document.getElementById('actualites');
+      if (!sec || res.error || !res.data || !res.data.length) return;
+      var list = document.getElementById('actu-list');
+      list.innerHTML = res.data.map(function (a) {
+        var d = new Date(a.ts);
+        return '<div class="actu-item"><div class="actu-date">' +
+          d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
+          '</div><div class="actu-dot"></div><div class="actu-body"><h4>' + esc(a.auteur || 'Annonce') +
+          '</h4><p>' + esc(a.texte || '') + '</p></div></div>';
+      }).join('');
+      sec.style.display = '';
+      var nav = document.getElementById('nav-actus');
+      if (nav) nav.style.display = '';
+    });
 
     // Événements : visibles uniquement pour les membres connectés
     var locked = document.getElementById('events-locked');
@@ -1918,7 +1885,7 @@
               (e.type ? '<span class="event-type">' + esc(e.type) + '</span>' : '') +
               '<div class="event-title">' + esc(e.titre||'') + '</div><div class="event-time">' + esc(e.heure||'') +
               '</div><div class="event-desc">' + esc(e.texte||'') + '</div>' +
-              (e.image_url ? '<img class="event-img" src="' + esc(e.image_url) + '" alt="' + esc(e.titre || 'Illustration de l\'événement') + '" loading="lazy" decoding="async">' : '') +
+              (e.image_url ? '<img class="event-img" src="' + esc(e.image_url) + '" alt="" loading="lazy">' : '') +
               rsvp + '</div></div>';
           }).join('');
           grid.querySelectorAll('.rsvp-btn').forEach(function (btn) {

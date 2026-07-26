@@ -2,6 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /espace-membre.html
-Disallow: /os.html
 
 Sitemap: https://poloveni.github.io/FamilleMoni/sitemap.xml

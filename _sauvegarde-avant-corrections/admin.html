@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/jpeg" href="logo.jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="dashboard.css" />
   <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --bg: #0b0c10; --panel: #12141b; --panel2: #1a1d27;
       --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.14);
@@ -16,6 +16,15 @@
       --red: #e0503f; --red-deep: #c0392b; --gold: #d4b26e;
       --green: #2ecc71; --amber: #e67e22;
     }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; font-size: 14px;
+      background-image:
+        radial-gradient(900px 500px at 85% -10%, rgba(192,57,43,0.10), transparent 60%),
+        radial-gradient(700px 500px at -10% 110%, rgba(212,178,110,0.07), transparent 60%);
+      background-attachment: fixed;
+    }
+    a { color: inherit; }
     #admin-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.5; }
 
     /* ═══ LOGIN ═══ */
@@ -27,18 +36,26 @@
     .login-box h1 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; margin-bottom: 4px; }
     .login-box h1 span { color: var(--red); }
     .login-sub { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 26px; }
+    label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 6px; }
     input, select, textarea {
       width: 100%; padding: 11px 14px; background: var(--panel2);
       border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px;
       font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; margin-bottom: 14px;
     }
     textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    input:focus, select:focus, textarea:focus { border-color: var(--red); }
+    select option { background: var(--panel2); }
     .btn {
       padding: 12px 20px; background: var(--red-deep); color: #fff; font-size: 12px;
       letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 10px; cursor: pointer;
       font-family: 'Inter', sans-serif; font-weight: 600; transition: background 0.2s, transform 0.2s;
     }
+    .btn:hover { background: #a93226; transform: translateY(-1px); }
     .btn.full { width: 100%; }
+    .btn.green { background: #1f8a4d; }
+    .btn.green:hover { background: #1a7642; }
+    .btn.ghost { background: transparent; border: 1px solid var(--border2); color: var(--text); }
+    .btn.ghost:hover { background: var(--panel2); }
     .btn.danger { background: transparent; border: 1px solid rgba(224,80,63,0.5); color: var(--red); }
     .btn.danger:hover { background: rgba(224,80,63,0.12); }
     .login-error {
@@ -48,24 +65,50 @@
 
     /* ═══ DASHBOARD : SIDEBAR + MAIN ═══ */
     #admin-screen { display: none; position: relative; z-index: 1; }
+    .sb-nav {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 232px; z-index: 10;
+      background: rgba(14,15,20,0.92); backdrop-filter: blur(8px);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 20px 12px 14px; overflow-y: auto;
+    }
+    .sb-logo { padding: 0 10px 18px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+    .sb-logo .t1 { font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+    .sb-logo .t1 span { color: var(--red); }
     .sb-logo .t2 {
       display: inline-block; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
       color: #1a1206; background: var(--gold); border-radius: 5px; padding: 2px 8px; margin-top: 6px; font-weight: 700;
     }
+    .sb-group { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); padding: 14px 10px 6px; }
     .sb-item {
-      background: none; border: 0; width: 100%; text-align: left; font: inherit;
       display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px;
       font-size: 13px; color: var(--muted); cursor: pointer; border: 1px solid transparent;
       transition: background 0.15s, color 0.15s; text-decoration: none; margin-bottom: 2px; position: relative;
     }
+    .sb-item:hover { background: var(--panel2); color: var(--text); }
+    .sb-item.active { background: rgba(192,57,43,0.14); color: #fff; border-color: rgba(192,57,43,0.35); }
+    .sb-item .ico { width: 18px; text-align: center; }
     .sb-badge {
       margin-left: auto; min-width: 18px; height: 18px; border-radius: 9px; background: var(--amber);
       color: #fff; font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; padding: 0 5px;
     }
+    .sb-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--border); }
+    .sb-user { font-size: 11px; color: var(--dim); margin-bottom: 8px; word-break: break-all; }
+    .sb-out { color: var(--red); font-size: 12.5px; cursor: pointer; display: flex; gap: 10px; align-items: center; padding: 8px 0; }
+    .sb-out:hover { color: #ff7a6e; }
+
+    .dash { margin-left: 232px; padding: 30px 34px 60px; min-height: 100vh; }
+    .dash-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+    .dash-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; }
+    .dash-title em { font-style: normal; color: var(--red); }
+    .dash-sub { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1); }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
     .bloc { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
     .bloc + .bloc { margin-top: 14px; }
+    .bloc-t { font-size: 13.5px; font-weight: 600; margin-bottom: 16px; }
     .hint { font-size: 12px; color: var(--dim); }
 
     /* KPI cards */
@@ -75,6 +118,7 @@
       border-radius: 14px; padding: 18px 18px 16px;
       transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s, box-shadow 0.25s;
     }
+    .kpi:hover { transform: translateY(-3px); border-color: var(--border2); box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
     .kpi::before { content: ''; position: absolute; top: -40px; left: -40px; width: 110px; height: 110px; border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--kc, var(--red)); }
     .kpi-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); position: relative; }
     .kpi-num { font-size: 28px; font-weight: 700; margin-top: 7px; position: relative; letter-spacing: -0.5px; }
@@ -126,6 +170,13 @@
       font-family: ui-monospace, monospace;
     }
 
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: #1f8a4d; color: #fff; padding: 12px 20px; font-size: 13px; border-radius: 10px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .toast.show { opacity: 1; }
+
     /* Mobile */
     @media (max-width: 860px) {
       .sb-nav { position: fixed; top: 0; bottom: auto; width: 100%; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 8px 10px; overflow-x: auto; overflow-y: hidden; }
@@ -170,21 +221,21 @@
     </div>
 
     <div class="sb-group">Pilotage</div>
-    <button type="button" class="sb-item active" data-panel="dashboard" data-title="Bienvenue, &lt;em&gt;Donna&lt;/em&gt; 👑" data-sub="Vue d'ensemble du site et de la famille." onclick="showPanel('dashboard', this)"><span class="ico">📊</span><span class="lbl">Dashboard</span></button>
+    <a class="sb-item active" data-panel="dashboard" data-title="Bienvenue, &lt;em&gt;Donna&lt;/em&gt; 👑" data-sub="Vue d'ensemble du site et de la famille." onclick="showPanel('dashboard', this)"><span class="ico">📊</span><span class="lbl">Dashboard</span></a>
 
     <div class="sb-group">Contenu</div>
-    <button type="button" class="sb-item" data-panel="hero" data-title="Page d'&lt;em&gt;accueil&lt;/em&gt;" data-sub="Les textes principaux du site public." onclick="showPanel('hero', this)"><span class="ico">🏠</span><span class="lbl">Page d'accueil</span></button>
-    <button type="button" class="sb-item" data-panel="membres" data-title="Les &lt;em&gt;membres&lt;/em&gt;" data-sub="La liste officielle : noms et rangs." onclick="showPanel('membres', this)"><span class="ico">👥</span><span class="lbl">Membres</span></button>
+    <a class="sb-item" data-panel="hero" data-title="Page d'&lt;em&gt;accueil&lt;/em&gt;" data-sub="Les textes principaux du site public." onclick="showPanel('hero', this)"><span class="ico">🏠</span><span class="lbl">Page d'accueil</span></a>
+    <a class="sb-item" data-panel="membres" data-title="Les &lt;em&gt;membres&lt;/em&gt;" data-sub="La liste officielle : noms et rangs." onclick="showPanel('membres', this)"><span class="ico">👥</span><span class="lbl">Membres</span></a>
 
     <div class="sb-group">Espace membre</div>
-    <button type="button" class="sb-item" id="side-inscriptions" data-panel="inscriptions" data-title="Les &lt;em&gt;inscriptions&lt;/em&gt;" data-sub="Approuve ou refuse les comptes créés sur l'espace membre." onclick="showPanel('inscriptions', this)"><span class="ico">✅</span><span class="lbl">Inscriptions</span><span class="sb-badge" id="badge-attente"></span></button>
+    <a class="sb-item" id="side-inscriptions" data-panel="inscriptions" data-title="Les &lt;em&gt;inscriptions&lt;/em&gt;" data-sub="Approuve ou refuse les comptes créés sur l'espace membre." onclick="showPanel('inscriptions', this)"><span class="ico">✅</span><span class="lbl">Inscriptions</span><span class="sb-badge" id="badge-attente"></span></a>
 
     <div class="sb-group">Export</div>
-    <button type="button" class="sb-item" data-panel="export" data-title="&lt;em&gt;Exporter&lt;/em&gt;" data-sub="Récupère le code à coller dans supabase-config.js." onclick="showPanel('export', this)"><span class="ico">💾</span><span class="lbl">Exporter</span></button>
+    <a class="sb-item" data-panel="export" data-title="&lt;em&gt;Exporter&lt;/em&gt;" data-sub="Récupère le code à coller dans supabase-config.js." onclick="showPanel('export', this)"><span class="ico">💾</span><span class="lbl">Exporter</span></a>
 
     <div class="sb-group">Système</div>
-    <button type="button" class="sb-item" href="index.html" target="_blank"><span class="ico">🌐</span><span class="lbl">Voir le site</span></button>
-    <button type="button" class="sb-item" href="espace-membre.html" target="_blank"><span class="ico">📈</span><span class="lbl">Espace membre</span></button>
+    <a class="sb-item" href="index.html" target="_blank"><span class="ico">🌐</span><span class="lbl">Voir le site</span></a>
+    <a class="sb-item" href="espace-membre.html" target="_blank"><span class="ico">📈</span><span class="lbl">Espace membre</span></a>
 
     <div class="sb-foot">
       <div class="sb-user">Connectée : <b id="who-email"></b></div>
@@ -307,15 +358,6 @@
   if (saved && savedVer >= DATA_VERSION) { try { data = JSON.parse(saved); } catch(e) {} }
 
   const ADMIN_EMAIL = 'syne@live.fr';
-
-  // Neutralise le HTML contenu dans un texte venu de la base ou d'un utilisateur.
-  // Sans ça, un membre pouvait glisser du code dans son email et le faire
-  // exécuter ici, dans TA session d'administratrice.
-  function escHTML(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
   const SB = (window.supabase && window.SUPABASE_URL)
     ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY) : null;
 
@@ -379,7 +421,7 @@
     const list = document.getElementById('insc-list');
     if (!SB) { list.innerHTML = '<p class="hint">Supabase non chargé.</p>'; return; }
     const { data: comptes, error } = await SB.from('comptes').select('*').order('created_at', { ascending: false });
-    if (error) { list.innerHTML = '<p style="color:var(--red);font-size:13px;">Erreur : ' + escHTML(error.message) + '</p>'; return; }
+    if (error) { list.innerHTML = '<p style="color:var(--red);font-size:13px;">Erreur : ' + error.message + '</p>'; return; }
     const enAttente = (comptes || []).filter(c => !c.approuve).length;
     if (!comptes || !comptes.length) {
       list.innerHTML = '<p class="hint">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres s\'inscriront sur l\'espace membre.</p>';
@@ -390,7 +432,7 @@
       '<button class="btn ghost" style="padding:9px 16px;" onclick="renderInscriptions()">↻ Rafraîchir</button></div>' +
       comptes.map(function (c) {
         return '<div class="insc-row"><div>' +
-          '<div class="insc-email">' + escHTML(c.email || '(sans email)') + '</div>' +
+          '<div class="insc-email">' + (c.email || '(sans email)') + '</div>' +
           '<div class="insc-state ' + (c.approuve ? 'ok' : 'attente') + '">' + (c.approuve ? '✅ Approuvé' : '⏳ En attente') + '</div>' +
           '</div>' +
           '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:10px 16px;" onclick="setApprouve(\'' + c.id + '\', ' + (!c.approuve) + ')">' +
@@ -529,8 +571,6 @@
     preview.style.display = 'block';
     navigator.clipboard.writeText(txt).then(() => {
       showToast('Code copié ! Colle le bloc window.MONI_MEMBRES dans supabase-config.js, puis publie.');
-    }).catch(() => {
-      showToast('Copie automatique refusée par le navigateur — sélectionne le texte ci-dessous et fais Ctrl+C.');
     });
   }
 
@@ -541,10 +581,67 @@
   }
 </script>
 
-<script src="starfield.js"></script>
 <script>
-  // Fond étoilé : le code est partagé avec l'espace membre (starfield.js).
-  starfield('admin-canvas', { max: 120, densite: 16000 });
+  // ── Fond étoilé animé (discret) ──
+  (function starfield() {
+    const c = document.getElementById('admin-canvas');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    let W, H, stars = [];
+    const COLORS = ['rgba(238,240,244,', 'rgba(224,80,63,', 'rgba(212,178,110,', 'rgba(88,101,242,'];
+    function mk(init) {
+      const big = Math.random() < 0.12;
+      return {
+        x: Math.random() * W,
+        y: init ? Math.random() * H : H + 4,
+        r: big ? Math.random() * 1.8 + 1.2 : Math.random() * 1.1 + 0.4,
+        vy: -(Math.random() * 0.16 + 0.03),
+        vx: (Math.random() - 0.5) * 0.05,
+        col: big ? COLORS[1 + Math.floor(Math.random() * 3)] : COLORS[0],
+        ph: Math.random() * 7,
+        sp: Math.random() * 0.03 + 0.008,
+        big
+      };
+    }
+    function resize() {
+      W = c.width = window.innerWidth;
+      H = c.height = window.innerHeight;
+      const n = Math.min(120, Math.round(W * H / 16000));
+      stars = [];
+      for (let i = 0; i < n; i++) stars.push(mk(true));
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    const BLOBS = [['205,33,42', 0.10], ['212,178,110', 0.07]];
+    let t = 0;
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      BLOBS.forEach((b, i) => {
+        const px = W * (0.3 + 0.4 * Math.sin(t * 0.4 + i * 2.4));
+        const py = H * (0.35 + 0.3 * Math.cos(t * 0.3 + i * 1.6));
+        const g = ctx.createRadialGradient(px, py, 0, px, py, Math.max(W, H) * 0.5);
+        g.addColorStop(0, 'rgba(' + b[0] + ',' + b[1] + ')');
+        g.addColorStop(1, 'rgba(' + b[0] + ',0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      });
+      stars.forEach((s, i) => {
+        s.x += s.vx; s.y += s.vy; s.ph += s.sp;
+        if (s.y < -4) stars[i] = mk(false);
+        const a = (s.big ? 0.55 : 0.4) * (0.45 + 0.55 * Math.abs(Math.sin(s.ph)));
+        ctx.save();
+        if (s.big) { ctx.shadowBlur = 8; ctx.shadowColor = s.col + '0.9)'; }
+        ctx.fillStyle = s.col + a.toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+      ctx.globalCompositeOperation = 'source-over';
+      t += 0.004;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
 </script>
 </body>
 </html>

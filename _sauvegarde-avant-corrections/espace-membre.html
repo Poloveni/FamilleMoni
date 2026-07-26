@@ -11,8 +11,8 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="dashboard.css" />
   <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --bg: #0b0c10; --panel: #12141b; --panel2: #1a1d27;
       --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.14);
@@ -20,6 +20,15 @@
       --red: #e0503f; --red-deep: #c0392b; --gold: #d4b26e;
       --green: #2ecc71; --amber: #faa61a; --blue: #5865f2;
     }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; font-size: 14px;
+      background-image:
+        radial-gradient(900px 500px at 85% -10%, rgba(192,57,43,0.10), transparent 60%),
+        radial-gradient(700px 500px at -10% 110%, rgba(212,178,110,0.07), transparent 60%);
+      background-attachment: fixed;
+    }
+    a { color: inherit; }
     #member-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.5; }
 
     /* ═══ ÉCRANS AUTH / RESET (centrés) ═══ */
@@ -32,20 +41,25 @@
     h1.auth-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; margin-bottom: 6px; }
     h1.auth-title span { color: var(--red); }
     .sub { font-size: 13px; color: var(--muted); margin-bottom: 26px; }
+    label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 6px; }
     input, select, textarea {
       width: 100%; padding: 11px 14px; background: var(--panel2);
       border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px;
       font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; margin-bottom: 16px;
     }
     textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
-    /* Faux liens : de vrais boutons, stylés comme des liens. */
-    .lien { background: none; border: 0; padding: 0; font: inherit; color: var(--red);
-      text-decoration: underline; cursor: pointer; }
+    input:focus, select:focus, textarea:focus { border-color: var(--red); }
+    select option { background: var(--panel2); }
     .btn {
       width: 100%; padding: 12px; background: var(--red-deep); color: #fff; font-size: 12px;
       letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 10px; cursor: pointer;
       font-family: 'Inter', sans-serif; font-weight: 600; transition: background 0.2s, transform 0.2s;
     }
+    .btn:hover { background: #a93226; transform: translateY(-1px); }
+    .btn.green { background: #1f8a4d; }
+    .btn.green:hover { background: #1a7642; }
+    .btn.ghost { background: transparent; border: 1px solid var(--border2); color: var(--text); }
+    .btn.ghost:hover { background: var(--panel2); }
     .switch { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
     .switch a { color: var(--red); cursor: pointer; text-decoration: none; }
     .msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; border-radius: 8px; display: none; }
@@ -54,19 +68,44 @@
 
     /* ═══ DASHBOARD : SIDEBAR + MAIN ═══ */
     #member-screen { display: none; position: relative; z-index: 1; }
+    .sb-nav {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 232px; z-index: 10;
+      background: rgba(14,15,20,0.92); backdrop-filter: blur(8px);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 20px 12px 14px; overflow-y: auto;
+    }
+    .sb-logo { padding: 0 10px 18px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+    .sb-logo .t1 { font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+    .sb-logo .t1 span { color: var(--red); }
     .sb-logo .t2 { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+    .sb-group { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); padding: 14px 10px 6px; }
     .sb-item {
-      background: none; border: 0; width: 100%; text-align: left; font: inherit;
       display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px;
       font-size: 13px; color: var(--muted); cursor: pointer; border: 1px solid transparent;
       transition: background 0.15s, color 0.15s; text-decoration: none; margin-bottom: 2px;
     }
+    .sb-item:hover { background: var(--panel2); color: var(--text); }
+    .sb-item.active { background: rgba(192,57,43,0.14); color: #fff; border-color: rgba(192,57,43,0.35); }
+    .sb-item .ico { width: 18px; text-align: center; }
+    .sb-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--border); }
+    .sb-user { font-size: 11px; color: var(--dim); margin-bottom: 8px; word-break: break-all; }
     .sb-user b { color: var(--muted); font-weight: 600; }
+    .sb-out { color: var(--red); font-size: 12.5px; cursor: pointer; display: flex; gap: 10px; align-items: center; padding: 8px 0; }
+    .sb-out:hover { color: #ff7a6e; }
+
+    .dash { margin-left: 232px; padding: 30px 34px 60px; min-height: 100vh; }
+    .dash-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+    .dash-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; }
+    .dash-title em { font-style: normal; color: var(--red); }
+    .dash-sub { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
     .chip {
       font-size: 11px; color: var(--muted); background: var(--panel); border: 1px solid var(--border);
       border-radius: 999px; padding: 7px 14px; white-space: nowrap;
     }
     .chip b { color: var(--gold); font-weight: 600; }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1); }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
     /* KPI cards */
@@ -76,6 +115,7 @@
       border-radius: 14px; padding: 20px 20px 18px;
       transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s, box-shadow 0.25s;
     }
+    .kpi:hover { transform: translateY(-3px); border-color: var(--border2); box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
     .kpi::before { content: ''; position: absolute; top: -40px; left: -40px; width: 120px; height: 120px; border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--kc, var(--red)); }
     .kpi-label { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); position: relative; }
     .kpi-num { font-size: 30px; font-weight: 700; margin-top: 8px; position: relative; letter-spacing: -0.5px; }
@@ -102,6 +142,7 @@
     .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: stretch; }
     @media (max-width: 1080px) { .grid2 { grid-template-columns: 1fr; } }
     .bloc { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .bloc-t { font-size: 13.5px; font-weight: 600; margin-bottom: 16px; }
     .bloc-t small { font-weight: 400; color: var(--dim); font-size: 11px; }
     .bars { display: flex; align-items: flex-end; gap: 7px; height: 210px; }
     .bar-w { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; }
@@ -238,6 +279,13 @@
     .event-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
     .event-type { display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; background: rgba(192,57,43,0.15); color: var(--red); margin-bottom: 4px; }
 
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: #1f8a4d; color: #fff; padding: 12px 20px; font-size: 13px; border-radius: 10px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .toast.show { opacity: 1; }
+
     /* Mobile : la sidebar devient une barre horizontale défilante */
     @media (max-width: 860px) {
       .sb-nav { position: fixed; top: 0; bottom: auto; width: 100%; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 8px 10px; overflow-x: auto; overflow-y: hidden; }
@@ -275,10 +323,10 @@
     <div class="msg" id="auth-msg"></div>
 
     <div class="switch" id="auth-switch">
-      Pas encore de compte ? <button type="button" class="lien" onclick="setMode('signup')">Créer un compte</button>
+      Pas encore de compte ? <a onclick="setMode('signup')">Créer un compte</a>
     </div>
     <div class="switch" style="margin-top:10px;">
-      <button type="button" class="lien" onclick="motDePasseOublie()">Mot de passe oublié ?</button>
+      <a onclick="motDePasseOublie()">Mot de passe oublié ?</a>
     </div>
   </div>
 </div>
@@ -305,25 +353,25 @@
     </div>
 
     <div class="sb-group req-approve">Pilotage</div>
-    <button type="button" class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico">📊</span><span class="lbl">Vue d'ensemble</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico">⭐</span><span class="lbl">Ma semaine</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico">💊</span><span class="lbl">Classement</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico">🏦</span><span class="lbl">Le coffre</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="prix" data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico">🏷</span><span class="lbl">Prix drogues</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico">🔫</span><span class="lbl">Armurerie</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico">🧾</span><span class="lbl">Taxes</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico">🚨</span><span class="lbl">Braquages</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="palmares" data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico">🏆</span><span class="lbl">Palmarès</span></button>
-    <button type="button" class="sb-item req-approve" id="tv-btn"><span class="ico">📺</span><span class="lbl">Mode TV</span></button>
+    <a class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico">📊</span><span class="lbl">Vue d'ensemble</span></a>
+    <a class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico">⭐</span><span class="lbl">Ma semaine</span></a>
+    <a class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico">💊</span><span class="lbl">Classement</span></a>
+    <a class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico">🏦</span><span class="lbl">Le coffre</span></a>
+    <a class="sb-item req-approve" data-panel="prix" data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico">🏷</span><span class="lbl">Prix drogues</span></a>
+    <a class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico">🔫</span><span class="lbl">Armurerie</span></a>
+    <a class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico">🧾</span><span class="lbl">Taxes</span></a>
+    <a class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico">🚨</span><span class="lbl">Braquages</span></a>
+    <a class="sb-item req-approve" data-panel="palmares" data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico">🏆</span><span class="lbl">Palmarès</span></a>
+    <a class="sb-item req-approve" id="tv-btn"><span class="ico">📺</span><span class="lbl">Mode TV</span></a>
 
     <div class="sb-group">Perso</div>
-    <button type="button" class="sb-item req-approve" data-panel="events" data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico">📅</span><span class="lbl">Planning</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="profil" data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico">👤</span><span class="lbl">Mon profil</span></button>
-    <button type="button" class="sb-item" data-panel="galerie" data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico">📸</span><span class="lbl">Galerie</span></button>
+    <a class="sb-item req-approve" data-panel="events" data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico">📅</span><span class="lbl">Planning</span></a>
+    <a class="sb-item req-approve" data-panel="profil" data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico">👤</span><span class="lbl">Mon profil</span></a>
+    <a class="sb-item" data-panel="galerie" data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico">📸</span><span class="lbl">Galerie</span></a>
 
     <div class="sb-group">Système</div>
-    <button type="button" class="sb-item" href="index.html"><span class="ico">🏠</span><span class="lbl">Retour au site</span></button>
-    <button type="button" class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico">🛠</span><span class="lbl">Panel admin</span></button>
+    <a class="sb-item" href="index.html"><span class="ico">🏠</span><span class="lbl">Retour au site</span></a>
+    <a class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico">🛠</span><span class="lbl">Panel admin</span></a>
 
     <div class="sb-foot">
       <div class="sb-user">Connecté : <b id="who-email"></b></div>
@@ -518,15 +566,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-  // Si le CDN de Supabase est bloqué (réseau d'entreprise, extension, coupure),
-  // window.supabase n'existe pas : on affiche un message clair au lieu d'une page morte.
-  if (!window.supabase || !window.SUPABASE_URL) {
-    document.addEventListener('DOMContentLoaded', function () {
-      document.body.insertAdjacentHTML('afterbegin',
-        '<div style="padding:16px;background:#3a1d1a;color:#ffd9d2;font:14px/1.5 Inter,sans-serif;text-align:center">' +
-        'Connexion au serveur impossible pour le moment. Vérifie ta connexion, puis recharge la page.</div>');
-    });
-  }
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
   let mode = 'login';
   let currentUser = null;
@@ -656,10 +695,8 @@
     const sbAdmin = document.getElementById('sb-admin');
     if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
 
-    // Un seul aller-retour : on écrit et on relit la colonne dans la même requête.
-    const { data: compte } = await sb.from('comptes')
-      .upsert({ id: user.id, email: user.email })
-      .select('approuve').maybeSingle();
+    await sb.from('comptes').upsert({ id: user.id, email: user.email });
+    const { data: compte } = await sb.from('comptes').select('approuve').eq('id', user.id).maybeSingle();
     isApproved = !!(compte && compte.approuve);
 
     if (!isApproved) {
@@ -903,8 +940,7 @@
 
   // ══ MOTEUR GRAPHIQUE CANVAS ══
   // Animations forcées pour tout le monde (choix du proprio), quel que soit le réglage système.
-  // Respecte le réglage système « réduire les animations » (accessibilité).
-  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const REDUCED = false;
   const lastCharts = { bars: null, donut: null };
   function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
@@ -1625,7 +1661,67 @@
   })();
 </script>
 
-<script src="starfield.js"></script>
-<script>starfield('member-canvas', { max: 140, densite: 14000 });</script>
+<script>
+  // ── Fond étoilé animé (étoiles + éclats rouge/or + nappes de lumière) ──
+  (function starfield() {
+    const c = document.getElementById('member-canvas');
+    if (!c) return;
+    const reduced = false; // animations forcées
+    const ctx = c.getContext('2d');
+    let W, H, stars = [];
+    const COLORS = ['rgba(238,240,244,', 'rgba(224,80,63,', 'rgba(212,178,110,', 'rgba(88,101,242,'];
+    function mk(init) {
+      const big = Math.random() < 0.12;
+      return {
+        x: Math.random() * W,
+        y: init ? Math.random() * H : H + 4,
+        r: big ? Math.random() * 1.8 + 1.2 : Math.random() * 1.1 + 0.4,
+        vy: -(Math.random() * 0.16 + 0.03),
+        vx: (Math.random() - 0.5) * 0.05,
+        col: big ? COLORS[1 + Math.floor(Math.random() * 3)] : COLORS[0],
+        ph: Math.random() * 7,
+        sp: Math.random() * 0.03 + 0.008,
+        big
+      };
+    }
+    function resize() {
+      W = c.width = window.innerWidth;
+      H = c.height = window.innerHeight;
+      const n = Math.min(140, Math.round(W * H / 14000));
+      stars = [];
+      for (let i = 0; i < n; i++) stars.push(mk(true));
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    const BLOBS = [['205,33,42', 0.10], ['212,178,110', 0.07]];
+    let t = 0;
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      BLOBS.forEach((b, i) => {
+        const px = W * (0.3 + 0.4 * Math.sin(t * 0.4 + i * 2.4));
+        const py = H * (0.35 + 0.3 * Math.cos(t * 0.3 + i * 1.6));
+        const g = ctx.createRadialGradient(px, py, 0, px, py, Math.max(W, H) * 0.5);
+        g.addColorStop(0, 'rgba(' + b[0] + ',' + b[1] + ')');
+        g.addColorStop(1, 'rgba(' + b[0] + ',0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      });
+      stars.forEach((s, i) => {
+        s.x += s.vx; s.y += s.vy; s.ph += s.sp;
+        if (s.y < -4) stars[i] = mk(false);
+        const a = (s.big ? 0.55 : 0.4) * (0.45 + 0.55 * Math.abs(Math.sin(s.ph)));
+        ctx.save();
+        if (s.big) { ctx.shadowBlur = 8; ctx.shadowColor = s.col + '0.9)'; }
+        ctx.fillStyle = s.col + a.toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (reduced) { draw(); return; }
+    (function loop() { draw(); t += 0.004; requestAnimationFrame(loop); })();
+  })();
+</script>
 </body>
 </html>

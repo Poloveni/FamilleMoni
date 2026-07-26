@@ -23,14 +23,14 @@ window.MONI_NOM_FIX = {
 // Les rangs, du plus haut au plus bas, avec leur couleur d'affichage.
 window.MONI_RANGS = [
   { nom: 'La Donna',       color: '#d4b26e', desc: 'Chef' },
-  { nom: 'Braccio Destro', color: '#e35d4c', desc: 'Bras Droit — Co-Lead' },
-  { nom: 'Consigliere',    color: '#d08a3f', desc: 'Conseiller — Capitaines' },
+  { nom: 'Braccio Destro', color: '#c0392b', desc: 'Bras Droit — Co-Lead' },
+  { nom: 'Consigliere',    color: '#b5651d', desc: 'Conseiller — Capitaines' },
   { nom: 'Anziani',        color: '#c07a2b', desc: 'Aînés — Lieutenants' },
-  { nom: 'Baroni',         color: '#96b854', desc: 'Barons — Gérants drogue, armes, blanchiment, opérations, événements…' },
-  { nom: 'Fedeli',         color: '#96b854', desc: 'Fidèle — Gradé' },
-  { nom: 'Vicino',         color: '#9a9a9a', desc: 'Proches' },
-  { nom: 'Sicario',        color: '#8e8e8e', desc: 'Hommes de main — Membres confirmés' },
-  { nom: 'Associati',      color: '#8e8e8e', desc: 'Associés — Membres' }
+  { nom: 'Baroni',         color: '#5a7a2b', desc: 'Barons — Gérants drogue, armes, blanchiment, opérations, événements…' },
+  { nom: 'Fedeli',         color: '#5a7a2b', desc: 'Fidèle — Gradé' },
+  { nom: 'Vicino',         color: '#888888', desc: 'Proches' },
+  { nom: 'Sicario',        color: '#777777', desc: 'Hommes de main — Membres confirmés' },
+  { nom: 'Associati',      color: '#777777', desc: 'Associés — Membres' }
 ];
 
 // Liste officielle des membres (nom -> rang). — Mise à jour 14/07/2026

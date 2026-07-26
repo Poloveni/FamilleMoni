@@ -16,23 +16,7 @@ function embedsText(embeds: any[]): string {
   return (embeds || []).map((e) => [e.title, e.description].filter(Boolean).join("\n")).join("\n");
 }
 
-// ── Verrou d'accès ────────────────────────────────────────────────────────
-// Cette fonction est publique sur Internet : sans ce contrôle, n'importe qui
-// pouvait l'appeler en boucle, faire tourner le bot à vide (risque de blocage
-// par Discord) et maintenir la table vide entre le vidage et le remplissage.
-// Le secret CRON_SECRET se règle dans Supabase → Edge Functions → Secrets,
-// et dans GitHub → Settings → Secrets and variables → Actions.
-const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
-function accesRefuse(req: Request): Response | null {
-  if (!CRON_SECRET) return null;   // secret pas encore configuré : on laisse passer
-  if (req.headers.get("x-cron-secret") === CRON_SECRET) return null;
-  return new Response("unauthorized", { status: 401 });
-}
-
-Deno.serve(async (req: Request) => {
-  const refus = accesRefuse(req);
-  if (refus) return refus;
-
+Deno.serve(async () => {
   if (!TOKEN || !CHANNEL) {
     return new Response("Secrets manquants (DISCORD_BOT_TOKEN / ANNONCES_CHANNEL_ID).", { status: 500 });
   }

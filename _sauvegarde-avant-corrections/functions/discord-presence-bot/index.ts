@@ -14,8 +14,6 @@ const APP_ID     = Deno.env.get("DISCORD_APP_ID") ?? "";
 const PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY") ?? "";
 const GUILD_ID   = Deno.env.get("DISCORD_GUILD_ID") ?? "";
 const SYNC_URL   = "https://prwdtdmdkhzwfyivaepw.supabase.co/functions/v1/sync-discord-presences";
-const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
-const SYNC_OPTS  = { headers: { "x-cron-secret": CRON_SECRET } };
 
 function hexToBytes(hex: string): Uint8Array {
   const out = new Uint8Array(hex.length / 2);
@@ -44,12 +42,6 @@ Deno.serve(async (req) => {
 
   // ── Enregistrement (une seule fois) des commandes /presence et /annuler ──
   if (req.method === "GET" && url.searchParams.has("setup")) {
-    // Ce chemin s'exécute avant la vérification de signature Discord :
-    // il doit donc porter son propre verrou, sinon n'importe qui peut
-    // faire réenregistrer les commandes avec ton token de bot.
-    if (CRON_SECRET && url.searchParams.get("setup") !== CRON_SECRET) {
-      return new Response("unauthorized", { status: 401 });
-    }
     if (!APP_ID || !GUILD_ID || !TOKEN) return new Response("Secrets manquants.", { status: 500 });
     const cmds = [
       { name: "presence", description: "Publier une présence sur le planning de la famille" },
@@ -138,7 +130,7 @@ Deno.serve(async (req) => {
     }
     try {
       // @ts-ignore API spécifique Supabase Edge
-      EdgeRuntime.waitUntil(fetch(SYNC_URL, SYNC_OPTS).catch(() => {}));
+      EdgeRuntime.waitUntil(fetch(SYNC_URL).catch(() => {}));
     } catch { /* la synchro auto passera dans les 5 min */ }
     return json({ type: 7, data: { content: "✅ Présence annulée — supprimée de Discord et du planning du site.", components: [] } });
   }
@@ -175,7 +167,7 @@ Deno.serve(async (req) => {
 
     try {
       // @ts-ignore API spécifique Supabase Edge
-      EdgeRuntime.waitUntil(fetch(SYNC_URL, SYNC_OPTS).catch(() => {}));
+      EdgeRuntime.waitUntil(fetch(SYNC_URL).catch(() => {}));
     } catch { /* la synchro auto passera dans les 5 min */ }
 
     return json({ type: 4, data: { content: "✅ Présence publiée ! Elle apparaît sur le planning du site dans quelques secondes.", flags: 64 } });
