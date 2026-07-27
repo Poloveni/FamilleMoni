@@ -1,0 +1,5 @@
+# Dossiers de sauvegarde : ils ne doivent JAMAIS partir sur GitHub Pages,
+# sinon l'ancienne version du site reste accessible publiquement en ligne.
+_sauvegarde*/
+*-sauvegarde/
+*.bak
