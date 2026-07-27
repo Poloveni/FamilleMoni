@@ -426,6 +426,25 @@
     <!-- TAXES -->
     <div class="panel" id="panel-taxes">
       <div class="bloc"><div id="bd-taxes"><div class="locked">Chargement…</div></div></div>
+
+      <!-- Import Excel — visible uniquement pour l'administratrice -->
+      <div class="bloc" id="bloc-import-taxes" style="display:none;">
+        <div class="bloc-t">Importer des taxes depuis un fichier Excel</div>
+        <p class="hint" style="margin-bottom:14px;line-height:1.75;">
+          Colonnes attendues : <b>Nom du groupe</b>, <b>Type</b>, <b>Jours avant échéance</b>,
+          et si besoin <b>Téléphone</b> et <b>Mot de passe</b>.
+          Le fichier est lu ici, dans ton navigateur — rien n'est envoyé tant que tu n'as pas confirmé.
+        </p>
+
+        <input type="file" id="import-fichier" accept=".xlsx,.xls" style="margin-bottom:12px;" />
+        <div id="import-apercu"></div>
+        <div id="import-actions" style="display:none;margin-top:14px;gap:10px;flex-wrap:wrap;">
+          <button class="btn green" id="import-envoyer" type="button" style="width:auto;padding:12px 24px;">Importer les lignes valides</button>
+          <button class="btn ghost" type="button" onclick="importReset()" style="width:auto;padding:12px 24px;background:none;border:1px solid var(--border);color:var(--muted);">Annuler</button>
+        </div>
+        <div class="msg" id="import-msg"></div>
+        <div id="import-rapport" style="margin-top:16px;"></div>
+      </div>
     </div>
 
     <!-- MA SEMAINE -->
@@ -661,6 +680,11 @@
     // Lien Panel admin : visible uniquement pour l'administratrice
     const sbAdmin = document.getElementById('sb-admin');
     if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
+    // L'outil d'import de taxes n'est visible que pour l'administratrice.
+    // (La base refuse de toute façon le dépôt à quiconque d'autre : ce test
+    //  n'est qu'un confort d'affichage, pas une protection.)
+    const blocImport = document.getElementById('bloc-import-taxes');
+    if (blocImport) blocImport.style.display = user.email === 'syne@live.fr' ? '' : 'none';
 
     // Un seul aller-retour : on écrit et on relit la colonne dans la même requête.
     const { data: compte } = await sb.from('comptes')
@@ -1651,6 +1675,248 @@
 </script>
 
 <script src="starfield.js"></script>
-<script>starfield('member-canvas', { max: 140, densite: 14000 });</script>
+<script>starfield('member-canvas', { max: 140, densite: 14000 });
+  /* ══════════════════════════════════════════════════════════════════════
+     IMPORT DE TAXES DEPUIS UN FICHIER EXCEL
+
+     Le fichier est lu ICI, dans le navigateur. Rien ne part tant que
+     l'administratrice n'a pas vu l'aperçu et confirmé.
+
+     Ensuite, les lignes valides sont déposées dans la table import_taxes
+     (une boîte aux lettres, pas un miroir bot_*). Le bot les reçoit par
+     Realtime, les insère dans son SQLite — la seule source de vérité —
+     rafraîchit le salon #taxes, puis réécrit son rapport dans la ligne.
+     On écoute ce rapport et on l'affiche.
+     ══════════════════════════════════════════════════════════════════════ */
+  (function importTaxes() {
+    const CDN_SHEETJS = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    let typesValides = null;   // rempli depuis bot_taxes_types
+    let lignesPretes = [];
+    let nomFichier = '';
+    let abonnement = null;
+
+    // Correspondance en-tête du fichier → champ envoyé au bot.
+    // On accepte plusieurs orthographes : accents, casse et espaces sont ignorés.
+    const CHAMPS = [
+      { champ: 'nom',          entetes: ['nom du groupe', 'nom', 'groupe'],                    requis: true },
+      { champ: 'type',         entetes: ['type', 'type de taxe'],                              requis: true },
+      { champ: 'jours',        entetes: ['jours avant echeance', 'jours', 'echeance', 'delai'], requis: true },
+      { champ: 'telephone',    entetes: ['telephone', 'tel', 'numero'],                        requis: false },
+      { champ: 'mot_de_passe', entetes: ['mot de passe', 'mdp', 'password'],                   requis: false },
+    ];
+
+    const normalise = t => String(t == null ? '' : t).toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ').trim();
+
+    function charger(src) {
+      return new Promise((ok, ko) => {
+        const sc = document.createElement('script');
+        sc.src = src; sc.onload = ok; sc.onerror = () => ko(new Error('chargement impossible'));
+        document.head.appendChild(sc);
+      });
+    }
+
+    // La liste des types vient du bot (table bot_taxes_types) : on ne la
+    // recopie pas en dur ici, le bot reste la source de vérité.
+    async function chargerTypes() {
+      if (typesValides) return typesValides;
+      const { data, error } = await sb.from('bot_taxes_types').select('type,label,ordre').order('ordre');
+      if (error || !data || !data.length) {
+        throw new Error('Liste des types de taxe indisponible — exécute import-taxes.sql dans Supabase.');
+      }
+      typesValides = data;
+      return typesValides;
+    }
+
+    // Une ligne du fichier → un objet validé, ou une erreur expliquée.
+    function valider(brut, numLigne, types) {
+      const val = {};
+      CHAMPS.forEach(c => {
+        for (const cle of Object.keys(brut)) {
+          if (c.entetes.indexOf(normalise(cle)) !== -1) { val[c.champ] = brut[cle]; break; }
+        }
+      });
+
+      const nom = String(val.nom == null ? '' : val.nom).trim();
+      if (!nom) return { ligne: numLigne, ok: false, raison: 'nom du groupe vide' };
+
+      const typeBrut = normalise(val.type).replace(/ /g, '_');
+      const trouve = types.find(t => t.type === typeBrut || normalise(t.label).replace(/ /g, '_') === typeBrut);
+      if (!trouve) {
+        return { ligne: numLigne, ok: false,
+          raison: 'type « ' + String(val.type || '').trim() + ' » inconnu (attendus : ' + types.map(t => t.type).join(', ') + ')' };
+      }
+
+      const jours = Number(String(val.jours == null ? '' : val.jours).replace(',', '.'));
+      if (!isFinite(jours) || Math.floor(jours) !== jours || jours <= 0) {
+        return { ligne: numLigne, ok: false, raison: 'jours avant échéance invalide (entier > 0 attendu)' };
+      }
+
+      return {
+        ligne: numLigne, ok: true,
+        nom: nom,
+        type: trouve.type,
+        jours: jours,
+        // Le téléphone ne sert qu'aux taxes Roxwood : on ne l'envoie pas ailleurs.
+        telephone: trouve.type === 'roxwood' ? String(val.telephone == null ? '' : val.telephone).trim() : '',
+        mot_de_passe: String(val.mot_de_passe == null ? '' : val.mot_de_passe).trim(),
+      };
+    }
+
+    function tableauApercu(resultats) {
+      return '<table class="vd-table" style="margin-top:12px;"><thead><tr>' +
+        '<th>Ligne</th><th>Nom du groupe</th><th>Type</th><th class="num">Jours</th><th>État</th>' +
+        '</tr></thead><tbody>' +
+        resultats.map(r => '<tr>' +
+          '<td>' + r.ligne + '</td>' +
+          '<td>' + escT(r.ok ? r.nom : '—') + '</td>' +
+          '<td>' + escT(r.ok ? r.type : '—') + '</td>' +
+          '<td class="num">' + (r.ok ? r.jours : '—') + '</td>' +
+          '<td>' + (r.ok
+            ? '<span style="color:var(--green)">valide</span>'
+            : '<span style="color:var(--red)">' + escT(r.raison) + '</span>') + '</td>' +
+        '</tr>').join('') + '</tbody></table>';
+    }
+
+    window.importReset = function () {
+      lignesPretes = []; nomFichier = '';
+      const f = document.getElementById('import-fichier'); if (f) f.value = '';
+      document.getElementById('import-apercu').innerHTML = '';
+      document.getElementById('import-actions').style.display = 'none';
+      document.getElementById('import-rapport').innerHTML = '';
+      hideMsg('import-msg');
+      if (abonnement) { sb.removeChannel(abonnement); abonnement = null; }
+    };
+
+    async function surFichier(e) {
+      const fichier = e.target.files && e.target.files[0];
+      if (!fichier) return;
+      nomFichier = fichier.name;
+      hideMsg('import-msg');
+      document.getElementById('import-rapport').innerHTML = '';
+      document.getElementById('import-apercu').innerHTML = '<div class="hint">Lecture du fichier…</div>';
+
+      try {
+        const types = await chargerTypes();
+        // 450 Ko : chargés seulement maintenant, pas à l'ouverture de la page.
+        if (!window.XLSX) await charger(CDN_SHEETJS);
+
+        const donnees = new Uint8Array(await fichier.arrayBuffer());
+        const classeur = XLSX.read(donnees, { type: 'array' });
+        const feuille = classeur.Sheets[classeur.SheetNames[0]];
+        if (!feuille) throw new Error('le fichier ne contient aucune feuille');
+
+        const brut = XLSX.utils.sheet_to_json(feuille, { defval: '' });
+        if (!brut.length) throw new Error('la première feuille est vide');
+        if (brut.length > 500) throw new Error('fichier trop volumineux (' + brut.length + ' lignes, 500 maximum)');
+
+        // +2 : la ligne 1 du fichier contient les en-têtes.
+        const resultats = brut.map((r, i) => valider(r, i + 2, types));
+        lignesPretes = resultats.filter(r => r.ok);
+        const erreurs = resultats.length - lignesPretes.length;
+
+        document.getElementById('import-apercu').innerHTML =
+          '<div style="margin-bottom:4px;">' +
+            '<b>' + lignesPretes.length + '</b> ligne(s) valide(s)' +
+            (erreurs ? ' · <span style="color:var(--red)"><b>' + erreurs + '</b> en erreur</span>' : '') +
+            ' · fichier <span class="hint">' + escT(nomFichier) + '</span>' +
+          '</div>' + tableauApercu(resultats);
+
+        document.getElementById('import-actions').style.display = lignesPretes.length ? 'flex' : 'none';
+        document.getElementById('import-envoyer').textContent =
+          'Importer ' + lignesPretes.length + ' ligne' + (lignesPretes.length > 1 ? 's' : '');
+      } catch (err) {
+        document.getElementById('import-apercu').innerHTML = '';
+        showMsg('import-msg', 'Lecture impossible : ' + err.message, false);
+      }
+    }
+
+    function afficherRapport(rapport, statut) {
+      const box = document.getElementById('import-rapport');
+      if (!rapport || !rapport.length) {
+        box.innerHTML = '<div class="hint">Le bot n\'a renvoyé aucun détail.</div>';
+        return;
+      }
+      const ok = rapport.filter(r => r.ok).length;
+      const ko = rapport.length - ok;
+      box.innerHTML =
+        '<div class="bloc-t" style="margin-bottom:8px;">Rapport du bot</div>' +
+        '<div style="margin-bottom:6px;">' +
+          '<b style="color:var(--green)">' + ok + '</b> taxe(s) créée(s)' +
+          (ko ? ' · <b style="color:var(--red)">' + ko + '</b> refusée(s)' : '') +
+          (statut === 'erreur' ? ' · <span style="color:var(--red)">le bot a signalé un problème global</span>' : '') +
+        '</div>' +
+        (ko ? '<table class="vd-table"><thead><tr><th>Ligne</th><th>Motif du refus</th></tr></thead><tbody>' +
+          rapport.filter(r => !r.ok).map(r =>
+            '<tr><td>' + escT(r.ligne) + '</td><td style="color:var(--red)">' + escT(r.raison || 'non précisé') + '</td></tr>'
+          ).join('') + '</tbody></table>' : '') +
+        '<div class="hint" style="margin-top:10px;">Les taxes créées apparaîtront dans le tableau ci-dessus à la prochaine synchronisation (5 min maximum).</div>';
+    }
+
+    async function envoyer() {
+      if (!lignesPretes.length || !currentUser) return;
+      const bouton = document.getElementById('import-envoyer');
+      bouton.disabled = true; bouton.textContent = 'Envoi…';
+      hideMsg('import-msg');
+
+      const { data, error } = await sb.from('import_taxes')
+        .insert({ cree_par: currentUser.id, fichier: nomFichier, lignes: lignesPretes })
+        .select('id').single();
+
+      if (error) {
+        bouton.disabled = false; bouton.textContent = 'Importer les lignes valides';
+        showMsg('import-msg', 'Envoi impossible : ' + error.message, false);
+        return;
+      }
+
+      showMsg('import-msg', 'Demande envoyée. En attente du bot…', true);
+      document.getElementById('import-rapport').innerHTML = '<div class="hint">Le bot traite la demande…</div>';
+
+      // On écoute la ligne : le bot y écrira son rapport.
+      if (abonnement) sb.removeChannel(abonnement);
+      abonnement = sb.channel('import-' + data.id)
+        .on('postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'import_taxes', filter: 'id=eq.' + data.id },
+            payload => {
+              const l = payload.new;
+              if (l.statut === 'en_attente') return;
+              afficherRapport(l.rapport, l.statut);
+              showMsg('import-msg', 'Import terminé.', true);
+              bouton.disabled = false; bouton.textContent = 'Importer les lignes valides';
+              sb.removeChannel(abonnement); abonnement = null;
+            })
+        .subscribe();
+
+      // Filet de sécurité : si Realtime n'arrive pas, on relit la ligne.
+      let essais = 0;
+      const relance = setInterval(async () => {
+        if (!abonnement) { clearInterval(relance); return; }
+        if (++essais > 20) {   // 20 × 3 s = 1 minute
+          clearInterval(relance);
+          showMsg('import-msg', 'Le bot n\'a pas répondu en une minute. Les lignes restent en attente : il les traitera à son prochain démarrage.', false);
+          bouton.disabled = false; bouton.textContent = 'Importer les lignes valides';
+          return;
+        }
+        const { data: l } = await sb.from('import_taxes').select('statut,rapport').eq('id', data.id).maybeSingle();
+        if (l && l.statut !== 'en_attente') {
+          clearInterval(relance);
+          afficherRapport(l.rapport, l.statut);
+          showMsg('import-msg', 'Import terminé.', true);
+          bouton.disabled = false; bouton.textContent = 'Importer les lignes valides';
+          if (abonnement) { sb.removeChannel(abonnement); abonnement = null; }
+        }
+      }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const f = document.getElementById('import-fichier');
+      if (f) f.addEventListener('change', surFichier);
+      const b = document.getElementById('import-envoyer');
+      if (b) b.addEventListener('click', envoyer);
+    });
+  })();
+
+</script>
 </body>
 </html>

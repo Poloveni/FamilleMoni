@@ -21,6 +21,7 @@ exécute-les dans **cet ordre exact**, dans Supabase → SQL Editor.
 | 13 | `prix-drogues.sql` | Table des prix, modifiable depuis l'espace membre |
 | 14 | **`securite-2026-07.sql`** | **Correctifs de sécurité — à exécuter une fois** |
 | 15 | **`prix-drogues-2.sql`** | **Ajoute les produits manquants et un prix de départ (prix saisis à la main)** |
+| 16 | **`import-taxes.sql`** | **Boîte aux lettres site → bot pour l'import Excel + liste des types de taxe** |
 
 ## Règle pour la suite
 
