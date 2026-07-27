@@ -104,8 +104,12 @@
 
     /* ── ORGANIGRAMME ── */
     .organigramme { margin-top: 64px; }
-    .org-title { text-align: center; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 40px; }
-    .org-title em { color: var(--red); font-style: normal; }
+    .org-title {
+      text-align: center; margin-bottom: 40px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px; font-weight: 700; letter-spacing: 0.2px;
+    }
+    .org-title em { color: var(--red); font-style: italic; font-weight: 900; }
     .org-tree { display: flex; flex-direction: column; align-items: center; }
     .org-tier { display: flex; flex-direction: column; align-items: center; position: relative; }
     .org-tier + .org-tier { margin-top: 40px; }
@@ -312,7 +316,7 @@
     }
     .stat { padding: 28px; text-align: center; border-right: 1px solid var(--border); }
     .stat:last-child { border-right: none; }
-    .stat-num { font-size: 36px; font-weight: 600; color: var(--red); }
+    .stat-num { font-family: 'Playfair Display', Georgia, serif; font-size: 44px; font-weight: 700; letter-spacing: -1px; color: var(--red); line-height: 1; }
     .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
 
     section { padding: 80px 40px; }
@@ -320,10 +324,17 @@
       font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim);
       margin-bottom: 32px; display: flex; align-items: center; gap: 16px;
     }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .section-title { font-size: clamp(28px, 4vw, 40px); font-weight: 600; letter-spacing: -1px; margin-bottom: 12px; }
-    .section-title em { font-style: normal; color: var(--red); }
-    .section-desc { color: var(--text-muted); max-width: 500px; margin-bottom: 48px; }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border-strong), transparent);
+    }
+    .section-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(32px, 4.4vw, 46px); font-weight: 700;
+      letter-spacing: -0.5px; line-height: 1.12; margin-bottom: 14px;
+    }
+    .section-title em { font-style: italic; font-weight: 900; color: var(--red); }
+    .section-desc { color: var(--text-muted); max-width: 620px; margin-bottom: 48px; font-size: 15.5px; }
 
     #histoire { background: var(--surface); }
     .histoire-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
@@ -354,41 +365,71 @@
     .valeur-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
     #regles { background: var(--surface); }
-    .regles-list { display: flex; flex-direction: column; gap: 0; max-width: 700px; }
+    .regles-list { display: grid; grid-template-columns: 1fr; gap: 0 56px; max-width: 700px; }
+    @media (min-width: 1000px) {
+      .regles-list { grid-template-columns: 1fr 1fr; max-width: 1100px; }
+      /* En 2 colonnes, la dernière ligne de chaque colonne n'a plus de filet. */
+      .regle-item:nth-last-child(-n+2) { border-bottom: none; }
+    }
     .regle-item { display: flex; gap: 20px; align-items: flex-start; padding: 20px 0; border-bottom: 1px solid var(--border); }
     .regle-item:last-child { border-bottom: none; }
-    .regle-num { font-size: 11px; font-weight: 600; color: var(--red); min-width: 28px; padding-top: 2px; letter-spacing: 1px; }
+    .regle-num {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px; font-weight: 700; font-style: italic;
+      color: var(--red); min-width: 34px; padding-top: 1px; line-height: 1;
+      opacity: 0.85;
+    }
     .regle-item p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
     .regle-item strong { color: var(--text); font-weight: 600; }
 
     #membres { background: var(--bg); }
     .membres-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
     .membre-card {
-      background: var(--surface); border: 1px solid var(--border); padding: 24px 16px;
+      position: relative; overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border); padding: 26px 16px 22px;
       text-align: center; transition: border-color 0.35s ease, background 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
     }
-    .membre-card:hover {
-      border-color: var(--red); background: var(--surface2);
-      transform: translateY(-5px) scale(1.03);
-      box-shadow: 0 10px 28px rgba(192,57,43,0.2);
+    /* Liseré supérieur à la couleur du rang : lisible même en un coup d'œil rapide. */
+    .membre-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--rc, var(--red)); opacity: 0.55; transition: opacity 0.35s ease;
     }
-    .membre-card.chef:hover { box-shadow: 0 10px 28px rgba(192,57,43,0.4); }
+    .membre-card:hover::before { opacity: 1; }
+    .membre-card:hover {
+      border-color: color-mix(in srgb, var(--rc, var(--red)) 55%, transparent);
+      background: var(--surface2);
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 12px 30px color-mix(in srgb, var(--rc, var(--red)) 22%, transparent);
+    }
+    .membre-card.chef { background: linear-gradient(180deg, rgba(212,178,110,0.07), var(--surface)); }
+    .membre-card.chef:hover { box-shadow: 0 12px 32px rgba(212,178,110,0.28); }
     .avatar { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease; }
-    .membre-card:hover .avatar { transform: scale(1.1); box-shadow: 0 0 14px rgba(192,57,43,0.45); }
+    .membre-card:hover .avatar { transform: scale(1.1); box-shadow: 0 0 16px color-mix(in srgb, var(--rc, var(--red)) 50%, transparent); }
     .avatar {
-      width: 52px; height: 52px; border-radius: 50%; background: var(--surface2);
-      border: 2px solid var(--red); display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 12px; font-size: 14px; font-weight: 600; color: var(--red);
+      width: 54px; height: 54px; border-radius: 50%;
+      background: color-mix(in srgb, var(--rc, var(--red)) 14%, var(--surface2));
+      border: 2px solid var(--rc, var(--red));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+      color: var(--rc, var(--red));
       flex-shrink: 0;
     }
-    .membre-card.chef .avatar { border-color: #fff; color: #fff; }
+    /* La Donna : traitement or, comme dans l'organigramme et sa fiche. */
+    .membre-card.chef .avatar {
+      border-color: #d4b26e; color: #1a1206;
+      background: linear-gradient(160deg, #e6c887, #c39c52);
+      box-shadow: 0 0 0 4px rgba(212,178,110,0.14);
+    }
     .avatar { overflow: hidden; }
     .avatar-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
-    .membre-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .membre-name { font-size: 13.5px; font-weight: 600; margin-bottom: 5px; letter-spacing: 0.2px; }
     .membre-role { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
     .chef-badge {
       display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 2px 7px; background: var(--red-solid); color: #fff; margin-top: 6px;
+      padding: 3px 9px; margin-top: 7px; font-weight: 600;
+      background: linear-gradient(160deg, #e6c887, #c39c52); color: #1a1206;
     }
 
     /* ── HIÉRARCHIE ── */
@@ -399,29 +440,38 @@
     }
     .hierarchie-list { display: flex; flex-direction: column; gap: 2px; }
     .hierarchie-item {
-      display: flex; align-items: center; gap: 20px;
-      padding: 14px 20px; border: 1px solid var(--border);
-      background: var(--surface);
+      display: flex; align-items: center; gap: 18px;
+      padding: 15px 22px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--rc, var(--border-strong));
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--rc, #888) 9%, transparent), transparent 42%),
+        var(--surface);
       transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
       cursor: default;
     }
-    .hierarchie-item:hover { background: var(--surface2); border-color: var(--red); transform: translateX(6px); }
-    .rang-badge {
-      width: 36px; height: 36px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 600; letter-spacing: 1px;
-      border: 1px solid var(--border);
+    .hierarchie-item:hover {
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--rc, #888) 18%, transparent), transparent 52%),
+        var(--surface2);
+      border-color: var(--border-strong);
+      border-left-color: var(--rc, var(--red));
+      transform: translateX(6px);
     }
-    .rang-1 .rang-badge { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); }
-    .rang-2 .rang-badge { border-color: var(--red); color: var(--red); }
-    .rang-3 .rang-badge, .rang-4 .rang-badge { border-color: #c07a2b; color: #c07a2b; }
-    .rang-5 .rang-badge, .rang-6 .rang-badge { border-color: #5a7a2b; color: #5a7a2b; }
-    .rang-7 .rang-badge, .rang-8 .rang-badge, .rang-9 .rang-badge { border-color: var(--border-strong); color: var(--text-muted); }
-    .rang-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-    .rang-1 .rang-name { color: #fff; }
-    .rang-2 .rang-name { color: var(--red); }
-    .rang-3 .rang-name, .rang-4 .rang-name { color: #c07a2b; }
+    .rang-badge {
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+      border: 1px solid var(--rc, var(--border-strong));
+      color: var(--rc, var(--text-muted));
+      background: color-mix(in srgb, var(--rc, #888) 12%, transparent);
+    }
+    .rang-name { font-size: 14.5px; font-weight: 600; margin-bottom: 2px; color: var(--rc, var(--text)); }
     .rang-desc { font-size: 12px; color: var(--text-dim); }
+    /* Les paliers du bas s'effacent doucement : la hiérarchie se lit d'un coup d'œil. */
+    .hierarchie-item { opacity: 1; }
+    .hierarchie-item.pal-7, .hierarchie-item.pal-8, .hierarchie-item.pal-9 { opacity: 0.88; }
 
     #recrutement { background: var(--surface); }
     .recrutement-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
@@ -452,6 +502,9 @@
     }
 
     .galerie-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    /* Tant qu'il y a peu de photos, elles s'étalent au lieu de laisser un grand vide. */
+    .galerie-grid:has(.galerie-item:only-child) { grid-template-columns: 1fr; max-width: 900px; margin: 0 auto; }
+    .galerie-grid:has(.galerie-item:nth-child(2):last-child) { grid-template-columns: repeat(2, 1fr); }
     .galerie-item {
       position: relative; overflow: hidden; aspect-ratio: 16/9;
       background: var(--surface); border: 1px solid var(--border); cursor: pointer;
@@ -990,13 +1043,13 @@
 
   <!-- HIÉRARCHIE -->
   <div class="hierarchie-section reveal">
-    <div class="hierarchie-title">Hiérarchie</div>
+    <h3 class="hierarchie-title">Hiérarchie</h3>
     <div class="hierarchie-list" id="hierarchie-list"></div>
   </div>
 
   <!-- ORGANIGRAMME -->
   <div class="organigramme reveal" id="organigramme">
-    <div class="org-title">L'organigramme de la <em>famille</em></div>
+    <h3 class="org-title">L'organigramme de la <em>famille</em></h3>
     <div class="org-tree" id="org-tree"></div>
   </div>
 
@@ -1196,7 +1249,11 @@
     if (hier) {
       var romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
       hier.innerHTML = RANGS.map(function (r, i) {
-        return '<div class="hierarchie-item rang-' + (i + 1) + '"><div class="rang-badge">' + romans[i] + '</div>' +
+        // La Donna garde l'or ; les autres paliers prennent la couleur définie
+        // dans supabase-config.js — une seule source de vérité pour les couleurs.
+        var rc = (r.nom === 'La Donna') ? '#d4b26e' : (r.color || '#8e8e8e');
+        return '<div class="hierarchie-item rang-' + (i + 1) + ' pal-' + (i + 1) + '" style="--rc:' + rc + '">' +
+          '<div class="rang-badge">' + romans[i] + '</div>' +
           '<div class="rang-info"><div class="rang-name">' + escHTML(r.nom) + '</div><div class="rang-desc">' + escHTML(r.desc) + '</div></div></div>';
       }).join('');
     }
@@ -1211,8 +1268,11 @@
       grid.innerHTML = sorted.map(function (m) {
         var chef = m.rang === 'La Donna';
         var r = RANGS[rangIndex[m.rang]] || {};
-        var color = chef ? '#ffffff' : (r.color || '#777777');
+        // Or pour La Donna, couleur du rang pour les autres. La variable --rc
+        // pilote le cercle, le liseré et le halo au survol : une seule valeur.
+        var color = chef ? '#d4b26e' : (r.color || '#8e8e8e');
         return '<div class="membre-card' + (chef ? ' chef' : '') + '" data-nom="' + escHTML(m.nom) + '"' +
+          ' style="--rc:' + color + '"' +
           ' role="button" tabindex="0" aria-label="Voir la fiche de ' + escHTML(m.nom) + '">' +
           '<div class="avatar">' + initials(m.nom) + '</div>' +
           '<div class="membre-name">' + escHTML(m.nom) + '</div>' +
