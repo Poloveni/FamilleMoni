@@ -1801,9 +1801,10 @@
       const c = cours[item];
       prix[item] = { valeur: ((c.prix_actuel_min || 0) + (c.prix_actuel_max || 0)) / 2, source: 'cours' };
     });
-    (prixManuels || []).forEach(r => {
-      if (!prix[r.item] && Number(r.prix) > 0) prix[r.item] = { valeur: Number(r.prix), source: 'ton prix' };
-    });
+    // Volontairement : aucun repli sur le prix d'achat. Un produit que le bot
+    // n'a pas encore relevé n'apparaît pas ici, plutôt que d'afficher un gain
+    // de revente calculé sur ce que la famille a payé.
+    void prixManuels;
     const produits = Object.keys(prix);
     if (!produits.length) { bloc.style.display = 'none'; return; }
 
@@ -1880,7 +1881,7 @@
     bloc.style.display = '';
     box.innerHTML = sections +
       '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
-        'Prix de base = dernier relevé du bot (médiane de la fourchette). ' +
+        'Prix de base = prix de vente au PNJ relevé par le bot (médiane de la fourchette). ' +
         'Les bonus sont <b>additionnés</b> puis appliqués au prix. ' +
         'Le détail est affiché sous chaque pourcentage : si le résultat ne correspond pas à ce que tu constates en jeu, dis-le moi et j\'ajuste la règle.' +
       '</div>';
@@ -2016,8 +2017,8 @@
     let totalValeur = 0;
     box.innerHTML =
       '<table class="vd-table prix-table"><thead><tr>' +
-      '<th>Produit</th><th class="num ref">Cours du bot</th>' +
-      '<th class="num">Ton prix / unité</th><th class="num">Stock au coffre</th><th class="num">Valeur du stock</th>' +
+      '<th>Produit</th><th class="num ref">Prix de vente au PNJ</th>' +
+      '<th class="num">Prix d\'achat</th><th class="num">Stock au coffre</th><th class="num">Valeur du stock</th>' +
       '</tr></thead><tbody>' +
       rows.map(r => {
         const stock = st[r.item] || 0;
@@ -2030,10 +2031,6 @@
         let ref = '—', ecart = '';
         if (c) {
           ref = fmtArgent(c.prix_actuel_min) + ' – ' + fmtArgent(c.prix_actuel_max);
-          const tien = Number(r.prix) || 0;
-          if (tien > 0 && (tien < c.prix_actuel_min || tien > c.prix_actuel_max)) {
-            ecart = ' <span title="Ton prix sort de la fourchette relevée par le bot" style="color:var(--amber)">≠</span>';
-          }
         } else if (Number(r.base_max) > 0) {
           ref = '<span title="Prix de base officiel — le bot n\'a pas encore relevé ce produit">' +
                 fmtArgent(r.base_min) + ' – ' + fmtArgent(r.base_max) + '</span>';
@@ -2053,9 +2050,10 @@
       '<td class="num" style="color:var(--green);font-weight:700;font-size:15px;">' + fmtArgent(Math.round(totalValeur)) + '</td></tr>' +
       '</tbody></table>' +
       '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
-        'La colonne <b>Cours du bot</b> est le dernier relevé automatique, en lecture seule. ' +
-        'C\'est <b>ton prix</b> qui est appliqué et qui sert au calcul de la valeur du coffre. ' +
-        'Un <span style="color:var(--amber)">≠</span> signale simplement que ta valeur sort de la fourchette relevée.' +
+        '<b>Prix de vente au PNJ</b> : le dernier relevé automatique du bot, en lecture seule — ' +
+        'ce que rapporte une unité revendue en jeu. ' +
+        '<b>Prix d\'achat</b> : ce que la famille paie l\'unité, saisi par la Donna. ' +
+        'La valeur du stock est calculée sur le prix d\'achat.' +
       '</div>' +
       (estAdmin
         ? '<button class="btn green" style="margin-top:16px;" onclick="savePrix()">Enregistrer les prix</button><div class="msg" id="prix-msg"></div>'
