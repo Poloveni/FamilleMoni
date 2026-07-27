@@ -46,6 +46,11 @@
       letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 10px; cursor: pointer;
       font-family: 'Inter', sans-serif; font-weight: 600; transition: background 0.2s, transform 0.2s;
     }
+    .btn.discord { background: #5865F2; display: flex; align-items: center; justify-content: center; }
+    .btn.discord:hover { background: #4752c4; }
+    .auth-sep { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; }
+    .auth-sep::before, .auth-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .auth-sep span { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
     .switch { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
     .switch a { color: var(--red); cursor: pointer; text-decoration: none; }
     .msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; border-radius: 8px; display: none; }
@@ -359,6 +364,16 @@
 
     <button class="btn" id="auth-btn" onclick="doAuth()">Se connecter</button>
     <div class="msg" id="auth-msg"></div>
+
+    <div class="auth-sep"><span>ou</span></div>
+    <button type="button" class="btn discord" onclick="connexionDiscord()">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:18px;height:18px;vertical-align:-4px;margin-right:8px;">
+        <path d="M20.3 4.5A19.8 19.8 0 0 0 15.4 3l-.25.5a18.3 18.3 0 0 1 4.3 1.4 15.6 15.6 0 0 0-12.9 0A18.3 18.3 0 0 1 10.85 3.5L10.6 3a19.8 19.8 0 0 0-4.9 1.5C2.6 9.1 1.8 13.6 2.2 18a19.9 19.9 0 0 0 6 3l1.2-1.7a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1L19.8 21a19.9 19.9 0 0 0 6-3c.5-5.1-.8-9.5-3.5-13.5zM9.7 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm6.6 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/>
+      </svg>Se connecter avec Discord
+    </button>
+    <p class="hint" style="margin-top:10px;line-height:1.6;">
+      Recommandé : c'est ce qui permet au site de reconnaître ton rôle sur le serveur Discord.
+    </p>
 
     <div class="switch" id="auth-switch">
       Pas encore de compte ? <button type="button" class="lien" onclick="setMode('signup')">Créer un compte</button>
@@ -749,6 +764,21 @@
     }
   }
 
+  async function connexionDiscord() {
+    hideMsg('auth-msg');
+    // redirectTo doit figurer dans Supabase → Authentication → URL Configuration
+    // → Redirect URLs, sinon Supabase refuse le retour.
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'discord',
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    });
+    if (error) {
+      showMsg('auth-msg',
+        'Connexion Discord indisponible : ' + error.message +
+        ' — vérifie que le fournisseur Discord est activé dans Supabase.', false);
+    }
+  }
+
   async function doLogout() {
     await sb.auth.signOut();
     currentUser = null;
@@ -782,13 +812,19 @@
     // Lien Panel admin : visible uniquement pour l'administratrice
     const sbAdmin = document.getElementById('sb-admin');
     if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
-    // Qui voit l'outil d'import : la liste est dans supabase-config.js.
-    // (La base refuse de toute façon le dépôt à quiconque n'y est pas
-    //  autorisé : ce test n'est qu'un confort d'affichage, pas une protection.)
-    const autorises = window.MONI_IMPORT_TAXES || ['syne@live.fr'];
-    const peutImporter = autorises.indexOf(user.email) !== -1;
+    // Qui voit l'outil d'import : on demande à la base, qui applique
+    // exactement la même fonction que ses règles de sécurité. Une seule
+    // implémentation, donc aucun risque que l'affichage et l'autorisation
+    // réelle divergent. Et ce test n'est qu'un confort : même en le
+    // contournant dans le navigateur, la base refuserait le dépôt.
     const blocImport = document.getElementById('bloc-import-taxes');
-    if (blocImport) blocImport.style.display = peutImporter ? '' : 'none';
+    if (blocImport) {
+      blocImport.style.display = 'none';
+      sb.rpc('peut_importer_taxes').then(({ data, error }) => {
+        if (error) { console.warn('[import] vérification impossible :', error.message); return; }
+        blocImport.style.display = data === true ? '' : 'none';
+      });
+    }
 
     // Un seul aller-retour : on écrit et on relit la colonne dans la même requête.
     const { data: compte } = await sb.from('comptes')
