@@ -82,10 +82,22 @@ create policy "Admin lit ses imports" on public.import_taxes for select to authe
 
 -- ── Realtime : le bot est prévenu à l'instant du dépôt ───────────────────
 --    (sans ça, il faudrait qu'il interroge la table en boucle)
-alter publication supabase_realtime add table public.import_taxes;
-
--- Si la ligne ci-dessus renvoie « is already member of publication »,
--- c'est déjà fait : ignore l'erreur, tout va bien.
+--
+--    On vérifie avant d'ajouter : l'éditeur SQL de Supabase exécute tout
+--    le fichier dans UNE SEULE transaction. Un « already member of
+--    publication » annulerait donc l'intégralité du script, y compris les
+--    autorisations plus bas.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'import_taxes'
+  ) then
+    alter publication supabase_realtime add table public.import_taxes;
+  end if;
+end $$;
 
 
 -- ══════════════════════════════════════════════════════════════════════════
