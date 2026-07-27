@@ -156,6 +156,23 @@
       font-size: 10.5px; color: var(--dim); line-height: 1.5;
     }
 
+
+    /* ── OÙ VENDRE ───────────────────────────────────────────────────── */
+    .ouv-table td { vertical-align: top; }
+    .ouv-table .ouv-top { background: rgba(46,204,113,.05); }
+    .ouv-gain { display: block; color: var(--green); font-weight: 600; font-size: 12.5px; }
+    .ouv-detail { display: block; font-size: 10.5px; line-height: 1.5; margin-top: 2px; }
+    @media (max-width: 900px) { .ouv-table { display: block; overflow-x: auto; } }
+
+    /* ── ZONES SANS BONUS ────────────────────────────────────────────── */
+    .zone-vides { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .zone-vides summary { font-size: 11.5px; color: var(--dim); cursor: pointer; }
+    .zone-vides-liste { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .zone-vides-liste span {
+      font-size: 11px; color: var(--dim); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 10px;
+    }
+
     /* ── ZONES ET BONUS ─────────────────────────────────────────────────── */
     .zone-cat {
       font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
@@ -485,6 +502,12 @@
       <div class="bloc">
         <div class="bloc-t">Tes prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
         <div id="bd-prix"><div class="locked">Chargement…</div></div>
+      </div>
+
+      <!-- OÙ VENDRE — croisement du cours et des bonus de zone -->
+      <div class="bloc" id="bloc-ouvendre" style="display:none;">
+        <div class="bloc-t">Où vendre <span class="hint" id="ouvendre-note" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div id="bd-ouvendre"></div>
       </div>
 
       <!-- LES ZONES — bonus par secteur -->
@@ -1739,6 +1762,132 @@
       }).join('') + '</div>';
   }
 
+
+  /* ══════════════════════════════════════════════════════════════════════
+     OÙ VENDRE — croisement du cours et des bonus de zone
+
+     Pour chaque drogue et chaque catégorie de vente, on cherche la zone qui
+     rapporte le plus. Les catégories (gang_organisation, petite_frappe) sont
+     traitées séparément : ce sont deux contextes de vente différents, les
+     mélanger n'aurait aucun sens.
+
+     RÈGLE DE CUMUL : les bonus s'ADDITIONNENT.
+       prix final = prix du cours × (1 + somme des bonus)
+     C'est la lecture la plus directe de la note du serveur (« +10% de zone,
+     +10% sur le tranq »). Le détail du calcul est affiché sur chaque ligne
+     pour que tu puisses le vérifier en jeu en un coup d'œil.
+     Si le serveur multiplie les bonus au lieu de les additionner, il n'y a
+     qu'à passer CUMUL_ADDITIF à false ci-dessous : tout se recalcule.
+     ══════════════════════════════════════════════════════════════════════ */
+  const CUMUL_ADDITIF = true;
+
+  // Comparaison de noms tolérante : accents, casse et tirets ignorés.
+  // « Meth bleue », « meth-bleue » et « METH BLEUE » désignent la même chose.
+  function memeProduit(a, b) {
+    const n = t => String(t == null ? '' : t).toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ').trim();
+    return n(a) === n(b);
+  }
+
+  function rendreOuVendre(zones, cours, prixManuels) {
+    const bloc = document.getElementById('bloc-ouvendre');
+    const box = document.getElementById('bd-ouvendre');
+    if (!zones.length) { bloc.style.display = 'none'; return; }
+
+    // Prix de référence par produit : le cours du bot, sinon ton prix saisi.
+    const prix = {};
+    Object.keys(cours).forEach(item => {
+      const c = cours[item];
+      prix[item] = { valeur: ((c.prix_actuel_min || 0) + (c.prix_actuel_max || 0)) / 2, source: 'cours' };
+    });
+    (prixManuels || []).forEach(r => {
+      if (!prix[r.item] && Number(r.prix) > 0) prix[r.item] = { valeur: Number(r.prix), source: 'ton prix' };
+    });
+    const produits = Object.keys(prix);
+    if (!produits.length) { bloc.style.display = 'none'; return; }
+
+    const parCat = {};
+    zones.forEach(z => { (parCat[z.categorie] = parCat[z.categorie] || []).push(z); });
+
+    // Le gain d'une zone pour un produit donné, et son détail lisible.
+    function gain(z, item) {
+      const parts = [], pcts = [];
+      const ajoute = (v, texte) => { if (v) { pcts.push(Number(v)); parts.push(texte); } };
+      ajoute(z.bonus_all_drogues_pct, (Number(z.bonus_all_drogues_pct) > 0 ? '+' : '') + z.bonus_all_drogues_pct + ' % toutes drogues');
+      ajoute(z.bonus_zone_pct,        (Number(z.bonus_zone_pct) > 0 ? '+' : '') + z.bonus_zone_pct + ' % zone');
+      if (z.drogue_associee && memeProduit(z.drogue_associee, item)) {
+        ajoute(z.bonus_drogue_associee_pct, (Number(z.bonus_drogue_associee_pct) > 0 ? '+' : '') + z.bonus_drogue_associee_pct + ' % ' + cap(z.drogue_associee));
+      }
+      if (z.bonus_nord) ajoute(z.bonus_nord_valeur, (Number(z.bonus_nord_valeur) > 0 ? '+' : '') + (z.bonus_nord_valeur || 0) + ' % Nord');
+
+      // Additif : 10 % + 10 % = 20 %.  Multiplicatif : 1,10 × 1,10 = 21 %.
+      const facteur = CUMUL_ADDITIF
+        ? 1 + pcts.reduce((t, v) => t + v, 0) / 100
+        : pcts.reduce((t, v) => t * (1 + v / 100), 1);
+      return { total: Math.round((facteur - 1) * 1000) / 10, facteur: facteur, detail: parts };
+    }
+
+    const sections = Object.keys(parCat).sort().map(cat => {
+      const lignes = produits.map(item => {
+        const classees = parCat[cat]
+          .map(z => ({ zone: z, g: gain(z, item) }))
+          .sort((a, b) => (b.g.total - a.g.total) || String(a.zone.zone).localeCompare(String(b.zone.zone)));
+        const meilleur = classees[0];
+        if (!meilleur || meilleur.g.total <= 0) return null;
+        const base = prix[item].valeur;
+        const second = classees.find(c => c.g.total < meilleur.g.total);
+        // Plusieurs zones peuvent rapporter autant avec des bonus DIFFÉRENTS.
+        // On n'en nomme qu'une — celle dont le détail est affiché — et on
+        // signale les autres à part, sinon le calcul montré serait faux
+        // pour toutes sauf une.
+        const exaequo = classees
+          .filter(c => c.g.total === meilleur.g.total && c.zone !== meilleur.zone)
+          .map(c => c.zone.zone);
+        return {
+          item: item, base: base, source: prix[item].source,
+          zone: meilleur.zone.zone, exaequo: exaequo, gain: meilleur.g,
+          final: base * meilleur.g.facteur,
+          ecart: second ? base * meilleur.g.facteur - base * second.g.facteur : 0,
+        };
+      }).filter(Boolean).sort((a, b) => b.final - a.final);
+
+      if (!lignes.length) return '';
+      return '<div class="zone-cat">' + escT(cap(String(cat).replace(/_/g, ' '))) + '</div>' +
+        '<table class="vd-table ouv-table"><thead><tr>' +
+        '<th>Drogue</th><th>Meilleure zone</th><th>Bonus</th>' +
+        '<th class="num">Prix de base</th><th class="num">Prix sur zone</th>' +
+        '</tr></thead><tbody>' +
+        lignes.map((l, i) =>
+          '<tr' + (i === 0 ? ' class="ouv-top"' : '') + '>' +
+            '<td><b>' + escT(cap(l.item)) + '</b></td>' +
+            '<td><b>' + escT(l.zone) + '</b>' +
+              (l.exaequo.length
+                ? '<span class="hint ouv-detail" title="' + escT(l.exaequo.join(', ')) + '">et ' + l.exaequo.length +
+                  ' autre' + (l.exaequo.length > 1 ? 's' : '') + ' à égalité</span>'
+                : '') +
+              (l.ecart > 0 ? '<span class="hint ouv-detail">+' + fmtArgent(Math.round(l.ecart)) + ' vs la zone suivante</span>' : '') +
+            '</td>' +
+            '<td><span class="ouv-gain">+' + l.gain.total + ' %</span>' +
+              '<span class="hint ouv-detail">' + escT(l.gain.detail.join(' · ')) + '</span></td>' +
+            '<td class="num ref">' + fmtArgent(Math.round(l.base)) + '</td>' +
+            '<td class="num"><b style="color:var(--green)">' + fmtArgent(Math.round(l.final)) + '</b></td>' +
+          '</tr>').join('') +
+        '</tbody></table>';
+    }).filter(Boolean).join('');
+
+    if (!sections) { bloc.style.display = 'none'; return; }
+    bloc.style.display = '';
+    box.innerHTML = sections +
+      '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
+        'Prix de base = dernier relevé du bot (médiane de la fourchette). ' +
+        'Les bonus sont <b>additionnés</b> puis appliqués au prix. ' +
+        'Le détail est affiché sous chaque pourcentage : si le résultat ne correspond pas à ce que tu constates en jeu, dis-le moi et j\'ajuste la règle.' +
+      '</div>';
+    const note = document.getElementById('ouvendre-note');
+    if (note) note.textContent = ' · calculé sur le dernier cours et les bonus en cours';
+  }
+
   function rendreZones(lignes) {
     const bloc = document.getElementById('bloc-zones');
     const box = document.getElementById('bd-zones');
@@ -1767,10 +1916,17 @@
     const parCat = {};
     zones.forEach(z => { (parCat[z.categorie] = parCat[z.categorie] || []).push(z); });
 
+    // Une zone sans le moindre bonus n'apporte rien : elle prenait pourtant
+    // autant de place que les autres. On les regroupe en fin de liste.
+    const aDuBonus = z => !!(z.bonus_all_drogues_pct || z.bonus_zone_pct ||
+      (z.bonus_drogue_associee_pct && z.drogue_associee) || z.bonus_nord);
+    const sansBonus = zones.filter(z => !aDuBonus(z));
+
     box.innerHTML = Object.keys(parCat).sort().map(cat =>
-      '<div class="zone-cat">' + escT(cap(cat)) + '</div>' +
+      parCat[cat].filter(aDuBonus).length === 0 ? '' :
+      '<div class="zone-cat">' + escT(cap(String(cat).replace(/_/g, ' '))) + '</div>' +
       '<div class="zone-grille">' +
-      parCat[cat].sort((a, b) => String(a.zone).localeCompare(String(b.zone))).map(z => {
+      parCat[cat].filter(aDuBonus).sort((a, b) => String(a.zone).localeCompare(String(b.zone))).map(z => {
         const puces = [];
         if (z.bonus_all_drogues_pct) puces.push('<span class="zone-puce all">' + pct(z.bonus_all_drogues_pct) + ' sur toutes les drogues</span>');
         if (z.bonus_zone_pct) puces.push('<span class="zone-puce">' + pct(z.bonus_zone_pct) + ' de zone</span>');
@@ -1778,8 +1934,11 @@
           puces.push('<span class="zone-puce assoc">' + pct(z.bonus_drogue_associee_pct) + ' sur ' + escT(cap(z.drogue_associee)) + '</span>');
         }
         if (z.bonus_nord) {
-          puces.push('<span class="zone-puce nord">Nord' +
-            (z.bonus_nord_valeur ? ' · ' + fmtArgent(z.bonus_nord_valeur) : '') + '</span>');
+          // bonus_nord_valeur est un POURCENTAGE, comme les autres bonus de zone.
+          // (Sa valeur est constante à 10 sur toutes les zones concernées, alors
+          //  que le bonus de zone varie : c'est le +10 % du nord de la carte.)
+          puces.push('<span class="zone-puce nord">' +
+            (z.bonus_nord_valeur ? pct(z.bonus_nord_valeur) + ' Nord' : 'Zone Nord') + '</span>');
         }
         return '<div class="zone-carte">' +
           '<div class="zone-nom">' + escT(z.zone) + '</div>' +
@@ -1788,7 +1947,15 @@
           (z.texte_brut ? '<details class="zone-brut"><summary>Texte du serveur</summary><p>' + escT(z.texte_brut) + '</p></details>' : '') +
         '</div>';
       }).join('') + '</div>'
-    ).join('');
+    ).join('') +
+    (sansBonus.length
+      ? '<details class="zone-vides"><summary>' + sansBonus.length +
+        ' zone' + (sansBonus.length > 1 ? 's' : '') + ' sans bonus actif</summary>' +
+        '<div class="zone-vides-liste">' +
+        sansBonus.sort((a, b) => String(a.zone).localeCompare(String(b.zone)))
+          .map(z => '<span>' + escT(z.zone) + '</span>').join('') +
+        '</div></details>'
+      : '');
   }
 
   async function loadPrix() {
@@ -1830,6 +1997,17 @@
       const c = cours[r.item];
       if (!c || r.ts > c.ts || (r.ts === c.ts && (r.id || 0) > (c.id || 0))) cours[r.item] = r;
     });
+
+    // Le croisement cours × zones a besoin des deux : on l'appelle ici.
+    if (!zonesQ.error && !bourseQ.error) {
+      const derniereZone = {};
+      (zonesQ.data || []).forEach(z => {
+        const cle = z.categorie + '§' + z.zone;
+        const d = derniereZone[cle];
+        if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniereZone[cle] = z;
+      });
+      rendreOuVendre(Object.values(derniereZone), cours, rows);
+    }
 
     const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
     const majEl = document.getElementById('prix-maj');
