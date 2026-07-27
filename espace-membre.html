@@ -436,7 +436,11 @@
           Le fichier est lu ici, dans ton navigateur — rien n'est envoyé tant que tu n'as pas confirmé.
         </p>
 
-        <input type="file" id="import-fichier" accept=".xlsx,.xls" style="margin-bottom:12px;" />
+        <div class="file-row" style="margin-top:0;margin-bottom:12px;">
+          <label class="file-label" for="import-fichier">Choisir un fichier Excel</label>
+          <input type="file" id="import-fichier" accept=".xlsx,.xls" />
+          <span class="hint" id="import-nom-fichier"></span>
+        </div>
         <div id="import-apercu"></div>
         <div id="import-actions" style="display:none;margin-top:14px;gap:10px;flex-wrap:wrap;">
           <button class="btn green" id="import-envoyer" type="button" style="width:auto;padding:12px 24px;">Importer les lignes valides</button>
@@ -1782,6 +1786,7 @@
     window.importReset = function () {
       lignesPretes = []; nomFichier = '';
       const f = document.getElementById('import-fichier'); if (f) f.value = '';
+      const et = document.getElementById('import-nom-fichier'); if (et) et.textContent = '';
       document.getElementById('import-apercu').innerHTML = '';
       document.getElementById('import-actions').style.display = 'none';
       document.getElementById('import-rapport').innerHTML = '';
@@ -1793,6 +1798,8 @@
       const fichier = e.target.files && e.target.files[0];
       if (!fichier) return;
       nomFichier = fichier.name;
+      const etiquette = document.getElementById('import-nom-fichier');
+      if (etiquette) etiquette.textContent = nomFichier;
       hideMsg('import-msg');
       document.getElementById('import-rapport').innerHTML = '';
       document.getElementById('import-apercu').innerHTML = '<div class="hint">Lecture du fichier…</div>';
