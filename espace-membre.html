@@ -118,6 +118,69 @@
     .leg b { color: var(--text); margin-left: auto; font-weight: 600; }
 
     /* Tables */
+
+    /* ── LE COURS DES DROGUES ────────────────────────────────────────────
+       Une carte par produit, façon tableau de cotation : le prix domine,
+       la variation et la courbe l'accompagnent, le détail reste discret. */
+    .bourse-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 12px; }
+    .bourse-carte {
+      background: var(--panel2); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 18px 14px; position: relative; overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .bourse-carte:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .bourse-carte.top { border-color: rgba(212,178,110,.45); background: linear-gradient(180deg, rgba(212,178,110,.07), var(--panel2)); }
+    .bourse-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .bourse-rang {
+      display: inline-block; min-width: 18px; margin-right: 8px;
+      font-family: 'Playfair Display', Georgia, serif; font-size: 13px; font-weight: 700;
+      color: var(--dim);
+    }
+    .bourse-nom { font-size: 13px; font-weight: 600; letter-spacing: .2px; }
+    .bourse-badge {
+      font-size: 8.5px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600;
+      color: #1a1206; background: linear-gradient(160deg, #e6c887, #c39c52);
+      padding: 3px 8px; border-radius: 20px; white-space: nowrap;
+    }
+    .bourse-prix {
+      font-family: 'Playfair Display', Georgia, serif; font-size: 23px; font-weight: 700;
+      color: var(--gold); line-height: 1.1; letter-spacing: -.5px; white-space: nowrap;
+    }
+    .bourse-tiret { color: var(--dim); font-size: 17px; }
+    .bourse-bas { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 10px; }
+    .bourse-var { font-size: 11.5px; font-weight: 600; line-height: 1.4; }
+    .bourse-var .hint { display: block; font-weight: 400; font-size: 10px; }
+    .bourse-courbe { flex-shrink: 0; opacity: .9; }
+    .bourse-detail {
+      margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+      font-size: 10.5px; color: var(--dim); line-height: 1.5;
+    }
+
+    /* ── ZONES ET BONUS ─────────────────────────────────────────────────── */
+    .zone-cat {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--dim); margin: 18px 0 10px;
+    }
+    .zone-cat:first-child { margin-top: 0; }
+    .zone-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+    .zone-carte { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .zone-nom { font-size: 13px; font-weight: 600; margin-bottom: 9px; }
+    .zone-puces { display: flex; flex-wrap: wrap; gap: 6px; }
+    .zone-puce {
+      font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted); white-space: nowrap;
+    }
+    .zone-puce.all   { border-color: rgba(46,204,113,.4);  color: var(--green); background: rgba(46,204,113,.08); }
+    .zone-puce.assoc { border-color: rgba(212,178,110,.4); color: var(--gold);  background: rgba(212,178,110,.08); }
+    .zone-puce.nord  { border-color: rgba(88,101,242,.4);  color: var(--blue);  background: rgba(88,101,242,.08); }
+    .zone-brut { margin-top: 10px; }
+    .zone-brut summary { font-size: 10.5px; color: var(--dim); cursor: pointer; }
+    .zone-brut p { font-size: 11.5px; color: var(--muted); line-height: 1.6; margin-top: 7px; white-space: pre-line; }
+
+    @media (max-width: 560px) {
+      .bourse-grille, .zone-grille { grid-template-columns: 1fr; }
+    }
+
     .prix-table th.num, .prix-table td.num { text-align: right; white-space: nowrap; }
     .prix-table .ref { color: var(--dim); font-size: 13px; }
     .prix-table td:first-child { white-space: nowrap; }
@@ -412,9 +475,22 @@
 
     <!-- PRIX DES DROGUES -->
     <div class="panel" id="panel-prix">
+      <!-- LE COURS — données du bot, horodatées : on peut montrer l'évolution -->
       <div class="bloc">
-        <div class="bloc-t">Prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div class="bloc-t">Le cours des drogues <span class="hint" id="bourse-maj" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div id="bd-bourse"><div class="locked">Chargement…</div></div>
+      </div>
+
+      <!-- TES PRIX — saisie manuelle, sert au calcul de la valeur du coffre -->
+      <div class="bloc">
+        <div class="bloc-t">Tes prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
         <div id="bd-prix"><div class="locked">Chargement…</div></div>
+      </div>
+
+      <!-- LES ZONES — bonus par secteur -->
+      <div class="bloc" id="bloc-zones" style="display:none;">
+        <div class="bloc-t">Zones et bonus <span class="hint" id="zones-maj" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div id="bd-zones"></div>
       </div>
     </div>
 
@@ -1545,14 +1621,199 @@
   })();
 
   // ── PRIX DES DROGUES (lecture : famille · édition : admin) ──
+  /* ══════════════════════════════════════════════════════════════════════
+     LE COURS DES DROGUES
+
+     bot_drogue_bourse n'est pas un état, c'est un HISTORIQUE horodaté :
+     une ligne par relevé et par produit. On peut donc afficher un vrai
+     cours — prix du moment, variation depuis le relevé précédent, et la
+     courbe des dernières semaines.
+
+     bot_zone_bonus donne les bonus par secteur. On les affiche fidèlement,
+     sans inventer de règle de cumul.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  // Petite courbe en SVG. Pas de canvas : il y en a une par produit, et le
+  // SVG reste net à tous les zooms sans gérer les écrans Retina.
+  function courbe(valeurs, couleur, l, h) {
+    l = l || 108; h = h || 30;
+    if (!valeurs || valeurs.length < 2) return '<svg width="' + l + '" height="' + h + '"></svg>';
+    const min = Math.min.apply(null, valeurs), max = Math.max.apply(null, valeurs);
+    const amp = (max - min) || 1;
+    const pas = l / (valeurs.length - 1);
+    const pts = valeurs.map((v, i) => [
+      (i * pas).toFixed(1),
+      (h - 3 - ((v - min) / amp) * (h - 6)).toFixed(1)
+    ]);
+    const ligne = pts.map(p => p.join(',')).join(' ');
+    const aire = 'M0,' + h + ' L' + ligne.replace(/ /g, ' L') + ' L' + l + ',' + h + ' Z';
+    const id = 'g' + Math.abs(valeurs[0] * 7 + valeurs.length * 13 + l);
+    return '<svg width="' + l + '" height="' + h + '" viewBox="0 0 ' + l + ' ' + h + '" aria-hidden="true" style="display:block">' +
+      '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="' + couleur + '" stop-opacity=".35"/>' +
+        '<stop offset="100%" stop-color="' + couleur + '" stop-opacity="0"/>' +
+      '</linearGradient></defs>' +
+      '<path d="' + aire + '" fill="url(#' + id + ')"/>' +
+      '<polyline points="' + ligne + '" fill="none" stroke="' + couleur + '" stroke-width="1.6" ' +
+        'stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + pts[pts.length - 1][0] + '" cy="' + pts[pts.length - 1][1] + '" r="2.4" fill="' + couleur + '"/>' +
+    '</svg>';
+  }
+
+  function rendreBourse(lignes) {
+    const box = document.getElementById('bd-bourse');
+    const majEl = document.getElementById('bourse-maj');
+    if (!lignes || !lignes.length) {
+      box.innerHTML = '<div class="locked">En attente du premier relevé du bot — la table <code>bot_drogue_bourse</code> est vide.</div>';
+      return;
+    }
+
+    // Un historique par produit, dans l'ordre chronologique.
+    const parItem = {};
+    lignes.forEach(r => { (parItem[r.item] = parItem[r.item] || []).push(r); });
+    // Tri stable : à horodatage égal, l'id du bot (croissant) départage.
+    const plusRecent = (a, b) => (new Date(a.ts) - new Date(b.ts)) || ((a.id || 0) - (b.id || 0));
+    Object.keys(parItem).forEach(k => parItem[k].sort(plusRecent));
+
+    const dernierTs = lignes.reduce((m, r) => (!m || r.ts > m) ? r.ts : m, null);
+    void plusRecent;
+    if (majEl && dernierTs) {
+      majEl.textContent = ' · relevé du ' + new Date(dernierTs).toLocaleDateString('fr-FR',
+        { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+
+    const median = r => ((r.prix_actuel_min || 0) + (r.prix_actuel_max || 0)) / 2;
+
+    const produits = Object.keys(parItem).map(item => {
+      const hist = parItem[item];
+      const actuel = hist[hist.length - 1];
+      // Variation : on remonte jusqu'au dernier relevé d'un prix DIFFÉRENT.
+      // Comparer au relevé précédent afficherait « 0 » dès que le bot
+      // enregistre deux fois la même valeur.
+      let precedent = null;
+      for (let i = hist.length - 2; i >= 0; i--) {
+        if (median(hist[i]) !== median(actuel)) { precedent = hist[i]; break; }
+      }
+      return {
+        item: item,
+        actuel: actuel,
+        median: median(actuel),
+        delta: precedent ? median(actuel) - median(precedent) : 0,
+        depuis: precedent ? precedent.ts : null,
+        serie: hist.slice(-24).map(median),
+      };
+    }).sort((a, b) => b.median - a.median);
+
+    box.innerHTML =
+      '<div class="bourse-grille">' +
+      produits.map((p, rang) => {
+        const hausse = p.delta > 0, baisse = p.delta < 0;
+        const couleur = hausse ? 'var(--green)' : baisse ? 'var(--red)' : 'var(--gold)';
+        const fleche = hausse ? '▲' : baisse ? '▼' : '—';
+        const variation = p.delta
+          ? '<span class="bourse-var" style="color:' + couleur + '">' + fleche + ' ' +
+              (p.delta > 0 ? '+' : '−') + fmtArgent(Math.abs(p.delta)) +
+              (p.depuis ? ' <span class="hint">depuis le ' + new Date(p.depuis).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + '</span>' : '') +
+            '</span>'
+          : '<span class="bourse-var hint">stable</span>';
+
+        const a = p.actuel;
+        const details = [];
+        if (a.prix_base_min != null) details.push('base ' + fmtArgent(a.prix_base_min) + ' – ' + fmtArgent(a.prix_base_max));
+        if (a.semaines_revendication != null) details.push(a.semaines_revendication + ' sem. de revendication');
+        if (a.bonus_dollars) details.push('bonus ' + fmtArgent(a.bonus_dollars));
+
+        return '<div class="bourse-carte' + (rang === 0 ? ' top' : '') + '">' +
+          '<div class="bourse-tete">' +
+            '<div><span class="bourse-rang">' + (rang + 1) + '</span>' +
+              '<span class="bourse-nom">' + escT(cap(p.item)) + '</span></div>' +
+            (rang === 0 ? '<span class="bourse-badge">le plus cher</span>' : '') +
+          '</div>' +
+          '<div class="bourse-prix">' + fmtArgent(a.prix_actuel_min) +
+            ' <span class="bourse-tiret">–</span> ' + fmtArgent(a.prix_actuel_max) + '</div>' +
+          '<div class="bourse-bas">' + variation +
+            '<div class="bourse-courbe">' + courbe(p.serie, hausse ? '#2ecc71' : baisse ? '#e0503f' : '#d4b26e') + '</div>' +
+          '</div>' +
+          (details.length ? '<div class="bourse-detail">' + escT(details.join(' · ')) + '</div>' : '') +
+        '</div>';
+      }).join('') + '</div>';
+  }
+
+  function rendreZones(lignes) {
+    const bloc = document.getElementById('bloc-zones');
+    const box = document.getElementById('bd-zones');
+    if (!lignes || !lignes.length) { bloc.style.display = 'none'; return; }
+    bloc.style.display = '';
+
+    // On ne garde que le relevé le plus récent de chaque zone.
+    const derniere = {};
+    lignes.forEach(z => {
+      const cle = z.categorie + '§' + z.zone;
+      const d = derniere[cle];
+      if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniere[cle] = z;
+    });
+    const zones = Object.values(derniere);
+
+    const majTs = zones.reduce((m, z) => (!m || z.ts > m) ? z.ts : m, null);
+    const majEl = document.getElementById('zones-maj');
+    if (majEl && majTs) {
+      majEl.textContent = ' · relevé du ' + new Date(majTs).toLocaleDateString('fr-FR',
+        { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+
+    const pct = v => (Number(v) > 0 ? '+' : '') + Number(v).toLocaleString('fr-FR') + ' %';
+
+    // Regroupées par catégorie, comme le bot les range.
+    const parCat = {};
+    zones.forEach(z => { (parCat[z.categorie] = parCat[z.categorie] || []).push(z); });
+
+    box.innerHTML = Object.keys(parCat).sort().map(cat =>
+      '<div class="zone-cat">' + escT(cap(cat)) + '</div>' +
+      '<div class="zone-grille">' +
+      parCat[cat].sort((a, b) => String(a.zone).localeCompare(String(b.zone))).map(z => {
+        const puces = [];
+        if (z.bonus_all_drogues_pct) puces.push('<span class="zone-puce all">' + pct(z.bonus_all_drogues_pct) + ' sur toutes les drogues</span>');
+        if (z.bonus_zone_pct) puces.push('<span class="zone-puce">' + pct(z.bonus_zone_pct) + ' de zone</span>');
+        if (z.bonus_drogue_associee_pct && z.drogue_associee) {
+          puces.push('<span class="zone-puce assoc">' + pct(z.bonus_drogue_associee_pct) + ' sur ' + escT(cap(z.drogue_associee)) + '</span>');
+        }
+        if (z.bonus_nord) {
+          puces.push('<span class="zone-puce nord">Nord' +
+            (z.bonus_nord_valeur ? ' · ' + fmtArgent(z.bonus_nord_valeur) : '') + '</span>');
+        }
+        return '<div class="zone-carte">' +
+          '<div class="zone-nom">' + escT(z.zone) + '</div>' +
+          (puces.length ? '<div class="zone-puces">' + puces.join('') + '</div>'
+                        : '<div class="hint">aucun bonus actif</div>') +
+          (z.texte_brut ? '<details class="zone-brut"><summary>Texte du serveur</summary><p>' + escT(z.texte_brut) + '</p></details>' : '') +
+        '</div>';
+      }).join('') + '</div>'
+    ).join('');
+  }
+
   async function loadPrix() {
     const box = document.getElementById('bd-prix');
     if (!box || !currentUser) return;
     const estAdmin = currentUser.email === 'syne@live.fr';
-    const [prixQ, stocksQ] = await Promise.all([
+
+    const [prixQ, stocksQ, bourseQ, zonesQ] = await Promise.all([
       sb.from('prix_drogues').select('*').order('item'),
       sb.from('bot_stocks').select('*'),
+      // 800 relevés suffisent largement pour une dizaine de produits.
+      sb.from('bot_drogue_bourse').select('*').order('ts', { ascending: false }).limit(800),
+      sb.from('bot_zone_bonus').select('*').order('ts', { ascending: false }).limit(400),
     ]);
+
+    // Le cours et les zones sont indépendants : si le bot n'a pas encore
+    // créé ses tables, le reste du panneau continue de fonctionner.
+    if (bourseQ.error) {
+      document.getElementById('bd-bourse').innerHTML =
+        '<div class="locked">Cours indisponible — la table <code>bot_drogue_bourse</code> n\'existe pas encore. (' + escT(bourseQ.error.message) + ')</div>';
+    } else {
+      rendreBourse(bourseQ.data || []);
+    }
+    if (!zonesQ.error) rendreZones(zonesQ.data || []);
+
     if (prixQ.error) {
       box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql puis prix-drogues-2.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
       return;
@@ -1561,7 +1822,15 @@
     const st = {};
     ((stocksQ && stocksQ.data) || []).forEach(s => { st[s.item] = s.quantite || 0; });
 
-    // Date de dernière mise à jour
+    // Le dernier cours connu par produit, pour signaler un écart avec ta saisie.
+    // Même règle de départage que dans le cours ci-dessus, sinon les deux
+    // tableaux pourraient désigner des relevés différents.
+    const cours = {};
+    ((bourseQ && bourseQ.data) || []).forEach(r => {
+      const c = cours[r.item];
+      if (!c || r.ts > c.ts || (r.ts === c.ts && (r.id || 0) > (c.id || 0))) cours[r.item] = r;
+    });
+
     const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
     const majEl = document.getElementById('prix-maj');
     if (majEl && maj) majEl.textContent = ' · mis à jour le ' + new Date(maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -1569,26 +1838,35 @@
     let totalValeur = 0;
     box.innerHTML =
       '<table class="vd-table prix-table"><thead><tr>' +
-      '<th>Produit</th><th class="num ref">Prix de base officiel</th>' +
-      '<th class="num">Prix / unité</th><th class="num">Stock au coffre</th><th class="num">Valeur du stock</th>' +
+      '<th>Produit</th><th class="num ref">Cours du bot</th>' +
+      '<th class="num">Ton prix / unité</th><th class="num">Stock au coffre</th><th class="num">Valeur du stock</th>' +
       '</tr></thead><tbody>' +
       rows.map(r => {
         const stock = st[r.item] || 0;
         const valeur = stock * (r.prix || 0);
         totalValeur += valeur;
 
-        // Colonne de référence : le prix officiel du serveur. Purement indicatif,
-        // il n'entre dans aucun calcul — c'est le prix saisi ci-contre qui compte.
-        const base = Number(r.base_max) > 0
-          ? fmtArgent(r.base_min) + ' – ' + fmtArgent(r.base_max)
-          : '—';
+        // Colonne de référence : le relevé du bot, ou le prix de base officiel
+        // si le bot n'a rien relevé pour ce produit. Purement indicatif.
+        const c = cours[r.item];
+        let ref = '—', ecart = '';
+        if (c) {
+          ref = fmtArgent(c.prix_actuel_min) + ' – ' + fmtArgent(c.prix_actuel_max);
+          const tien = Number(r.prix) || 0;
+          if (tien > 0 && (tien < c.prix_actuel_min || tien > c.prix_actuel_max)) {
+            ecart = ' <span title="Ton prix sort de la fourchette relevée par le bot" style="color:var(--amber)">≠</span>';
+          }
+        } else if (Number(r.base_max) > 0) {
+          ref = '<span title="Prix de base officiel — le bot n\'a pas encore relevé ce produit">' +
+                fmtArgent(r.base_min) + ' – ' + fmtArgent(r.base_max) + '</span>';
+        }
 
         const prixCell = estAdmin
           ? '<input type="number" min="0" step="1" class="prix-input" data-item="' + escT(r.item) + '" value="' + (r.prix || 0) + '" style="width:110px;margin-bottom:0;padding:8px 10px;text-align:right;" />'
           : '<b style="color:var(--gold);">' + fmtArgent(r.prix || 0) + '</b>';
 
         return '<tr><td>' + escT(cap(r.item)) + '</td>' +
-          '<td class="num ref">' + base + '</td>' +
+          '<td class="num ref">' + ref + ecart + '</td>' +
           '<td class="num">' + prixCell + '</td>' +
           '<td class="num">' + stock.toLocaleString('fr-FR') + '</td>' +
           '<td class="num" style="color:var(--green);font-weight:600;">' + fmtArgent(Math.round(valeur)) + '</td></tr>';
@@ -1597,13 +1875,13 @@
       '<td class="num" style="color:var(--green);font-weight:700;font-size:15px;">' + fmtArgent(Math.round(totalValeur)) + '</td></tr>' +
       '</tbody></table>' +
       '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
-        '<b>Prix de base officiel</b> : le tarif de vente aux PNJ sans bonus, tel qu\'annoncé par Flashback FA. ' +
-        'Chaque semaine de revendication ajoute <b>10 $</b> par-dessus — 17 semaines sur la cocaïne, c\'est +170 $. ' +
-        'Cette colonne est là pour t\'éviter de rouvrir la note du serveur : c\'est bien le prix que tu saisis à droite qui est appliqué.' +
+        'La colonne <b>Cours du bot</b> est le dernier relevé automatique, en lecture seule. ' +
+        'C\'est <b>ton prix</b> qui est appliqué et qui sert au calcul de la valeur du coffre. ' +
+        'Un <span style="color:var(--amber)">≠</span> signale simplement que ta valeur sort de la fourchette relevée.' +
       '</div>' +
       (estAdmin
         ? '<button class="btn green" style="margin-top:16px;" onclick="savePrix()">Enregistrer les prix</button><div class="msg" id="prix-msg"></div>'
-        : '<div class="hint" style="margin-top:10px;">Les prix sont fixés par la Donna.</div>');
+        : '<div class="hint" style="margin-top:12px;">Les prix sont fixés par la Donna.</div>');
   }
 
   async function savePrix() {
