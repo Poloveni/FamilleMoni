@@ -118,6 +118,11 @@
     .leg b { color: var(--text); margin-left: auto; font-weight: 600; }
 
     /* Tables */
+    .prix-table th.num, .prix-table td.num { text-align: right; white-space: nowrap; }
+    .prix-table td:first-child { white-space: nowrap; }
+    @media (max-width: 900px) {
+      .prix-table { display: block; overflow-x: auto; }
+    }
     .vd-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .vd-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); padding: 9px 10px; border-bottom: 1px solid var(--border2); }
     .vd-table td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -1533,54 +1538,109 @@
     if (!box || !currentUser) return;
     const estAdmin = currentUser.email === 'syne@live.fr';
     const [prixQ, stocksQ] = await Promise.all([
-      sb.from('prix_drogues').select('*').order('item'),
+      sb.from('prix_drogues').select('*').order('ordre').order('item'),
       sb.from('bot_stocks').select('*'),
     ]);
     if (prixQ.error) {
-      box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
+      box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql puis prix-drogues-2.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
       return;
     }
     const rows = prixQ.data || [];
     const st = {};
     ((stocksQ && stocksQ.data) || []).forEach(s => { st[s.item] = s.quantite || 0; });
-    // Date de dernière mise à jour
+
+    // Sur Flashback FA : prix actuel = prix de base + 10 $ par semaine de
+    // revendication. On recalcule ici plutôt que de stocker un prix figé.
+    const BONUS_SEMAINE = 10;
+    const calc = r => {
+      const bonus = r.revendicable ? (r.semaines || 0) * BONUS_SEMAINE : 0;
+      const min = (Number(r.base_min) || 0) + bonus;
+      const max = (Number(r.base_max) || 0) + bonus;
+      return { bonus, min, max, median: (min + max) / 2 };
+    };
+
     const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
     const majEl = document.getElementById('prix-maj');
     if (majEl && maj) majEl.textContent = ' · mis à jour le ' + new Date(maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
+    // Le produit le plus rentable à l'unité, mis en avant.
+    const renseignes = rows.filter(r => Number(r.base_max) > 0);
+    const meilleur = renseignes.length
+      ? renseignes.reduce((a, b) => calc(b).median > calc(a).median ? b : a).item : null;
+
     let totalValeur = 0;
+    const lignes = rows.map(r => {
+      const c = calc(r);
+      const stock = st[r.item] || 0;
+      const valeur = stock * c.median;
+      totalValeur += valeur;
+      const top = r.item === meilleur;
+      const inconnu = !Number(r.base_max);
+
+      const nom = '<td>' + (top ? '<span title="Le plus rentable à l\'unité" style="color:var(--gold)">★ </span>' : '') +
+        '<b>' + escT(cap(r.item)) + '</b></td>';
+
+      const base = '<td class="num">' + (inconnu ? '<span class="hint">—</span>'
+        : fmtArgent(r.base_min) + ' – ' + fmtArgent(r.base_max)) + '</td>';
+
+      const rev = '<td class="num">' + (
+        !r.revendicable ? '<span class="hint">aucune</span>'
+        : (estAdmin
+            ? '<input type="number" min="0" max="520" step="1" class="sem-input" data-item="' + escT(r.item) + '" value="' + (r.semaines || 0) + '" style="width:64px;margin-bottom:0;padding:6px 8px;text-align:center;" /> <span class="hint">sem.</span>'
+            : (r.semaines || 0) + ' <span class="hint">sem.</span>')
+      ) + '</td>';
+
+      const bonus = '<td class="num">' + (c.bonus ? '<span style="color:var(--green)">+' + fmtArgent(c.bonus) + '</span>' : '<span class="hint">—</span>') + '</td>';
+
+      const actuel = '<td class="num">' + (inconnu ? '<span class="hint">—</span>'
+        : '<b style="color:var(--gold)">' + fmtArgent(c.min) + ' – ' + fmtArgent(c.max) + '</b>') + '</td>';
+
+      return '<tr' + (top ? ' style="background:rgba(212,178,110,.06)"' : '') + '>' +
+        nom + base + rev + bonus + actuel +
+        '<td class="num">' + stock.toLocaleString('fr-FR') + '</td>' +
+        '<td class="num" style="color:var(--green);font-weight:600;">' + fmtArgent(Math.round(valeur)) + '</td></tr>';
+    }).join('');
+
     box.innerHTML =
-      '<table class="vd-table"><thead><tr><th>Produit</th><th>Prix / unité</th><th>Stock au coffre</th><th>Valeur du stock</th></tr></thead><tbody>' +
-      rows.map(r => {
-        const stock = st[r.item] || 0;
-        const valeur = stock * (r.prix || 0);
-        totalValeur += valeur;
-        const prixCell = estAdmin
-          ? '<input type="number" min="0" step="1" class="prix-input" data-item="' + escT(r.item) + '" value="' + (r.prix || 0) + '" style="width:110px;margin-bottom:0;padding:8px 10px;" />'
-          : '<b style="color:var(--gold);">' + fmtArgent(r.prix || 0) + '</b>';
-        return '<tr><td>' + escT(cap(r.item)) + '</td><td>' + prixCell + '</td>' +
-          '<td>' + stock.toLocaleString('fr-FR') + '</td>' +
-          '<td style="color:var(--green);font-weight:600;">' + fmtArgent(Math.round(valeur)) + '</td></tr>';
-      }).join('') +
-      '<tr><td colspan="3" style="text-align:right;color:var(--muted);font-weight:600;">💰 Valeur totale du stock</td>' +
-      '<td style="color:var(--green);font-weight:700;font-size:15px;">' + fmtArgent(Math.round(totalValeur)) + '</td></tr>' +
+      '<table class="vd-table prix-table"><thead><tr>' +
+      '<th>Produit</th><th class="num">Prix de base</th><th class="num">Revendication</th>' +
+      '<th class="num">Bonus</th><th class="num">Prix actuel / unité</th>' +
+      '<th class="num">Stock</th><th class="num">Valeur</th>' +
+      '</tr></thead><tbody>' + lignes +
+      '<tr><td colspan="6" style="text-align:right;color:var(--muted);font-weight:600;">Valeur totale du stock</td>' +
+      '<td class="num" style="color:var(--green);font-weight:700;font-size:15px;">' + fmtArgent(Math.round(totalValeur)) + '</td></tr>' +
       '</tbody></table>' +
+      '<div class="hint" style="margin-top:14px;line-height:1.7;">' +
+        'Sur Flashback FA, chaque semaine de revendication ajoute <b>' + fmtArgent(BONUS_SEMAINE) + '</b> au prix de vente aux PNJ. ' +
+        'Le prix actuel est donc recalculé automatiquement à partir du prix de base et du nombre de semaines — ' +
+        'il n\'y a que le compteur de semaines à tenir à jour.' +
+      '</div>' +
       (estAdmin
-        ? '<button class="btn green" style="margin-top:16px;" onclick="savePrix()">💾 Enregistrer les prix</button><div class="msg" id="prix-msg"></div>'
-        : '<div class="hint" style="margin-top:12px;">Les prix sont fixés par la Donna.</div>');
+        ? '<button class="btn green" style="margin-top:16px;" onclick="savePrix()">Enregistrer les semaines de revendication</button><div class="msg" id="prix-msg"></div>'
+        : '<div class="hint" style="margin-top:10px;">Les compteurs sont tenus à jour par la Donna.</div>');
   }
 
   async function savePrix() {
     if (!currentUser || currentUser.email !== 'syne@live.fr') return;
     hideMsg('prix-msg');
-    const lignes = [...document.querySelectorAll('.prix-input')].map(inp => ({
-      item: inp.dataset.item,
-      prix: Math.max(0, parseFloat(inp.value) || 0),
-      updated_at: new Date().toISOString(),
-    }));
+    // On enregistre le compteur de semaines ET le prix médian recalculé :
+    // le reste du site (valeur du coffre) continue de lire la colonne "prix".
+    const { data: actuels } = await sb.from('prix_drogues').select('item,base_min,base_max,revendicable');
+    const parItem = {};
+    (actuels || []).forEach(r => { parItem[r.item] = r; });
+
+    const lignes = [...document.querySelectorAll('.sem-input')].map(inp => {
+      const r = parItem[inp.dataset.item] || {};
+      const sem = Math.max(0, Math.min(520, parseInt(inp.value, 10) || 0));
+      const bonus = r.revendicable === false ? 0 : sem * 10;
+      const median = ((Number(r.base_min) || 0) + (Number(r.base_max) || 0)) / 2 + bonus;
+      return { item: inp.dataset.item, semaines: sem, prix: median, updated_at: new Date().toISOString() };
+    });
+    if (!lignes.length) { showMsg('prix-msg', 'Rien à enregistrer.', false); return; }
+
     const { error } = await sb.from('prix_drogues').upsert(lignes);
     if (error) { showMsg('prix-msg', 'Erreur : ' + error.message, false); return; }
-    toast('Prix enregistrés !');
+    toast('Semaines de revendication enregistrées — les prix sont recalculés.');
     loadPrix();
   }
 

@@ -20,6 +20,7 @@ exécute-les dans **cet ordre exact**, dans Supabase → SQL Editor.
 | 12 | `bot-sync-schema-4.sql` | Ajouts bot : métadonnées de synchro |
 | 13 | `prix-drogues.sql` | Table des prix, modifiable depuis l'espace membre |
 | 14 | **`securite-2026-07.sql`** | **Correctifs de sécurité — à exécuter une fois** |
+| 15 | **`prix-drogues-2.sql`** | **Prix de base + semaines de revendication (prix actuel calculé automatiquement)** |
 
 ## Règle pour la suite
 
