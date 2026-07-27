@@ -782,11 +782,13 @@
     // Lien Panel admin : visible uniquement pour l'administratrice
     const sbAdmin = document.getElementById('sb-admin');
     if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
-    // L'outil d'import de taxes n'est visible que pour l'administratrice.
-    // (La base refuse de toute façon le dépôt à quiconque d'autre : ce test
-    //  n'est qu'un confort d'affichage, pas une protection.)
+    // Qui voit l'outil d'import : la liste est dans supabase-config.js.
+    // (La base refuse de toute façon le dépôt à quiconque n'y est pas
+    //  autorisé : ce test n'est qu'un confort d'affichage, pas une protection.)
+    const autorises = window.MONI_IMPORT_TAXES || ['syne@live.fr'];
+    const peutImporter = autorises.indexOf(user.email) !== -1;
     const blocImport = document.getElementById('bloc-import-taxes');
-    if (blocImport) blocImport.style.display = user.email === 'syne@live.fr' ? '' : 'none';
+    if (blocImport) blocImport.style.display = peutImporter ? '' : 'none';
 
     // Un seul aller-retour : on écrit et on relit la colonne dans la même requête.
     const { data: compte } = await sb.from('comptes')

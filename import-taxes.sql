@@ -39,21 +39,43 @@ create index if not exists import_taxes_statut_idx on public.import_taxes (statu
 
 alter table public.import_taxes enable row level security;
 
--- ── Qui peut déposer une demande : l'administratrice uniquement ──────────
+-- ══════════════════════════════════════════════════════════════════════════
+--  QUI PEUT IMPORTER
+--
+--  ⚠️ Cette liste doit rester IDENTIQUE à window.MONI_IMPORT_TAXES dans
+--  supabase-config.js. Celle du site ne fait qu'afficher ou masquer le
+--  bouton ; c'est celle-ci qui autorise réellement l'écriture.
+--
+--  On ne se base pas sur le nom du personnage : chaque membre choisit
+--  lui-même son nom dans son profil, n'importe qui pourrait donc se
+--  déclarer « Raymond Carter ». L'email, lui, est verrouillé par
+--  l'authentification.
+--
+--  POUR AJOUTER QUELQU'UN : ajoute son email dans la liste ci-dessous,
+--  relance ce fichier entier, et ajoute-le aussi dans supabase-config.js.
+-- ══════════════════════════════════════════════════════════════════════════
+create or replace function public.peut_importer_taxes()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select coalesce(auth.jwt() ->> 'email', '') in (
+    'syne@live.fr',             -- Lov Moni — La Donna
+    'f.moinard44@gmail.com'     -- Raymond Carter — Braccio Destro
+  );
+$$;
+
+-- ── Qui peut déposer une demande ─────────────────────────────────────────
 drop policy if exists "Admin depose un import" on public.import_taxes;
 create policy "Admin depose un import" on public.import_taxes for insert to authenticated
-  with check (
-    cree_par = auth.uid()
-    and (auth.jwt() ->> 'email') = 'syne@live.fr'
-  );
+  with check (cree_par = auth.uid() and public.peut_importer_taxes());
 
--- ── Qui peut lire le rapport : celle qui a déposé la demande ─────────────
+-- ── Qui peut lire le rapport : celui qui a déposé la demande ─────────────
 drop policy if exists "Admin lit ses imports" on public.import_taxes;
 create policy "Admin lit ses imports" on public.import_taxes for select to authenticated
-  using (
-    cree_par = auth.uid()
-    and (auth.jwt() ->> 'email') = 'syne@live.fr'
-  );
+  using (cree_par = auth.uid() and public.peut_importer_taxes());
 
 -- Personne d'autre n'a de politique : ni lecture, ni écriture.
 -- Le bot, lui, utilise sa clé de service, qui ignore ces règles.

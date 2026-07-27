@@ -4,6 +4,22 @@
 window.SUPABASE_URL = 'https://prwdtdmdkhzwfyivaepw.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_qgN4fRX9eVdKn3SWAjtmhw_F00rlqXz';
 
+// ══════════════════════════════════════════════════════════════════════
+//  QUI PEUT IMPORTER DES TAXES
+//  Adresses email des comptes autorisés à déposer un fichier Excel dans
+//  l'onglet « Taxes & racket » de l'espace membre.
+//
+//  ⚠️ Cette liste ne fait qu'AFFICHER ou masquer le bouton. La vraie
+//  autorisation est dans Supabase (politique de la table import_taxes) :
+//  si tu ajoutes quelqu'un ici sans l'ajouter là-bas, le bouton
+//  apparaîtra mais la base refusera le dépôt.
+//  Les deux listes doivent rester identiques — voir import-taxes.sql.
+// ══════════════════════════════════════════════════════════════════════
+window.MONI_IMPORT_TAXES = [
+  'syne@live.fr',              // Lov Moni — La Donna
+  'f.moinard44@gmail.com',     // Raymond Carter — Braccio Destro
+];
+
 // Objectif hebdomadaire de ventes par membre (dashboard Business de l'espace membre).
 window.MONI_QUOTA_DROGUE = 200;
 
