@@ -77,8 +77,8 @@
     }
     .kpi::before { content: ''; position: absolute; top: -40px; left: -40px; width: 110px; height: 110px; border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--kc, var(--red)); }
     .kpi-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); position: relative; }
-    .kpi-num { font-size: 28px; font-weight: 700; margin-top: 7px; position: relative; letter-spacing: -0.5px; }
-    .kpi-num.small { font-size: 15px; padding-top: 8px; }
+    .kpi-num { font-family: 'Playfair Display', Georgia, serif; font-size: 32px; font-weight: 700; margin-top: 7px; position: relative; letter-spacing: -0.5px; line-height: 1.05; }
+    .kpi-num.small { font-family: 'Inter', sans-serif; font-size: 15px; padding-top: 8px; font-weight: 600; }
 
     /* Alerte inscriptions */
     .alerte {
@@ -170,25 +170,25 @@
     </div>
 
     <div class="sb-group">Pilotage</div>
-    <button type="button" class="sb-item active" data-panel="dashboard" data-title="Bienvenue, &lt;em&gt;Donna&lt;/em&gt; 👑" data-sub="Vue d'ensemble du site et de la famille." onclick="showPanel('dashboard', this)"><span class="ico">📊</span><span class="lbl">Dashboard</span></button>
+    <button type="button" class="sb-item active" data-panel="dashboard" data-title="Bienvenue, &lt;em&gt;Donna&lt;/em&gt; 👑" data-sub="Vue d'ensemble du site et de la famille." onclick="showPanel('dashboard', this)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg></span><span class="lbl">Dashboard</span></button>
 
     <div class="sb-group">Contenu</div>
-    <button type="button" class="sb-item" data-panel="hero" data-title="Page d'&lt;em&gt;accueil&lt;/em&gt;" data-sub="Les textes principaux du site public." onclick="showPanel('hero', this)"><span class="ico">🏠</span><span class="lbl">Page d'accueil</span></button>
-    <button type="button" class="sb-item" data-panel="membres" data-title="Les &lt;em&gt;membres&lt;/em&gt;" data-sub="La liste officielle : noms et rangs." onclick="showPanel('membres', this)"><span class="ico">👥</span><span class="lbl">Membres</span></button>
+    <button type="button" class="sb-item" data-panel="hero" data-title="Page d'&lt;em&gt;accueil&lt;/em&gt;" data-sub="Les textes principaux du site public." onclick="showPanel('hero', this)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-5.5h4V20"/></svg></span><span class="lbl">Page d'accueil</span></button>
+    <button type="button" class="sb-item" data-panel="membres" data-title="Les &lt;em&gt;membres&lt;/em&gt;" data-sub="La liste officielle : noms et rangs." onclick="showPanel('membres', this)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.5" cy="8.5" r="3.3"/><path d="M3.4 19.5a6.1 6.1 0 0112.2 0"/><path d="M16.2 6.1a3.3 3.3 0 010 5.4M17.4 14.6a6 6 0 013.2 4.9"/></svg></span><span class="lbl">Membres</span></button>
 
     <div class="sb-group">Espace membre</div>
-    <button type="button" class="sb-item" id="side-inscriptions" data-panel="inscriptions" data-title="Les &lt;em&gt;inscriptions&lt;/em&gt;" data-sub="Approuve ou refuse les comptes créés sur l'espace membre." onclick="showPanel('inscriptions', this)"><span class="ico">✅</span><span class="lbl">Inscriptions</span><span class="sb-badge" id="badge-attente"></span></button>
+    <button type="button" class="sb-item" id="side-inscriptions" data-panel="inscriptions" data-title="Les &lt;em&gt;inscriptions&lt;/em&gt;" data-sub="Approuve ou refuse les comptes créés sur l'espace membre." onclick="showPanel('inscriptions', this)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.6 2.6 5-5.2"/></svg></span><span class="lbl">Inscriptions</span><span class="sb-badge" id="badge-attente"></span></button>
 
     <div class="sb-group">Export</div>
-    <button type="button" class="sb-item" data-panel="export" data-title="&lt;em&gt;Exporter&lt;/em&gt;" data-sub="Récupère le code à coller dans supabase-config.js." onclick="showPanel('export', this)"><span class="ico">💾</span><span class="lbl">Exporter</span></button>
+    <button type="button" class="sb-item" data-panel="export" data-title="&lt;em&gt;Exporter&lt;/em&gt;" data-sub="Récupère le code à coller dans supabase-config.js." onclick="showPanel('export', this)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5h11L19.5 8v11.5h-15z"/><path d="M8 4.5v5h6v-5M8 19.5v-5h8v5"/></svg></span><span class="lbl">Exporter</span></button>
 
     <div class="sb-group">Système</div>
-    <button type="button" class="sb-item" href="index.html" target="_blank"><span class="ico">🌐</span><span class="lbl">Voir le site</span></button>
-    <button type="button" class="sb-item" href="espace-membre.html" target="_blank"><span class="ico">📈</span><span class="lbl">Espace membre</span></button>
+    <button type="button" class="sb-item" href="index.html" target="_blank"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5a13 13 0 010 17 13 13 0 010-17z"/></svg></span><span class="lbl">Voir le site</span></button>
+    <button type="button" class="sb-item" href="espace-membre.html" target="_blank"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5.5 15.5l4-4.5 3.2 3 5.8-6.5"/><path d="M14 7.5h4.5V12"/></svg></span><span class="lbl">Espace membre</span></button>
 
     <div class="sb-foot">
       <div class="sb-user">Connectée : <b id="who-email"></b></div>
-      <div class="sb-out" onclick="doLogout()"><span class="ico">⏻</span><span class="lbl">Déconnexion</span></div>
+      <div class="sb-out" onclick="doLogout()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M17.7 6.6a8 8 0 11-11.4 0"/></svg></span><span class="lbl">Déconnexion</span></div>
     </div>
   </aside>
 
@@ -218,17 +218,17 @@
       </div>
 
       <div class="bloc">
-        <div class="bloc-t">🔗 Accès rapides</div>
+        <div class="bloc-t">Accès rapides</div>
         <div class="liens">
-          <a class="lien" href="index.html" target="_blank">🌐 Voir le site</a>
-          <a class="lien" href="espace-membre.html" target="_blank">📊 Espace membre</a>
-          <a class="lien" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">📈 Stats de visite</a>
-          <a class="lien" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">🗄 Base de données</a>
+          <a class="lien" href="index.html" target="_blank">Voir le site</a>
+          <a class="lien" href="espace-membre.html" target="_blank">Espace membre</a>
+          <a class="lien" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">Stats de visite</a>
+          <a class="lien" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">Base de données</a>
         </div>
       </div>
 
       <div class="bloc">
-        <div class="bloc-t">⚠️ Comment fonctionnent les modifications</div>
+        <div class="bloc-t">Comment fonctionnent les modifications</div>
         <p class="hint" style="line-height:1.7;">
           Les <b style="color:var(--text);">inscriptions</b> se valident ici, en direct. Les <b style="color:var(--text);">événements, présences et annonces</b>
           se gèrent sur Discord (synchronisation automatique). Les modifications de <b style="color:var(--text);">membres</b> et de la

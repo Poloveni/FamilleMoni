@@ -779,6 +779,13 @@
     .fiche-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .fiche-nom { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; }
     .fiche-rang { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+    .fiche-lien {
+      display: inline-block; margin-top: 22px; padding: 11px 20px;
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+      color: var(--text); text-decoration: none;
+      border: 1px solid var(--border-strong); border-radius: 10px; transition: 0.2s;
+    }
+    .fiche-lien:hover { border-color: var(--red); color: var(--red); }
     .fiche-spec {
       display: inline-block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
       padding: 3px 10px; background: rgba(192,57,43,0.15); color: var(--red); margin-top: 14px;
@@ -1300,6 +1307,14 @@
   // Les infos viennent de Supabase (table profils), remplies par chaque
   // membre dans l'espace membre. window.MONI_PROFILS est alimenté plus bas.
   window.MONI_PROFILS = window.MONI_PROFILS || {};
+
+  // Doit rester STRICTEMENT identique à la fonction slug() de
+  // outils/generer-passeports.mjs, sinon les liens tombent sur du vide.
+  function slugNom(n) {
+    return String(n).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
   function openFiche(nom) {
     var ov = document.getElementById('fiche-overlay');
     if (!ov) return;
@@ -1319,6 +1334,8 @@
     if (p.citation) body += '<div class="fiche-citation">\u00ab\u00a0' + escHTML(p.citation) + '\u00a0\u00bb</div>';
     if (p.bio) body += '<div class="fiche-bio">' + escHTML(p.bio) + '</div>';
     if (!body) body = '<div class="fiche-empty">Cette fiche n\'a pas encore \u00e9t\u00e9 remplie dans l\'espace membre.</div>';
+    // Lien vers le passeport : une vraie page, partageable sur Discord.
+    body += '<a class="fiche-lien" href="membre/' + slugNom(nom) + '.html">Voir la page compl\u00e8te \u2192</a>';
     document.getElementById('fiche-body').innerHTML = body;
     ov.classList.add('open');
     ov.setAttribute('aria-hidden', 'false');

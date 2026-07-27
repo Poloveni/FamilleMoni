@@ -98,3 +98,14 @@ select option { background: var(--panel2); }
     }
 
 .toast.show { opacity: 1; }
+
+
+/* ── Icônes du menu ────────────────────────────────────────────────────
+   Les emojis d'origine (📊 💊 🏦 …) changeaient d'apparence selon le
+   système, étaient multicolores et juraient avec le reste du tableau de
+   bord. Ils sont remplacés par un jeu d'icônes dessinées, monochromes,
+   qui prennent automatiquement la couleur du texte de l'élément.
+   ──────────────────────────────────────────────────────────────────── */
+.sb-item .ico svg, .sb-out .ico svg { width: 17px; height: 17px; display: block; }
+.sb-item .ico, .sb-out .ico { display: flex; align-items: center; justify-content: center; opacity: 0.75; transition: opacity 0.2s ease; }
+.sb-item:hover .ico, .sb-item.active .ico, .sb-out:hover .ico { opacity: 1; }

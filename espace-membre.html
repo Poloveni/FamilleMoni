@@ -78,7 +78,7 @@
     }
     .kpi::before { content: ''; position: absolute; top: -40px; left: -40px; width: 120px; height: 120px; border-radius: 50%; filter: blur(34px); opacity: 0.35; background: var(--kc, var(--red)); }
     .kpi-label { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); position: relative; }
-    .kpi-num { font-size: 30px; font-weight: 700; margin-top: 8px; position: relative; letter-spacing: -0.5px; }
+    .kpi-num { font-family: 'Playfair Display', Georgia, serif; font-size: 34px; font-weight: 700; margin-top: 8px; position: relative; letter-spacing: -0.5px; line-height: 1.05; }
     .kpi-num small { font-size: 14px; color: var(--dim); font-weight: 500; }
     .kpi-foot { font-size: 11px; color: var(--dim); margin-top: 5px; position: relative; }
 
@@ -305,29 +305,29 @@
     </div>
 
     <div class="sb-group req-approve">Pilotage</div>
-    <button type="button" class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico">📊</span><span class="lbl">Vue d'ensemble</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico">⭐</span><span class="lbl">Ma semaine</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico">💊</span><span class="lbl">Classement</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico">🏦</span><span class="lbl">Le coffre</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="prix" data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico">🏷</span><span class="lbl">Prix drogues</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico">🔫</span><span class="lbl">Armurerie</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico">🧾</span><span class="lbl">Taxes</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico">🚨</span><span class="lbl">Braquages</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="palmares" data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico">🏆</span><span class="lbl">Palmarès</span></button>
-    <button type="button" class="sb-item req-approve" id="tv-btn"><span class="ico">📺</span><span class="lbl">Mode TV</span></button>
+    <button type="button" class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg></span><span class="lbl">Vue d'ensemble</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l2.3 4.9 5.2.7-3.8 3.7.9 5.3-4.6-2.5-4.6 2.5.9-5.3L4.5 9.6l5.2-.7z"/></svg></span><span class="lbl">Ma semaine</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="10" width="18" height="8" rx="4"/><path d="M12 10v8"/><path d="M7 6.5V4m10 2.5V4"/></svg></span><span class="lbl">Classement</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="coffre" data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="17" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M7 3.5h10"/></svg></span><span class="lbl">Le coffre</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="prix" data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 3.5H20v8.5l-8.7 8.7a1.5 1.5 0 01-2.1 0l-6.4-6.4a1.5 1.5 0 010-2.1z"/><circle cx="16.3" cy="7.7" r="1.2"/></svg></span><span class="lbl">Prix drogues</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="armurerie" data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></span><span class="lbl">Armurerie</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="taxes" data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 3.5h13v17l-2.2-1.5-2.2 1.5-2.1-1.5L9.9 20.5 7.7 19l-2.2 1.5z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="lbl">Taxes</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none"/></svg></span><span class="lbl">Braquages</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="palmares" data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 5.5H5.2a3 3 0 003 3M16 5.5h2.8a3 3 0 01-3 3"/><path d="M12 13v3.5M9 20h6"/></svg></span><span class="lbl">Palmarès</span></button>
+    <button type="button" class="sb-item req-approve" id="tv-btn"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8.5 20.5h7"/></svg></span><span class="lbl">Mode TV</span></button>
 
     <div class="sb-group">Perso</div>
-    <button type="button" class="sb-item req-approve" data-panel="events" data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico">📅</span><span class="lbl">Planning</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="profil" data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico">👤</span><span class="lbl">Mon profil</span></button>
-    <button type="button" class="sb-item" data-panel="galerie" data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico">📸</span><span class="lbl">Galerie</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="events" data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4m8-4v4"/></svg></span><span class="lbl">Planning</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="profil" data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.8 20a7.2 7.2 0 0114.4 0"/></svg></span><span class="lbl">Mon profil</span></button>
+    <button type="button" class="sb-item" data-panel="galerie" data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.8 6.5l1.2-2.3h4l1.2 2.3"/></svg></span><span class="lbl">Galerie</span></button>
 
     <div class="sb-group">Système</div>
-    <button type="button" class="sb-item" href="index.html"><span class="ico">🏠</span><span class="lbl">Retour au site</span></button>
-    <button type="button" class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico">🛠</span><span class="lbl">Panel admin</span></button>
+    <button type="button" class="sb-item" href="index.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-5.5h4V20"/></svg></span><span class="lbl">Retour au site</span></button>
+    <button type="button" class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></span><span class="lbl">Panel admin</span></button>
 
     <div class="sb-foot">
       <div class="sb-user">Connecté : <b id="who-email"></b></div>
-      <div class="sb-out" onclick="doLogout()"><span class="ico">⏻</span><span class="lbl">Déconnexion</span></div>
+      <div class="sb-out" onclick="doLogout()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M17.7 6.6a8 8 0 11-11.4 0"/></svg></span><span class="lbl">Déconnexion</span></div>
     </div>
   </aside>
 
@@ -364,7 +364,7 @@
 
       <div class="goal">
         <div class="goal-head">
-          <b>🎯 Objectif collectif de la semaine</b>
+          <b>Objectif collectif de la semaine</b>
           <span class="val" id="goal-val">— / —</span>
         </div>
         <div class="goal-bar"><span id="goal-fill" style="width:0%"></span></div>
@@ -384,11 +384,11 @@
 
       <div class="grid2" style="margin-top:14px;">
         <div class="bloc">
-          <div class="bloc-t">💰 Évolution de l'argent sale au coffre <small>(7 derniers jours)</small></div>
+          <div class="bloc-t">Évolution de l'argent sale au coffre <small>(7 derniers jours)</small></div>
           <div id="chart-coffre"><div class="locked">Chargement…</div></div>
         </div>
         <div class="bloc">
-          <div class="bloc-t">📜 Dernière activité du coffre</div>
+          <div class="bloc-t">Dernière activité du coffre</div>
           <div id="feed-coffre" class="feed"><div class="locked">Chargement…</div></div>
         </div>
       </div>
@@ -407,7 +407,7 @@
     <!-- PRIX DES DROGUES -->
     <div class="panel" id="panel-prix">
       <div class="bloc">
-        <div class="bloc-t">🏷 Prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div class="bloc-t">Prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
         <div id="bd-prix"><div class="locked">Chargement…</div></div>
       </div>
     </div>
@@ -435,11 +435,11 @@
     <!-- BRAQUAGES & COOLDOWNS -->
     <div class="panel" id="panel-braquages">
       <div class="bloc" style="margin-bottom:14px;">
-        <div class="bloc-t">🚨 Braquages disponibles <small>(fenêtre glissante de 7 jours)</small></div>
+        <div class="bloc-t">Braquages disponibles <small>(fenêtre glissante de 7 jours)</small></div>
         <div id="bd-braquages"><div class="locked">Chargement…</div></div>
       </div>
       <div class="bloc">
-        <div class="bloc-t">⏱ Cooldowns en cours <small>(comptes à rebours en direct)</small></div>
+        <div class="bloc-t">Cooldowns en cours <small>(comptes à rebours en direct)</small></div>
         <div id="bd-cooldowns"><div class="locked">Chargement…</div></div>
       </div>
     </div>
@@ -1451,14 +1451,14 @@
             '<div class="kpi" style="--kc:#5865f2;"><div class="kpi-label">Mon rang</div><div class="kpi-num">' + (rangM >= 0 ? '#' + (rangM + 1) : '—') + '</div><div class="kpi-foot">sur ' + ids.length + ' membres actifs</div></div>' +
             '<div class="kpi" style="--kc:#2ecc71;"><div class="kpi-label">Récolte · activités</div><div class="kpi-num">' + Math.round(jm.recolte) + ' <small>· ' + Math.round(jm.activites) + '</small></div><div class="kpi-foot" title="' + escT(jm.detail.join(', ')) + '">' + escT(jm.detail.slice(0, 2).join(', ') || 'aucune activité') + '</div></div>' +
           '</div>' +
-          '<div class="goal"><div class="goal-head"><b>🎯 Ma progression</b><span class="val"><b>' + vM + '</b> / ' + quotaVente + ' ventes</span></div>' +
+          '<div class="goal"><div class="goal-head"><b>Ma progression</b><span class="val"><b>' + vM + '</b> / ' + quotaVente + ' ventes</span></div>' +
           '<div class="goal-bar"><span style="width:' + pctM + '%"></span></div><div class="goal-pct">' + pctM + '%</div></div>' +
           '<div class="grid2">' +
-            '<div class="bloc"><div class="bloc-t">⏱ Mes cooldowns</div>' +
+            '<div class="bloc"><div class="bloc-t">Mes cooldowns</div>' +
             (!mesCd.length ? '<div class="hint">Aucun — tout est disponible ! 🟢</div>' :
               mesCd.map(c => '<div class="cd-row"><span>' + escT(BD_ACTIVITES[c.action] || c.action) + '</span><span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>').join('')) +
             '</div>' +
-            '<div class="bloc"><div class="bloc-t">💵 Mes dernières ventes confirmées</div>' +
+            '<div class="bloc"><div class="bloc-t">Mes dernières ventes confirmées</div>' +
             (!mesVentes.length ? '<div class="hint">Aucune vente confirmée cette semaine.</div>' :
               mesVentes.map(x => '<div class="cd-row"><span>' + Number(x.quantite).toLocaleString('fr-FR') + '× ' + escT(cap(x.item)) + '</span><span style="margin-left:auto;color:var(--gold);font-weight:600;">' + fmtArgent(x.montant) + '</span></div>').join('')) +
             '</div>' +
