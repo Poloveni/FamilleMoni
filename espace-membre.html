@@ -425,7 +425,6 @@
 
     <!-- TAXES -->
     <div class="panel" id="panel-taxes">
-      <div class="bloc"><div id="bd-taxes"><div class="locked">Chargement…</div></div></div>
 
       <!-- Import Excel — visible uniquement pour l'administratrice -->
       <div class="bloc" id="bloc-import-taxes" style="display:none;">
@@ -1213,20 +1212,19 @@
   async function loadBotDashboards() {
     const elC = document.getElementById('bd-classement');
     if (!elC || !currentUser) return;
-    const [meta, stats, mapping, stocks, armes, taxes, histoQ, braqQ, cdQ, ventesQ, bilansQ] = await Promise.all([
+    const [meta, stats, mapping, stocks, armes, histoQ, braqQ, cdQ, ventesQ, bilansQ] = await Promise.all([
       sb.from('bot_meta').select('*'),
       sb.from('bot_stats').select('*'),
       sb.from('bot_user_mapping').select('*'),
       sb.from('bot_stocks').select('*'),
       sb.from('bot_armurerie').select('*'),
-      sb.from('bot_taxes').select('*'),
       sb.from('bot_stock_history').select('*'),
       sb.from('bot_braquages').select('*'),
       sb.from('bot_cooldowns').select('*'),
       sb.from('bot_ventes').select('*'),
       sb.from('bot_bilans').select('*'),
     ]);
-    const err = meta.error || stats.error || mapping.error || stocks.error || armes.error || taxes.error;
+    const err = meta.error || stats.error || mapping.error || stocks.error || armes.error;
     if (err) {
       elC.innerHTML = '<div class="locked">Dashboard indisponible — exécute bot-sync-schema.sql dans Supabase. (' + escT(err.message) + ')</div>';
       return;
@@ -1235,7 +1233,7 @@
     (meta.data || []).forEach(m => { metaMap[m.key] = m.value; });
     if (!metaMap.last_sync) {
       const waitMsg = '<div class="locked">⏳ En attente de la première synchronisation du bot Moni — le module sync-supabase.js doit être installé sur le bot (voir GUIDE-SYNC-SITE.md).</div>';
-      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'bd-taxes', 'chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns', 'bd-moi', 'bd-palmares'].forEach(id => {
+      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns', 'bd-moi', 'bd-palmares'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = waitMsg;
       });
@@ -1369,21 +1367,6 @@
           pretees.map(a => '<tr><td>' + escT(a.nom) + '</td><td>' + escT(a.reference) + '</td><td>' + escT(a.pretee_a || '?') + '</td></tr>').join('') +
           '</tbody></table>'
         : '<div class="hint">Aucune arme prêtée en ce moment.</div>');
-
-    // ── TAXES ──
-    const tx = (taxes.data || []).sort((a, b) => new Date(a.echeance) - new Date(b.echeance));
-    document.getElementById('bd-taxes').innerHTML = !tx.length
-      ? '<div class="hint">Aucune taxe active.</div>'
-      : '<table class="vd-table"><thead><tr><th>Nom</th><th>Type</th><th>Échéance</th><th>Statut</th></tr></thead><tbody>' +
-        tx.map(t => {
-          const retard = !t.paye && new Date(t.echeance) < new Date();
-          const badge = t.paye ? '<span style="color:var(--green);">✅ Payée</span>'
-            : retard ? '<span style="color:var(--red);">🔴 En retard</span>'
-            : '<span style="color:var(--amber);">⏳ En attente</span>';
-          return '<tr><td>' + escT(t.nom) + '</td><td>' + escT(cap(t.type)) + '</td>' +
-            '<td>' + new Date(t.echeance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td>' +
-            '<td>' + badge + '</td></tr>';
-        }).join('') + '</tbody></table>';
 
     // ── CHIFFRE D'AFFAIRES (depuis lundi) ──
     // Source principale : montants des ventes confirmées ; si le bot ne les
@@ -1536,7 +1519,7 @@
 
   // ── MODE TV (plein écran auto-défilant) ──
   let tvRot = null, tvRef = null, tvIdx = 0;
-  const TV_PANELS = ['apercu', 'business', 'coffre', 'braquages', 'armurerie', 'taxes'];
+  const TV_PANELS = ['apercu', 'business', 'coffre', 'braquages', 'armurerie'];
   function startTV() {
     document.body.classList.add('tv-mode');
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
@@ -1858,7 +1841,7 @@
           rapport.filter(r => !r.ok).map(r =>
             '<tr><td>' + escT(r.ligne) + '</td><td style="color:var(--red)">' + escT(r.raison || 'non précisé') + '</td></tr>'
           ).join('') + '</tbody></table>' : '') +
-        '<div class="hint" style="margin-top:10px;">Les taxes créées apparaîtront dans le tableau ci-dessus à la prochaine synchronisation (5 min maximum).</div>';
+        '<div class="hint" style="margin-top:10px;">Les taxes créées sont dans la base du bot et visibles dans le salon #taxes de Discord.</div>';
     }
 
     async function envoyer() {
