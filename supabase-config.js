@@ -33,19 +33,21 @@ window.MONI_RANGS = [
   { nom: 'Associati',      color: '#8e8e8e', desc: 'Associés — Membres' }
 ];
 
-// Liste officielle des membres (nom -> rang). — Mise à jour 14/07/2026
+// Liste officielle des membres (nom -> rang). — Mise à jour 27/07/2026
+// Source : aperçu des membres du bot Discord.
 window.MONI_MEMBRES = [
   { nom: 'Lov Moni',           rang: 'La Donna' },
   { nom: 'Raymond Carter',     rang: 'Braccio Destro' },
   { nom: 'Ezio Spallow',       rang: 'Anziani' },
-  { nom: 'Oscar Santo',        rang: 'Baroni' },
-  { nom: 'James Mendoza',      rang: 'Fedeli' },
+  { nom: 'James Mendoza',      rang: 'Baroni' },
+  { nom: 'Javier Silva',       rang: 'Baroni' },
+  { nom: 'Bass Carter',        rang: 'Fedeli' },
+  { nom: 'Javier Cruz Silva',  rang: 'Fedeli' },
+  { nom: 'Oscar Santo',        rang: 'Fedeli' },
   { nom: 'Tommy Dane',         rang: 'Fedeli' },
-  { nom: 'Allesandro Moretti', rang: 'Associati' },
-  { nom: 'Bass Carter',        rang: 'Associati' },
   { nom: 'Dayon Reas',         rang: 'Associati' },
-  { nom: 'Javier Silva',       rang: 'Associati' },
-  { nom: 'Javier Cruz Silva',  rang: 'Associati' },
+  { nom: 'Juan Malbi',         rang: 'Associati' },
+  { nom: 'Tiago Rodrigues',    rang: 'Associati' },
   { nom: 'Valentino Romano',   rang: 'Associati' },
-  { nom: 'Tiago Rodrigues',    rang: 'Associati' }
+  { nom: 'Valerio Moncini',    rang: 'Associati' },
 ];
