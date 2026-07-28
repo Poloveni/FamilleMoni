@@ -1,155 +1,70 @@
-# Ce qu'il te reste à faire — 4 étapes, ~15 minutes
+# Ce qu'il te reste à faire — état au 28 juillet
 
-Tout le code est déjà corrigé et écrit dans ton dossier `FamilleMoni`.
-Il reste 4 choses que je ne peux pas faire à ta place, parce qu'elles
-demandent tes mots de passe Supabase et GitHub.
-
----
-
-## Étape 1 — Publier le site (2 min)
-
-Double-clique sur **`publier.bat`**, comme d'habitude. Attends le message
-« Terminé ! ». Le site est à jour environ une minute plus tard.
-
-> ⚠️ Si Git affiche une erreur du type *« index.lock »* : va dans le dossier
-> `.git` (affiche les fichiers cachés si besoin) et supprime le fichier
-> `index.lock.a-supprimer`. C'est un résidu que j'ai renommé sans pouvoir
-> l'effacer. Ce n'est pas grave, mais autant faire propre.
-
-**Comment vérifier que ça a marché :** ouvre le site, fais `Ctrl + F5`
-(rechargement forcé). Le badge violet en haut du hero doit être nettement
-plus lisible qu'avant, et la musique ne doit **pas** démarrer toute seule.
+Tout le code est déjà écrit et testé. Ces trois chantiers n'attendent que
+des clics de ta part, parce qu'ils demandent tes mots de passe. Ils sont
+indépendants : tu peux en faire un et t'arrêter là.
 
 ---
 
-## Étape 2 — Exécuter le SQL de sécurité (5 min) ⚠️ LE PLUS IMPORTANT
+## 1 · Activer la carte de Roxwood (5 min + le temps de placer tes points)
 
-1. Va sur **https://supabase.com/dashboard** et ouvre ton projet.
-2. Dans le menu de gauche, clique sur **SQL Editor**.
-3. Clique sur **+ New query** en haut.
-4. Ouvre le fichier **`securite-2026-07.sql`** (dans ton dossier FamilleMoni),
-   sélectionne **tout** le contenu (`Ctrl + A`), copie (`Ctrl + C`).
-5. Colle dans la fenêtre Supabase (`Ctrl + V`), puis clique sur **Run**
-   (ou `Ctrl + Entrée`).
-6. Tu dois voir **« Success. No rows returned »** en bas. C'est normal.
+1. Supabase → **SQL Editor** → colle **`carte-points.sql`** → **Run**.
+2. Double-clique **`publier.bat`**.
+3. Espace membre → onglet **Carte** → **Modifier la carte**.
+   Clique pour poser un point, glisse pour le déplacer, renseigne le nom
+   et le type. Pour une **zone de vente**, choisis le nom exact proposé
+   dans le champ « Zone du bot » : l'anneau du point suivra automatiquement
+   le bonus en cours. Termine par **Enregistrer la carte**.
 
-**Ce que ça corrige :** plus personne ne peut effacer ton planning, écraser
-la photo d'un autre membre, ni publier dans la galerie sans être approuvé.
-
-**Comment vérifier :** connecte-toi à l'espace membre et change ta photo de
-profil. Si elle s'enregistre, tout va bien.
-
-**Si ça échoue** avec une erreur du type *« policy ... does not exist »* :
-c'est sans gravité, relance simplement — le fichier est fait pour être
-rejoué sans risque. Si l'erreur mentionne un nom de règle différent du mien,
-va dans Supabase → Storage → Policies pour lire les noms réels et dis-le moi.
+Seule toi peux modifier la carte ; les membres approuvés la consultent.
 
 ---
 
-## Étape 3 — Créer le secret des fonctions Discord (5 min)
+## 2 · Verrouiller les fonctions Discord (10 min) — en attente depuis le début
 
-Le code est déjà en place. Tant que le secret n'existe pas, les fonctions
-continuent de marcher exactement comme avant — **rien ne casse si tu remets
-cette étape à plus tard**. Elle ferme juste la porte.
+Tant que ce n'est pas fait, n'importe qui connaissant l'adresse de tes
+fonctions peut les appeler en boucle. Rien ne casse en attendant, mais
+c'est la dernière porte ouverte connue.
 
-### 3a. Invente un mot de passe
-
-Par exemple : `moni_cron_7f3a91c8d2e4b6` (change quelques caractères).
-Note-le quelque part.
-
-### 3b. Dans Supabase
-
-Menu de gauche → **Edge Functions** → onglet **Secrets** → **Add new secret**
-- Nom : `CRON_SECRET`
-- Valeur : ton mot de passe
-- **Save**
-
-### 3c. Dans GitHub
-
-Ton dépôt → **Settings** → menu de gauche **Secrets and variables** →
-**Actions** → bouton **New repository secret**
-- Name : `CRON_SECRET`
-- Secret : **le même** mot de passe
-- **Add secret**
-
-### 3d. Une modification à faire à la main
-
-Je n'ai pas le droit d'écrire dans le dossier `.github` (GitHub le protège
-contre les outils externes). Ouvre le fichier
-**`.github/workflows/sync-discord.yml`** dans ton éditeur, et remplace la
-dernière ligne par celle-ci (une seule ligne, tout d'un bloc) :
-
-```yaml
+1. Invente un mot de passe long, ex. `moni_cron_7f3a91c8d2e4b6`.
+2. Supabase → **Edge Functions** → **Secrets** → ajoute `CRON_SECRET` = ce mot de passe.
+3. GitHub → ton dépôt → **Settings** → **Secrets and variables** → **Actions**
+   → **New repository secret** → `CRON_SECRET` = le même.
+4. Ouvre `.github/workflows/sync-discord.yml` et remplace la dernière ligne par :
+   ```yaml
         run: curl -s --max-time 30 -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" https://prwdtdmdkhzwfyivaepw.supabase.co/functions/v1/sync-discord-presences
-```
+   ```
+   (je n'ai pas le droit d'écrire dans le dossier `.github`, c'est la seule
+   ligne à faire à la main)
+5. Redéploie les 4 fonctions modifiées : `sync-discord-presences`,
+   `sync-discord-annonces`, `sync-discord-events`, `discord-presence-bot`.
 
-### 3e. Redéployer les fonctions
-
-Comme d'habitude quand tu modifies une fonction Edge (via le tableau de bord
-Supabase ou la commande `supabase functions deploy`). Les 4 fonctions
-modifiées sont : `sync-discord-presences`, `sync-discord-annonces`,
-`sync-discord-events`, `discord-presence-bot`.
-
-**Comment vérifier :** attends 5 minutes, puis regarde si le planning du site
-se met toujours à jour depuis Discord. Si oui, c'est bon.
-**Si ça ne marche plus :** supprime le secret `CRON_SECRET` côté Supabase —
-tout redevient comme avant, et on regarde ensemble.
+**Vérifier :** 5 minutes plus tard, le planning du site se met toujours à
+jour. **Si ça casse :** supprime le secret côté Supabase, tout redevient
+comme avant.
 
 ---
 
-## Étape 4 — Vider le vieux cache (1 min)
+## 3 · Activer la connexion Discord (15 min)
 
-Tes visiteurs habituels ont l'ancienne version en mémoire. J'ai changé le
-numéro de version du cache (`moni-v5`), donc ça se règle tout seul à leur
-prochaine visite. De ton côté, pour vérifier tout de suite :
+Le guide complet pas à pas : **`docs/CONNEXION-DISCORD.md`**.
+Sans cette configuration, le bouton « Se connecter avec Discord » de
+l'espace membre affiche une erreur — le reste fonctionne normalement.
 
-`F12` → onglet **Application** → **Service Workers** → coche
-**« Update on reload »** → recharge deux fois la page.
+Ordre conseillé : configure Discord + Supabase d'abord (étapes 1 à 3 du
+guide), puis exécute `discord-admin.sql`. Ton email et celui de Raymond
+restent en accès de secours pour l'import de taxes pendant toute la
+transition : personne ne se retrouve enfermé dehors.
 
 ---
 
-# Ce qui a été fait pendant ce temps
+## Pour mémoire — déjà fait ✔
 
-## Sécurité
-- Faille critique bouchée dans `admin.html` : l'email d'un compte pouvait
-  contenir du code exécuté dans ta session.
-- Échappement HTML ajouté partout dans `os.html`, qui n'en avait aucun.
-- Les 3 fonctions de synchro Discord et l'endpoint `?setup=` du bot sont
-  prêts à être verrouillés par un secret partagé.
-- Message clair si le serveur Supabase est injoignable, au lieu d'une page morte.
+Sécurité (XSS admin, règles de la base, photos, galerie) · musique en
+opt-in · service worker réparé · contrastes et clavier · passeports de
+membre générés à chaque publication · import Excel des taxes · panneau
+Prix des drogues réorganisé autour de la rentabilité · liste des membres
+au 27/07 (14 membres) · carte de Roxwood (côté code).
 
-## Performance
-- La musique ne se télécharge plus au défilement : **3,3 Mo économisés**
-  sur chaque première visite. Elle démarre au clic sur le bouton, et le
-  choix est mémorisé.
-- Le décor animé du hero s'arrête quand on a scrollé plus bas.
-- Le fond animé de Moni OS : 2 fois moins de particules (donc 4 fois moins
-  de calculs), en pause quand l'onglet est en arrière-plan.
-- Les sondages Discord et FiveM se mettent en pause sur un onglet inactif.
-- Favicon de 7 Ko au lieu d'un JPEG de 45 Ko, logo du hero à 835 octets.
-- `preconnect` vers le bon domaine de polices, image du hero préchargée,
-  et la bonne graisse de Playfair (le titre était en faux italique).
-
-## Accessibilité
-- Tous les gris illisibles corrigés (le pire était à 2,5 sur 4,5 requis).
-- Le menu burger est un vrai bouton : utilisable au clavier sur mobile.
-- Les cartes membres s'ouvrent avec Entrée ou Espace.
-- « Créer un compte » et « Mot de passe oublié » deviennent atteignables.
-- Le menu de l'admin et de l'espace membre passe en vrais boutons.
-- Les modales fermées ne piègent plus la touche Tab.
-- Le réglage système « réduire les animations » est enfin respecté.
-
-## Rangement
-- `dashboard.css` : 93 lignes qui étaient copiées dans deux fichiers.
-- `starfield.js` : 62 lignes de décor, copiées elles aussi.
-- Code mort supprimé (la fonctionnalité « annonces » désactivée).
-- `sw.js` réécrit : le mode hors-ligne fonctionne, et surtout **tes mises à
-  jour de membres arrivent enfin chez les visiteurs habituels**.
-- `migrations/README.md` : l'ordre d'exécution de tes 14 fichiers SQL.
-
-**Vérifié** : zéro erreur JavaScript sur les 4 pages, et 397 éléments
-comparés avant/après sur l'espace membre et l'admin — **zéro changement
-d'apparence**.
-
-Une sauvegarde complète de l'état d'avant est dans
-`_sauvegarde-avant-corrections/`.
+Reste en projet, quand tu veux : la chronique hebdomadaire automatique et
+le bilan mensuel partageable par membre.

@@ -89,7 +89,8 @@ set search_path = public, auth, pg_temp
 as $$
   select public.est_admin_discord()
       or coalesce(auth.jwt() ->> 'email', '') in (
-           'syne@live.fr'              -- accès de secours — Lov Moni
+           'syne@live.fr',             -- accès de secours — Lov Moni
+           'f.moinard44@gmail.com'     -- accès de secours — Raymond Carter
          );
 $$;
 

@@ -181,8 +181,107 @@
     /* Le résumé colle au reste du tableau de bord. */
     #prix-kpis { margin-bottom: 14px; }
     #zones-details summary::-webkit-details-marker { display: none; }
+    #zones-details summary::marker { content: ''; }
     #zones-details summary::before { content: '▸ '; color: var(--dim); }
     #zones-details[open] summary::before { content: '▾ '; }
+
+
+
+    /* ── LA CARTE DE ROXWOOD ─────────────────────────────────────────────
+       Les points sont positionnés en % : la carte reste juste à toutes les
+       tailles. L'anneau d'une zone s'épaissit avec son bonus, et le
+       pourcentage est écrit à côté — la couleur n'est jamais seule. */
+    .carte-wrap { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .carte-wrap img { width: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+    .carte-wrap.edition { cursor: crosshair; box-shadow: 0 0 0 2px rgba(224,80,63,.5); }
+    .carte-calque { position: absolute; inset: 0; }
+    .carte-pt {
+      position: absolute; transform: translate(-50%, -50%);
+      background: none; border: 0; padding: 6px; cursor: pointer;
+      font-family: inherit; text-align: center; touch-action: none;
+    }
+    .carte-wrap.edition .carte-pt { cursor: grab; }
+    .pt-dot {
+      display: block; width: 14px; height: 14px; margin: 0 auto; border-radius: 50%;
+      background: var(--pc); border: 2px solid #0d0f14;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc) 45%, transparent), 0 2px 8px rgba(0,0,0,.6);
+    }
+    .t-qg .pt-dot { width: 18px; height: 18px; }
+    .carte-pt.b1 .pt-dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc) 30%, transparent), 0 2px 8px rgba(0,0,0,.6); }
+    .carte-pt.b2 .pt-dot { box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc) 35%, transparent), 0 2px 8px rgba(0,0,0,.6); }
+    .carte-pt.b3 .pt-dot { box-shadow: 0 0 0 9px color-mix(in srgb, var(--pc) 40%, transparent), 0 2px 8px rgba(0,0,0,.6); }
+    .pt-nom {
+      display: block; margin-top: 4px; font-size: 10px; font-weight: 600; color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 8px rgba(0,0,0,.8); white-space: nowrap;
+    }
+    .pt-bonus { display: block; font-size: 9.5px; font-weight: 700; color: var(--pc); text-shadow: 0 1px 3px rgba(0,0,0,.95); }
+    .carte-pt.sel .pt-dot { outline: 2px dashed #fff; outline-offset: 3px; }
+    .carte-pt:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 8px; }
+    .carte-legende { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 11.5px; color: var(--muted); align-items: center; }
+    .carte-legende .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+    .carte-fiche { margin-top: 12px; background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .carte-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 12px; align-items: end; }
+    .carte-form label { font-size: 10px; }
+    .carte-btn { width: auto; padding: 11px 20px; }
+    .carte-annuler { background: none; border: 1px solid var(--border2); color: var(--muted); }
+    .carte-suppr { background: none; border: 1px solid rgba(224,80,63,.5); color: var(--red); }
+    @media (max-width: 640px) { .pt-nom { font-size: 9px; } .carte-form { grid-template-columns: 1fr 1fr; } }
+
+    /* ── CE QUI RAPPORTE LE PLUS ──────────────────────────────────────────
+       Barres divergentes : le bénéfice net par unité, du meilleur au pire.
+       Une seule série, donc pas de légende — le titre dit ce qui est mesuré.
+       Le vert et le rouge sont doublés par la position (à droite ou à gauche
+       du zéro) et par le signe du montant : la couleur n'est jamais seule. */
+    .rent-hero {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      padding: 18px 22px; margin-bottom: 20px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(95,208,138,.10), rgba(212,178,110,.05));
+      border: 1px solid rgba(95,208,138,.25);
+    }
+    .rent-hero-nom {
+      font-family: 'Playfair Display', Georgia, serif; font-size: 34px; font-weight: 700;
+      line-height: 1; color: var(--green); letter-spacing: -.5px; flex-shrink: 0;
+    }
+    .rent-hero-txt { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .rent-hero-txt b { color: var(--text); }
+
+    .rent-graph { display: flex; flex-direction: column; gap: 6px; }
+    .rent-ligne { display: flex; align-items: center; gap: 14px; padding: 3px 0; }
+    .rent-nom {
+      width: 148px; flex-shrink: 0; font-size: 12.5px; color: var(--muted);
+      text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rent-ligne.champion .rent-nom { color: var(--text); font-weight: 600; }
+    .rent-etoile { color: var(--gold); margin-right: 5px; }
+    .rent-piste { position: relative; flex: 1; height: 18px; }
+    .rent-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--border2); }
+    .rent-barre {
+      position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0;
+      transition: width .5s cubic-bezier(.16,1,.3,1);
+    }
+    .rent-barre.plus  { background: #5fd08a; }
+    .rent-barre.moins { background: #e0503f; border-radius: 4px 0 0 4px; }
+    .rent-ligne.champion .rent-barre.plus { background: linear-gradient(90deg, #5fd08a, #d4b26e); }
+    .rent-val { width: 92px; flex-shrink: 0; text-align: right; font-size: 13px; font-weight: 600; }
+    .rent-val.plus  { color: #5fd08a; }
+    .rent-val.moins { color: #e0503f; }
+    .rent-pct { display: block; font-size: 10px; font-weight: 400; margin-top: 1px; }
+
+    .rent-details { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .rent-details summary { font-size: 12px; color: var(--dim); cursor: pointer; list-style: none; }
+    .rent-details summary::-webkit-details-marker { display: none; }
+    .rent-details summary::marker { content: ''; }
+    .rent-details summary::before { content: '▸ '; }
+    .rent-details[open] summary::before { content: '▾ '; }
+    .rent-table { margin-top: 14px; }
+    .rent-table td { vertical-align: top; }
+    .rent-table .rent-top { background: rgba(95,208,138,.06); }
+    @media (max-width: 900px) {
+      .rent-table { display: block; overflow-x: auto; }
+      .rent-nom { width: 96px; font-size: 11.5px; }
+      .rent-val { width: 74px; font-size: 12px; }
+      .rent-hero-nom { font-size: 26px; }
+    }
 
     /* ── OÙ VENDRE ───────────────────────────────────────────────────── */
     .ouv-table td { vertical-align: top; }
@@ -215,7 +314,11 @@
       border: 1px solid var(--border2); color: var(--muted); white-space: nowrap;
     }
     .zone-brut { margin-top: 10px; }
-    .zone-brut summary { font-size: 10.5px; color: var(--dim); cursor: pointer; }
+    .zone-brut summary { font-size: 10.5px; color: var(--dim); cursor: pointer; list-style: none; }
+    .zone-brut summary::-webkit-details-marker { display: none; }
+    .zone-brut summary::marker { content: ''; }
+    .zone-brut summary::before { content: '▸ '; }
+    .zone-brut[open] summary::before { content: '▾ '; }
     .zone-brut p { font-size: 11.5px; color: var(--muted); line-height: 1.6; margin-top: 7px; white-space: pre-line; }
 
     @media (max-width: 560px) {
@@ -438,6 +541,7 @@
 
     <div class="sb-group">Perso</div>
     <button type="button" class="sb-item req-approve" data-panel="events" data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4m8-4v4"/></svg></span><span class="lbl">Planning</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="carte" data-title="La &lt;em&gt;carte&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L4 6v14l5-2 6 2 5-2V4l-5 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span class="lbl">Carte</span></button>
     <button type="button" class="sb-item req-approve" data-panel="profil" data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.8 20a7.2 7.2 0 0114.4 0"/></svg></span><span class="lbl">Mon profil</span></button>
     <button type="button" class="sb-item" data-panel="galerie" data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.8 6.5l1.2-2.3h4l1.2 2.3"/></svg></span><span class="lbl">Galerie</span></button>
 
@@ -529,6 +633,12 @@
       <!-- RÉSUMÉ — les 4 réponses qu'on vient chercher en premier -->
       <div class="kpis" id="prix-kpis" style="display:none;"></div>
 
+      <!-- LA RENTABILITÉ — la question du groupe : quoi vendre en priorité -->
+      <div class="bloc" id="bloc-rentabilite" style="display:none;">
+        <div class="bloc-t">Ce qui rapporte le plus <span class="hint" id="rent-note" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div id="bd-rentabilite"></div>
+      </div>
+
       <!-- LE COURS — données du bot, horodatées : on peut montrer l'évolution -->
       <div class="bloc">
         <div class="bloc-t">Le cours des drogues <span class="hint" id="bourse-maj" style="text-transform:none;letter-spacing:0;"></span></div>
@@ -539,12 +649,6 @@
       <div class="bloc">
         <div class="bloc-t">Tes prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
         <div id="bd-prix"><div class="locked">Chargement…</div></div>
-      </div>
-
-      <!-- OÙ VENDRE — croisement du cours et des bonus de zone -->
-      <div class="bloc" id="bloc-ouvendre" style="display:none;">
-        <div class="bloc-t">Où vendre <span class="hint" id="ouvendre-note" style="text-transform:none;letter-spacing:0;"></span></div>
-        <div id="bd-ouvendre"></div>
       </div>
 
       <!-- LES ZONES — bonus par secteur -->
@@ -614,6 +718,46 @@
     </div>
 
     <!-- ÉVÉNEMENTS : PLANNING HEBDOMADAIRE -->
+    <!-- LA CARTE — points posés par la Donna, zones colorées par leur bonus -->
+    <div class="panel" id="panel-carte">
+      <div class="bloc">
+        <div class="bloc-t">La carte de Roxwood <span class="hint" id="carte-note" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div class="carte-wrap" id="carte-wrap">
+          <img src="qg-carte.webp" alt="Carte de Roxwood et Los Santos" id="carte-img" decoding="async" draggable="false" />
+          <div id="carte-calque" class="carte-calque"></div>
+        </div>
+        <div class="carte-legende" id="carte-legende"></div>
+        <div id="carte-fiche" class="carte-fiche" style="display:none;"></div>
+
+        <!-- Mode édition — visible pour la Donna uniquement -->
+        <div id="carte-admin" style="display:none;margin-top:14px;">
+          <div id="carte-boutons" style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn carte-btn" id="carte-edit-btn" onclick="carteToggleEdition()">Modifier la carte</button>
+            <button type="button" class="btn green carte-btn" id="carte-save-btn" style="display:none;" onclick="carteEnregistrer()">Enregistrer la carte</button>
+            <button type="button" class="btn carte-btn carte-annuler" id="carte-cancel-btn" style="display:none;" onclick="carteAnnuler()">Annuler</button>
+          </div>
+          <p class="hint" id="carte-aide" style="display:none;margin-top:10px;line-height:1.7;">
+            Clique sur la carte pour poser un point, glisse un point pour le déplacer
+            (ou sélectionne-le et utilise les flèches du clavier). Rien n'est envoyé
+            avant « Enregistrer la carte ».
+          </p>
+          <div id="carte-form" class="carte-form" style="display:none;">
+            <label>Nom du point<input type="text" id="cf-nom" style="margin-bottom:0;" /></label>
+            <label>Type<select id="cf-type" style="margin-bottom:0;">
+              <option value="qg">QG</option><option value="zone">Zone de vente</option>
+              <option value="planque">Planque</option><option value="event">Événement</option>
+              <option value="autre" selected>Repère</option>
+            </select></label>
+            <label id="cf-zone-l">Zone du bot<input type="text" id="cf-zone" list="carte-zones-dl" placeholder="ex. Paleto" style="margin-bottom:0;" /></label>
+            <label>Note<input type="text" id="cf-notes" style="margin-bottom:0;" /></label>
+            <button type="button" class="btn carte-btn carte-suppr" onclick="carteSupprimer()">Supprimer ce point</button>
+          </div>
+          <datalist id="carte-zones-dl"></datalist>
+          <div class="msg" id="carte-msg"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="panel" id="panel-events">
       <div class="bloc">
         <div class="cal-head">
@@ -844,6 +988,8 @@
     // implémentation, donc aucun risque que l'affichage et l'autorisation
     // réelle divergent. Et ce test n'est qu'un confort : même en le
     // contournant dans le navigateur, la base refuserait le dépôt.
+    const carteAdmin = document.getElementById('carte-admin');
+    if (carteAdmin) carteAdmin.style.display = user.email === 'syne@live.fr' ? '' : 'none';
     const blocImport = document.getElementById('bloc-import-taxes');
     if (blocImport) {
       blocImport.style.display = 'none';
@@ -870,6 +1016,7 @@
     loadEvents();
     loadBotDashboards();
     loadPrix();
+    loadCarte();
   }
 
   async function loadProfil() {
@@ -1872,28 +2019,23 @@
     // Le plus cher à l'unité
     const cher = items.reduce((a, b) => med(cours[b]) > med(cours[a]) ? b : a);
 
-    // La meilleure marge : uniquement là où un prix d'achat est renseigné.
-    const avecMarge = items.filter(i => achat[i] > 0)
-      .map(i => ({ item: i, marge: med(cours[i]) - achat[i], pct: (med(cours[i]) - achat[i]) / achat[i] * 100 }))
-      .sort((a, b) => b.pct - a.pct);
-    const top = avecMarge[0];
-
     const valeurStock = (stocks || []).reduce((t, s) => t + (s.quantite || 0) * (achat[s.item] || 0), 0);
     const dernier = items.reduce((m, i) => (!m || cours[i].ts > m) ? cours[i].ts : m, null);
 
     box.style.display = '';
     box.innerHTML =
+      '<div class="kpi" style="--kc:#5fd08a;">' +
+        '<div class="kpi-label">La plus rentable</div>' +
+        '<div class="kpi-num" style="color:var(--green);">' + (meilleureZone ? escT(cap(meilleureZone.item)) : '—') + '</div>' +
+        '<div class="kpi-foot">' + (meilleureZone
+          ? '+' + fmtArgent(Math.round(meilleureZone.benefice)) + ' net par unité' +
+            (meilleureZone.zone ? ' · ' + escT(meilleureZone.zone) : '')
+          : 'renseigne des prix d\'achat') + '</div>' +
+      '</div>' +
       '<div class="kpi" style="--kc:#d4b26e;">' +
         '<div class="kpi-label">Le plus cher à l\'unité</div>' +
         '<div class="kpi-num" style="color:var(--gold);">' + escT(cap(cher)) + '</div>' +
         '<div class="kpi-foot">' + fmtArgent(Math.round(med(cours[cher]))) + ' en moyenne au PNJ</div>' +
-      '</div>' +
-      '<div class="kpi" style="--kc:#5fd08a;">' +
-        '<div class="kpi-label">Meilleure marge</div>' +
-        '<div class="kpi-num" style="color:var(--green);">' + (top ? escT(cap(top.item)) : '—') + '</div>' +
-        '<div class="kpi-foot">' + (top
-          ? '+' + fmtArgent(Math.round(top.marge)) + ' par unité · +' + Math.round(top.pct) + ' %'
-          : 'renseigne des prix d\'achat') + '</div>' +
       '</div>' +
       '<div class="kpi" style="--kc:#e0b062;">' +
         '<div class="kpi-label">Valeur du stock</div>' +
@@ -1901,116 +2043,176 @@
         '<div class="kpi-foot">au prix d\'achat</div>' +
       '</div>' +
       '<div class="kpi" style="--kc:#9b8cf0;">' +
-        '<div class="kpi-label">Meilleure vente</div>' +
-        '<div class="kpi-num" style="font-size:20px;">' + (meilleureZone ? escT(meilleureZone.zone) : '—') + '</div>' +
-        '<div class="kpi-foot">' + (meilleureZone
-          ? escT(cap(meilleureZone.item)) + ' · ' + fmtArgent(Math.round(meilleureZone.prix)) + ' (+' + meilleureZone.gain + ' %)'
-          : 'aucun bonus de zone connu') + '</div>' +
+        '<div class="kpi-label">Meilleur rendement</div>' +
+        '<div class="kpi-num" style="font-size:26px;">' +
+          (meilleureZone && meilleureZone.pctItem ? escT(cap(meilleureZone.pctItem)) : '—') + '</div>' +
+        '<div class="kpi-foot">' + (meilleureZone && meilleureZone.pctValeur != null
+          ? '+' + Math.round(meilleureZone.pctValeur) + ' % de ce que tu as payé'
+          : '—') + '</div>' +
       '</div>';
   }
 
-  function rendreOuVendre(zones, cours, prixManuels) {
-    const bloc = document.getElementById('bloc-ouvendre');
-    const box = document.getElementById('bd-ouvendre');
-    if (!zones.length) { bloc.style.display = 'none'; return null; }
+  /* ══════════════════════════════════════════════════════════════════════
+     CE QUI RAPPORTE LE PLUS
 
-    // Prix de référence par produit : le cours du bot, sinon ton prix saisi.
-    const prix = {};
-    Object.keys(cours).forEach(item => {
-      const c = cours[item];
-      prix[item] = { valeur: ((c.prix_actuel_min || 0) + (c.prix_actuel_max || 0)) / 2, source: 'cours' };
-    });
-    // Volontairement : aucun repli sur le prix d'achat. Un produit que le bot
-    // n'a pas encore relevé n'apparaît pas ici, plutôt que d'afficher un gain
-    // de revente calculé sur ce que la famille a payé.
-    void prixManuels;
-    const produits = Object.keys(prix);
-    if (!produits.length) { bloc.style.display = 'none'; return null; }
+     La vraie question du groupe : « quelle drogue vend-on en priorité ? »
+     La réponse n'est ni le prix le plus élevé, ni la meilleure marge brute :
+     c'est ce qu'on encaisse réellement, une fois le meilleur bonus de zone
+     appliqué, moins ce que la famille a payé la marchandise.
 
-    const parCat = {};
-    zones.forEach(z => { (parCat[z.categorie] = parCat[z.categorie] || []).push(z); });
+         gain net à l'unité = (cours médian × meilleur bonus de zone) − prix d'achat
 
-    // Le gain d'une zone pour un produit donné, et son détail lisible.
-    function gain(z, item) {
-      const parts = [], pcts = [];
-      const ajoute = (v, texte) => { if (v) { pcts.push(Number(v)); parts.push(texte); } };
-      ajoute(z.bonus_all_drogues_pct, (Number(z.bonus_all_drogues_pct) > 0 ? '+' : '') + z.bonus_all_drogues_pct + ' % toutes drogues');
-      ajoute(z.bonus_zone_pct,        (Number(z.bonus_zone_pct) > 0 ? '+' : '') + z.bonus_zone_pct + ' % zone');
-      if (z.drogue_associee && memeProduit(z.drogue_associee, item)) {
-        ajoute(z.bonus_drogue_associee_pct, (Number(z.bonus_drogue_associee_pct) > 0 ? '+' : '') + z.bonus_drogue_associee_pct + ' % ' + cap(z.drogue_associee));
-      }
-      if (z.bonus_nord) ajoute(z.bonus_nord_valeur, (Number(z.bonus_nord_valeur) > 0 ? '+' : '') + (z.bonus_nord_valeur || 0) + ' % Nord');
+     Le classement est trié là-dessus. Un gain négatif signifie qu'on achète
+     plus cher qu'on ne revend : la barre part alors à gauche du zéro.
+     ══════════════════════════════════════════════════════════════════════ */
+  function rendreRentabilite(zones, cours, rows, stocks) {
+    const bloc = document.getElementById('bloc-rentabilite');
+    const box = document.getElementById('bd-rentabilite');
+    if (!bloc || !box) return null;
 
-      // Additif : 10 % + 10 % = 20 %.  Multiplicatif : 1,10 × 1,10 = 21 %.
-      const facteur = CUMUL_ADDITIF
-        ? 1 + pcts.reduce((t, v) => t + v, 0) / 100
-        : pcts.reduce((t, v) => t * (1 + v / 100), 1);
-      return { total: Math.round((facteur - 1) * 1000) / 10, facteur: facteur, detail: parts };
+    const items = Object.keys(cours);
+    if (!items.length) { bloc.style.display = 'none'; return null; }
+
+    const achat = {};
+    (rows || []).forEach(r => { achat[r.item] = Number(r.prix) || 0; });
+    const stock = {};
+    (stocks || []).forEach(x => { stock[x.item] = x.quantite || 0; });
+    const med = c => ((c.prix_actuel_min || 0) + (c.prix_actuel_max || 0)) / 2;
+
+    // Le meilleur bonus applicable à un produit, toutes zones confondues.
+    function meilleurBonus(item) {
+      let best = null;
+      (zones || []).forEach(z => {
+        const parts = [], pcts = [];
+        const ajoute = (v, t) => { if (v) { pcts.push(Number(v)); parts.push(t); } };
+        ajoute(z.bonus_all_drogues_pct, (Number(z.bonus_all_drogues_pct) > 0 ? '+' : '') + z.bonus_all_drogues_pct + ' % toutes drogues');
+        ajoute(z.bonus_zone_pct,        (Number(z.bonus_zone_pct) > 0 ? '+' : '') + z.bonus_zone_pct + ' % zone');
+        if (z.drogue_associee && memeProduit(z.drogue_associee, item)) {
+          ajoute(z.bonus_drogue_associee_pct, (Number(z.bonus_drogue_associee_pct) > 0 ? '+' : '') + z.bonus_drogue_associee_pct + ' % ' + cap(z.drogue_associee));
+        }
+        if (z.bonus_nord) ajoute(z.bonus_nord_valeur, (Number(z.bonus_nord_valeur) > 0 ? '+' : '') + (z.bonus_nord_valeur || 0) + ' % Nord');
+        const facteur = CUMUL_ADDITIF
+          ? 1 + pcts.reduce((t, v) => t + v, 0) / 100
+          : pcts.reduce((t, v) => t * (1 + v / 100), 1);
+        const cand = { zone: z.zone, categorie: z.categorie, facteur: facteur,
+                       pct: Math.round((facteur - 1) * 1000) / 10, detail: parts };
+        if (!best || cand.facteur > best.facteur ||
+            (cand.facteur === best.facteur && String(cand.zone).localeCompare(String(best.zone)) < 0)) best = cand;
+      });
+      return best || { zone: null, facteur: 1, pct: 0, detail: [] };
     }
 
-    let championne = null;
-    const sections = Object.keys(parCat).sort().map(cat => {
-      const lignes = produits.map(item => {
-        const classees = parCat[cat]
-          .map(z => ({ zone: z, g: gain(z, item) }))
-          .sort((a, b) => (b.g.total - a.g.total) || String(a.zone.zone).localeCompare(String(b.zone.zone)));
-        const meilleur = classees[0];
-        if (!meilleur || meilleur.g.total <= 0) return null;
-        const base = prix[item].valeur;
-        const second = classees.find(c => c.g.total < meilleur.g.total);
-        // Plusieurs zones peuvent rapporter autant avec des bonus DIFFÉRENTS.
-        // On n'en nomme qu'une — celle dont le détail est affiché — et on
-        // signale les autres à part, sinon le calcul montré serait faux
-        // pour toutes sauf une.
-        const exaequo = classees
-          .filter(c => c.g.total === meilleur.g.total && c.zone !== meilleur.zone)
-          .map(c => c.zone.zone);
-        return {
-          item: item, base: base, source: prix[item].source,
-          zone: meilleur.zone.zone, exaequo: exaequo, gain: meilleur.g,
-          final: base * meilleur.g.facteur,
-          ecart: second ? base * meilleur.g.facteur - base * second.g.facteur : 0,
-        };
-      }).filter(Boolean).sort((a, b) => b.final - a.final);
+    const lignes = items.map(item => {
+      const b = meilleurBonus(item);
+      const base = med(cours[item]);
+      const vente = base * b.facteur;
+      const cout = achat[item] || 0;
+      return {
+        item: item, zone: b.zone, bonusPct: b.pct, detail: b.detail,
+        base: base, vente: vente, cout: cout,
+        gain: cout > 0 ? vente - cout : null,
+        pct: cout > 0 ? (vente - cout) / cout * 100 : null,
+        stock: stock[item] || 0,
+      };
+    });
 
-      if (!lignes.length) return '';
-      if (!championne || lignes[0].final > championne.prix) {
-        championne = { zone: lignes[0].zone, item: lignes[0].item, prix: lignes[0].final, gain: lignes[0].gain.total };
-      }
-      return '<div class="zone-cat">' + escT(cap(String(cat).replace(/_/g, ' '))) + '</div>' +
-        '<table class="vd-table ouv-table"><thead><tr>' +
-        '<th>Drogue</th><th>Meilleure zone</th><th>Bonus</th>' +
-        '<th class="num">Prix sur zone</th>' +
-        '</tr></thead><tbody>' +
-        lignes.map((l, i) =>
-          '<tr' + (i === 0 ? ' class="ouv-top"' : '') + '>' +
-            '<td><b>' + escT(cap(l.item)) + '</b></td>' +
-            '<td><b>' + escT(l.zone) + '</b>' +
-              (l.exaequo.length
-                ? '<span class="hint ouv-detail" title="' + escT(l.exaequo.join(', ')) + '">et ' + l.exaequo.length +
-                  ' autre' + (l.exaequo.length > 1 ? 's' : '') + ' à égalité</span>'
-                : '') +
-              (l.ecart > 0 ? '<span class="hint ouv-detail">+' + fmtArgent(Math.round(l.ecart)) + ' vs la zone suivante</span>' : '') +
-            '</td>' +
-            '<td><span class="ouv-gain">+' + l.gain.total + ' %</span>' +
-              '<span class="hint ouv-detail">' + escT(l.gain.detail.join(' · ')) + '</span></td>' +
-            '<td class="num"><b style="color:var(--green)">' + fmtArgent(Math.round(l.final)) + '</b>' +
-              '<span class="hint ouv-detail">au lieu de ' + fmtArgent(Math.round(l.base)) + '</span></td>' +
-          '</tr>').join('') +
-        '</tbody></table>';
-    }).filter(Boolean).join('');
+    const chiffrables = lignes.filter(l => l.gain !== null).sort((a, b) => b.gain - a.gain);
+    const sansAchat = lignes.filter(l => l.gain === null);
 
-    if (!sections) { bloc.style.display = 'none'; return null; }
+    if (!chiffrables.length) {
+      bloc.style.display = '';
+      box.innerHTML = '<div class="locked">Renseigne les prix d\'achat plus bas : le classement s\'affichera aussitôt.</div>';
+      return null;
+    }
+
     bloc.style.display = '';
-    box.innerHTML = sections +
-      '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
-        'Prix de base = prix de vente au PNJ relevé par le bot (médiane de la fourchette). ' +
-        'Les bonus sont <b>additionnés</b> puis appliqués au prix. ' +
-        'Le détail est affiché sous chaque pourcentage : si le résultat ne correspond pas à ce que tu constates en jeu, dis-le moi et j\'ajuste la règle.' +
+    const champion = chiffrables[0];
+
+    // Barres divergentes : le zéro se place selon qu'il existe ou non des pertes.
+    const maxi = Math.max.apply(null, chiffrables.map(l => l.gain));
+    const mini = Math.min.apply(null, chiffrables.map(l => l.gain));
+    const bas = Math.min(0, mini), haut = Math.max(0, maxi);
+    const amplitude = (haut - bas) || 1;
+    const zeroPct = (0 - bas) / amplitude * 100;
+
+    const barres = chiffrables.map((l, i) => {
+      const positif = l.gain >= 0;
+      const largeur = Math.abs(l.gain) / amplitude * 100;
+      const gauche = positif ? zeroPct : zeroPct - largeur;
+      return '<div class="rent-ligne' + (i === 0 ? ' champion' : '') + '"' +
+          ' title="' + escT(cap(l.item)) + ' · vendu ' + fmtArgent(Math.round(l.vente)) +
+          (l.zone ? ' à ' + escT(l.zone) : '') + ', acheté ' + fmtArgent(Math.round(l.cout)) + '">' +
+        '<div class="rent-nom">' + (i === 0 ? '<span class="rent-etoile">★</span>' : '') + escT(cap(l.item)) + '</div>' +
+        '<div class="rent-piste">' +
+          (bas < 0 ? '<span class="rent-zero" style="left:' + zeroPct.toFixed(2) + '%"></span>' : '') +
+          '<span class="rent-barre ' + (positif ? 'plus' : 'moins') + '"' +
+            ' style="left:' + gauche.toFixed(2) + '%;width:' + largeur.toFixed(2) + '%"></span>' +
+        '</div>' +
+        '<div class="rent-val ' + (positif ? 'plus' : 'moins') + '">' +
+          (positif ? '+' : '−') + fmtArgent(Math.abs(Math.round(l.gain))) +
+          '<span class="hint rent-pct">' + (positif ? '+' : '−') + Math.abs(Math.round(l.pct)) + ' %</span>' +
+        '</div>' +
       '</div>';
-    const note = document.getElementById('ouvendre-note');
-    if (note) note.textContent = ' · calculé sur le dernier cours et les bonus en cours';
-    return championne;
+    }).join('');
+
+    const potentiel = champion.stock ? champion.gain * champion.stock : 0;
+
+    box.innerHTML =
+      '<div class="rent-hero">' +
+        '<div class="rent-hero-nom">' + escT(cap(champion.item)) + '</div>' +
+        '<div class="rent-hero-txt">' +
+          '<b>' + (champion.gain >= 0 ? '+' : '−') + fmtArgent(Math.abs(Math.round(champion.gain))) + '</b> de bénéfice par unité' +
+          (champion.zone ? ' en vendant à <b>' + escT(champion.zone) + '</b>' : '') +
+          ' — acheté ' + fmtArgent(Math.round(champion.cout)) +
+          ', revendu ' + fmtArgent(Math.round(champion.vente)) +
+          (champion.bonusPct ? ' (bonus +' + champion.bonusPct + ' %)' : '') + '.' +
+          (potentiel > 0
+            ? '<br>Tes ' + champion.stock.toLocaleString('fr-FR') + ' unités en stock valent <b>' +
+              fmtArgent(Math.round(potentiel)) + '</b> de bénéfice.'
+            : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="rent-graph">' + barres + '</div>' +
+      '<details class="rent-details"><summary>Le détail par produit</summary>' +
+      '<table class="vd-table rent-table"><thead><tr>' +
+        '<th>Drogue</th><th>Où vendre</th><th class="num">Revendu</th>' +
+        '<th class="num">Acheté</th><th class="num">Bénéfice / unité</th>' +
+        '<th class="num">Stock</th><th class="num">Bénéfice du stock</th>' +
+      '</tr></thead><tbody>' +
+      chiffrables.map((l, i) =>
+        '<tr' + (i === 0 ? ' class="rent-top"' : '') + '>' +
+          '<td><b>' + escT(cap(l.item)) + '</b></td>' +
+          '<td>' + (l.zone ? '<b>' + escT(l.zone) + '</b>' : '<span class="hint">aucune zone</span>') +
+            (l.detail.length ? '<span class="hint ouv-detail">' + escT(l.detail.join(' · ')) + '</span>' : '') + '</td>' +
+          '<td class="num">' + fmtArgent(Math.round(l.vente)) +
+            '<span class="hint ouv-detail">au lieu de ' + fmtArgent(Math.round(l.base)) + '</span></td>' +
+          '<td class="num ref">' + fmtArgent(Math.round(l.cout)) + '</td>' +
+          '<td class="num"><b class="marge ' + (l.gain < 0 ? 'perte' : l.pct < 30 ? 'faible' : 'bonne') + '">' +
+            (l.gain >= 0 ? '+' : '−') + fmtArgent(Math.abs(Math.round(l.gain))) + '</b>' +
+            '<span class="hint marge-pct">' + (l.gain >= 0 ? '+' : '−') + Math.abs(Math.round(l.pct)) + ' %' +
+            (l.gain < 0 ? ' · perte' : l.pct < 30 ? ' · faible' : '') + '</span></td>' +
+          '<td class="num">' + l.stock.toLocaleString('fr-FR') + '</td>' +
+          '<td class="num" style="color:var(--green);font-weight:600;">' +
+            (l.stock ? fmtArgent(Math.round(l.gain * l.stock)) : '<span class="hint">—</span>') + '</td>' +
+        '</tr>').join('') +
+      '</tbody></table>' +
+      (sansAchat.length
+        ? '<div class="hint" style="margin-top:12px;">Sans prix d\'achat, donc hors classement : ' +
+          sansAchat.map(l => escT(cap(l.item))).join(', ') + '.</div>'
+        : '') +
+      '<div class="hint" style="margin-top:12px;line-height:1.75;">' +
+        'Bénéfice = prix de revente au meilleur bonus de zone, moins le prix d\'achat. ' +
+        'Les bonus sont additionnés ; le détail est affiché sous chaque zone pour que tu puisses le vérifier en jeu.' +
+      '</div></details>';
+
+    const note = document.getElementById('rent-note');
+    if (note) note.textContent = ' · bénéfice net par unité, bonus de zone compris';
+
+    const meilleurPct = chiffrables.slice().sort((a, b) => b.pct - a.pct)[0];
+    return { zone: champion.zone, item: champion.item, prix: champion.vente,
+             gain: champion.bonusPct, benefice: champion.gain,
+             pctItem: meilleurPct ? meilleurPct.item : null,
+             pctValeur: meilleurPct ? meilleurPct.pct : null };
   }
 
   function rendreZones(lignes) {
@@ -2131,10 +2333,11 @@
         const d = derniereZone[cle];
         if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniereZone[cle] = z;
       });
-      const championne = rendreOuVendre(Object.values(derniereZone), cours, rows);
+      const championne = rendreRentabilite(Object.values(derniereZone), cours, rows, (stocksQ && stocksQ.data) || []);
       rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], championne);
     } else {
-      rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], null);
+      const championne = rendreRentabilite([], cours, rows, (stocksQ && stocksQ.data) || []);
+      rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], championne);
     }
 
     const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
@@ -2262,6 +2465,316 @@
 
 <script src="starfield.js"></script>
 <script>starfield('member-canvas', { max: 140, densite: 14000 });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     LA CARTE DE ROXWOOD
+
+     Les points vivent dans la table carte_points, en pourcentages de
+     l'image : la carte reste juste quelle que soit la taille de l'écran.
+     Un point « zone de vente » relié à une zone du bot porte un anneau
+     dont l'épaisseur suit le bonus en cours — et le pourcentage est
+     toujours écrit à côté, la couleur ne porte jamais l'info toute seule.
+
+     Le mode édition (Donna uniquement) travaille en local : rien ne part
+     vers la base avant le clic sur « Enregistrer la carte ».
+     ══════════════════════════════════════════════════════════════════════ */
+  const CARTE_TYPES = {
+    qg:      { label: 'QG',            color: '#d4b26e' },
+    zone:    { label: 'Zone de vente', color: '#4fc3f7' },
+    planque: { label: 'Planque',       color: '#9b8cf0' },
+    event:   { label: 'Événement',     color: '#e35d4c' },
+    autre:   { label: 'Repère',        color: '#9a9a9a' },
+  };
+  let cartePoints = [];        // les points affichés (copie de travail)
+  let carteSupprimes = [];     // ids à effacer au prochain enregistrement
+  let carteZones = {};         // nom de zone -> derniers relevés (un par catégorie)
+  let carteEdition = false;
+  let carteSel = -1;           // index du point sélectionné en édition
+
+  // Le bonus « toute la zone » : ce qui s'applique quel que soit le produit.
+  function carteBonusZone(z) {
+    return (Number(z.bonus_all_drogues_pct) || 0) + (Number(z.bonus_zone_pct) || 0) +
+           (z.bonus_nord ? (Number(z.bonus_nord_valeur) || 0) : 0);
+  }
+  function carteBonusDe(nomZone) {
+    const rows = carteZones[nomZone];
+    if (!rows || !rows.length) return null;
+    return Math.max.apply(null, rows.map(carteBonusZone));
+  }
+
+  async function loadCarte() {
+    const note = document.getElementById('carte-note');
+    const calque = document.getElementById('carte-calque');
+    if (!calque || !currentUser) return;
+
+    const [ptsQ, zonesQ] = await Promise.all([
+      sb.from('carte_points').select('*').order('nom'),
+      sb.from('bot_zone_bonus').select('*').order('ts', { ascending: false }).limit(400),
+    ]);
+
+    if (ptsQ.error) {
+      if (note) note.textContent = ' · exécute carte-points.sql dans Supabase pour activer la carte';
+      calque.innerHTML = '';
+      return;
+    }
+
+    // Dernier relevé de chaque zone, rangé par nom de zone.
+    carteZones = {};
+    const derniers = {};
+    ((zonesQ && zonesQ.data) || []).forEach(z => {
+      const cle = z.categorie + '§' + z.zone;
+      const d = derniers[cle];
+      if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniers[cle] = z;
+    });
+    Object.values(derniers).forEach(z => { (carteZones[z.zone] = carteZones[z.zone] || []).push(z); });
+
+    // Le champ « zone du bot » propose les vrais noms — pas de faute de frappe.
+    const dl = document.getElementById('carte-zones-dl');
+    if (dl) dl.innerHTML = Object.keys(carteZones).sort()
+      .map(z => '<option value="' + escT(z) + '"></option>').join('');
+
+    cartePoints = (ptsQ.data || []).map(r => ({
+      id: r.id, nom: r.nom, type: r.type, x: Number(r.x), y: Number(r.y),
+      zone_liee: r.zone_liee || '', notes: r.notes || '',
+    }));
+    carteSupprimes = [];
+    carteSel = -1;
+    carteRender();
+
+    if (note) note.textContent = cartePoints.length
+      ? ' · ' + cartePoints.length + ' point' + (cartePoints.length > 1 ? 's' : '')
+      : ' · aucun point pour le moment';
+  }
+
+  function carteRender() {
+    const calque = document.getElementById('carte-calque');
+    if (!calque) return;
+
+    calque.innerHTML = cartePoints.map((pt, i) => {
+      const t = CARTE_TYPES[pt.type] || CARTE_TYPES.autre;
+      const bonus = pt.type === 'zone' && pt.zone_liee ? carteBonusDe(pt.zone_liee) : null;
+      const b = bonus == null ? 0 : bonus <= 10 ? 1 : bonus <= 20 ? 2 : 3;
+      return '<button type="button" class="carte-pt t-' + pt.type + (b ? ' b' + b : '') +
+          (i === carteSel ? ' sel' : '') + '"' +
+          ' style="left:' + pt.x + '%;top:' + pt.y + '%;--pc:' + t.color + '"' +
+          ' data-i="' + i + '" aria-label="' + escT(pt.nom) + ' — ' + t.label + '">' +
+        '<span class="pt-dot"></span>' +
+        '<span class="pt-nom">' + escT(pt.nom) + '</span>' +
+        (bonus != null ? '<span class="pt-bonus">+' + bonus + ' %</span>' : '') +
+      '</button>';
+    }).join('');
+
+    // Légende : uniquement les types réellement présents.
+    const leg = document.getElementById('carte-legende');
+    if (leg) {
+      const presents = Object.keys(CARTE_TYPES).filter(t => cartePoints.some(p => p.type === t));
+      leg.innerHTML = presents.map(t =>
+        '<span><span class="dot" style="background:' + CARTE_TYPES[t].color + '"></span>' + CARTE_TYPES[t].label + '</span>').join('') +
+        (cartePoints.some(p => p.type === 'zone' && p.zone_liee)
+          ? '<span class="hint">l\'anneau et le % suivent le bonus de zone en cours</span>' : '');
+    }
+  }
+
+  // ── Consultation : la fiche d'un point ───────────────────────────────
+  function carteFiche(i) {
+    const pt = cartePoints[i];
+    const fiche = document.getElementById('carte-fiche');
+    if (!pt || !fiche) return;
+    const t = CARTE_TYPES[pt.type] || CARTE_TYPES.autre;
+    const pctTxt = v => (Number(v) > 0 ? '+' : '') + Number(v).toLocaleString('fr-FR') + ' %';
+
+    let zonesHtml = '';
+    if (pt.type === 'zone' && pt.zone_liee && carteZones[pt.zone_liee]) {
+      zonesHtml = carteZones[pt.zone_liee].map(z => {
+        const puces = [];
+        if (z.bonus_all_drogues_pct) puces.push('<span class="zone-puce all">' + pctTxt(z.bonus_all_drogues_pct) + ' toutes drogues</span>');
+        if (z.bonus_zone_pct) puces.push('<span class="zone-puce">' + pctTxt(z.bonus_zone_pct) + ' de zone</span>');
+        if (z.bonus_drogue_associee_pct && z.drogue_associee) puces.push('<span class="zone-puce assoc">' + pctTxt(z.bonus_drogue_associee_pct) + ' sur ' + escT(cap(z.drogue_associee)) + '</span>');
+        if (z.bonus_nord) puces.push('<span class="zone-puce nord">' + (z.bonus_nord_valeur ? pctTxt(z.bonus_nord_valeur) + ' Nord' : 'Zone Nord') + '</span>');
+        return '<div style="margin-top:8px;"><span class="hint" style="text-transform:uppercase;letter-spacing:1px;font-size:9.5px;">' +
+          escT(cap(String(z.categorie).replace(/_/g, ' '))) + '</span><div class="zone-puces" style="margin-top:5px;">' +
+          (puces.join('') || '<span class="hint">aucun bonus actif</span>') + '</div></div>';
+      }).join('');
+    }
+
+    fiche.style.display = '';
+    fiche.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+        '<b style="font-size:14px;"><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + t.color + ';margin-right:7px;"></span>' +
+        escT(pt.nom) + ' <span class="hint">· ' + t.label + '</span></b>' +
+        '<button type="button" class="lien" onclick="document.getElementById(\'carte-fiche\').style.display=\'none\'">fermer</button>' +
+      '</div>' +
+      (pt.notes ? '<p style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;">' + escT(pt.notes) + '</p>' : '') +
+      zonesHtml;
+  }
+
+  // ── Édition ──────────────────────────────────────────────────────────
+  function carteToggleEdition() {
+    carteEdition = true;
+    document.getElementById('carte-wrap').classList.add('edition');
+    document.getElementById('carte-edit-btn').style.display = 'none';
+    document.getElementById('carte-save-btn').style.display = '';
+    document.getElementById('carte-cancel-btn').style.display = '';
+    document.getElementById('carte-aide').style.display = '';
+    document.getElementById('carte-fiche').style.display = 'none';
+    hideMsg('carte-msg');
+  }
+  function carteFinEdition() {
+    carteEdition = false; carteSel = -1;
+    document.getElementById('carte-wrap').classList.remove('edition');
+    document.getElementById('carte-edit-btn').style.display = '';
+    document.getElementById('carte-save-btn').style.display = 'none';
+    document.getElementById('carte-cancel-btn').style.display = 'none';
+    document.getElementById('carte-aide').style.display = 'none';
+    document.getElementById('carte-form').style.display = 'none';
+  }
+  function carteAnnuler() { carteFinEdition(); loadCarte(); }
+
+  function carteSelectionne(i) {
+    carteSel = i;
+    const pt = cartePoints[i];
+    const form = document.getElementById('carte-form');
+    form.style.display = 'grid';
+    document.getElementById('cf-nom').value = pt.nom;
+    document.getElementById('cf-type').value = pt.type;
+    document.getElementById('cf-zone').value = pt.zone_liee;
+    document.getElementById('cf-notes').value = pt.notes;
+    document.getElementById('cf-zone-l').style.display = pt.type === 'zone' ? '' : 'none';
+    carteRender();
+  }
+
+  function carteSupprimer() {
+    if (carteSel < 0) return;
+    const pt = cartePoints[carteSel];
+    if (pt.id) carteSupprimes.push(pt.id);
+    cartePoints.splice(carteSel, 1);
+    carteSel = -1;
+    document.getElementById('carte-form').style.display = 'none';
+    carteRender();
+  }
+
+  function carteUuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    // Repli pour les vieux navigateurs : un UUID v4 fabriqué à la main.
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  async function carteEnregistrer() {
+    if (!currentUser) return;
+    hideMsg('carte-msg');
+    const invalides = cartePoints.filter(p => !String(p.nom).trim());
+    if (invalides.length) { showMsg('carte-msg', 'Un point n\'a pas de nom.', false); return; }
+
+    const rows = cartePoints.map(p => ({
+      id: p.id || carteUuid(),
+      nom: String(p.nom).trim(), type: p.type,
+      x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100,
+      zone_liee: p.type === 'zone' ? (String(p.zone_liee).trim() || null) : null,
+      notes: String(p.notes).trim() || null,
+      updated_at: new Date().toISOString(),
+    }));
+
+    if (rows.length) {
+      const { error } = await sb.from('carte_points').upsert(rows);
+      if (error) { showMsg('carte-msg', 'Enregistrement impossible : ' + error.message, false); return; }
+    }
+    if (carteSupprimes.length) {
+      const { error } = await sb.from('carte_points').delete().in('id', carteSupprimes);
+      if (error) { showMsg('carte-msg', 'Suppression impossible : ' + error.message, false); return; }
+    }
+    toast('Carte enregistrée !');
+    carteFinEdition();
+    loadCarte();
+  }
+
+  // ── Interactions sur le calque ───────────────────────────────────────
+  (function carteInit() {
+    const wrap = document.getElementById('carte-wrap');
+    const calque = document.getElementById('carte-calque');
+    if (!wrap || !calque) return;
+
+    const pos = e => {
+      const r = wrap.getBoundingClientRect();
+      return {
+        x: Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)),
+        y: Math.max(0, Math.min(100, (e.clientY - r.top) / r.height * 100)),
+      };
+    };
+
+    let drag = null;   // { i, bouge }
+    let clicApresDrag = false;   // le navigateur émet un clic après un glisser : on l'ignore
+    calque.addEventListener('pointerdown', e => {
+      const btn = e.target.closest('.carte-pt');
+      if (!btn || !carteEdition) return;
+      drag = { i: Number(btn.dataset.i), bouge: false, x0: e.clientX, y0: e.clientY };
+      calque.setPointerCapture(e.pointerId);
+    });
+    calque.addEventListener('pointermove', e => {
+      if (!drag) return;
+      if (!drag.bouge && Math.abs(e.clientX - drag.x0) + Math.abs(e.clientY - drag.y0) < 5) return;
+      drag.bouge = true;
+      const p = pos(e);
+      cartePoints[drag.i].x = p.x; cartePoints[drag.i].y = p.y;
+      const el = calque.querySelector('[data-i="' + drag.i + '"]');
+      if (el) { el.style.left = p.x + '%'; el.style.top = p.y + '%'; }
+    });
+    calque.addEventListener('pointerup', e => {
+      if (!drag) return;
+      const fut = drag; drag = null;
+      if (fut.bouge) { clicApresDrag = true; carteSelectionne(fut.i); }
+      else carteSelectionne(fut.i);
+    });
+
+    // Clic sur la carte elle-même : consultation ou création.
+    wrap.addEventListener('click', e => {
+      if (clicApresDrag) { clicApresDrag = false; return; }
+      const btn = e.target.closest('.carte-pt');
+      if (btn) { if (!carteEdition) carteFiche(Number(btn.dataset.i)); return; }
+      if (!carteEdition) return;
+      const p = pos(e);
+      cartePoints.push({ id: null, nom: 'Nouveau point', type: 'autre', x: p.x, y: p.y, zone_liee: '', notes: '' });
+      carteSelectionne(cartePoints.length - 1);
+      const nom = document.getElementById('cf-nom');
+      if (nom) { nom.focus(); nom.select(); }
+    });
+
+    // Flèches du clavier : déplacer le point sélectionné sans souris.
+    calque.addEventListener('keydown', e => {
+      if (!carteEdition || carteSel < 0) return;
+      const pas = e.shiftKey ? 2 : 0.4;
+      const pt = cartePoints[carteSel];
+      if (e.key === 'ArrowLeft') pt.x = Math.max(0, pt.x - pas);
+      else if (e.key === 'ArrowRight') pt.x = Math.min(100, pt.x + pas);
+      else if (e.key === 'ArrowUp') pt.y = Math.max(0, pt.y - pas);
+      else if (e.key === 'ArrowDown') pt.y = Math.min(100, pt.y + pas);
+      else return;
+      e.preventDefault();
+      const el = calque.querySelector('[data-i="' + carteSel + '"]');
+      if (el) { el.style.left = pt.x + '%'; el.style.top = pt.y + '%'; }
+    });
+
+    // Le formulaire modifie le point sélectionné en direct.
+    [['cf-nom', 'nom'], ['cf-zone', 'zone_liee'], ['cf-notes', 'notes']].forEach(([id, champ]) => {
+      document.getElementById(id).addEventListener('input', e => {
+        if (carteSel < 0) return;
+        cartePoints[carteSel][champ] = e.target.value;
+        if (champ === 'nom') {
+          const el = calque.querySelector('[data-i="' + carteSel + '"] .pt-nom');
+          if (el) el.textContent = e.target.value;
+        }
+      });
+    });
+    document.getElementById('cf-type').addEventListener('change', e => {
+      if (carteSel < 0) return;
+      cartePoints[carteSel].type = e.target.value;
+      document.getElementById('cf-zone-l').style.display = e.target.value === 'zone' ? '' : 'none';
+      carteRender();
+    });
+  })();
+
   /* ══════════════════════════════════════════════════════════════════════
      IMPORT DE TAXES DEPUIS UN FICHIER EXCEL
 

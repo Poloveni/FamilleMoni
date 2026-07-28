@@ -23,6 +23,7 @@ exécute-les dans **cet ordre exact**, dans Supabase → SQL Editor.
 | 15 | **`prix-drogues-2.sql`** | **Ajoute les produits manquants et un prix de départ (prix saisis à la main)** |
 | 16 | **`import-taxes.sql`** | **Boîte aux lettres site → bot pour l'import Excel + liste des types de taxe** |
 | 17 | **`discord-admin.sql`** | **Connexion Discord : les droits d'import suivent le rôle admin du serveur** |
+| 18 | **`carte-points.sql`** | **La carte interactive de l'espace membre (points posés par la Donna)** |
 
 ## Règle pour la suite
 
