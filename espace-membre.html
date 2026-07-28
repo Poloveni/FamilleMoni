@@ -187,6 +187,14 @@
 
 
 
+    /* ── MA SEMAINE : la cible et le bon plan ─────────────────────────── */
+    .duel-txt { font-size: 13.5px; color: var(--muted); line-height: 1.75; }
+    .duel-txt b { color: var(--text); }
+    .duel-num {
+      font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 700;
+      color: var(--red); padding: 0 3px; line-height: 1;
+    }
+
     /* ── LA CARTE DE ROXWOOD ─────────────────────────────────────────────
        Les points sont positionnés en % : la carte reste juste à toutes les
        tailles. L'anneau d'une zone s'épaissit avec son bonus, et le
@@ -1772,6 +1780,58 @@
         const mesCd = ((cdQ && cdQ.data) || []).filter(c => c.user_id === monId && new Date(c.expires_at) > new Date());
         const mesVentes = vRows.filter(x => x.discord_id === monId && x.confirmed)
           .sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6);
+
+        // ── Le tempo : suis-je dans les temps pour le quota ? ──
+        // On projette le rythme des jours écoulés sur la semaine entière,
+        // et on dit combien il faut de ventes par jour pour tenir.
+        const jourIdx = (new Date().getDay() + 6) % 7;        // 0 = lundi … 6 = dimanche
+        const joursEcoules = jourIdx + 1, joursRestants = 6 - jourIdx;
+        const projection = Math.round(vM / joursEcoules * 7);
+        const besoinJour = Math.ceil(Math.max(0, quotaVente - vM) / Math.max(1, joursRestants));
+        const dansLesTemps = vM >= quotaVente || projection >= quotaVente;
+        const tempo = vM >= quotaVente
+          ? 'Quota atteint — tout le reste est du bonus.'
+          : 'À ce rythme tu finiras à ~' + projection + ' ventes' +
+            (joursRestants > 0
+              ? ' · il t\'en faut ' + besoinJour + ' par jour pour tenir les ' + quotaVente
+              : ' — dernier jour pour boucler le quota !');
+
+        // ── La cible : le membre juste au-dessus au classement ──
+        let duel;
+        if (rangM === 0) {
+          const second = ids[1];
+          const avance = second ? Math.max(0, vM - Math.round(joueurs[second].ventes)) : 0;
+          duel = '<div class="bloc-t">Tu es en tête</div><div class="duel-txt">' +
+            (second
+              ? '<b class="duel-num">' + avance + '</b> vente' + (avance > 1 ? 's' : '') +
+                ' d\'avance sur <b>' + escT(nomDe[second] || '?') + '</b> — ne le laisse pas revenir.'
+              : 'Personne d\'autre n\'a vendu cette semaine.') + '</div>';
+        } else if (rangM > 0) {
+          const cible = ids[rangM - 1];
+          const ecart = Math.max(1, Math.round(joueurs[cible].ventes) - vM + 1);
+          duel = '<div class="bloc-t">Ta prochaine cible</div><div class="duel-txt">' +
+            'Encore <b class="duel-num">' + ecart + '</b> vente' + (ecart > 1 ? 's' : '') +
+            ' pour passer devant <b>' + escT(nomDe[cible] || '?') + '</b> et prendre la place <b>#' + rangM + '</b>.</div>';
+        } else {
+          duel = '<div class="bloc-t">Ta prochaine cible</div><div class="duel-txt">Fais ta première vente de la semaine pour entrer au classement.</div>';
+        }
+
+        // ── Mes ventes jour par jour, pour le graphique de rythme ──
+        const JOURS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+        const parJour = [0, 0, 0, 0, 0, 0, 0];
+        vRows.filter(x => x.discord_id === monId && x.confirmed && new Date(x.ts) >= lundi)
+          .forEach(x => { parJour[(new Date(x.ts).getDay() + 6) % 7] += (x.quantite || 0); });
+
+        // ── Quand je n'ai aucun cooldown : ce qui est disponible tout de suite ──
+        let limitsM = {};
+        try { limitsM = JSON.parse(metaMap.braquage_limits || '{}'); } catch (e) {}
+        if (!Object.keys(limitsM).length) limitsM = { fleeca: 6, braq_armurerie: 6, bijouterie: 1, pinebank: 1 };
+        const usedM = {};
+        ((braqQ && braqQ.data) || []).forEach(b => { usedM[b.action] = (usedM[b.action] || 0) + 1; });
+        const dispos = Object.keys(limitsM)
+          .map(k => ({ nom: BD_ACTIVITES[k] || k, reste: Math.max(0, limitsM[k] - (usedM[k] || 0)) }))
+          .filter(d => d.reste > 0);
+
         elMoi.innerHTML =
           '<div class="kpis">' +
             '<div class="kpi" style="--kc:#e0503f;"><div class="kpi-label">Mes ventes</div><div class="kpi-num">' + vM + '<small> / ' + quotaVente + '</small></div><div class="kpi-foot">' + (vM >= quotaVente ? '✅ quota atteint, la Donna est fière' : (quotaVente - vM) + ' restantes cette semaine') + '</div></div>' +
@@ -1780,17 +1840,37 @@
             '<div class="kpi" style="--kc:#2ecc71;"><div class="kpi-label">Récolte · activités</div><div class="kpi-num">' + Math.round(jm.recolte) + ' <small>· ' + Math.round(jm.activites) + '</small></div><div class="kpi-foot" title="' + escT(jm.detail.join(', ')) + '">' + escT(jm.detail.slice(0, 2).join(', ') || 'aucune activité') + '</div></div>' +
           '</div>' +
           '<div class="goal"><div class="goal-head"><b>Ma progression</b><span class="val"><b>' + vM + '</b> / ' + quotaVente + ' ventes</span></div>' +
-          '<div class="goal-bar"><span style="width:' + pctM + '%"></span></div><div class="goal-pct">' + pctM + '%</div></div>' +
+          '<div class="goal-bar"><span style="width:' + pctM + '%"></span></div>' +
+          '<div class="goal-pct" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
+            '<span style="color:' + (dansLesTemps ? 'var(--green)' : 'var(--amber)') + ';">' + tempo + '</span><span>' + pctM + '%</span></div></div>' +
           '<div class="grid2">' +
+            '<div class="bloc">' + duel + '</div>' +
+            '<div class="bloc"><div class="bloc-t">Le bon plan du moment</div><div id="moi-plan-txt" class="hint">Calcul en cours…</div></div>' +
+          '</div>' +
+          '<div class="bloc" style="margin-top:14px;"><div class="bloc-t">Mon rythme <small>(unités vendues par jour · objectif ' + Math.ceil(quotaVente / 7) + '/jour)</small></div><div id="chart-moi-rythme"></div></div>' +
+          '<div class="grid2" style="margin-top:14px;">' +
             '<div class="bloc"><div class="bloc-t">Mes cooldowns</div>' +
-            (!mesCd.length ? '<div class="hint">Aucun — tout est disponible ! 🟢</div>' :
-              mesCd.map(c => '<div class="cd-row"><span>' + escT(BD_ACTIVITES[c.action] || c.action) + '</span><span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>').join('')) +
+            (!mesCd.length
+              ? '<div class="hint" style="margin-bottom:10px;">Aucun — tout est disponible.</div>' +
+                (dispos.length ? '<div class="zone-puces">' + dispos.map(d =>
+                  '<span class="zone-puce all">' + escT(d.nom) + ' ×' + d.reste + '</span>').join('') + '</div>' +
+                  '<div class="hint" style="margin-top:8px;">restants pour la famille cette semaine</div>' : '')
+              : mesCd.map(c => '<div class="cd-row"><span>' + escT(BD_ACTIVITES[c.action] || c.action) + '</span><span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>').join('')) +
             '</div>' +
             '<div class="bloc"><div class="bloc-t">Mes dernières ventes confirmées</div>' +
             (!mesVentes.length ? '<div class="hint">Aucune vente confirmée cette semaine.</div>' :
-              mesVentes.map(x => '<div class="cd-row"><span>' + Number(x.quantite).toLocaleString('fr-FR') + '× ' + escT(cap(x.item)) + '</span><span style="margin-left:auto;color:var(--gold);font-weight:600;">' + fmtArgent(x.montant) + '</span></div>').join('')) +
+              mesVentes.map(x => '<div class="cd-row"><span>' + Number(x.quantite).toLocaleString('fr-FR') + '× ' + escT(cap(x.item)) + '</span>' +
+                '<span class="feed-time" style="margin-left:10px;">' + timeAgo(x.ts) + '</span>' +
+                '<span style="margin-left:auto;color:var(--gold);font-weight:600;">' +
+                (x.montant ? fmtArgent(x.montant) : '<span class="hint" title="Montant non transmis par le bot">—</span>') + '</span></div>').join('')) +
             '</div>' +
           '</div>';
+
+        // Le graphique de rythme réutilise le moteur des barres, avec la
+        // ligne d'objectif journalier en pointillés.
+        const chartR = document.getElementById('chart-moi-rythme');
+        if (chartR) drawBarChart(chartR, JOURS_FR.map((j, i) => ({ label: j, value: parJour[i] })), Math.ceil(quotaVente / 7));
+        majPlanDuMoment();
         if (mesCd.length) startCdTicker();
       }
     }
@@ -2065,13 +2145,32 @@
      Le classement est trié là-dessus. Un gain négatif signifie qu'on achète
      plus cher qu'on ne revend : la barre part alors à gauche du zéro.
      ══════════════════════════════════════════════════════════════════════ */
+  // Le meilleur plan calculé par « Prix drogues » est aussi affiché sur
+  // « Ma semaine ». Les deux pages se chargent en parallèle : chacune
+  // appelle cette fonction, la première arrivée pose le texte, la seconde
+  // le trouve prêt.
+  function majPlanDuMoment() {
+    const el = document.getElementById('moi-plan-txt');
+    if (!el || window.__planDuMoment === undefined) return;
+    const p = window.__planDuMoment;
+    if (!p) {
+      el.innerHTML = 'Renseigne les prix d\'achat dans « Prix drogues » pour voir le meilleur plan.';
+      return;
+    }
+    el.className = 'duel-txt';
+    el.innerHTML = 'Vends de la <b style="color:var(--green)">' + escT(cap(p.item)) + '</b>' +
+      (p.zone ? ' à <b>' + escT(p.zone) + '</b>' : '') +
+      ' : <b style="color:var(--green)">+' + fmtArgent(Math.round(p.benefice)) + '</b> nets par unité.' +
+      '<div class="hint" style="margin-top:6px;">Le détail est dans l\'onglet « Prix drogues ».</div>';
+  }
+
   function rendreRentabilite(zones, cours, rows, stocks) {
     const bloc = document.getElementById('bloc-rentabilite');
     const box = document.getElementById('bd-rentabilite');
     if (!bloc || !box) return null;
 
     const items = Object.keys(cours);
-    if (!items.length) { bloc.style.display = 'none'; return null; }
+    if (!items.length) { bloc.style.display = 'none'; window.__planDuMoment = null; majPlanDuMoment(); return null; }
 
     const achat = {};
     (rows || []).forEach(r => { achat[r.item] = Number(r.prix) || 0; });
@@ -2122,6 +2221,7 @@
     if (!chiffrables.length) {
       bloc.style.display = '';
       box.innerHTML = '<div class="locked">Renseigne les prix d\'achat plus bas : le classement s\'affichera aussitôt.</div>';
+      window.__planDuMoment = null; majPlanDuMoment();
       return null;
     }
 
@@ -2207,6 +2307,11 @@
 
     const note = document.getElementById('rent-note');
     if (note) note.textContent = ' · bénéfice net par unité, bonus de zone compris';
+
+    window.__planDuMoment = champion.gain > 0
+      ? { item: champion.item, zone: champion.zone, benefice: champion.gain }
+      : null;
+    majPlanDuMoment();
 
     const meilleurPct = chiffrables.slice().sort((a, b) => b.pct - a.pct)[0];
     return { zone: champion.zone, item: champion.item, prix: champion.vente,
@@ -2461,10 +2566,6 @@
     const { data } = await sb.auth.getSession();
     if (data.session) onLogged(data.session.user);
   })();
-</script>
-
-<script src="starfield.js"></script>
-<script>starfield('member-canvas', { max: 140, densite: 14000 });
 
   /* ══════════════════════════════════════════════════════════════════════
      LA CARTE DE ROXWOOD
@@ -3018,7 +3119,9 @@
       if (b) b.addEventListener('click', envoyer);
     });
   })();
-
 </script>
+
+<script src="starfield.js"></script>
+<script>starfield('member-canvas', { max: 140, densite: 14000 });</script>
 </body>
 </html>
