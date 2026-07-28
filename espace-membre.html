@@ -162,6 +162,28 @@
     }
 
 
+
+    /* Palette des pastilles de zone, vérifiée pour les daltonismes.
+       L'ancien couple vert/or avait un écart perceptif de 3 sur 15 requis :
+       un protanope voyait deux pastilles identiques. Cyan / or / violet
+       passe tous les contrôles, et chaque pastille porte son libellé. */
+    .zone-puce.all   { border-color: rgba(79,195,247,.45);  color: #4fc3f7; background: rgba(79,195,247,.10); }
+    .zone-puce.assoc { border-color: rgba(224,176,98,.45);  color: #e0b062; background: rgba(224,176,98,.10); }
+    .zone-puce.nord  { border-color: rgba(155,140,240,.45); color: #9b8cf0; background: rgba(155,140,240,.10); }
+
+    /* Marge : la couleur double toujours un mot. */
+    .marge { display: block; font-size: 13px; }
+    .marge.bonne  { color: #5fd08a; }
+    .marge.faible { color: #e0b062; }
+    .marge.perte  { color: var(--red); }
+    .marge-pct { display: block; font-size: 10.5px; margin-top: 1px; }
+
+    /* Le résumé colle au reste du tableau de bord. */
+    #prix-kpis { margin-bottom: 14px; }
+    #zones-details summary::-webkit-details-marker { display: none; }
+    #zones-details summary::before { content: '▸ '; color: var(--dim); }
+    #zones-details[open] summary::before { content: '▾ '; }
+
     /* ── OÙ VENDRE ───────────────────────────────────────────────────── */
     .ouv-table td { vertical-align: top; }
     .ouv-table .ouv-top { background: rgba(46,204,113,.05); }
@@ -192,9 +214,6 @@
       font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
       border: 1px solid var(--border2); color: var(--muted); white-space: nowrap;
     }
-    .zone-puce.all   { border-color: rgba(46,204,113,.4);  color: var(--green); background: rgba(46,204,113,.08); }
-    .zone-puce.assoc { border-color: rgba(212,178,110,.4); color: var(--gold);  background: rgba(212,178,110,.08); }
-    .zone-puce.nord  { border-color: rgba(88,101,242,.4);  color: var(--blue);  background: rgba(88,101,242,.08); }
     .zone-brut { margin-top: 10px; }
     .zone-brut summary { font-size: 10.5px; color: var(--dim); cursor: pointer; }
     .zone-brut p { font-size: 11.5px; color: var(--muted); line-height: 1.6; margin-top: 7px; white-space: pre-line; }
@@ -507,6 +526,9 @@
 
     <!-- PRIX DES DROGUES -->
     <div class="panel" id="panel-prix">
+      <!-- RÉSUMÉ — les 4 réponses qu'on vient chercher en premier -->
+      <div class="kpis" id="prix-kpis" style="display:none;"></div>
+
       <!-- LE COURS — données du bot, horodatées : on peut montrer l'évolution -->
       <div class="bloc">
         <div class="bloc-t">Le cours des drogues <span class="hint" id="bourse-maj" style="text-transform:none;letter-spacing:0;"></span></div>
@@ -527,8 +549,13 @@
 
       <!-- LES ZONES — bonus par secteur -->
       <div class="bloc" id="bloc-zones" style="display:none;">
-        <div class="bloc-t">Zones et bonus <span class="hint" id="zones-maj" style="text-transform:none;letter-spacing:0;"></span></div>
-        <div id="bd-zones"></div>
+        <details id="zones-details">
+          <summary class="bloc-t" style="cursor:pointer;list-style:none;">
+            Le détail de toutes les zones
+            <span class="hint" id="zones-maj" style="text-transform:none;letter-spacing:0;"></span>
+          </summary>
+          <div id="bd-zones" style="margin-top:16px;"></div>
+        </details>
       </div>
     </div>
 
@@ -1828,10 +1855,64 @@
     return n(a) === n(b);
   }
 
+
+  /* Un bandeau de 4 chiffres en tête du panneau : ce sont les questions
+     qu'on se pose en arrivant. Une valeur unique accompagnée d'un contexte
+     se lit mieux en tuile qu'en graphique. */
+  function rendreResumePrix(cours, rows, stocks, meilleureZone) {
+    const box = document.getElementById('prix-kpis');
+    if (!box) return;
+    const items = Object.keys(cours);
+    if (!items.length) { box.style.display = 'none'; return; }
+
+    const med = c => ((c.prix_actuel_min || 0) + (c.prix_actuel_max || 0)) / 2;
+    const achat = {};
+    (rows || []).forEach(r => { achat[r.item] = Number(r.prix) || 0; });
+
+    // Le plus cher à l'unité
+    const cher = items.reduce((a, b) => med(cours[b]) > med(cours[a]) ? b : a);
+
+    // La meilleure marge : uniquement là où un prix d'achat est renseigné.
+    const avecMarge = items.filter(i => achat[i] > 0)
+      .map(i => ({ item: i, marge: med(cours[i]) - achat[i], pct: (med(cours[i]) - achat[i]) / achat[i] * 100 }))
+      .sort((a, b) => b.pct - a.pct);
+    const top = avecMarge[0];
+
+    const valeurStock = (stocks || []).reduce((t, s) => t + (s.quantite || 0) * (achat[s.item] || 0), 0);
+    const dernier = items.reduce((m, i) => (!m || cours[i].ts > m) ? cours[i].ts : m, null);
+
+    box.style.display = '';
+    box.innerHTML =
+      '<div class="kpi" style="--kc:#d4b26e;">' +
+        '<div class="kpi-label">Le plus cher à l\'unité</div>' +
+        '<div class="kpi-num" style="color:var(--gold);">' + escT(cap(cher)) + '</div>' +
+        '<div class="kpi-foot">' + fmtArgent(Math.round(med(cours[cher]))) + ' en moyenne au PNJ</div>' +
+      '</div>' +
+      '<div class="kpi" style="--kc:#5fd08a;">' +
+        '<div class="kpi-label">Meilleure marge</div>' +
+        '<div class="kpi-num" style="color:var(--green);">' + (top ? escT(cap(top.item)) : '—') + '</div>' +
+        '<div class="kpi-foot">' + (top
+          ? '+' + fmtArgent(Math.round(top.marge)) + ' par unité · +' + Math.round(top.pct) + ' %'
+          : 'renseigne des prix d\'achat') + '</div>' +
+      '</div>' +
+      '<div class="kpi" style="--kc:#e0b062;">' +
+        '<div class="kpi-label">Valeur du stock</div>' +
+        '<div class="kpi-num">' + fmtArgent(Math.round(valeurStock)) + '</div>' +
+        '<div class="kpi-foot">au prix d\'achat</div>' +
+      '</div>' +
+      '<div class="kpi" style="--kc:#9b8cf0;">' +
+        '<div class="kpi-label">Meilleure vente</div>' +
+        '<div class="kpi-num" style="font-size:20px;">' + (meilleureZone ? escT(meilleureZone.zone) : '—') + '</div>' +
+        '<div class="kpi-foot">' + (meilleureZone
+          ? escT(cap(meilleureZone.item)) + ' · ' + fmtArgent(Math.round(meilleureZone.prix)) + ' (+' + meilleureZone.gain + ' %)'
+          : 'aucun bonus de zone connu') + '</div>' +
+      '</div>';
+  }
+
   function rendreOuVendre(zones, cours, prixManuels) {
     const bloc = document.getElementById('bloc-ouvendre');
     const box = document.getElementById('bd-ouvendre');
-    if (!zones.length) { bloc.style.display = 'none'; return; }
+    if (!zones.length) { bloc.style.display = 'none'; return null; }
 
     // Prix de référence par produit : le cours du bot, sinon ton prix saisi.
     const prix = {};
@@ -1844,7 +1925,7 @@
     // de revente calculé sur ce que la famille a payé.
     void prixManuels;
     const produits = Object.keys(prix);
-    if (!produits.length) { bloc.style.display = 'none'; return; }
+    if (!produits.length) { bloc.style.display = 'none'; return null; }
 
     const parCat = {};
     zones.forEach(z => { (parCat[z.categorie] = parCat[z.categorie] || []).push(z); });
@@ -1867,6 +1948,7 @@
       return { total: Math.round((facteur - 1) * 1000) / 10, facteur: facteur, detail: parts };
     }
 
+    let championne = null;
     const sections = Object.keys(parCat).sort().map(cat => {
       const lignes = produits.map(item => {
         const classees = parCat[cat]
@@ -1892,10 +1974,13 @@
       }).filter(Boolean).sort((a, b) => b.final - a.final);
 
       if (!lignes.length) return '';
+      if (!championne || lignes[0].final > championne.prix) {
+        championne = { zone: lignes[0].zone, item: lignes[0].item, prix: lignes[0].final, gain: lignes[0].gain.total };
+      }
       return '<div class="zone-cat">' + escT(cap(String(cat).replace(/_/g, ' '))) + '</div>' +
         '<table class="vd-table ouv-table"><thead><tr>' +
         '<th>Drogue</th><th>Meilleure zone</th><th>Bonus</th>' +
-        '<th class="num">Prix de base</th><th class="num">Prix sur zone</th>' +
+        '<th class="num">Prix sur zone</th>' +
         '</tr></thead><tbody>' +
         lignes.map((l, i) =>
           '<tr' + (i === 0 ? ' class="ouv-top"' : '') + '>' +
@@ -1909,13 +1994,13 @@
             '</td>' +
             '<td><span class="ouv-gain">+' + l.gain.total + ' %</span>' +
               '<span class="hint ouv-detail">' + escT(l.gain.detail.join(' · ')) + '</span></td>' +
-            '<td class="num ref">' + fmtArgent(Math.round(l.base)) + '</td>' +
-            '<td class="num"><b style="color:var(--green)">' + fmtArgent(Math.round(l.final)) + '</b></td>' +
+            '<td class="num"><b style="color:var(--green)">' + fmtArgent(Math.round(l.final)) + '</b>' +
+              '<span class="hint ouv-detail">au lieu de ' + fmtArgent(Math.round(l.base)) + '</span></td>' +
           '</tr>').join('') +
         '</tbody></table>';
     }).filter(Boolean).join('');
 
-    if (!sections) { bloc.style.display = 'none'; return; }
+    if (!sections) { bloc.style.display = 'none'; return null; }
     bloc.style.display = '';
     box.innerHTML = sections +
       '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
@@ -1925,6 +2010,7 @@
       '</div>';
     const note = document.getElementById('ouvendre-note');
     if (note) note.textContent = ' · calculé sur le dernier cours et les bonus en cours';
+    return championne;
   }
 
   function rendreZones(lignes) {
@@ -2045,7 +2131,10 @@
         const d = derniereZone[cle];
         if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniereZone[cle] = z;
       });
-      rendreOuVendre(Object.values(derniereZone), cours, rows);
+      const championne = rendreOuVendre(Object.values(derniereZone), cours, rows);
+      rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], championne);
+    } else {
+      rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], null);
     }
 
     const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
@@ -2056,7 +2145,8 @@
     box.innerHTML =
       '<table class="vd-table prix-table"><thead><tr>' +
       '<th>Produit</th><th class="num ref">Prix de vente au PNJ</th>' +
-      '<th class="num">Prix d\'achat</th><th class="num">Stock au coffre</th><th class="num">Valeur du stock</th>' +
+      '<th class="num">Prix d\'achat</th><th class="num">Marge</th>' +
+      '<th class="num">Stock au coffre</th><th class="num">Valeur du stock</th>' +
       '</tr></thead><tbody>' +
       rows.map(r => {
         const stock = st[r.item] || 0;
@@ -2078,19 +2168,36 @@
           ? '<input type="number" min="0" step="1" class="prix-input" data-item="' + escT(r.item) + '" value="' + (r.prix || 0) + '" style="width:110px;margin-bottom:0;padding:8px 10px;text-align:right;" />'
           : '<b style="color:var(--gold);">' + fmtArgent(r.prix || 0) + '</b>';
 
+        // Marge = ce que rapporte la revente moins ce que la famille a payé.
+        // Le code couleur est accompagné d'un mot : lisible même sans
+        // distinguer le vert du rouge.
+        let marge = '<span class="hint">—</span>';
+        const p = Number(r.prix) || 0;
+        if (c && p > 0) {
+          const m = ((c.prix_actuel_min + c.prix_actuel_max) / 2) - p;
+          const pc = Math.round(m / p * 100);
+          const etat = m <= 0 ? 'perte' : pc < 30 ? 'faible' : 'bonne';
+          const mot = m <= 0 ? 'perte' : pc < 30 ? 'faible' : '';
+          marge = '<b class="marge ' + etat + '">' + (m > 0 ? '+' : '') + fmtArgent(Math.round(m)) + '</b>' +
+                  '<span class="hint marge-pct">' + (m > 0 ? '+' : '') + pc + ' %' +
+                  (mot ? ' · ' + mot : '') + '</span>';
+        }
+
         return '<tr><td>' + escT(cap(r.item)) + '</td>' +
           '<td class="num ref">' + ref + ecart + '</td>' +
           '<td class="num">' + prixCell + '</td>' +
+          '<td class="num">' + marge + '</td>' +
           '<td class="num">' + stock.toLocaleString('fr-FR') + '</td>' +
           '<td class="num" style="color:var(--green);font-weight:600;">' + fmtArgent(Math.round(valeur)) + '</td></tr>';
       }).join('') +
-      '<tr><td colspan="4" style="text-align:right;color:var(--muted);font-weight:600;">Valeur totale du stock</td>' +
+      '<tr><td colspan="5" style="text-align:right;color:var(--muted);font-weight:600;">Valeur totale du stock</td>' +
       '<td class="num" style="color:var(--green);font-weight:700;font-size:15px;">' + fmtArgent(Math.round(totalValeur)) + '</td></tr>' +
       '</tbody></table>' +
       '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
         '<b>Prix de vente au PNJ</b> : le dernier relevé automatique du bot, en lecture seule — ' +
         'ce que rapporte une unité revendue en jeu. ' +
         '<b>Prix d\'achat</b> : ce que la famille paie l\'unité, saisi par la Donna. ' +
+        '<b>Marge</b> : la différence, recalculée à chaque relevé du bot. ' +
         'La valeur du stock est calculée sur le prix d\'achat.' +
       '</div>' +
       (estAdmin
