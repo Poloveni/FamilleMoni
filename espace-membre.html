@@ -636,6 +636,22 @@
     <!-- COFFRE -->
     <div class="panel" id="panel-coffre">
       <div class="bloc"><div id="bd-coffre"><div class="locked">Chargement…</div></div></div>
+
+      <!-- Quand le stock affiché ne colle pas avec le coffre en jeu, c'est ici
+           qu'on vérifie : tous les mouvements que le bot a enregistrés. -->
+      <div class="bloc" style="margin-top:14px;">
+        <div class="bloc-t">Enquête sur un produit</div>
+        <p class="hint" style="margin-bottom:12px;line-height:1.7;">
+          Le stock affiché est le <b>registre du bot</b>, pas le contenu réel du
+          coffre en jeu. S'ils ne collent pas, l'historique ci-dessous montre où
+          le registre a décroché.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <select id="enq-item" style="max-width:280px;margin-bottom:0;"></select>
+          <button class="btn carte-btn" type="button" onclick="enqueteProduit()">Voir l'historique</button>
+        </div>
+        <div id="enq-resultat" style="margin-top:14px;"></div>
+      </div>
     </div>
 
     <!-- PRIX DES DROGUES -->
@@ -1687,6 +1703,17 @@
       '<table class="vd-table"><tbody>' +
       autres.map(s => '<tr><td>' + escT(cap(s.item)) + '</td><td style="text-align:right;font-weight:600;">' + Number(s.quantite).toLocaleString('fr-FR') + '</td></tr>').join('') +
       '</tbody></table>';
+
+    // L'enquête a besoin de la liste des produits et du stock affiché.
+    window.__stocksMap = st;
+    const enqSel = document.getElementById('enq-item');
+    if (enqSel) {
+      const choix = enqSel.value;
+      enqSel.innerHTML = (stocks.data || []).slice()
+        .sort((a, b) => String(a.item).localeCompare(String(b.item)))
+        .map(x => '<option value="' + escT(x.item) + '">' + escT(cap(x.item)) + ' — ' + Number(x.quantite).toLocaleString('fr-FR') + ' en stock</option>').join('');
+      if (choix) enqSel.value = choix;
+    }
 
     // ── ARMURERIE ──
     const arm = armes.data || [];
@@ -2894,6 +2921,95 @@
       carteRender();
     });
   })();
+
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ENQUÊTE SUR UN PRODUIT DU COFFRE
+
+     Le stock affiché sur le site vient du registre du bot (bot_stocks),
+     réécrit toutes les 5 minutes depuis son SQLite. Le bot, lui, compte
+     les dépôts et retraits qu'on lui déclare — il ne voit PAS le coffre
+     du jeu. Quand le site et le jeu ne collent pas, il n'y a que deux
+     explications possibles, et cet outil les départage :
+
+       1. le registre a un TROU : deux mouvements consécutifs dont les
+          stocks ne s'enchaînent pas (le bot a raté un événement, ou la
+          base a été modifiée à la main) — détecté ligne par ligne ;
+       2. le registre est COHÉRENT mais faux : des retraits ont eu lieu
+          en jeu sans jamais être déclarés au bot. Aucun outil ne peut
+          les retrouver — c'est une correction à faire côté bot.
+     ══════════════════════════════════════════════════════════════════════ */
+  async function enqueteProduit() {
+    const sel = document.getElementById('enq-item');
+    const box = document.getElementById('enq-resultat');
+    if (!sel || !box || !sel.value) return;
+    const item = sel.value;
+    box.innerHTML = '<div class="locked">Lecture du registre…</div>';
+
+    const { data, error } = await sb.from('bot_stock_history').select('*')
+      .eq('item', item).order('ts', { ascending: true }).limit(1000);
+    if (error) { box.innerHTML = '<div class="locked">Historique indisponible : ' + escT(error.message) + '</div>'; return; }
+
+    const rows = (data || []).slice().sort((a, b) => (new Date(a.ts) - new Date(b.ts)) || ((a.id || 0) - (b.id || 0)));
+    const stockAffiche = (window.__stocksMap && window.__stocksMap[item]) || 0;
+
+    if (!rows.length) {
+      box.innerHTML = '<div class="hint" style="line-height:1.75;">Aucun mouvement enregistré pour <b>' + escT(cap(item)) + '</b>. ' +
+        'Le stock affiché (' + stockAffiche.toLocaleString('fr-FR') + ') vient donc d\'ailleurs : ' +
+        'import direct dans la base du bot, ou historique purgé.</div>';
+      return;
+    }
+
+    let dep = 0, ret = 0;
+    const trous = [];
+    rows.forEach((r, i) => {
+      if (r.action === 'depose') dep += (r.quantite || 0); else ret += (r.quantite || 0);
+      if (i > 0) {
+        const prev = rows[i - 1];
+        if (prev.stock_apres != null && r.stock_avant != null && Number(prev.stock_apres) !== Number(r.stock_avant)) {
+          trous.push({ de: prev, a: r, ecart: Number(r.stock_avant) - Number(prev.stock_apres) });
+        }
+      }
+    });
+    const dernier = rows[rows.length - 1];
+    const finRegistre = dernier.stock_apres != null ? Number(dernier.stock_apres) : null;
+    const ecartFinal = finRegistre != null ? stockAffiche - finRegistre : null;
+
+    const fDate = t => new Date(t).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+    let verdict;
+    if (trous.length) {
+      verdict = '<div class="msg error" style="display:block;position:static;line-height:1.7;">Le registre a <b>' + trous.length +
+        ' trou' + (trous.length > 1 ? 's' : '') + '</b> : le stock saute sans mouvement enregistré. Détail ci-dessous.</div>';
+    } else if (ecartFinal) {
+      verdict = '<div class="msg error" style="display:block;position:static;line-height:1.7;">Le dernier mouvement laisse le stock à <b>' +
+        finRegistre.toLocaleString('fr-FR') + '</b>, mais le bot affiche <b>' + stockAffiche.toLocaleString('fr-FR') +
+        '</b> : la base a bougé sans passer par le registre.</div>';
+    } else {
+      verdict = '<div class="msg ok" style="display:block;position:static;line-height:1.7;">Le registre est <b>cohérent</b> de bout en bout. ' +
+        'Si le coffre en jeu ne correspond pas, c\'est que des mouvements ont eu lieu <b>sans être déclarés au bot</b> — ' +
+        'il faut corriger le stock côté bot (un retrait de la différence), le site suivra à la synchro suivante.</div>';
+    }
+
+    box.innerHTML =
+      '<div class="vd-stats3">' +
+        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">+' + dep.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">déposés au total</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--red);">−' + ret.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">retirés au total</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num">' + stockAffiche.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">stock affiché</div></div>' +
+      '</div>' + verdict +
+      (trous.length ? trous.map(t =>
+        '<div class="hint" style="margin-top:8px;line-height:1.7;">⚠ Entre le ' + fDate(t.de.ts) + ' et le ' + fDate(t.a.ts) +
+        ', le stock passe de <b>' + Number(t.de.stock_apres).toLocaleString('fr-FR') + '</b> à <b>' + Number(t.a.stock_avant).toLocaleString('fr-FR') +
+        '</b> sans mouvement (' + (t.ecart > 0 ? '+' : '') + t.ecart.toLocaleString('fr-FR') + ').</div>').join('') : '') +
+      '<table class="vd-table" style="margin-top:14px;"><thead><tr><th>Quand</th><th>Qui</th><th>Mouvement</th><th class="num">Stock après</th></tr></thead><tbody>' +
+      rows.slice(-30).reverse().map(r =>
+        '<tr><td>' + fDate(r.ts) + '</td><td>' + escT(r.joueur || '?') + '</td>' +
+        '<td style="color:' + (r.action === 'depose' ? 'var(--green)' : 'var(--red)') + ';font-weight:600;">' +
+          (r.action === 'depose' ? '+' : '−') + Number(r.quantite || 0).toLocaleString('fr-FR') + '</td>' +
+        '<td class="num">' + (r.stock_apres != null ? Number(r.stock_apres).toLocaleString('fr-FR') : '—') + '</td></tr>').join('') +
+      '</tbody></table>' +
+      (rows.length > 30 ? '<div class="hint" style="margin-top:8px;">' + rows.length + ' mouvements au total — les 30 derniers sont affichés.</div>' : '');
+  }
 
   /* ══════════════════════════════════════════════════════════════════════
      IMPORT DE TAXES DEPUIS UN FICHIER EXCEL
