@@ -109,3 +109,10 @@ select option { background: var(--panel2); }
 .sb-item .ico svg, .sb-out .ico svg { width: 17px; height: 17px; display: block; }
 .sb-item .ico, .sb-out .ico { display: flex; align-items: center; justify-content: center; opacity: 0.75; transition: opacity 0.2s ease; }
 .sb-item:hover .ico, .sb-item.active .ico, .sb-out:hover .ico { opacity: 1; }
+
+/* ── Navigation latérale : lisibilité des groupes et de l'entrée active ──
+   L'entrée active porte un filet rouge à gauche (en plus du fond), et les
+   groupes sont davantage séparés : l'œil trouve sa zone avant de lire. */
+.sb-item.active { box-shadow: inset 3px 0 0 var(--red); }
+.sb-group { margin-top: 18px; letter-spacing: 2.2px; }
+.sb-group:first-of-type { margin-top: 6px; }
