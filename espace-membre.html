@@ -990,7 +990,13 @@
     if (!email || !password) { showMsg('auth-msg', 'Email et mot de passe requis.', false); return; }
     hideMsg('auth-msg');
     if (mode === 'signup') {
-      const { data, error } = await sb.auth.signUp({ email, password });
+      // emailRedirectTo : le lien de confirmation revient sur CE site.
+      // Sans ça, Supabase utiliserait le « Site URL » du projet, qui est
+      // réservé à l'autre site hébergé sur le même projet.
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname }
+      });
       if (error) { showMsg('auth-msg', error.message, false); return; }
       if (!data.session) {
         showMsg('auth-msg', 'Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.', true);
