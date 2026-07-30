@@ -925,6 +925,58 @@
     #back-to-top { border-radius: 12px; }
     .discord-widget-wrap { border-radius: 12px; overflow: hidden; }
     footer { background: var(--surface); }
+
+    /* ═══ UNIFICATION 29/07 — icônes dessinées, galerie, pied de page ═══ */
+    .valeur-icon svg { width: 22px; height: 22px; }
+    .lock-ico { color: var(--gold); display: flex; justify-content: center; }
+    .lock-ico svg { width: 34px; height: 34px; }
+    .discord-locked .lock-ico svg { width: 30px; height: 30px; }
+
+    .galerie-cta {
+      margin-top: 20px; padding: 18px 22px; border-radius: 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    }
+    .galerie-cta p { font-size: 13.5px; color: var(--text-muted); line-height: 1.7; margin: 0; max-width: 560px; }
+    .galerie-cta p span {
+      font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 700;
+      color: var(--gold); font-size: 15px; margin-right: 6px;
+    }
+
+    footer { display: block; padding: 48px 40px 34px; border-top: 1px solid var(--border); background: var(--surface); }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr; gap: 40px; align-items: start;
+    }
+    .footer-devise {
+      font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 700;
+      color: var(--gold); font-size: 15px; margin: 10px 0 12px;
+    }
+    .footer-text { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+    .footer-liens { display: flex; flex-direction: column; gap: 9px; }
+    .footer-liens a {
+      color: var(--text-muted); text-decoration: none; font-size: 13px;
+      width: fit-content; transition: color 0.2s;
+    }
+    .footer-liens a:hover { color: var(--text); }
+    .footer-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+    .footer-btn {
+      display: inline-block; padding: 11px 20px; border-radius: 10px;
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+      background: var(--red-solid); color: #fff; text-decoration: none; transition: background 0.2s, border-color 0.2s;
+    }
+    .footer-btn:hover { background: var(--red-dark); }
+    .footer-btn.ghost { background: none; border: 1px solid var(--border-strong); color: var(--text); }
+    .footer-btn.ghost:hover { border-color: var(--red); color: var(--red); }
+    .footer-admin {
+      font-size: 11px; color: var(--text-dim); text-decoration: none;
+      letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; transition: color 0.2s;
+    }
+    .footer-admin:hover { color: var(--red); }
+    @media (max-width: 860px) {
+      footer { padding: 40px 24px 90px; }   /* de l'air pour le bouton musique flottant */
+      .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+    }
   </style>
   <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -1007,22 +1059,22 @@
   <p class="section-desc">On est une petite frappe, mais on a du code. Des règles, une vision, et surtout — une vraie famille.</p>
   <div class="valeurs-grid reveal-stagger">
     <div class="valeur-card">
-      <div class="valeur-icon">&#128101;</div>
+      <div class="valeur-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.5" cy="8.5" r="3.3"/><path d="M3.4 19.5a6.1 6.1 0 0112.2 0"/><path d="M16.2 6.1a3.3 3.3 0 010 5.4M17.4 14.6a6 6 0 013.2 4.9"/></svg></div>
       <h3>La famille avant tout</h3>
       <p>On se couvre mutuellement, quoi qu'il arrive. Les Moni ne s'abandonnent pas.</p>
     </div>
     <div class="valeur-card">
-      <div class="valeur-icon">&#128205;</div>
+      <div class="valeur-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-10.2a6.5 6.5 0 0113 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.8" r="2.3"/></svg></div>
       <h3>Roxwood, notre territoire</h3>
       <p>On connaît chaque ruelle de notre quartier. C'est chez nous, on le défend.</p>
     </div>
     <div class="valeur-card">
-      <div class="valeur-icon">&#128737;</div>
+      <div class="valeur-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l16 16"/><path d="M10.5 5.4A10 10 0 0121.5 12a15.3 15.3 0 01-3 3.4M6.1 7A14.4 14.4 0 002.5 12a10 10 0 0011.9 5.1"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg></div>
       <h3>Discrétion & survie</h3>
       <p>On reste dans l'ombre. Pas de bruit inutile, juste du travail bien fait.</p>
     </div>
     <div class="valeur-card">
-      <div class="valeur-icon">&#9994;</div>
+      <div class="valeur-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l7 2.5v5.5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="M9 12l2.2 2.2 4.2-4.4"/></svg></div>
       <h3>Respect du code</h3>
       <p>Des règles claires, des engagements tenus. La parole donnée est sacrée.</p>
     </div>
@@ -1091,7 +1143,10 @@
   <h2 class="section-title">Nos <em>moments</em></h2>
   <p class="section-desc">Des screens de nos meilleures sessions RP à Roxwood et Los Santos.</p>
   <div class="galerie-grid reveal-stagger" id="galerie-grid"></div>
-  <p style="font-size:13px; color:var(--text-dim); margin-top:20px;">Envoyez vos plus beaux screens sur le Discord pour les voir apparaître ici !</p>
+  <div class="galerie-cta">
+    <p><span>Ta place est ici.</span> Les plus beaux screens de la famille finissent sur cette page — envoie les tiens depuis l'espace membre.</p>
+    <a class="btn-red" href="espace-membre.html" style="font-size:11px;padding:11px 22px;white-space:nowrap;">Envoyer un screen</a>
+  </div>
 </section>
 
 <section id="qg">
@@ -1126,7 +1181,7 @@
   <h2 class="section-title">Nos <em>événements</em></h2>
   <p class="section-desc">Réunions, sessions RP et soirées de la famille. Note les dates et sois au rendez-vous.</p>
   <div id="events-locked" class="events-locked">
-    <div class="lock-ico">🔒</div>
+    <div class="lock-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 019 0v2.5"/><rect x="5" y="10.5" width="14" height="9" rx="2"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg></div>
     <p>Cette section est réservée aux membres de la famille.</p>
     <a href="espace-membre.html" class="btn-red">Accéder à l'espace membre</a>
   </div>
@@ -1152,9 +1207,9 @@
     <!-- SERVEUR PRINCIPAL — réservé aux membres -->
     <div class="discord-card discord-locked" id="discord-principal-locked">
       <div class="discord-role principal">★ Serveur principal</div>
-      <div class="lock-ico">🔒</div>
+      <div class="lock-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 019 0v2.5"/><rect x="5" y="10.5" width="14" height="9" rx="2"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg></div>
       <p>L'accès au serveur principal est réservé aux membres de la famille.</p>
-      <a href="espace-membre.html" class="discord-cta-btn">Espace membre</a>
+      <a href="espace-membre.html" class="btn-red" style="font-size:11px;padding:11px 22px;">Espace membre</a>
     </div>
     <div class="discord-card" id="discord-principal" style="display:none;">
       <div class="discord-role principal">★ Serveur principal</div>
@@ -1232,9 +1287,25 @@
 </section>
 
 <footer>
-  <div class="footer-logo">Famille <span>Moni</span></div>
-  <div class="footer-text">Roxwood, Los Santos &mdash; Flashback FA GTA RP &middot; Site fictif</div>
-  <a href="admin.html" title="Administration" style="font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-dim)'">⚙ Admin</a>
+  <div class="footer-inner">
+    <div class="footer-marque">
+      <div class="footer-logo">Famille <span>Moni</span></div>
+      <p class="footer-devise">« Une fois Moni, toujours Moni. »</p>
+      <div class="footer-text">Roxwood, Los Santos &mdash; Flashback FA GTA RP &middot; Site fictif</div>
+    </div>
+    <div class="footer-liens" role="navigation" aria-label="Pied de page">
+      <a href="#histoire">Histoire</a>
+      <a href="#membres">Membres</a>
+      <a href="#galerie">Galerie</a>
+      <a href="#recrutement">Recrutement</a>
+      <a href="os.html">Moni OS</a>
+    </div>
+    <div class="footer-actions">
+      <a class="footer-btn" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer">Rejoindre le Discord</a>
+      <a class="footer-btn ghost" href="espace-membre.html">Espace membre</a>
+      <a class="footer-admin" href="admin.html">Administration</a>
+    </div>
+  </div>
 </footer>
 
 <script>
