@@ -39,8 +39,8 @@ Toujours dans Authentication, va dans **URL Configuration** et ajoute ces
 deux adresses dans **Redirect URLs** :
 
 ```
-https://poloveni.github.io/FamilleMoni/espace-membre.html
-https://poloveni.github.io/FamilleMoni/**
+https://famillemoni.com/espace-membre.html
+https://famillemoni.com/**
 ```
 
 Sans ça, Discord te renverra vers une page d'erreur après la connexion.

@@ -21,7 +21,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE   = 'https://poloveni.github.io/FamilleMoni';
+const SITE   = 'https://famillemoni.com';
 const DOSSIER = join(RACINE, 'membre');
 
 // ── 1. On lit la configuration comme le ferait un navigateur ──────────────

@@ -2727,7 +2727,7 @@
     const email = document.getElementById('email').value.trim();
     if (!email) { showMsg('auth-msg', "Écris d'abord ton email dans le champ ci-dessus, puis reclique sur « Mot de passe oublié ? ».", false); return; }
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://poloveni.github.io/FamilleMoni/espace-membre.html'
+      redirectTo: 'https://famillemoni.com/espace-membre.html'
     });
     if (error) { showMsg('auth-msg', 'Erreur : ' + error.message, false); return; }
     showMsg('auth-msg', '📬 Email envoyé à ' + email + ' ! Clique le lien dedans pour choisir un nouveau mot de passe (regarde aussi les spams).', true);
