@@ -719,6 +719,13 @@
         <div class="msg" id="import-msg"></div>
         <div id="import-rapport" style="margin-top:16px;"></div>
       </div>
+
+      <!-- Liste vivante des taxes (miroir bot_taxes, resynchronise toutes les 5 min) -->
+      <div class="bloc">
+        <div class="bloc-t">Taxes en cours <span class="hint" id="taxes-compte" style="margin-left:6px;"></span></div>
+        <div id="taxes-kpis"></div>
+        <div id="taxes-liste"><div class="locked">Chargement…</div></div>
+      </div>
     </div>
 
     <!-- MA SEMAINE -->
@@ -920,6 +927,7 @@
     item.addEventListener('click', () => {
       if (!isApproved && item.classList.contains('req-approve')) { toast('Compte en attente de validation.'); return; }
       showPanel(item.dataset.panel);
+      if (item.dataset.panel === 'taxes') loadTaxes();
     });
   });
 
@@ -1060,6 +1068,7 @@
     loadBotDashboards();
     loadPrix();
     loadCarte();
+    loadTaxes();
   }
 
   async function loadProfil() {
@@ -2434,6 +2443,80 @@
           .map(z => '<span>' + escT(z.zone) + '</span>').join('') +
         '</div></details>'
       : '');
+  }
+
+  // ── TAXES : liste vivante depuis la base du bot ─────────────────────────
+  // bot_taxes est le miroir du salon #taxes de Discord : le bot le
+  // resynchronise toutes les 5 minutes. Ici on ne fait que LIRE — la vérité
+  // reste côté bot, le paiement se gère sur Discord.
+  async function loadTaxes() {
+    const box = document.getElementById('taxes-liste');
+    if (!box || !currentUser) return;
+    const [taxesQ, typesQ] = await Promise.all([
+      sb.from('bot_taxes').select('*').order('echeance', { ascending: true }),
+      sb.from('bot_taxes_types').select('type,label'),
+    ]);
+    if (taxesQ.error) {
+      box.innerHTML = '<div class="locked">Taxes indisponibles : ' + escT(taxesQ.error.message) + '</div>';
+      return;
+    }
+    const labels = {};
+    (typesQ.data || []).forEach(t => { labels[t.type] = t.label || t.type; });
+
+    const now = Date.now();
+    const JOUR = 86400000;
+    function etat(t) {
+      if (t.paye) return { k: 'payee', txt: 'Payée', c: '#59c98c' };
+      if (!t.echeance) return { k: 'attente', txt: 'Sans échéance', c: 'var(--dim)' };
+      const d = new Date(t.echeance).getTime() - now;
+      if (d < 0) return { k: 'retard', txt: 'En retard de ' + Math.max(1, Math.floor(-d / JOUR)) + ' j', c: '#e35d4c' };
+      if (d < 2 * JOUR) return { k: 'urgent', txt: d < JOUR ? "Aujourd'hui" : 'Demain', c: '#e0b062' };
+      return { k: 'ok', txt: 'Dans ' + Math.ceil(d / JOUR) + ' j', c: 'var(--dim)' };
+    }
+
+    const lignes = (taxesQ.data || []).filter(t => t.actif !== false).map(t => ({ t, e: etat(t) }));
+    const enRetard = lignes.filter(x => x.e.k === 'retard').length;
+    const urgentes = lignes.filter(x => x.e.k === 'urgent').length;
+    const payees   = lignes.filter(x => x.e.k === 'payee').length;
+
+    const kpis = document.getElementById('taxes-kpis');
+    if (kpis) kpis.innerHTML = !lignes.length ? '' :
+      '<div class="kpis" style="margin-bottom:16px;">' +
+        '<div class="kpi" style="--kc:#e35d4c;"><div class="kpi-label">En retard</div><div class="kpi-num">' + enRetard + '</div><div class="kpi-foot">à relancer en priorité</div></div>' +
+        '<div class="kpi" style="--kc:#e0b062;"><div class="kpi-label">Sous 48 h</div><div class="kpi-num">' + urgentes + '</div><div class="kpi-foot">échéance imminente</div></div>' +
+        '<div class="kpi" style="--kc:#59c98c;"><div class="kpi-label">Payées</div><div class="kpi-num">' + payees + '</div><div class="kpi-foot">sur ' + lignes.length + ' taxes actives</div></div>' +
+        '<div class="kpi"><div class="kpi-label">À encaisser</div><div class="kpi-num">' + (lignes.length - payees) + '</div><div class="kpi-foot">taxes encore dues</div></div>' +
+      '</div>';
+
+    if (!lignes.length) {
+      box.innerHTML = '<div class="locked">Aucune taxe active pour le moment — le bot n\'en a remonté aucune. Les taxes créées (sur Discord ou via l\'import Excel ci-dessus) apparaîtront ici sous 5 minutes.</div>';
+      const c0 = document.getElementById('taxes-compte');
+      if (c0) c0.textContent = '';
+      return;
+    }
+
+    // Les plus urgentes en tête, les payées à la fin.
+    const ordre = { retard: 0, urgent: 1, ok: 2, attente: 3, payee: 4 };
+    const LOIN = 8640000000000000;
+    lignes.sort((a, b) => (ordre[a.e.k] - ordre[b.e.k]) ||
+      ((a.t.echeance ? new Date(a.t.echeance).getTime() : LOIN) - (b.t.echeance ? new Date(b.t.echeance).getTime() : LOIN)));
+
+    box.innerHTML =
+      '<table class="vd-table"><thead><tr><th>Groupe</th><th>Type</th><th>Échéance</th><th>Statut</th></tr></thead><tbody>' +
+      lignes.map(({ t, e }) => {
+        const dte = t.echeance ? new Date(t.echeance).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+        return '<tr style="' + (e.k === 'payee' ? 'opacity:0.45;' : '') + '">' +
+          '<td>' + escT(t.nom || '?') + '</td>' +
+          '<td>' + escT(labels[t.type] || t.type || '—') + '</td>' +
+          '<td>' + escT(dte) + '</td>' +
+          '<td><span style="color:' + e.c + ';font-weight:600;">' + e.txt + '</span></td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table>' +
+      '<div class="hint" style="margin-top:10px;">Synchronisé depuis le bot toutes les 5 minutes — le paiement se gère sur Discord, dans le salon #taxes.</div>';
+
+    const compte = document.getElementById('taxes-compte');
+    if (compte) compte.textContent = '· ' + lignes.length + ' active' + (lignes.length > 1 ? 's' : '');
   }
 
   async function loadPrix() {
