@@ -1214,7 +1214,7 @@
     <div class="discord-card" id="discord-principal" style="display:none;">
       <div class="discord-role principal">★ Serveur principal</div>
       <div class="discord-server">
-        <img src="https://cdn.discordapp.com/icons/1450234264305008693/f196c07d8171daa8bf532ce3627d28ee.png?size=128" alt="Icône serveur principal" onerror="this.style.display='none'" />
+        <img id="d-icone-1450234264305008693" src="https://cdn.discordapp.com/icons/1450234264305008693/f196c07d8171daa8bf532ce3627d28ee.png?size=128" alt="Icône serveur principal" onerror="this.style.display='none'" />
         <div>
           <div class="discord-server-name">Famille Moni 🇮🇹</div>
           <div class="discord-server-tag">Flashback FA — GTA RP</div>
@@ -1226,7 +1226,7 @@
           <div class="discord-stat-label">En ligne</div>
         </div>
         <div class="discord-stat">
-          <div class="discord-stat-num">53</div>
+          <div class="discord-stat-num d-membres" data-guild="1450234264305008693">53</div>
           <div class="discord-stat-label">Membres</div>
         </div>
       </div>
@@ -1240,7 +1240,7 @@
     <div class="discord-card">
       <div class="discord-role">📣 Recrutement</div>
       <div class="discord-server">
-        <img src="https://cdn.discordapp.com/icons/1489387311245558004/5ec6d1ac45679fd05693dd23b88cbc14.png?size=128" alt="Icône serveur recrutement" onerror="this.style.display='none'" />
+        <img id="d-icone-1489387311245558004" src="https://cdn.discordapp.com/icons/1489387311245558004/5ec6d1ac45679fd05693dd23b88cbc14.png?size=128" alt="Icône serveur recrutement" onerror="this.style.display='none'" />
         <div>
           <div class="discord-server-name">RC Famille Moni 🇮🇹</div>
           <div class="discord-server-tag">Serveur de recrutement</div>
@@ -1252,7 +1252,7 @@
           <div class="discord-stat-label">En ligne</div>
         </div>
         <div class="discord-stat">
-          <div class="discord-stat-num">74</div>
+          <div class="discord-stat-num d-membres" data-guild="1489387311245558004">74</div>
           <div class="discord-stat-label">Membres</div>
         </div>
       </div>
@@ -1847,14 +1847,54 @@
   // ── DISCORD : compteurs en direct ──
   // Nécessite "Activer le widget" dans les paramètres du serveur Discord.
   // Compteur "en ligne" en direct pour chaque serveur (si le widget est activé côté Discord).
-  (function discordLive() {
-    document.querySelectorAll('.d-online[data-guild]').forEach(function (el) {
-      const gid = el.getAttribute('data-guild');
-      fetch('https://discord.com/api/guilds/' + gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
+  (function cartesDiscord() {
+    // L'API d'invitation de Discord donne, en un appel : l'icône ACTUELLE du
+    // serveur, le nombre de connectés et le nombre de membres — widget activé
+    // ou non. C'est elle qui pilote les deux cartes.
+    //   Repli 1 : le widget (s'il est activé) pour le "en ligne".
+    //   Repli 2 : si rien ne répond, on affiche « — » plutôt qu'un vieux
+    //             chiffre écrit en dur — un faux compteur est pire que pas
+    //             de compteur.
+    // ⚠ Les codes d'invitation ci-dessous doivent être des invitations
+    //   PERMANENTES (sans expiration), sinon les cartes passeront à « — »
+    //   le jour où le lien expire.
+    const SERVEURS = [
+      { gid: '1450234264305008693', invite: 'nM3ttEtYz' },   // serveur principal
+      { gid: '1489387311245558004', invite: '8zBwmG4y3' },   // recrutement
+    ];
+    function maj(gid, sel, val) {
+      document.querySelectorAll(sel + '[data-guild="' + gid + '"]').forEach(e => {
+        // On préserve la pastille verte du "en ligne".
+        const dot = e.querySelector && e.querySelector('.dot');
+        e.textContent = val;
+        if (dot) e.prepend(dot);
+      });
+    }
+    function charge(svr) {
+      return fetch('https://discord.com/api/v9/invites/' + svr.invite + '?with_counts=true&_=' + Date.now(), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => { if (typeof d.presence_count === 'number') el.textContent = d.presence_count; })
-        .catch(() => { /* widget non activé : on garde la valeur affichée */ });
-    });
+        .then(d => {
+          if (typeof d.approximate_presence_count === 'number') maj(svr.gid, '.d-online', d.approximate_presence_count);
+          if (typeof d.approximate_member_count === 'number') maj(svr.gid, '.d-membres', d.approximate_member_count);
+          const g = d.guild || {};
+          const img = document.getElementById('d-icone-' + svr.gid);
+          if (img && g.icon) {
+            img.style.display = '';
+            img.src = 'https://cdn.discordapp.com/icons/' + svr.gid + '/' + g.icon +
+              (String(g.icon).indexOf('a_') === 0 ? '.gif' : '.png') + '?size=128';
+          }
+        })
+        .catch(() =>
+          fetch('https://discord.com/api/guilds/' + svr.gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(d => { if (typeof d.presence_count === 'number') maj(svr.gid, '.d-online', d.presence_count); })
+            .catch(() => { maj(svr.gid, '.d-online', '—'); maj(svr.gid, '.d-membres', '—'); })
+        );
+    }
+    function tout() { SERVEURS.forEach(charge); }
+    tout();
+    // Rafraîchi chaque minute, en pause quand l'onglet est en arrière-plan.
+    setInterval(() => { if (!document.hidden) tout(); }, 60000);
   })();
 
   // ── MUR DES MEMBRES EN LIGNE (via le widget Discord) ──
