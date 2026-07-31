@@ -939,6 +939,9 @@
 
   // ── NAVIGATION ENTRE PANNEAUX ──
   function showPanel(name) {
+    // Gestionnaire des taxes : quoi qu'il arrive, on ne sort pas des taxes.
+    // (Filet de sécurité si un autre bout de code demandait un panneau.)
+    if (document.body.classList.contains('mode-taxes-seul') && name !== 'taxes') name = 'taxes';
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('panel-' + name);
     if (target) target.classList.add('active');
@@ -1059,25 +1062,40 @@
     // Lien Panel admin : visible uniquement pour l'administratrice
     const sbAdmin = document.getElementById('sb-admin');
     if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
-    // Qui voit l'outil d'import : on demande à la base, qui applique
-    // exactement la même fonction que ses règles de sécurité. Une seule
-    // implémentation, donc aucun risque que l'affichage et l'autorisation
-    // réelle divergent. Et ce test n'est qu'un confort : même en le
-    // contournant dans le navigateur, la base refuserait le dépôt.
     const carteAdmin = document.getElementById('carte-admin');
     if (carteAdmin) carteAdmin.style.display = user.email === 'syne@live.fr' ? '' : 'none';
+
+    // ── DROITS DU COMPTE ────────────────────────────────────────────────
+    // On demande à la base, qui applique exactement les mêmes fonctions que
+    // ses règles de sécurité. Une seule implémentation, donc aucun risque
+    // que l'affichage et l'autorisation réelle divergent. Et ces tests ne
+    // sont qu'un confort : même en les contournant dans le navigateur, la
+    // base refuserait l'écriture.
+    //   · peut_importer_taxes    → a le droit de déposer un fichier Excel
+    //   · est_gestionnaire_taxes → colonne is_taxes_manager du bot :
+    //     ce compte ne s'occupe QUE des taxes, on lui masque le reste.
+    // Les deux s'appuient sur l'identifiant Discord réel (auth.identities) :
+    // un membre connecté par email/mot de passe n'est donc jamais reconnu
+    // comme gestionnaire, et garde l'espace membre normal.
+    let peutImporter = false;
+    let estGestionnaireTaxes = false;
+    const [repImport, repGest] = await Promise.all([
+      sb.rpc('peut_importer_taxes'),
+      sb.rpc('est_gestionnaire_taxes'),
+    ]);
+    if (repImport.error) console.warn('[droits] import taxes :', repImport.error.message);
+    else peutImporter = repImport.data === true;
+    if (repGest.error) console.warn('[droits] gestionnaire taxes :', repGest.error.message);
+    else estGestionnaireTaxes = repGest.data === true;
+
+    // Sécurité anti-verrouillage : l'administratrice garde toujours tout,
+    // même si le bot lui posait la case is_taxes_manager par erreur.
+    const modeTaxesSeul = estGestionnaireTaxes && user.email !== 'syne@live.fr';
+
     const blocImport = document.getElementById('bloc-import-taxes');
-    if (blocImport) {
-      blocImport.style.display = 'none';
-      sb.rpc('peut_importer_taxes').then(({ data, error }) => {
-        if (error) { console.warn('[import] vérification impossible :', error.message); return; }
-        blocImport.style.display = data === true ? '' : 'none';
-        // Le panneau Taxes ne contient que l'import : inutile de montrer
-        // l'entrée du menu à ceux qui n'y ont pas droit.
-        const sbTaxes = document.getElementById('sb-taxes');
-        if (sbTaxes) sbTaxes.style.display = data === true ? '' : 'none';
-      });
-    }
+    if (blocImport) blocImport.style.display = peutImporter ? '' : 'none';
+    const sbTaxes = document.getElementById('sb-taxes');
+    if (sbTaxes) sbTaxes.style.display = (peutImporter || modeTaxesSeul) ? '' : 'none';
 
     // Un seul aller-retour : on écrit et on relit la colonne dans la même requête.
     const { data: compte } = await sb.from('comptes')
@@ -1091,6 +1109,16 @@
       document.getElementById('bd-sync').textContent = 'Validation par un administrateur requise';
       return;
     }
+
+    // Gestionnaire des taxes : on réduit l'espace membre au seul panneau
+    // Taxes et on ne charge aucune autre donnée.
+    if (modeTaxesSeul) {
+      appliquerModeTaxesSeul();
+      showPanel('taxes');
+      loadTaxes();
+      return;
+    }
+
     // « Ma semaine » d'abord : c'est la page qui concerne le membre.
     // S'il avait quitté ailleurs, on le remet où il était.
     let panneau = 'moi';
@@ -1104,6 +1132,36 @@
     loadPrix();
     loadCarte();
     loadTaxes();
+  }
+
+  // ── MODE « TAXES SEULEMENT » ──────────────────────────────────────────
+  // Ne laisse dans le menu que l'entrée Taxes (plus le retour au site et la
+  // déconnexion), et rend tous les autres panneaux inatteignables.
+  // C'est du confort d'affichage : la vraie barrière reste les règles de
+  // sécurité de la base, qui décident seules ce que ce compte peut écrire.
+  function appliquerModeTaxesSeul() {
+    document.body.classList.add('mode-taxes-seul');
+
+    // 1. Les entrées de menu qui ouvrent un panneau : tout sauf Taxes.
+    document.querySelectorAll('#member-screen .sb-nav .sb-item[data-panel]').forEach(el => {
+      if (el.dataset.panel !== 'taxes') el.style.display = 'none';
+    });
+    // 2. Les entrées sans panneau réservées aux autres rôles.
+    ['tv-btn', 'sb-admin'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    // 3. Les intitulés de rubrique (« Moi », « La famille »…) devenus vides.
+    document.querySelectorAll('#member-screen .sb-nav .sb-group').forEach(groupe => {
+      let el = groupe.nextElementSibling, resteQuelqueChose = false;
+      while (el && !el.classList.contains('sb-group') && !el.classList.contains('sb-foot')) {
+        if (el.style.display !== 'none') { resteQuelqueChose = true; break; }
+        el = el.nextElementSibling;
+      }
+      if (!resteQuelqueChose) groupe.style.display = 'none';
+    });
+    // 4. On oublie le dernier panneau visité : il est désormais interdit.
+    try { localStorage.removeItem('moni-panel'); } catch (e) {}
   }
 
   async function loadProfil() {
