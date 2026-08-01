@@ -1,9 +1,9 @@
 /* Service Worker — Famille Moni (PWA) */
-const CACHE = 'moni-v5';
+const CACHE = 'moni-v6';
 const CORE = [
   './', './index.html', './os.html', './espace-membre.html',
   './logo.jpg', './hero-bg.webp', './icon-192.png', './icon-512.png',
-  './manifest.json', './404.html', './theme.css', './utils.js'
+  './manifest.json', './404.html', './dashboard.css', './animations.css'
 ];
 
 self.addEventListener('install', e => {
@@ -36,9 +36,14 @@ self.addEventListener('fetch', e => {
 
   // supabase-config.js contient la liste des membres : il doit TOUJOURS être frais,
   // sinon les visiteurs habituels gardent l'ancienne liste après une mise à jour.
+  // Les fichiers de code (pages, styles, scripts) doivent TOUJOURS être
+  // frais : sinon, après une mise à jour du site, les visiteurs habituels
+  // gardent un ancien CSS avec un nouveau HTML — et la page s'affiche
+  // cassée. Le cache reste utilisé en secours quand il n'y a pas de réseau.
   const toujoursFrais = req.mode === 'navigate'
     || url.pathname.endsWith('.html')
-    || url.pathname.endsWith('supabase-config.js');
+    || url.pathname.endsWith('.css')
+    || url.pathname.endsWith('.js');
 
   if (toujoursFrais) {
     // Réseau d'abord (toujours à jour), cache en secours (hors ligne).
