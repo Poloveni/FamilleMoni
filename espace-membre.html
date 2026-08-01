@@ -985,6 +985,13 @@
     if (sousEl) sousEl.textContent = (nav && nav.dataset.sub) || window.__semaineTxt || '';
     // On retient où on était : à la prochaine visite, on rouvre au même endroit.
     if (name !== 'pending') { try { localStorage.setItem('moni-panel', name); } catch (e) {} }
+    // Le panneau vient d'apparaître : ses graphiques connaissent enfin leur
+    // vraie largeur. On les redessine (ceux déjà à la bonne taille sont ignorés).
+    // Le try/catch est un filet : si le script s'est interrompu plus haut
+    // (CDN bloqué, coupure réseau), la navigation entre panneaux doit
+    // continuer de marcher — un graphique mal dimensionné vaut mieux
+    // qu'un menu qui ne répond plus.
+    try { redessineGraphiques(); } catch (e) {}
   }
   document.querySelectorAll('.sb-item[data-panel]').forEach(item => {
     item.addEventListener('click', () => {
@@ -1425,7 +1432,33 @@
   // Animations forcées pour tout le monde (choix du proprio), quel que soit le réglage système.
   // Respecte le réglage système « réduire les animations » (accessibilité).
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const lastCharts = { bars: null, donut: null };
+  // ── REGISTRE DES GRAPHIQUES ────────────────────────────────────────
+  // Les graphiques sont dessinés sur un <canvas>, dont la largeur est
+  // FIXÉE au moment du dessin d'après la largeur de son conteneur.
+  // Problème : au chargement, on ouvre le dernier panneau visité. Tous
+  // les autres panneaux sont alors masqués — donc larges de 0 pixel — et
+  // leurs graphiques sortent à la largeur minimale de 280 px. Ils restent
+  // ratatinés même une fois le panneau affiché.
+  // Solution : chaque graphique retient COMMENT se redessiner et à quelle
+  // largeur il l'a fait. Dès qu'il devient visible (ou que la fenêtre
+  // change de taille), on le redessine à la bonne largeur.
+  const graphiques = new Map();      // conteneur -> fonction de redessin
+  const largeurDessinee = new Map(); // conteneur -> largeur utilisée au dessin
+
+  function enregistreGraphique(container, redessine) {
+    graphiques.set(container, redessine);
+    largeurDessinee.set(container, container.clientWidth);
+  }
+
+  function redessineGraphiques() {
+    graphiques.forEach((redessine, container) => {
+      // Un conteneur retiré du document n'a plus rien à redessiner.
+      if (!container.isConnected) { graphiques.delete(container); largeurDessinee.delete(container); return; }
+      const l = container.clientWidth;
+      // Largeur nulle = encore masqué. Largeur identique = rien à refaire.
+      if (l > 0 && l !== largeurDessinee.get(container)) redessine();
+    });
+  }
   function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
   // Compteur animé (les chiffres "défilent" jusqu'à leur valeur)
@@ -1467,7 +1500,7 @@
 
   // Graphique en barres lumineuses + ligne de quota
   function drawBarChart(container, data, quota) {
-    lastCharts.bars = { container, data, quota };
+    enregistreGraphique(container, () => drawBarChart(container, data, quota));
     const { cv, ctx, w, h } = makeCanvas(container, 250);
     const padB = 26, padT = 22;
     const zone = h - padB - padT;
@@ -1549,7 +1582,7 @@
 
   // Donut animé avec halo + total au centre
   function drawDonut(container, parts) {
-    lastCharts.donut = { container, parts };
+    enregistreGraphique(container, () => drawDonut(container, parts));
     container.innerHTML = '';
     const wrap = document.createElement('div'); wrap.className = 'donut-wrap';
     const cvBox = document.createElement('div');
@@ -1606,7 +1639,7 @@
 
   // Courbe animée (aire + ligne lumineuse) — évolution de l'argent sale
   function drawLineChart(container, pts) {
-    lastCharts.line = { container, pts };
+    enregistreGraphique(container, () => drawLineChart(container, pts));
     const { cv, ctx, w, h } = makeCanvas(container, 240);
     const padL = 8, padR = 10, padT = 26, padB = 14;
     const xs = pts.map(p => p.t), ys = pts.map(p => p.y);
@@ -1689,11 +1722,7 @@
   let rsTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(rsTimer);
-    rsTimer = setTimeout(() => {
-      if (lastCharts.bars) drawBarChart(lastCharts.bars.container, lastCharts.bars.data, lastCharts.bars.quota);
-      if (lastCharts.donut) drawDonut(lastCharts.donut.container, lastCharts.donut.parts);
-      if (lastCharts.line) drawLineChart(lastCharts.line.container, lastCharts.line.pts);
-    }, 200);
+    rsTimer = setTimeout(redessineGraphiques, 200);
   });
 
   async function loadBotDashboards() {
