@@ -1735,10 +1735,13 @@
     { src: "duo-nuit.webp",         caption: "Complices",    w: 255 },
     { src: "famille-escaliers.webp",caption: "Le clan",      w: 285 },
     { src: "famille-balcon.webp",   caption: "La Famiglia",  w: 285 },
+    { src: "famille-manoir.webp",   caption: "Au complet",   w: 235 },
     // Ajoute d'autres photos ici (w = largeur optionnelle en px) :
     // { src: "photo.png", caption: "Légende", w: 200 },
   ];
-  // Emplacements pré-réglés (position, inclinaison, largeur) — jusqu'à 6 photos
+  // Emplacements pré-réglés (position, inclinaison, largeur) — jusqu'à 7 photos.
+  // Au-delà, les photos suivantes se reposeraient sur les premières :
+  // ajoute une ligne ici en même temps qu'une ligne ci-dessus.
   const HERO_SLOTS = [
     { pos: "right:3%;",   top: "24%", rot: 5,  w: 178 },
     { pos: "left:2.5%;",  top: "15%", rot: -7, w: 168 },
@@ -1746,6 +1749,7 @@
     { pos: "left:5.5%;",  top: "50%", rot: 6,  w: 162 },
     { pos: "right:10%;",  top: "54%", rot: 8,  w: 148 },
     { pos: "left:9%;",    top: "5%",  rot: 4,  w: 142 },
+    { pos: "left:7%;",    top: "73%", rot: -6, w: 152 },
   ];
   (function initHeroPhotos() {
     const wrap = document.getElementById('hero-photos');
@@ -1754,7 +1758,7 @@
       const s = HERO_SLOTS[i % HERO_SLOTS.length];
       const fig = document.createElement('figure');
       fig.className = 'hero-photo';
-      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + (p.w || s.w) + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
+      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + (p.w || s.w) + 'px;animation-delay:' + (0.4 + i * 0.42) + 's;';
       fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy" decoding="async">' +
         (p.caption ? '<figcaption class="cap">' + p.caption + '</figcaption>' : '');
       fig.addEventListener('click', () => openLightbox(HERO_PHOTOS, i));
