@@ -36,6 +36,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://famillemoni.com/membre/dayon-reas.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://famillemoni.com/membre/javier-cruz-silva.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -51,7 +56,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://famillemoni.com/membre/dayon-reas.html</loc>
+    <loc>https://famillemoni.com/membre/gustavo-cardoso.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
