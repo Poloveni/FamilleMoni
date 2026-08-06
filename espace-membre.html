@@ -654,6 +654,21 @@
     .np-item svg { width: 20px; height: 20px; }
     .np-item.active { color: var(--text); border-color: var(--red); }
     .np-item.np-sortie { color: var(--red); }
+
+    /* ── Alignements mobiles (audit 06/08) ── */
+    .nm-item span { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    @media (max-width: 860px) {
+      /* Le formulaire du profil reste aligné à gauche ; seule la photo est centrée */
+      .profil-grid { text-align: left; justify-items: stretch; }
+      .profil-grid > div:first-child { justify-self: center; text-align: center; }
+      /* Tout tableau large devient défilable au doigt, sans casser la page */
+      .vd-table { display: block; overflow-x: auto; white-space: nowrap; }
+      .vd-table td { white-space: normal; min-width: 72px; }
+      /* Les grands chiffres ne débordent plus des tuiles en 2 colonnes */
+      .kpi-num { font-size: 22px; }
+      .kpi { padding: 14px; }
+      .dash-title { font-size: 19px; }
+    }
   </style>
 </head>
 <body>
@@ -1142,6 +1157,8 @@
   // (compte en attente, gérant des taxes, panel admin) restent respectés
   // sans dupliquer la moindre règle.
   const NM_PRINCIPAUX = ['moi', 'apercu', 'prix', 'coffre'];
+  // Étiquettes courtes pour la barre (une seule ligne, icônes alignées)
+  const NM_LBLS = { moi: 'Semaine', apercu: 'Vue', prix: 'Prix', coffre: 'Coffre', taxes: 'Taxes', carte: 'Carte', galerie: 'Galerie', profil: 'Profil', events: 'Planning', business: 'Classement', palmares: 'Palmarès', braquages: 'Braquages', armurerie: 'Armurerie' };
   const NM_ICO_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
   function nmVisibles() {
     return [...document.querySelectorAll('.sb-nav .sb-item[data-panel]')].filter(b => b.style.display !== 'none');
@@ -1156,7 +1173,7 @@
     bar.innerHTML = principaux.map(b =>
       '<button type="button" class="nm-item' + (b.classList.contains('active') ? ' active' : '') + '" data-cible="' + b.dataset.panel + '">' +
         (b.querySelector('.ico') ? b.querySelector('.ico').innerHTML : '') +
-        '<span>' + escT(b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel) + '</span></button>'
+        '<span>' + escT(NM_LBLS[b.dataset.panel] || (b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel)) + '</span></button>'
     ).join('') +
     '<button type="button" class="nm-item" id="nm-plus">' + NM_ICO_PLUS + '<span>Plus</span></button>';
     bar.querySelectorAll('.nm-item[data-cible]').forEach(x => x.addEventListener('click', () => {
