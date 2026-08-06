@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.famillemoni.twa",
+        "sha256_cert_fingerprints": ["CB:93:CF:B7:86:C4:06:6D:82:FC:4C:13:7B:1C:B4:7B:FA:B1:6F:81:75:79:6A:AB:78:10:FE:A6:ED:5A:95:B9"]
+      }
+    }]
