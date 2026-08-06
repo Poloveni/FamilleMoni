@@ -672,6 +672,40 @@
       .kpi { padding: 14px; }
       .dash-title { font-size: 19px; }
     }
+
+    /* ── Sensations natives (mobile) ── */
+    .sb-item, .nm-item, .np-item, .btn, .tx-carte { -webkit-tap-highlight-color: transparent; }
+    .nm-item { transition: transform 0.12s ease, color 0.15s; position: relative; }
+    .nm-item:active { transform: scale(0.86); }
+    .nm-item.active::after {
+      content: ''; position: absolute; bottom: 1px; left: 50%;
+      width: 4px; height: 4px; border-radius: 50%; background: var(--red);
+      transform: translateX(-50%); animation: nmPop 0.25s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes nmPop { from { transform: translateX(-50%) scale(0); } }
+    .np-item { transition: transform 0.12s ease; }
+    .np-item:active { transform: scale(0.94); }
+    .np-fond { backdrop-filter: blur(4px); }
+    .np-poignee { width: 38px; height: 4px; border-radius: 2px; background: var(--border2); margin: 0 auto 14px; }
+    .np-feuille { touch-action: pan-y; transition: transform 0.18s ease; }
+    #ptr {
+      position: fixed; top: 0; left: 50%; z-index: 60; pointer-events: none;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--panel2); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      transform: translate(-50%, -56px); transition: transform 0.2s ease;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    }
+    #ptr svg { width: 18px; height: 18px; color: var(--red); }
+    #ptr.actif svg { animation: ptrTourne 0.8s linear infinite; }
+    @keyframes ptrTourne { to { transform: rotate(360deg); } }
+    @media (max-width: 860px) {
+      body:not(.tv-mode) { overscroll-behavior-y: contain; }
+      body:not(.tv-mode) .toast {
+        left: 16px; right: 16px; text-align: center;
+        bottom: calc(96px + env(safe-area-inset-bottom));
+      }
+    }
   </style>
 </head>
 <body>
@@ -1159,6 +1193,48 @@
   // latéral : on relaie le clic vers le vrai bouton. Ainsi, tous les droits
   // (compte en attente, gérant des taxes, panel admin) restent respectés
   // sans dupliquer la moindre règle.
+  function nmVib() { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} }
+
+  // ── Tirer vers le bas pour actualiser (mobile, en haut de page) ────────
+  (function tirerPourActualiser() {
+    if (!('ontouchstart' in window)) return;
+    const ptr = document.createElement('div');
+    ptr.id = 'ptr';
+    ptr.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg>';
+    document.body.appendChild(ptr);
+    let y0 = null, tirage = 0, enCours = false;
+    window.addEventListener('touchstart', e => {
+      if (enCours || window.innerWidth > 860 || document.body.classList.contains('tv-mode')) return;
+      if ((window.scrollY || 0) > 2) return;
+      const ecran = document.getElementById('member-screen');
+      if (!ecran || ecran.style.display === 'none') return;
+      if (document.getElementById('nav-plus') && !document.getElementById('nav-plus').hidden) return;
+      y0 = e.touches[0].clientY; tirage = 0;
+    }, { passive: true });
+    window.addEventListener('touchmove', e => {
+      if (y0 === null || enCours) return;
+      tirage = e.touches[0].clientY - y0;
+      if (tirage > 10) ptr.style.transform = 'translate(-50%, ' + Math.min(tirage * 0.45, 62) + 'px)';
+    }, { passive: true });
+    window.addEventListener('touchend', async () => {
+      if (y0 === null) return;
+      const assez = tirage > 75; y0 = null;
+      if (!assez) { ptr.style.transform = 'translate(-50%, -56px)'; return; }
+      enCours = true; nmVib();
+      ptr.classList.add('actif'); ptr.style.transform = 'translate(-50%, 48px)';
+      try {
+        await Promise.allSettled([
+          typeof loadBotDashboards === 'function' ? loadBotDashboards() : null,
+          typeof loadPrix === 'function' ? loadPrix() : null,
+          typeof loadTaxes === 'function' ? loadTaxes() : null,
+          typeof loadEvents === 'function' ? loadEvents() : null,
+        ]);
+      } catch (e) {}
+      ptr.classList.remove('actif'); ptr.style.transform = 'translate(-50%, -56px)';
+      enCours = false;
+      toast('✓ Données actualisées');
+    });
+  })();
   const NM_PRINCIPAUX = ['moi', 'apercu', 'prix', 'coffre'];
   // Étiquettes courtes pour la barre (une seule ligne, icônes alignées)
   const NM_LBLS = { moi: 'Semaine', apercu: 'Vue', prix: 'Prix', coffre: 'Coffre', taxes: 'Taxes', carte: 'Carte', galerie: 'Galerie', profil: 'Profil', events: 'Planning', business: 'Classement', palmares: 'Palmarès', braquages: 'Braquages', armurerie: 'Armurerie' };
@@ -1180,10 +1256,11 @@
     ).join('') +
     '<button type="button" class="nm-item" id="nm-plus">' + NM_ICO_PLUS + '<span>Plus</span></button>';
     bar.querySelectorAll('.nm-item[data-cible]').forEach(x => x.addEventListener('click', () => {
+      nmVib();
       const src = document.querySelector('.sb-nav .sb-item[data-panel="' + x.dataset.cible + '"]');
       if (src) src.click();
     }));
-    document.getElementById('nm-plus').addEventListener('click', ouvrirNavPlus);
+    document.getElementById('nm-plus').addEventListener('click', () => { nmVib(); ouvrirNavPlus(); });
   }
   function fermerNavPlus() {
     const sh = document.getElementById('nav-plus');
@@ -1196,7 +1273,7 @@
     const liens = [...document.querySelectorAll('.sb-nav a.sb-item')].filter(a => a.style.display !== 'none');
     const tuile = (ico, lbl, cls) =>
       '<button type="button" class="np-item' + (cls || '') + '">' + ico + '<span>' + escT(lbl) + '</span></button>';
-    sh.innerHTML = '<div class="np-fond"></div><div class="np-feuille">' +
+    sh.innerHTML = '<div class="np-fond"></div><div class="np-feuille"><div class="np-poignee"></div>' +
       '<div class="np-titre">Menu</div><div class="np-grille" id="np-panneaux">' +
       panneaux.map(b => tuile(b.querySelector('.ico') ? b.querySelector('.ico').innerHTML : '',
         b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel,
@@ -1214,6 +1291,21 @@
       if (i < liens.length) { window.location.href = liens[i].getAttribute('href'); }
       else { doLogout(); }
     }));
+    // Glisser la feuille vers le bas pour la fermer, comme une appli native.
+    const feuille = sh.querySelector('.np-feuille');
+    let fy = null;
+    feuille.addEventListener('touchstart', e => { if (feuille.scrollTop > 0) return; fy = e.touches[0].clientY; }, { passive: true });
+    feuille.addEventListener('touchmove', e => {
+      if (fy === null) return;
+      const d = e.touches[0].clientY - fy;
+      if (d > 0) feuille.style.transform = 'translateY(' + d + 'px)';
+    }, { passive: true });
+    feuille.addEventListener('touchend', e => {
+      if (fy === null) return;
+      const d = e.changedTouches[0].clientY - fy; fy = null;
+      feuille.style.transform = '';
+      if (d > 90) fermerNavPlus();
+    });
     sh.hidden = false; sh.classList.add('ouvert');
   }
 
