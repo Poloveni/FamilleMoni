@@ -612,6 +612,48 @@
     .feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
     .panel.active { animation-duration: 0.2s; }
     .goal, .bloc { padding: 18px 20px; }
+  
+    /* ═══ MODE APPLICATION (mobile) : navigation par le bas ═══ */
+    #nav-mobile, #nav-plus { display: none; }
+    @media (max-width: 860px) {
+      body:not(.tv-mode) .sb-nav { display: none !important; }   /* l'ancienne barre du haut */
+      body:not(.tv-mode) .dash { margin-left: 0; padding: 18px 14px calc(86px + env(safe-area-inset-bottom)); }
+      body:not(.tv-mode) #nav-mobile {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+        background: rgba(9,10,11,0.97); backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border2);
+        padding: 6px max(10px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
+        justify-content: space-around; gap: 2px;
+      }
+    }
+    .nm-item {
+      flex: 1; max-width: 96px; min-height: 52px; border: 0; background: none; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      color: var(--muted); font: inherit; font-size: 10px; letter-spacing: 0.2px; border-radius: 10px;
+    }
+    .nm-item svg { width: 21px; height: 21px; }
+    .nm-item.active { color: var(--text); }
+    .nm-item.active svg { color: var(--red); }
+    /* Feuille « Plus » : tout le menu, en grille, au-dessus de la barre */
+    #nav-plus.ouvert { display: block; position: fixed; inset: 0; z-index: 45; }
+    .np-fond { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+    .np-feuille {
+      position: absolute; left: 0; right: 0; bottom: 0; max-height: 75vh; overflow-y: auto;
+      background: var(--panel); border-top: 1px solid var(--border2); border-radius: 16px 16px 0 0;
+      padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
+      animation: npMonte 0.22s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes npMonte { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .np-titre { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim); margin: 10px 2px 8px; }
+    .np-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .np-item {
+      border: 1px solid var(--border); background: var(--panel2); border-radius: 10px; cursor: pointer;
+      min-height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      color: var(--muted); font: inherit; font-size: 11px; text-decoration: none; text-align: center; padding: 8px 4px;
+    }
+    .np-item svg { width: 20px; height: 20px; }
+    .np-item.active { color: var(--text); border-color: var(--red); }
+    .np-item.np-sortie { color: var(--red); }
   </style>
 </head>
 <body>
@@ -701,6 +743,9 @@
       <div class="sb-out" onclick="doLogout()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M17.7 6.6a8 8 0 11-11.4 0"/></svg></span><span class="lbl">Déconnexion</span></div>
     </div>
   </aside>
+
+  <nav id="nav-mobile" aria-label="Navigation principale"></nav>
+  <div id="nav-plus" hidden></div>
 
   <main class="dash">
     <div class="dash-head">
@@ -1089,7 +1134,69 @@
     if (sousEl) sousEl.textContent = (nav && nav.dataset.sub) || window.__semaineTxt || '';
     // On retient où on était : à la prochaine visite, on rouvre au même endroit.
     if (name !== 'pending') { try { localStorage.setItem('moni-panel', name); } catch (e) {} }
+    majNavMobile();
   }
+  // ── Navigation mobile « application » ────────────────────────────────
+  // La barre du bas et la feuille « Plus » sont de simples MIROIRS du menu
+  // latéral : on relaie le clic vers le vrai bouton. Ainsi, tous les droits
+  // (compte en attente, gérant des taxes, panel admin) restent respectés
+  // sans dupliquer la moindre règle.
+  const NM_PRINCIPAUX = ['moi', 'apercu', 'prix', 'coffre'];
+  const NM_ICO_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
+  function nmVisibles() {
+    return [...document.querySelectorAll('.sb-nav .sb-item[data-panel]')].filter(b => b.style.display !== 'none');
+  }
+  function majNavMobile() {
+    const bar = document.getElementById('nav-mobile');
+    if (!bar) return;
+    const visibles = nmVisibles();
+    const principaux = NM_PRINCIPAUX.map(p => visibles.find(b => b.dataset.panel === p)).filter(Boolean);
+    // si les préférés sont masqués (ex : mode gérant taxes), on prend ce qui reste
+    (visibles.filter(b => !principaux.includes(b)).slice(0, 4 - principaux.length)).forEach(b => principaux.push(b));
+    bar.innerHTML = principaux.map(b =>
+      '<button type="button" class="nm-item' + (b.classList.contains('active') ? ' active' : '') + '" data-cible="' + b.dataset.panel + '">' +
+        (b.querySelector('.ico') ? b.querySelector('.ico').innerHTML : '') +
+        '<span>' + escT(b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel) + '</span></button>'
+    ).join('') +
+    '<button type="button" class="nm-item" id="nm-plus">' + NM_ICO_PLUS + '<span>Plus</span></button>';
+    bar.querySelectorAll('.nm-item[data-cible]').forEach(x => x.addEventListener('click', () => {
+      const src = document.querySelector('.sb-nav .sb-item[data-panel="' + x.dataset.cible + '"]');
+      if (src) src.click();
+    }));
+    document.getElementById('nm-plus').addEventListener('click', ouvrirNavPlus);
+  }
+  function fermerNavPlus() {
+    const sh = document.getElementById('nav-plus');
+    if (sh) { sh.classList.remove('ouvert'); sh.hidden = true; }
+  }
+  function ouvrirNavPlus() {
+    const sh = document.getElementById('nav-plus');
+    if (!sh) return;
+    const panneaux = nmVisibles();
+    const liens = [...document.querySelectorAll('.sb-nav a.sb-item')].filter(a => a.style.display !== 'none');
+    const tuile = (ico, lbl, cls) =>
+      '<button type="button" class="np-item' + (cls || '') + '">' + ico + '<span>' + escT(lbl) + '</span></button>';
+    sh.innerHTML = '<div class="np-fond"></div><div class="np-feuille">' +
+      '<div class="np-titre">Menu</div><div class="np-grille" id="np-panneaux">' +
+      panneaux.map(b => tuile(b.querySelector('.ico') ? b.querySelector('.ico').innerHTML : '',
+        b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel,
+        b.classList.contains('active') ? ' active' : '')).join('') + '</div>' +
+      '<div class="np-titre">Raccourcis</div><div class="np-grille" id="np-liens">' +
+      liens.map(a => tuile(a.querySelector('.ico') ? a.querySelector('.ico').innerHTML : '',
+        a.querySelector('.lbl') ? a.querySelector('.lbl').textContent : '')).join('') +
+      tuile('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M17.7 6.6a8 8 0 11-11.4 0"/></svg>', 'Déconnexion', ' np-sortie') +
+      '</div></div>';
+    sh.querySelector('.np-fond').addEventListener('click', fermerNavPlus);
+    [...sh.querySelectorAll('#np-panneaux .np-item')].forEach((t, i) => t.addEventListener('click', () => { fermerNavPlus(); panneaux[i].click(); }));
+    const lt = [...sh.querySelectorAll('#np-liens .np-item')];
+    lt.forEach((t, i) => t.addEventListener('click', () => {
+      fermerNavPlus();
+      if (i < liens.length) { window.location.href = liens[i].getAttribute('href'); }
+      else { doLogout(); }
+    }));
+    sh.hidden = false; sh.classList.add('ouvert');
+  }
+
   document.querySelectorAll('.sb-item[data-panel]').forEach(item => {
     item.addEventListener('click', () => {
       if (!isApproved && item.classList.contains('req-approve')) { toast('Compte en attente de validation.'); return; }
