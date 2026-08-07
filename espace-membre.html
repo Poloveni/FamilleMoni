@@ -3277,7 +3277,7 @@
       const img = new Image();
       img.onload = () => dessiner(img);
       img.onerror = () => dessiner(null);
-      img.src = 'icon-192.png';
+      img.src = 'icon-192.png?v=2';
       btn.onclick = () => {
         cv.toBlob(b => {
           const a = document.createElement('a');
