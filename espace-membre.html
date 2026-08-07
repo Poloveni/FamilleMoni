@@ -706,6 +706,25 @@
         bottom: calc(96px + env(safe-area-inset-bottom));
       }
     }
+  
+    /* ── Centre de notifications ── */
+    .notif-wrap { position: relative; }
+    #notif-btn { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; width: 34px; height: 34px; cursor: pointer; color: var(--muted); font-size: 15px; line-height: 1; }
+    #notif-btn:hover { color: var(--text); border-color: var(--border2); }
+    #notif-badge { position: absolute; top: -4px; right: -4px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+    #notif-menu { position: absolute; right: 0; top: 42px; z-index: 50; width: 330px; max-width: calc(100vw - 32px); background: var(--panel); border: 1px solid var(--border2); border-radius: 12px; padding: 6px; box-shadow: 0 18px 50px rgba(0,0,0,0.5); }
+    .notif-titre { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); padding: 8px 12px 4px; }
+    .notif-item { display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; color: var(--text); font: inherit; font-size: 12.5px; padding: 9px 12px; border-radius: 8px; cursor: pointer; line-height: 1.5; }
+    .notif-item:hover { background: var(--panel2); }
+    @media (max-width: 860px) { #notif-menu { position: fixed; left: 16px; right: 16px; top: 66px; width: auto; } }
+    /* ── Chronique ── */
+    .chr-carte { background: var(--panel2); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 10px; padding: 20px 22px; font-size: 14px; line-height: 1.9; }
+    .chr-carte p { margin: 0 0 14px; }
+    .chr-carte p:last-child { margin: 0; }
+    .chr-carte b { color: var(--gold); }
+    .chr-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .chr-stat { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: 11.5px; color: var(--muted); }
+    .chr-stat b { display: block; font-size: 18px; color: var(--text); font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -769,12 +788,14 @@
     <div class="sb-group req-approve">Moi</div>
     <button type="button" class="sb-item req-approve" data-panel="moi" data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l2.3 4.9 5.2.7-3.8 3.7.9 5.3-4.6-2.5-4.6 2.5.9-5.3L4.5 9.6l5.2-.7z"/></svg></span><span class="lbl">Ma semaine</span></button>
     <button type="button" class="sb-item req-approve" data-panel="profil" data-sub="Ton personnage, ta photo, ta fiche sur le site public." data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.8 20a7.2 7.2 0 0114.4 0"/></svg></span><span class="lbl">Mon profil</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="bilan" data-sub="Ta carte du mois, à télécharger et poster sur Discord." data-title="Mon &lt;em&gt;bilan&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="4.6"/><path d="M9.2 12.8L7.5 20.5l4.5-2.4 4.5 2.4-1.7-7.7"/></svg></span><span class="lbl">Mon bilan</span></button>
     <button type="button" class="sb-item req-approve" data-panel="events" data-sub="Les rendez-vous de la famille — dis si tu viens." data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4m8-4v4"/></svg></span><span class="lbl">Planning</span></button>
 
     <div class="sb-group">La famille</div>
     <button type="button" class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg></span><span class="lbl">Vue d'ensemble</span></button>
     <button type="button" class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="10" width="18" height="8" rx="4"/><path d="M12 10v8"/><path d="M7 6.5V4m10 2.5V4"/></svg></span><span class="lbl">Classement</span></button>
     <button type="button" class="sb-item req-approve" data-panel="palmares" data-sub="Les semaines passées, archivées par le bot." data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 5.5H5.2a3 3 0 003 3M16 5.5h2.8a3 3 0 01-3 3"/><path d="M12 13v3.5M9 20h6"/></svg></span><span class="lbl">Palmarès</span></button>
+    <button type="button" class="sb-item req-approve" data-panel="chronique" data-sub="Le récit de la semaine écoulée, écrit depuis les archives du bot." data-title="La &lt;em&gt;chronique&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M5 4v13a3 3 0 003 3"/><path d="M9.5 9h6M9.5 13h6"/></svg></span><span class="lbl">Chronique</span></button>
     <button type="button" class="sb-item req-approve" data-panel="carte" data-sub="Le territoire : QG, planques et zones avec leurs bonus." data-title="La &lt;em&gt;carte&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L4 6v14l5-2 6 2 5-2V4l-5 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span class="lbl">Carte</span></button>
     <button type="button" class="sb-item" data-panel="galerie" data-sub="Tes screens partent dans la galerie du site public." data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.8 6.5l1.2-2.3h4l1.2 2.3"/></svg></span><span class="lbl">Galerie</span></button>
 
@@ -805,7 +826,13 @@
         <div class="dash-title" id="dash-title">Vue d'<em>ensemble</em></div>
         <div class="dash-sub" id="dash-week"></div>
       </div>
-      <div class="chip" id="bd-sync">Données du bot Moni · en attente…</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="notif-wrap">
+          <button type="button" id="notif-btn" onclick="toggleNotifs()" aria-label="Notifications">🔔<span id="notif-badge" style="display:none"></span></button>
+          <div id="notif-menu" hidden></div>
+        </div>
+        <div class="chip" id="bd-sync">Données du bot Moni · en attente…</div>
+      </div>
     </div>
 
     <!-- Compte en attente de validation -->
@@ -968,6 +995,29 @@
         </div>
         <div id="taxes-kpis"></div>
         <div id="taxes-liste"></div>
+      </div>
+    </div>
+
+    <!-- CHRONIQUE -->
+    <div class="panel" id="panel-chronique">
+      <div class="bloc">
+        <div class="bloc-t" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">📜 Le récit de la semaine
+          <select class="field" id="chr-sem" style="width:auto;display:inline-block;padding:6px 10px;margin:0;"></select>
+        </div>
+        <div id="chronique-zone"><div class="locked">Chargement…</div></div>
+      </div>
+    </div>
+
+    <!-- BILAN MENSUEL -->
+    <div class="panel" id="panel-bilan">
+      <div class="bloc">
+        <div class="bloc-t" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">🎖️ Ma carte du mois
+          <select class="field" id="bil-mois" style="width:auto;display:inline-block;padding:6px 10px;margin:0;"></select>
+          <button class="btn" id="bil-dl" type="button" style="width:auto;padding:9px 16px;display:none;">⬇ Télécharger l'image</button>
+        </div>
+        <div id="bilan-zone"><div class="locked">Chargement…</div></div>
+        <canvas id="bilan-canvas" width="1200" height="675" style="width:100%;max-width:760px;border:1px solid var(--border2);border-radius:10px;display:none;margin-top:6px;"></canvas>
+        <div class="hint" id="bilan-hint" style="display:none;">Télécharge l'image et poste-la sur Discord — elle est à ta gloire. 🍷</div>
       </div>
     </div>
 
@@ -1237,7 +1287,7 @@
   })();
   const NM_PRINCIPAUX = ['moi', 'apercu', 'prix', 'coffre'];
   // Étiquettes courtes pour la barre (une seule ligne, icônes alignées)
-  const NM_LBLS = { moi: 'Semaine', apercu: 'Vue', prix: 'Prix', coffre: 'Coffre', taxes: 'Taxes', carte: 'Carte', galerie: 'Galerie', profil: 'Profil', events: 'Planning', business: 'Classement', palmares: 'Palmarès', braquages: 'Braquages', armurerie: 'Armurerie' };
+  const NM_LBLS = { moi: 'Semaine', apercu: 'Vue', prix: 'Prix', coffre: 'Coffre', taxes: 'Taxes', carte: 'Carte', galerie: 'Galerie', profil: 'Profil', events: 'Planning', business: 'Classement', chronique: 'Chronique', bilan: 'Bilan', palmares: 'Palmarès', braquages: 'Braquages', armurerie: 'Armurerie' };
   const NM_ICO_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
   function nmVisibles() {
     return [...document.querySelectorAll('.sb-nav .sb-item[data-panel]')].filter(b => b.style.display !== 'none');
@@ -1314,6 +1364,8 @@
       if (!isApproved && item.classList.contains('req-approve')) { toast('Compte en attente de validation.'); return; }
       showPanel(item.dataset.panel);
       if (item.dataset.panel === 'taxes') loadTaxes();
+      if (item.dataset.panel === 'chronique') loadChronique();
+      if (item.dataset.panel === 'bilan') loadBilan();
     });
   });
 
@@ -1467,6 +1519,9 @@
     loadPrix();
     loadCarte();
     loadTaxes();
+    loadNotifs();
+    if (panneau === 'chronique') loadChronique();
+    if (panneau === 'bilan') loadBilan();
   }
 
   async function loadProfil() {
@@ -2230,6 +2285,8 @@
         const salaireM = Number(metaMap.salaire_par_vente || 30) || 30;
         const bonusM = (rangM >= 0 && rangM < 3 && vM > 0) ? [30000, 20000, 15000][rangM] : 0;
         const pctM = Math.min(100, Math.round(vM / quotaVente * 100));
+        window.__quotaMoi = { v: vM, quota: quotaVente };
+        try { majNotifs(); } catch (e) {}
         const mesCd = ((cdQ && cdQ.data) || []).filter(c => c.user_id === monId && new Date(c.expires_at) > new Date());
         const mesVentes = vRows.filter(x => x.discord_id === monId && x.confirmed)
           .sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6);
@@ -2953,6 +3010,286 @@
     document.getElementById('bloc-taxes-detail').style.display = 'none';
     document.getElementById('bloc-taxes-choix').style.display = '';
   };
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  CENTRE DE NOTIFICATIONS — tout est calculé depuis les données déjà
+  //  chargées : taxes en retard, événements proches, quota à finir.
+  // ═══════════════════════════════════════════════════════════════════
+  let NOTIFS = [];
+  function moisIdx(txt) {
+    const n = String(txt || '').toLowerCase().replace('.', '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const mois = ['janvier','fevrier','mars','avril','mai','juin','juillet','aout','septembre','octobre','novembre','decembre'];
+    for (let i = 0; i < 12; i++) {
+      if (mois[i].startsWith(n.slice(0, 4)) || n.startsWith(mois[i].slice(0, 4))) return i;
+    }
+    return -1;
+  }
+  async function loadNotifs() {
+    if (!currentUser || !isApproved) return;
+    const [tx, ev] = await Promise.all([
+      sb.from('bot_taxes').select('*'),
+      sb.from('evenements').select('*'),
+    ]);
+    const now = Date.now(), J = 86400000;
+    NOTIFS = NOTIFS.filter(n => n.id.indexOf('quota') === 0);   // on garde la notif quota
+    ((tx && tx.data) || []).filter(t => t.actif !== false && !t.paye && t.echeance).forEach(t => {
+      const d = new Date(t.echeance).getTime() - now;
+      if (d < 0) NOTIFS.push({ id: 'txr' + t.id + '_' + Math.floor(-d / J), ico: '⚠️', txt: 'Taxe en retard de ' + Math.max(1, Math.floor(-d / J)) + ' j — ' + (t.nom || ''), panel: 'taxes' });
+      else if (d < 2 * J) NOTIFS.push({ id: 'txe' + t.id, ico: '⏳', txt: 'Taxe à encaisser ' + (d < J ? "aujourd'hui" : 'demain') + ' — ' + (t.nom || ''), panel: 'taxes' });
+    });
+    ((ev && ev.data) || []).forEach(e => {
+      const j = parseInt(e.jour, 10), m = moisIdx(e.mois);
+      if (isNaN(j) || m < 0) return;
+      const auj = new Date(); auj.setHours(0, 0, 0, 0);
+      let d = new Date(auj.getFullYear(), m, j);
+      if (d.getTime() < auj.getTime() - 40 * J) d = new Date(auj.getFullYear() + 1, m, j);
+      const dj = Math.round((d - auj) / J);
+      if (dj >= 0 && dj <= 2) NOTIFS.push({ id: 'ev' + e.id + '_' + dj, ico: '📅',
+        txt: (dj === 0 ? "Aujourd'hui" : dj === 1 ? 'Demain' : 'Après-demain') + (e.heure ? ' ' + e.heure : '') + ' — ' + (e.titre || 'Événement'), panel: 'events' });
+    });
+    majNotifs();
+  }
+  function majNotifs() {
+    NOTIFS = NOTIFS.filter(n => n.id.indexOf('quota') !== 0);
+    const q = window.__quotaMoi;
+    if (q && q.quota > 0) {
+      if (q.v < q.quota) {
+        const dim = new Date(); dim.setDate(dim.getDate() + ((7 - dim.getDay()) % 7)); dim.setHours(19, 0, 0, 0);
+        if (dim.getTime() < Date.now()) dim.setDate(dim.getDate() + 7);
+        const h = Math.round((dim - Date.now()) / 3600000);
+        NOTIFS.unshift({ id: 'quota_' + Math.round(q.quota - q.v), ico: '🎯',
+          txt: 'Il te manque ' + Math.round(q.quota - q.v) + ' vente(s) avant dimanche 19h' + (h <= 30 ? ' — plus que ' + h + ' h !' : ''), panel: 'moi' });
+      } else {
+        NOTIFS.unshift({ id: 'quota_ok', ico: '✅', txt: 'Quota atteint (' + Math.round(q.v) + ' ventes) — la Famille est fière.', panel: 'moi' });
+      }
+    }
+    rendreNotifs();
+  }
+  function notifVues() { try { return JSON.parse(localStorage.getItem('moni-notifs-vues') || '[]'); } catch (e) { return []; } }
+  function rendreNotifs() {
+    const badge = document.getElementById('notif-badge');
+    const menu = document.getElementById('notif-menu');
+    if (!badge || !menu) return;
+    const vues = notifVues();
+    const nouv = NOTIFS.filter(n => vues.indexOf(n.id) === -1).length;
+    badge.textContent = nouv > 9 ? '9+' : String(nouv);
+    badge.style.display = nouv ? 'flex' : 'none';
+    menu.innerHTML = '<div class="notif-titre">Notifications</div>' +
+      (NOTIFS.length
+        ? NOTIFS.map((n, i) => '<button type="button" class="notif-item" data-i="' + i + '">' + n.ico + ' <span>' + escT(n.txt) + '</span></button>').join('')
+        : '<div class="hint" style="padding:10px 14px;">Rien à signaler — tout roule. 🍷</div>');
+    menu.querySelectorAll('.notif-item').forEach(b => b.addEventListener('click', () => {
+      const n = NOTIFS[+b.dataset.i];
+      menu.hidden = true;
+      if (n && n.panel) { showPanel(n.panel); if (n.panel === 'taxes') loadTaxes(); }
+    }));
+  }
+  window.toggleNotifs = function () {
+    const m = document.getElementById('notif-menu');
+    if (!m) return;
+    m.hidden = !m.hidden;
+    if (!m.hidden) {
+      try { localStorage.setItem('moni-notifs-vues', JSON.stringify(NOTIFS.map(n => n.id).slice(0, 80))); } catch (e) {}
+      const b = document.getElementById('notif-badge'); if (b) b.style.display = 'none';
+    }
+  };
+  document.addEventListener('click', e => {
+    if (!e.target.closest || !e.target.closest('.notif-wrap')) {
+      const m = document.getElementById('notif-menu'); if (m) m.hidden = true;
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  LA CHRONIQUE — le récit de chaque semaine, généré depuis bot_bilans.
+  // ═══════════════════════════════════════════════════════════════════
+  function chrNoms(mapping) {
+    const FIX = window.MONI_NOM_FIX || {};
+    const noms = {};
+    (mapping || []).forEach(m => {
+      noms[m.discord_id] = FIX[m.discord_id] ||
+        (m.game_name ? String(m.game_name).replace(/\b\w/g, c => c.toUpperCase()) : '#' + String(m.discord_id).slice(-4));
+    });
+    return noms;
+  }
+  async function loadChronique() {
+    const zone = document.getElementById('chronique-zone');
+    if (!zone || !currentUser) return;
+    zone.innerHTML = '<div class="locked">Chargement…</div>';
+    const [bil, map] = await Promise.all([
+      sb.from('bot_bilans').select('*'),
+      sb.from('bot_user_mapping').select('*'),
+    ]);
+    if (bil.error || !(bil.data || []).length) {
+      zone.innerHTML = '<div class="locked">Pas encore d\'archives — la chronique s\'écrira toute seule après la première clôture de semaine du bot (dimanche 19h).</div>';
+      return;
+    }
+    const noms = chrNoms(map.data);
+    const semaines = {};
+    bil.data.forEach(r => { (semaines[r.semaine] = semaines[r.semaine] || []).push(r); });
+    const cles = Object.keys(semaines).sort().reverse();
+    const sel = document.getElementById('chr-sem');
+    sel.innerHTML = cles.map(c => '<option value="' + escT(c) + '">Semaine du ' + new Date(c + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + '</option>').join('');
+    sel.onchange = () => rendre(sel.value);
+    const totalDe = c => semaines[c].reduce((a, r) => a + (+r.ventes || 0), 0);
+    function rendre(cle) {
+      const rows = [...semaines[cle]].sort((a, b) => (+b.ventes || 0) - (+a.ventes || 0));
+      const total = Math.round(totalDe(cle));
+      const quota = Number(window.MONI_QUOTA_DROGUE || 200);
+      const nbQ = rows.filter(r => (+r.ventes || 0) >= quota).length;
+      const actifs = rows.filter(r => (+r.ventes || 0) > 0 || (+r.activites || 0) > 0).length;
+      const idx = cles.indexOf(cle);
+      const prev = idx + 1 < cles.length ? Math.round(totalDe(cles[idx + 1])) : null;
+      const record = Math.max(...cles.map(totalDe));
+      const estRecord = cles.length > 1 && total >= record && total > 0;
+      const g = [...cle].reduce((a, c) => a + c.charCodeAt(0), 0);   // graine stable par semaine
+      const pick = arr => arr[g % arr.length];
+      const nom = r => '<b>' + escT(noms[r.user_id] || 'Membre #' + String(r.user_id).slice(-4)) + '</b>';
+      const top = rows[0];
+      const phr = [];
+      // Intro
+      if (prev !== null && prev > 0) {
+        const d = Math.round((total - prev) / prev * 100);
+        phr.push(pick([
+          'Cette semaine, la Famille a écoulé <b>' + total.toLocaleString('fr-FR') + '</b> ventes — ' + (d >= 0 ? 'en hausse de <b>' + d + '%</b> sur la semaine passée. Les affaires reprennent des couleurs.' : 'en retrait de <b>' + Math.abs(d) + '%</b>. La rue a été moins généreuse, ou les soldats moins affamés.'),
+          'Le registre affiche <b>' + total.toLocaleString('fr-FR') + '</b> ventes. ' + (d >= 0 ? 'C\'est <b>' + d + '%</b> de mieux que la semaine d\'avant — la machine tourne.' : 'C\'est <b>' + Math.abs(d) + '%</b> de moins qu\'avant — la Direction a remarqué.'),
+        ]));
+      } else {
+        phr.push('Cette semaine, la Famille a écoulé <b>' + total.toLocaleString('fr-FR') + '</b> ventes.');
+      }
+      // Le patron de la semaine
+      if (top && (+top.ventes || 0) > 0) {
+        phr.push(pick([
+          nom(top) + ' a dominé la semaine : <b>' + Math.round(top.ventes).toLocaleString('fr-FR') + '</b> ventes à lui seul. La rue connaît son nom.',
+          'En tête du registre : ' + nom(top) + ', <b>' + Math.round(top.ventes).toLocaleString('fr-FR') + '</b> ventes. Qu\'on lui serve le meilleur verre.',
+          'Le fauteuil du meilleur vendeur revient à ' + nom(top) + ' — <b>' + Math.round(top.ventes).toLocaleString('fr-FR') + '</b> ventes, sans trembler.',
+        ]));
+        if (rows[1] && (+rows[1].ventes || 0) > 0) {
+          phr.push('Derrière lui, ' + nom(rows[1]) + ' (' + Math.round(rows[1].ventes).toLocaleString('fr-FR') + ')' + (rows[2] && (+rows[2].ventes || 0) > 0 ? ' et ' + nom(rows[2]) + ' (' + Math.round(rows[2].ventes).toLocaleString('fr-FR') + ')' : '') + ' complètent le podium.');
+        }
+      }
+      // Les quotas
+      phr.push(pick([
+        '<b>' + nbQ + '</b> membre(s) sur ' + rows.length + ' ont atteint le quota des ' + quota + ' ventes. ' + (nbQ >= rows.length / 2 ? 'La discipline paie.' : 'Les autres savent ce qu\'il leur reste à prouver.'),
+        'Côté quotas : <b>' + nbQ + '</b> sur ' + rows.length + ' au rendez-vous des ' + quota + ' ventes. ' + (nbQ === 0 ? 'Semaine à oublier — vite.' : nbQ >= rows.length / 2 ? 'La famille tient son rang.' : 'Peut mieux faire, et la Direction le sait.'),
+      ]));
+      if (estRecord) phr.push('🏆 Et que l\'histoire le retienne : c\'est le <b>meilleur total jamais enregistré</b> par la Famille.');
+      phr.push(pick([
+        'La semaine est close. La suivante appartient à ceux qui se lèvent tôt. 🍷',
+        'Le registre est refermé. Roxwood dort — la Famille, jamais. 🍷',
+        'Fin du chapitre. Le prochain s\'écrit dès ce soir, dans la rue. 🍷',
+      ]));
+      zone.innerHTML = '<div class="chr-carte">' + phr.map(x => '<p>' + x + '</p>').join('') + '</div>' +
+        '<div class="chr-stats">' +
+        '<div class="chr-stat">Ventes totales<b>' + total.toLocaleString('fr-FR') + '</b></div>' +
+        '<div class="chr-stat">Quotas atteints<b>' + nbQ + ' / ' + rows.length + '</b></div>' +
+        '<div class="chr-stat">Membres actifs<b>' + actifs + '</b></div>' +
+        (prev !== null ? '<div class="chr-stat">Vs semaine passée<b>' + (prev > 0 ? (total >= prev ? '+' : '') + Math.round((total - prev) / prev * 100) + '%' : '—') + '</b></div>' : '') +
+        '</div>';
+    }
+    rendre(cles[0]);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  MON BILAN — la carte du mois, dessinée puis téléchargeable en image.
+  // ═══════════════════════════════════════════════════════════════════
+  async function loadBilan() {
+    const zone = document.getElementById('bilan-zone');
+    if (!zone || !currentUser) return;
+    zone.innerHTML = '<div class="locked">Chargement…</div>';
+    const [bil, map, meta] = await Promise.all([
+      sb.from('bot_bilans').select('*'),
+      sb.from('bot_user_mapping').select('*'),
+      sb.from('bot_meta').select('*'),
+    ]);
+    if (bil.error || !(bil.data || []).length) {
+      zone.innerHTML = '<div class="locked">Pas encore d\'archives — ta première carte sortira après la première clôture de semaine.</div>';
+      return;
+    }
+    const noms = chrNoms(map.data);
+    const monId = Object.keys(noms).find(k => noms[k] === currentNom) || null;
+    if (!monId) {
+      zone.innerHTML = '<div class="locked">Choisis ton personnage dans « Mon profil » pour générer ta carte.</div>';
+      return;
+    }
+    const metaMap = {};
+    ((meta && meta.data) || []).forEach(m => { metaMap[m.key] = m.value; });
+    const salaire = Number(metaMap.salaire_par_vente || 30) || 30;
+    const parMois = {};
+    bil.data.forEach(r => { const mo = String(r.semaine).slice(0, 7); (parMois[mo] = parMois[mo] || []).push(r); });
+    const moisCles = Object.keys(parMois).sort().reverse();
+    const sel = document.getElementById('bil-mois');
+    const lblMois = mo => new Date(mo + '-15T12:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    sel.innerHTML = moisCles.map(mo => '<option value="' + mo + '">' + lblMois(mo) + '</option>').join('');
+    sel.onchange = () => rendre(sel.value);
+    function rendre(mo) {
+      const rows = parMois[mo];
+      const parUser = {};
+      rows.forEach(r => {
+        const u = parUser[r.user_id] = parUser[r.user_id] || { ventes: 0, recolte: 0, activites: 0 };
+        u.ventes += (+r.ventes || 0); u.recolte += (+r.recolte || 0); u.activites += (+r.activites || 0);
+      });
+      const moi = parUser[monId] || { ventes: 0, recolte: 0, activites: 0 };
+      const classement = Object.keys(parUser).sort((a, b) => parUser[b].ventes - parUser[a].ventes);
+      const rang = classement.indexOf(monId) + 1;
+      const paie = Math.round(moi.ventes * salaire);
+      const membre = (window.MONI_MEMBRES || []).find(m => m.nom === currentNom);
+      const medaille = rang === 1 ? '🥇' : rang === 2 ? '🥈' : rang === 3 ? '🥉' : '';
+      zone.innerHTML = '';
+      const cv = document.getElementById('bilan-canvas');
+      const hint = document.getElementById('bilan-hint');
+      const btn = document.getElementById('bil-dl');
+      cv.style.display = ''; hint.style.display = ''; btn.style.display = '';
+      const ctx = cv.getContext('2d');
+      const dessiner = (logo) => {
+        ctx.fillStyle = '#0a0b0d'; ctx.fillRect(0, 0, 1200, 675);
+        const grad = ctx.createRadialGradient(1050, 120, 40, 1050, 120, 700);
+        grad.addColorStop(0, 'rgba(211,172,104,0.10)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, 1200, 675);
+        ctx.strokeStyle = '#d3ac68'; ctx.lineWidth = 3; ctx.strokeRect(24, 24, 1152, 627);
+        ctx.strokeStyle = 'rgba(211,172,104,0.35)'; ctx.lineWidth = 1; ctx.strokeRect(34, 34, 1132, 607);
+        if (logo) { ctx.globalAlpha = 0.9; ctx.drawImage(logo, 950, 60, 180, 180); ctx.globalAlpha = 1; }
+        ctx.fillStyle = '#d3ac68'; ctx.font = '600 22px Inter, sans-serif';
+        ctx.fillText('F A M I L L E   M O N I', 70, 96);
+        ctx.fillStyle = '#9ba0a8'; ctx.font = '500 26px Inter, sans-serif';
+        ctx.fillText('Bilan de ' + lblMois(mo), 70, 138);
+        ctx.fillStyle = '#f7f8f8'; ctx.font = '700 58px Inter, sans-serif';
+        ctx.fillText(currentNom || '?', 70, 212);
+        if (membre) { ctx.fillStyle = '#d3ac68'; ctx.font = '600 26px Inter, sans-serif'; ctx.fillText(membre.rang, 70, 252); }
+        const stats = [
+          ['VENTES', Math.round(moi.ventes).toLocaleString('fr-FR')],
+          ['RÉCOLTE', Math.round(moi.recolte).toLocaleString('fr-FR')],
+          ['ACTIVITÉS', Math.round(moi.activites).toLocaleString('fr-FR')],
+          ['PAIE ESTIMÉE', '$' + paie.toLocaleString('fr-FR')],
+        ];
+        stats.forEach((st, i) => {
+          const x = 70 + i * 270;
+          ctx.fillStyle = 'rgba(255,255,255,0.05)';
+          ctx.fillRect(x, 320, 240, 140);
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.strokeRect(x, 320, 240, 140);
+          ctx.fillStyle = '#9ba0a8'; ctx.font = '600 17px Inter, sans-serif'; ctx.fillText(st[0], x + 22, 358);
+          ctx.fillStyle = i === 3 ? '#d3ac68' : '#f7f8f8'; ctx.font = '700 42px Inter, sans-serif'; ctx.fillText(st[1], x + 22, 420);
+        });
+        ctx.fillStyle = '#f7f8f8'; ctx.font = '600 32px Inter, sans-serif';
+        ctx.fillText((medaille ? medaille + '  ' : '') + '#' + rang + ' sur ' + classement.length + ' au classement du mois', 70, 540);
+        ctx.fillStyle = '#63676f'; ctx.font = '500 20px Inter, sans-serif';
+        ctx.fillText('famillemoni.com — Roxwood, Flashback FA', 70, 610);
+      };
+      const img = new Image();
+      img.onload = () => dessiner(img);
+      img.onerror = () => dessiner(null);
+      img.src = 'icon-192.png';
+      btn.onclick = () => {
+        cv.toBlob(b => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(b);
+          a.download = 'bilan-' + mo + '-' + (currentNom || 'membre').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        });
+      };
+    }
+    rendre(moisCles[0]);
+  }
 
   async function loadPrix() {
     const box = document.getElementById('bd-prix');
