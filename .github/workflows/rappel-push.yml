@@ -1,0 +1,29 @@
+name: Rappel push
+on:
+  schedule:
+    - cron: '0 16 * * 6'   # samedi 18h (heure FR, ete)
+  workflow_dispatch:
+    inputs:
+      titre:
+        description: 'Titre'
+        default: "🎯 Derniere ligne droite"
+      message:
+        description: 'Message'
+        default: "Le quota tombe dimanche 19h — verifie ou tu en es sur l'appli."
+jobs:
+  envoyer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install web-push @supabase/supabase-js
+      - run: node outils/envoyer-push.mjs
+        env:
+          SUPABASE_URL: https://prwdtdmdkhzwfyivaepw.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PUBLIC: BCLzeteW_uRb6hKgzoCTgLZSCEqa71675H53SvoM1ZmFBXBn6tC2NJBMiko0d6Zp4Bs_BGzJqn6JlP4h8ho5hfs
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          TITRE: ${{ inputs.titre || '🎯 Derniere ligne droite' }}
+          MESSAGE: ${{ inputs.message || 'Le quota tombe dimanche 19h.' }}
