@@ -3,3 +3,5 @@
 _sauvegarde*/
 *-sauvegarde/
 *.bak
+reparer.bat
+reparation-log.txt

@@ -3124,6 +3124,16 @@
         { onConflict: 'user_id' });
       if (error) return toast('⚠️ Enregistrement impossible : ' + error.message);
       toast('📲 Notifications activées sur cet appareil');
+      // Test immédiat : on affiche une notification locale. Si elle n'apparaît
+      // pas, c'est qu'Android bloque l'affichage (réglages de l'appareil).
+      try {
+        await reg.showNotification('🔔 Test réussi — Famille Moni', {
+          body: 'Si tu vois cette notification, ce téléphone est prêt à recevoir les rappels.',
+          icon: './icon-192.png',
+          badge: './icon-192.png',
+          data: { url: './espace-membre.html' },
+        });
+      } catch (e2) { toast('⚠️ Android bloque l\'affichage des notifications : ' + e2.message); }
       rendreNotifs();
     } catch (e) { toast('⚠️ ' + e.message); }
   };
