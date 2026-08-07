@@ -725,6 +725,23 @@
     .chr-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
     .chr-stat { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: 11.5px; color: var(--muted); }
     .chr-stat b { display: block; font-size: 18px; color: var(--text); font-variant-numeric: tabular-nums; }
+  
+    /* ── Trophées ── */
+    .tr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 14px; }
+    .tr-item { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 11px; align-items: center; }
+    .tr-item .tr-ico { font-size: 24px; }
+    .tr-item .tr-nom { font-size: 12.5px; font-weight: 600; }
+    .tr-item .tr-desc { font-size: 10.5px; color: var(--dim); margin-top: 2px; line-height: 1.4; }
+    .tr-item.verrou { opacity: 0.38; filter: grayscale(1); }
+    .tr-item.ok { border-color: rgba(211,172,104,0.4); }
+    /* ── Alertes de bourse ── */
+    .al-ligne { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .al-ligne .field { width: auto; display: inline-block; margin: 0; padding: 8px 10px; }
+    .al-liste { margin-top: 12px; }
+    .al-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .al-item:last-child { border-bottom: none; }
+    .al-suppr { margin-left: auto; background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 7px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 11px; }
+    .al-suppr:hover { color: var(--red); border-color: var(--red); }
   </style>
 </head>
 <body>
@@ -3074,16 +3091,43 @@
     const nouv = NOTIFS.filter(n => vues.indexOf(n.id) === -1).length;
     badge.textContent = nouv > 9 ? '9+' : String(nouv);
     badge.style.display = nouv ? 'flex' : 'none';
+    const pushOk = 'PushManager' in window && Notification.permission === 'granted';
     menu.innerHTML = '<div class="notif-titre">Notifications</div>' +
       (NOTIFS.length
         ? NOTIFS.map((n, i) => '<button type="button" class="notif-item" data-i="' + i + '">' + n.ico + ' <span>' + escT(n.txt) + '</span></button>').join('')
-        : '<div class="hint" style="padding:10px 14px;">Rien à signaler — tout roule. 🍷</div>');
+        : '<div class="hint" style="padding:10px 14px;">Rien à signaler — tout roule. 🍷</div>') +
+      ('PushManager' in window && !pushOk
+        ? '<button type="button" class="notif-item" style="border-top:1px solid var(--border);border-radius:0 0 8px 8px;color:var(--gold);" onclick="activerPush()">📲 <span>Activer les notifications sur ce téléphone (même appli fermée)</span></button>'
+        : '');
     menu.querySelectorAll('.notif-item').forEach(b => b.addEventListener('click', () => {
       const n = NOTIFS[+b.dataset.i];
       menu.hidden = true;
       if (n && n.panel) { showPanel(n.panel); if (n.panel === 'taxes') loadTaxes(); }
     }));
   }
+  // ── Vraies notifications push (téléphone, même appli fermée) ────────────
+  const VAPID_PUB = 'BCLzeteW_uRb6hKgzoCTgLZSCEqa71675H53SvoM1ZmFBXBn6tC2NJBMiko0d6Zp4Bs_BGzJqn6JlP4h8ho5hfs';
+  function b64ToU8(b) {
+    const pad = '='.repeat((4 - b.length % 4) % 4);
+    const raw = atob((b + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+  }
+  window.activerPush = async function () {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return toast('⚠️ Non pris en charge par ce navigateur');
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return toast('Notifications refusées — tu peux les réactiver dans les réglages du navigateur');
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(VAPID_PUB) });
+      const { error } = await sb.from('push_abonnements').upsert(
+        { user_id: currentUser.id, email: currentUser.email, sub: sub.toJSON(), maj: new Date().toISOString() },
+        { onConflict: 'user_id' });
+      if (error) return toast('⚠️ Enregistrement impossible : ' + error.message);
+      toast('📲 Notifications activées sur cet appareil');
+      rendreNotifs();
+    } catch (e) { toast('⚠️ ' + e.message); }
+  };
+
   window.toggleNotifs = function () {
     const m = document.getElementById('notif-menu');
     if (!m) return;
@@ -3192,6 +3236,52 @@
   // ═══════════════════════════════════════════════════════════════════
   //  MON BILAN — la carte du mois, dessinée puis téléchargeable en image.
   // ═══════════════════════════════════════════════════════════════════
+  // ── Trophées : succès calculés sur TOUT l'historique du bot ─────────────
+  function calcTrophees(bilans, monId, quota) {
+    const mines = bilans.filter(r => r.user_id === monId);
+    const parSem = {};
+    bilans.forEach(r => { (parSem[r.semaine] = parSem[r.semaine] || []).push(r); });
+    const semaines = Object.keys(parSem).sort();
+    const cumul = mines.reduce((a, r) => a + (+r.ventes || 0), 0);
+    const topSem = semaines.filter(sem => {
+      const rows = parSem[sem];
+      const max = Math.max(...rows.map(r => +r.ventes || 0));
+      const moi = rows.find(r => r.user_id === monId);
+      return moi && (+moi.ventes || 0) > 0 && (+moi.ventes || 0) >= max;
+    }).length;
+    const parMois = {};
+    bilans.forEach(r => {
+      const mo = String(r.semaine).slice(0, 7);
+      parMois[mo] = parMois[mo] || {};
+      parMois[mo][r.user_id] = (parMois[mo][r.user_id] || 0) + (+r.ventes || 0);
+    });
+    const topMois = Object.keys(parMois).filter(mo => {
+      const m = parMois[mo]; const max = Math.max(...Object.values(m));
+      return (m[monId] || 0) > 0 && (m[monId] || 0) >= max;
+    }).length;
+    let serie = 0, meilleureSerie = 0;
+    semaines.forEach(sem => {
+      const moi = (parSem[sem] || []).find(r => r.user_id === monId);
+      if (moi && (+moi.ventes || 0) >= quota) { serie++; meilleureSerie = Math.max(meilleureSerie, serie); }
+      else serie = 0;
+    });
+    const nbSem = new Set(mines.map(r => r.semaine)).size;
+    const totaux = semaines.map(sem => parSem[sem].reduce((a, r) => a + (+r.ventes || 0), 0));
+    const iRec = totaux.indexOf(Math.max(...totaux));
+    const recordAvecMoi = iRec >= 0 && (parSem[semaines[iRec]] || []).some(r => r.user_id === monId && (+r.ventes || 0) > 0);
+    return [
+      { ico: '🌱', nom: 'Premiers pas', desc: 'Réaliser sa première vente', ok: cumul > 0 },
+      { ico: '💯', nom: 'Quota honoré', desc: 'Atteindre le quota une semaine', ok: meilleureSerie >= 1 },
+      { ico: '🔥', nom: 'En feu', desc: '2 semaines de quota d\'affilée' + (meilleureSerie > 2 ? ' (record : ' + meilleureSerie + ')' : ''), ok: meilleureSerie >= 2 },
+      { ico: '📦', nom: 'Grossiste', desc: '1 000 ventes cumulées (' + Math.round(cumul).toLocaleString('fr-FR') + ')', ok: cumul >= 1000 },
+      { ico: '🚚', nom: 'Baron de la rue', desc: '5 000 ventes cumulées', ok: cumul >= 5000 },
+      { ico: '🥇', nom: 'Roi de la semaine', desc: 'Finir meilleur vendeur d\'une semaine' + (topSem > 1 ? ' — ×' + topSem : ''), ok: topSem >= 1 },
+      { ico: '👑', nom: 'Empereur du mois', desc: 'Finir meilleur vendeur d\'un mois' + (topMois > 1 ? ' — ×' + topMois : ''), ok: topMois >= 1 },
+      { ico: '🏆', nom: 'Semaine de légende', desc: 'Avoir contribué au record historique de la Famille', ok: recordAvecMoi },
+      { ico: '🎖️', nom: 'Vétéran', desc: '12 semaines de service (' + nbSem + ')', ok: nbSem >= 12 },
+    ];
+  }
+
   async function loadBilan() {
     const zone = document.getElementById('bilan-zone');
     if (!zone || !currentUser) return;
@@ -3234,7 +3324,12 @@
       const paie = Math.round(moi.ventes * salaire);
       const membre = (window.MONI_MEMBRES || []).find(m => m.nom === currentNom);
       const medaille = rang === 1 ? '🥇' : rang === 2 ? '🥈' : rang === 3 ? '🥉' : '';
-      zone.innerHTML = '';
+      const trophees = calcTrophees(bil.data, monId, Number(window.MONI_QUOTA_DROGUE || 200));
+      const debloques = trophees.filter(t => t.ok);
+      zone.innerHTML = '<div class="bloc-t" style="margin:6px 0 0;">Mes trophées <span class="hint" style="margin-left:6px;">· ' + debloques.length + ' / ' + trophees.length + '</span></div>' +
+        '<div class="tr-grid">' + trophees.map(t =>
+          '<div class="tr-item ' + (t.ok ? 'ok' : 'verrou') + '"><span class="tr-ico">' + t.ico + '</span><span><span class="tr-nom">' + escT(t.nom) + '</span><div class="tr-desc">' + t.desc + '</div></span></div>'
+        ).join('') + '</div>';
       const cv = document.getElementById('bilan-canvas');
       const hint = document.getElementById('bilan-hint');
       const btn = document.getElementById('bil-dl');
@@ -3271,6 +3366,11 @@
         });
         ctx.fillStyle = '#f7f8f8'; ctx.font = '600 32px Inter, sans-serif';
         ctx.fillText((medaille ? medaille + '  ' : '') + '#' + rang + ' sur ' + classement.length + ' au classement du mois', 70, 540);
+        const trOk = (typeof trophees !== 'undefined' ? trophees : []).filter(t => t.ok).slice(0, 8);
+        if (trOk.length) {
+          ctx.font = '30px serif';
+          trOk.forEach((t, i) => ctx.fillText(t.ico, 700 + i * 44, 545));
+        }
         ctx.fillStyle = '#63676f'; ctx.font = '500 20px Inter, sans-serif';
         ctx.fillText('famillemoni.com — Roxwood, Flashback FA', 70, 610);
       };
@@ -3290,6 +3390,67 @@
     }
     rendre(moisCles[0]);
   }
+
+  // ── Alertes de bourse : seuils personnels, vérifiés à chaque relevé ─────
+  function mesAlertes() { try { return JSON.parse(localStorage.getItem('moni-alertes') || '[]'); } catch (e) { return []; } }
+  function rendreAlertes(bourse) {
+    const panel = document.getElementById('panel-prix');
+    if (!panel) return;
+    let bl = document.getElementById('bloc-alertes');
+    if (!bl) { bl = document.createElement('div'); bl.id = 'bloc-alertes'; bl.className = 'bloc'; bl.style.marginTop = '14px'; panel.appendChild(bl); }
+    const derniers = {};
+    (bourse || []).forEach(r => {
+      const k = String(r.item || '').toLowerCase();
+      if (!derniers[k] || new Date(r.ts) > new Date(derniers[k].ts)) derniers[k] = r;
+    });
+    const items = Object.keys(derniers).sort();
+    const alertes = mesAlertes();
+    const cap = t => String(t).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    bl.innerHTML = '<div class="bloc-t">🔔 Mes alertes de cours <span class="hint" style="margin-left:6px;">· sur cet appareil</span></div>' +
+      '<div class="al-ligne">' +
+      '<select class="field" id="al-item">' + items.map(i => '<option value="' + escT(i) + '">' + escT(cap(i)) + '</option>').join('') + '</select>' +
+      '<select class="field" id="al-dir"><option value="sup">passe au-dessus de</option><option value="inf">passe en dessous de</option></select>' +
+      '<input class="field" id="al-val" type="number" placeholder="440" style="width:100px;">' +
+      '<button class="btn" type="button" style="width:auto;padding:9px 16px;" onclick="ajouterAlerte()">Ajouter</button>' +
+      '</div>' +
+      '<div class="al-liste">' + (alertes.length ? alertes.map((a, i) =>
+        '<div class="al-item"><span>' + escT(cap(a.item)) + ' ' + (a.dir === 'sup' ? '≥' : '≤') + ' <b>$' + a.val + '</b></span>' +
+        (derniers[a.item] ? '<span class="hint" style="margin:0;">cours actuel : $' + Math.round(derniers[a.item].prix ?? derniers[a.item].valeur ?? 0) + '</span>' : '') +
+        '<button type="button" class="al-suppr" onclick="supprimerAlerte(' + i + ')">Retirer</button></div>').join('')
+        : '<div class="hint">Aucune alerte — choisis un produit, un seuil, et la cloche sonnera dès qu\'un relevé du bot le franchit.</div>') + '</div>';
+    // Vérification : la cloche sonne pour chaque seuil franchi
+    let sonne = false;
+    alertes.forEach(a => {
+      const d = derniers[a.item];
+      if (!d) return;
+      const cours = Number(d.prix ?? d.valeur ?? NaN);
+      if (isNaN(cours)) return;
+      const franchi = a.dir === 'sup' ? cours >= a.val : cours <= a.val;
+      const id = 'al_' + a.item + '_' + a.dir + '_' + a.val;
+      NOTIFS = NOTIFS.filter(n => n.id !== id);
+      if (franchi) {
+        NOTIFS.unshift({ id: id, ico: '📈', txt: cap(a.item) + ' est ' + (a.dir === 'sup' ? 'monté à' : 'descendu à') + ' $' + Math.round(cours) + ' (ton seuil : $' + a.val + ')', panel: 'prix' });
+        sonne = true;
+      }
+    });
+    if (sonne || alertes.length) { try { rendreNotifs(); } catch (e) {} }
+  }
+  window.ajouterAlerte = function () {
+    const item = document.getElementById('al-item').value;
+    const dir = document.getElementById('al-dir').value;
+    const val = Number(document.getElementById('al-val').value);
+    if (!item || !val) return toast('⚠️ Choisis un produit et un montant');
+    const a = mesAlertes();
+    a.push({ item: item, dir: dir, val: val });
+    try { localStorage.setItem('moni-alertes', JSON.stringify(a.slice(0, 20))); } catch (e) {}
+    toast('🔔 Alerte ajoutée');
+    loadPrix();
+  };
+  window.supprimerAlerte = function (i) {
+    const a = mesAlertes(); a.splice(i, 1);
+    try { localStorage.setItem('moni-alertes', JSON.stringify(a)); } catch (e) {}
+    loadPrix();
+  };
 
   async function loadPrix() {
     const box = document.getElementById('bd-prix');
@@ -3313,6 +3474,14 @@
       rendreBourse(bourseQ.data || []);
     }
     if (!zonesQ.error) rendreZones(zonesQ.data || []);
+    rendreAlertes(bourseQ.data || []);
+    if (!window.__bourseLive) {
+      window.__bourseLive = sb.channel('bourse-live')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bot_drogue_bourse' }, () => {
+          clearTimeout(window.__bourseT);
+          window.__bourseT = setTimeout(() => loadPrix(), 1500);
+        }).subscribe();
+    }
 
     if (prixQ.error) {
       box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql puis prix-drogues-2.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';

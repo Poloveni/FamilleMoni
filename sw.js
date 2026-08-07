@@ -57,3 +57,24 @@ self.addEventListener('fetch', e => {
     );
   }
 });
+
+
+/* ── Notifications push : réception et clic ─────────────────────────────── */
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data.json(); } catch (err) { d = { titre: 'Famille Moni', corps: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.titre || 'Famille Moni', {
+    body: d.corps || '',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    data: { url: d.url || './espace-membre.html' },
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || './espace-membre.html';
+  e.waitUntil(clients.matchAll({ type: 'window' }).then(ws => {
+    for (const w of ws) { if ('focus' in w) return w.focus(); }
+    return clients.openWindow(url);
+  }));
+});
