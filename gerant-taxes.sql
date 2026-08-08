@@ -1,6 +1,11 @@
 -- ============================================================================
 -- GÉRANT DES TAXES — Famille Moni
 -- ============================================================================
+-- ⚠️  Si tu relances ce script, relance ENSUITE  acces-comptes.sql .
+--     Sa section 2 réécrit est_gerant_taxes() dans sa version « Discord
+--     seulement » et ferait perdre les réglages faits depuis le panneau
+--     Admin → Inscriptions. acces-comptes.sql remet tout en place.
+-- ============================================================================
 -- Le gérant du bot a ajouté la colonne bot_user_mapping.is_taxes_manager.
 -- Ce script crée la vérification côté base : est_gerant_taxes().
 --   • Le site l'appelle pour n'afficher QUE le panneau Taxes à ce rôle.

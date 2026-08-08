@@ -103,6 +103,21 @@
     .insc-state.attente { color: var(--amber); }
     .insc-state.ok { color: var(--green); }
 
+    /* Les commandes à droite de chaque ligne : niveau d'accès + bouton. */
+    .insc-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .insc-actions select {
+      margin-bottom: 0; width: auto; min-width: 178px;
+      padding: 11px 13px; font-size: 13px;
+    }
+    /* Repère visuel : un compte limité aux taxes se voit d'un coup d'œil. */
+    .insc-row.limite { border-color: rgba(212,178,110,0.5); }
+    .insc-row.limite .insc-email::after {
+      content: 'Taxes'; margin-left: 9px; vertical-align: 2px;
+      font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 800;
+      color: #1a1206; background: linear-gradient(160deg, var(--gold-soft), #c39c52);
+      border-radius: 4px; padding: 2px 7px;
+    }
+
     /* ── Export ─────────────────────────────────────────────────────── */
     .export-pre {
       display: none; margin-top: 16px; font-size: 11.5px; color: var(--muted);
@@ -114,6 +129,11 @@
     /* ── Ajustements mobile propres à cette page ────────────────────── */
     @media (max-width: 860px) {
       .membre-row { grid-template-columns: 1fr; }
+      /* Sur téléphone, la ligne d'inscription se déplie en hauteur :
+         email au-dessus, commandes en dessous sur toute la largeur. */
+      .insc-row { flex-direction: column; align-items: stretch; gap: 13px; }
+      .insc-actions { flex-direction: column; align-items: stretch; }
+      .insc-actions select, .insc-actions .btn { width: 100%; min-width: 0; }
     }
   </style>
 </head>
@@ -236,6 +256,11 @@
     <!-- INSCRIPTIONS -->
     <div class="panel" id="panel-inscriptions">
       <div class="bloc">
+        <p class="hint" style="line-height:1.7;margin-bottom:18px;">
+          <b style="color:var(--text);">Approuver</b> ouvre l'accès au compte. Le menu déroulant choisit ensuite
+          <b style="color:var(--text);">ce qu'il voit</b> : soit tout l'espace membre, soit uniquement le panneau
+          <b style="color:var(--gold);">Taxes</b>. Le changement est immédiat — la personne le verra à sa prochaine connexion.
+        </p>
         <div id="insc-list"><div class="hint">Chargement…</div></div>
       </div>
     </div>
@@ -363,12 +388,23 @@
       '<div class="insc-bar"><div class="insc-count">' + comptes.length + ' compte(s) — ' + enAttente + ' en attente</div>' +
       '<button class="btn ghost" style="padding:9px 16px;" onclick="renderInscriptions()">↻ Rafraîchir</button></div>' +
       comptes.map(function (c) {
-        return '<div class="insc-row"><div>' +
+        // « acces » vaut 'complet' ou 'taxes'. Si la colonne n'existe pas
+        // encore (script acces-comptes.sql pas encore exécuté), on retombe
+        // sur 'complet' : l'affichage reste correct, rien ne casse.
+        var acces = (c.acces === 'taxes') ? 'taxes' : 'complet';
+        var id = escHTML(c.id);
+        return '<div class="insc-row' + (acces === 'taxes' ? ' limite' : '') + '"><div>' +
           '<div class="insc-email">' + escHTML(c.email || '(sans email)') + '</div>' +
           '<div class="insc-state ' + (c.approuve ? 'ok' : 'attente') + '">' + (c.approuve ? '✅ Approuvé' : '⏳ En attente') + '</div>' +
           '</div>' +
-          '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:10px 16px;" onclick="setApprouve(\'' + c.id + '\', ' + (!c.approuve) + ')">' +
-          (c.approuve ? 'Révoquer' : 'Approuver') + '</button></div>';
+          '<div class="insc-actions">' +
+          '<select aria-label="Niveau d\'accès" onchange="setAcces(\'' + id + '\', this.value)">' +
+          '<option value="complet"' + (acces === 'complet' ? ' selected' : '') + '>Tout l\'espace membre</option>' +
+          '<option value="taxes"' + (acces === 'taxes' ? ' selected' : '') + '>Taxes uniquement</option>' +
+          '</select>' +
+          '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:11px 16px;" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' +
+          (c.approuve ? 'Révoquer' : 'Approuver') + '</button>' +
+          '</div></div>';
       }).join('');
   }
 
@@ -378,6 +414,24 @@
     showToast(val ? 'Compte approuvé !' : 'Accès révoqué.');
     renderInscriptions();
     updateDashLive();
+  }
+
+  // Niveau d'accès du compte : tout l'espace membre, ou seulement les taxes.
+  // C'est la base qui fait respecter ce choix (fonction est_gerant_taxes),
+  // pas seulement l'affichage du site.
+  async function setAcces(id, val) {
+    const { error } = await SB.from('comptes').update({ acces: val }).eq('id', id);
+    if (error) {
+      showToast(/acces/i.test(error.message)
+        ? "La colonne « acces » n'existe pas encore : exécute acces-comptes.sql dans Supabase."
+        : 'Erreur : ' + error.message);
+      renderInscriptions();
+      return;
+    }
+    showToast(val === 'taxes'
+      ? 'Ce compte ne verra plus que le panneau Taxes.'
+      : "Ce compte a de nouveau accès à tout l'espace membre.");
+    renderInscriptions();
   }
 
   function initAdmin() {

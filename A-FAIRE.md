@@ -6,6 +6,18 @@ indépendants : tu peux en faire un et t'arrêter là.
 
 ---
 
+## 0 · Activer le choix « accès complet / taxes uniquement » (2 min)
+
+1. Supabase → **SQL Editor** → colle **`acces-comptes.sql`** → **Run**.
+2. Double-clique **`publier.bat`**.
+3. Panneau Admin → **Inscriptions** : chaque ligne a maintenant un menu
+   déroulant. « Tout l'espace membre » ou « Taxes uniquement ».
+
+Les quatre gérants des taxes déjà déclarés basculent automatiquement :
+personne ne perd son accès.
+
+---
+
 ## 1 · Activer la carte de Roxwood (5 min + le temps de placer tes points)
 
 1. Supabase → **SQL Editor** → colle **`carte-points.sql`** → **Run**.

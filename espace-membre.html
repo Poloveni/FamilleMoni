@@ -1219,8 +1219,11 @@
   })();
 
   // ── NAVIGATION ENTRE PANNEAUX ──
-  // Gérant des taxes (rôle Discord is_taxes_manager) : il ne voit QUE les
-  // taxes. Ce n'est qu'un confort d'affichage — la vraie protection, ce sont
+  // Accès « taxes uniquement » : le compte ne voit QUE le panneau Taxes.
+  // Deux sources, réunies côté base dans est_gerant_taxes() :
+  //   • le rôle Discord is_taxes_manager (écrit par le bot) ;
+  //   • le niveau d'accès choisi dans le panneau Admin (comptes.acces).
+  // Ce n'est qu'un confort d'affichage — la vraie protection, ce sont
   // les règles de sécurité de la base (RLS), qui s'appliquent quoi qu'il voie.
   let modeGerantTaxes = false;
   function activerModeGerantTaxes() {
@@ -1235,6 +1238,10 @@
     document.querySelectorAll('.sb-group').forEach(g => { g.style.display = 'none'; });
     const sbTaxes = document.getElementById('sb-taxes');
     if (sbTaxes) sbTaxes.style.display = '';
+    // Un compte pas encore validé reste sur l'écran d'attente : cette
+    // vérification arrive de la base sans ordre garanti, elle ne doit pas
+    // passer devant l'approbation.
+    if (!isApproved) return;
     showPanel('taxes');
     if (typeof loadTaxes === 'function') loadTaxes();
   }

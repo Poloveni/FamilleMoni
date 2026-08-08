@@ -1,5 +1,17 @@
 -- ============================================================================
--- GÉRANTS DES TAXES PAR EMAIL — Famille Moni
+-- ⚠️  FICHIER REMPLACÉ — NE PLUS EXÉCUTER
+-- ============================================================================
+--  Les comptes « taxes uniquement » se règlent désormais en un clic dans
+--  Panneau Admin → Inscriptions → menu déroulant. Le script de référence est
+--  maintenant  acces-comptes.sql .
+--
+--  Relancer le script ci-dessous écraserait est_gerant_taxes() et ferait
+--  perdre les réglages faits depuis l'admin. Il n'est gardé que pour
+--  mémoire de la liste d'origine (déjà reprise par acces-comptes.sql).
+-- ============================================================================
+
+-- ============================================================================
+-- GÉRANTS DES TAXES PAR EMAIL — Famille Moni  (ancienne méthode)
 -- ============================================================================
 -- Ces comptes ne voient QUE le panneau Taxes de l'espace membre (et peuvent
 -- utiliser l'import Excel). Deux façons d'obtenir le rôle :
