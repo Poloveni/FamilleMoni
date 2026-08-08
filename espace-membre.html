@@ -164,6 +164,32 @@
       font-size: 10.5px; color: var(--dim); line-height: 1.5;
     }
 
+    /* ── Le calculateur de vente ──────────────────────────────────────────
+       Trois champs côte à côte sur ordinateur, l'un sous l'autre sur
+       téléphone. Les champs gardent la mise en forme du reste du site :
+       seule la disposition change ici. */
+    .calc-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+    .calc-form label { margin-bottom: 0; }
+    .calc-form select, .calc-form input { margin-bottom: 0; margin-top: 7px; }
+    .calc-form .sans-purete { opacity: .5; }
+    .calc-check {
+      display: flex; align-items: center; gap: 10px; margin-top: 16px; cursor: pointer;
+      font-size: 12.5px; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--muted);
+    }
+    .calc-check input { width: auto; margin: 0; accent-color: var(--red); }
+    /* Une fourchette « $219 – $239 » est deux fois plus longue qu'un chiffre
+       seul : on réduit la taille pour qu'elle tienne sur une ligne. */
+    .kpi-num.duo { font-size: 23px; letter-spacing: -0.4px; }
+    .calc-vide { color: var(--dim); font-size: 12.5px; }
+    #calc-admin { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+    #calc-admin summary { font-size: 11.5px; color: var(--dim); cursor: pointer; list-style: none; }
+    #calc-admin summary::-webkit-details-marker { display: none; }
+    #calc-admin summary::marker { content: ''; }
+    #calc-admin summary::before { content: '▸ '; }
+    #calc-admin[open] summary::before { content: '▾ '; }
+    #calc-admin input { width: 92px; margin-bottom: 0; padding: 8px 10px; text-align: right; }
+    @media (max-width: 720px) { .calc-form { grid-template-columns: 1fr; } }
+
 
 
     /* Palette des pastilles de zone, vérifiée pour les daltonismes.
@@ -936,6 +962,12 @@
     <div class="panel" id="panel-prix">
       <!-- RÉSUMÉ — les 4 réponses qu'on vient chercher en premier -->
       <div class="kpis" id="prix-kpis" style="display:none;"></div>
+
+      <!-- LE CALCULATEUR — produit + pureté + quantité = combien ça rapporte -->
+      <div class="bloc" id="bloc-calc">
+        <div class="bloc-t">Le calculateur de vente <span class="hint" id="calc-maj" style="text-transform:none;letter-spacing:0;"></span></div>
+        <div id="bd-calc"><div class="locked">Chargement…</div></div>
+      </div>
 
       <!-- LA RENTABILITÉ — la question du groupe : quoi vendre en priorité -->
       <div class="bloc" id="bloc-rentabilite" style="display:none;">
@@ -2616,6 +2648,33 @@
     return n(a) === n(b);
   }
 
+  /* Le meilleur bonus applicable à un produit, toutes zones confondues.
+     Un seul endroit dans le fichier calcule ce bonus : le classement de
+     rentabilité et le calculateur de vente affichent donc forcément le même
+     chiffre. « zones » = le dernier relevé de chaque zone par le bot.
+     Renvoie toujours un objet, même sans aucune zone connue (facteur 1). */
+  function meilleurBonusZone(item, zones) {
+    let best = null;
+    (zones || []).forEach(z => {
+      const parts = [], pcts = [];
+      const ajoute = (v, t) => { if (v) { pcts.push(Number(v)); parts.push(t); } };
+      ajoute(z.bonus_all_drogues_pct, (Number(z.bonus_all_drogues_pct) > 0 ? '+' : '') + z.bonus_all_drogues_pct + ' % toutes drogues');
+      ajoute(z.bonus_zone_pct,        (Number(z.bonus_zone_pct) > 0 ? '+' : '') + z.bonus_zone_pct + ' % zone');
+      if (z.drogue_associee && memeProduit(z.drogue_associee, item)) {
+        ajoute(z.bonus_drogue_associee_pct, (Number(z.bonus_drogue_associee_pct) > 0 ? '+' : '') + z.bonus_drogue_associee_pct + ' % ' + cap(z.drogue_associee));
+      }
+      if (z.bonus_nord) ajoute(z.bonus_nord_valeur, (Number(z.bonus_nord_valeur) > 0 ? '+' : '') + (z.bonus_nord_valeur || 0) + ' % Nord');
+      const facteur = CUMUL_ADDITIF
+        ? 1 + pcts.reduce((t, v) => t + v, 0) / 100
+        : pcts.reduce((t, v) => t * (1 + v / 100), 1);
+      const cand = { zone: z.zone, categorie: z.categorie, facteur: facteur,
+                     pct: Math.round((facteur - 1) * 1000) / 10, detail: parts };
+      if (!best || cand.facteur > best.facteur ||
+          (cand.facteur === best.facteur && String(cand.zone).localeCompare(String(best.zone)) < 0)) best = cand;
+    });
+    return best || { zone: null, categorie: null, facteur: 1, pct: 0, detail: [] };
+  }
+
 
   /* Un bandeau de 4 chiffres en tête du panneau : ce sont les questions
      qu'on se pose en arrivant. Une valeur unique accompagnée d'un contexte
@@ -2712,31 +2771,8 @@
     (stocks || []).forEach(x => { stock[x.item] = x.quantite || 0; });
     const med = c => ((c.prix_actuel_min || 0) + (c.prix_actuel_max || 0)) / 2;
 
-    // Le meilleur bonus applicable à un produit, toutes zones confondues.
-    function meilleurBonus(item) {
-      let best = null;
-      (zones || []).forEach(z => {
-        const parts = [], pcts = [];
-        const ajoute = (v, t) => { if (v) { pcts.push(Number(v)); parts.push(t); } };
-        ajoute(z.bonus_all_drogues_pct, (Number(z.bonus_all_drogues_pct) > 0 ? '+' : '') + z.bonus_all_drogues_pct + ' % toutes drogues');
-        ajoute(z.bonus_zone_pct,        (Number(z.bonus_zone_pct) > 0 ? '+' : '') + z.bonus_zone_pct + ' % zone');
-        if (z.drogue_associee && memeProduit(z.drogue_associee, item)) {
-          ajoute(z.bonus_drogue_associee_pct, (Number(z.bonus_drogue_associee_pct) > 0 ? '+' : '') + z.bonus_drogue_associee_pct + ' % ' + cap(z.drogue_associee));
-        }
-        if (z.bonus_nord) ajoute(z.bonus_nord_valeur, (Number(z.bonus_nord_valeur) > 0 ? '+' : '') + (z.bonus_nord_valeur || 0) + ' % Nord');
-        const facteur = CUMUL_ADDITIF
-          ? 1 + pcts.reduce((t, v) => t + v, 0) / 100
-          : pcts.reduce((t, v) => t * (1 + v / 100), 1);
-        const cand = { zone: z.zone, categorie: z.categorie, facteur: facteur,
-                       pct: Math.round((facteur - 1) * 1000) / 10, detail: parts };
-        if (!best || cand.facteur > best.facteur ||
-            (cand.facteur === best.facteur && String(cand.zone).localeCompare(String(best.zone)) < 0)) best = cand;
-      });
-      return best || { zone: null, facteur: 1, pct: 0, detail: [] };
-    }
-
     const lignes = items.map(item => {
-      const b = meilleurBonus(item);
+      const b = meilleurBonusZone(item, zones);
       const base = med(cours[item]);
       const vente = base * b.facteur;
       const cout = achat[item] || 0;
@@ -3469,17 +3505,272 @@
     loadPrix();
   };
 
+  /* ══════════════════════════════════════════════════════════════════════
+     LE CALCULATEUR DE VENTE
+
+     Trois questions, une réponse : quel produit, quelle pureté, combien
+     d'unités → combien ça rapporte, et combien on gagne réellement une fois
+     le prix d'achat déduit.
+
+     Le barème (table bareme_drogues) donne le prix officiel à l'unité pour
+     chaque pureté. Le bonus de zone relevé par le bot vient le multiplier,
+     via meilleurBonusZone() — la MÊME fonction que le classement de
+     rentabilité, pour que les deux ne puissent jamais se contredire.
+     ══════════════════════════════════════════════════════════════════════ */
+  let BAREME = [];
+  let PRIX_ACHAT = {};
+
+  // Les produits du barème, dans l'ordre d'affichage, sans doublon.
+  function produitsBareme() {
+    const vus = [];
+    BAREME.forEach(b => { if (vus.indexOf(b.item) === -1) vus.push(b.item); });
+    return vus;
+  }
+
+  function rendreCalculateur(baremeQ, rows) {
+    const box = document.getElementById('bd-calc');
+    if (!box) return;
+
+    PRIX_ACHAT = {};
+    (rows || []).forEach(r => { PRIX_ACHAT[r.item] = Number(r.prix) || 0; });
+
+    if (baremeQ && baremeQ.error) {
+      box.innerHTML = '<div class="locked">Calculateur indisponible — exécute <code>bareme-drogues.sql</code> dans Supabase. (' +
+        escT(baremeQ.error.message) + ')</div>';
+      return;
+    }
+    BAREME = ((baremeQ && baremeQ.data) || []).slice().sort((a, b) =>
+      (Number(a.ordre) - Number(b.ordre)) ||
+      String(a.item).localeCompare(String(b.item)) ||
+      (Number(a.purete) - Number(b.purete)));
+
+    if (!BAREME.length) {
+      box.innerHTML = '<div class="locked">Le barème est vide — exécute <code>bareme-drogues.sql</code> dans Supabase pour charger les prix officiels.</div>';
+      return;
+    }
+
+    // Le formulaire n'est construit qu'une seule fois. Le reconstruire à
+    // chaque frappe ferait sauter le curseur hors du champ Quantité.
+    if (!document.getElementById('calc-item')) {
+      box.innerHTML =
+        '<div class="calc-form">' +
+          '<label>Produit<select id="calc-item" onchange="majPuretes(); calcVente();"></select></label>' +
+          '<label id="calc-purete-l">Pureté<select id="calc-purete" onchange="calcVente()"></select></label>' +
+          '<label>Quantité<input type="number" id="calc-qte" min="0" max="100000" step="1" value="10" inputmode="numeric" oninput="calcVente()" /></label>' +
+        '</div>' +
+        '<label class="calc-check"><input type="checkbox" id="calc-zone" checked onchange="calcVente()" />' +
+          'Vendre dans la zone la plus avantageuse du moment</label>' +
+        '<div class="kpis" id="calc-res" style="margin-top:18px;margin-bottom:0;"></div>' +
+        '<div id="calc-comp" style="margin-top:20px;"></div>' +
+        '<div id="calc-admin-zone"></div>';
+    }
+
+    const items = produitsBareme();
+    const sel = document.getElementById('calc-item');
+    const garde = sel.value;
+    sel.innerHTML = items.map(i => '<option value="' + escT(i) + '">' + escT(cap(i)) + '</option>').join('');
+    if (garde && items.indexOf(garde) !== -1) sel.value = garde;
+
+    const maj = BAREME.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
+    const majEl = document.getElementById('calc-maj');
+    if (majEl && maj) majEl.textContent = ' · barème du ' +
+      new Date(maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    majPuretes();
+    calcVente();
+    rendreEditeurBareme();
+  }
+
+  // Les puretés disponibles dépendent du produit choisi. Ecstasy, Lean et
+  // B-Magic n'en ont pas : le champ se grise au lieu de disparaître, pour que
+  // la mise en page ne saute pas sous les doigts.
+  function majPuretes() {
+    const item = document.getElementById('calc-item').value;
+    const sel = document.getElementById('calc-purete');
+    const lab = document.getElementById('calc-purete-l');
+    const dispo = BAREME.filter(b => b.item === item).sort((a, b) => Number(a.purete) - Number(b.purete));
+    const avecPurete = dispo.some(l => Number(l.purete) > 0);
+    const garde = sel.value;
+
+    sel.innerHTML = avecPurete
+      ? dispo.map(l => '<option value="' + Number(l.purete) + '">' + Number(l.purete) + ' %</option>').join('')
+      : '<option value="0">Sans pureté</option>';
+    sel.disabled = !avecPurete;
+    if (lab) lab.className = avecPurete ? '' : 'sans-purete';
+
+    const options = [].slice.call(sel.options).map(o => o.value);
+    if (garde && options.indexOf(garde) !== -1) sel.value = garde;
+    else if (avecPurete) sel.value = String(Number(dispo[dispo.length - 1].purete)); // la plus pure par défaut
+  }
+
+  function calcVente() {
+    const res = document.getElementById('calc-res');
+    if (!res) return;
+    const item = document.getElementById('calc-item').value;
+    const pur = Number(document.getElementById('calc-purete').value) || 0;
+    const qte = Math.max(0, Math.floor(Number(document.getElementById('calc-qte').value) || 0));
+    const avecZone = document.getElementById('calc-zone').checked;
+
+    const ligne = BAREME.filter(b => b.item === item && Number(b.purete) === pur)[0] ||
+                  BAREME.filter(b => b.item === item)[0];
+    if (!ligne) { res.innerHTML = '<div class="calc-vide">Produit introuvable dans le barème.</div>'; return; }
+
+    const bonus = avecZone
+      ? meilleurBonusZone(item, window.__zonesDernieres || [])
+      : { zone: null, facteur: 1, pct: 0, detail: [] };
+
+    const uMin = Number(ligne.prix_min) * bonus.facteur;
+    const uMax = Number(ligne.prix_max) * bonus.facteur;
+    const uMoy = (uMin + uMax) / 2;
+    const achat = PRIX_ACHAT[item] || 0;
+    const marge = achat > 0 ? (uMoy - achat) * qte : null;
+
+    const noteBonus = bonus.pct
+      ? (bonus.pct > 0 ? '+' : '') + bonus.pct + ' % à ' + escT(bonus.zone || 'cette zone')
+      : (avecZone ? 'aucun bonus de zone connu' : 'prix de base, sans bonus');
+
+    res.innerHTML =
+      '<div class="kpi" style="--kc:#d4b26e;">' +
+        '<div class="kpi-label">Prix à l\'unité</div>' +
+        '<div class="kpi-num duo" style="color:var(--gold);">' + fmtArgent(Math.round(uMin)) + ' – ' + fmtArgent(Math.round(uMax)) + '</div>' +
+        '<div class="kpi-foot">' + noteBonus + '</div>' +
+      '</div>' +
+      '<div class="kpi" style="--kc:#2ecc71;">' +
+        '<div class="kpi-label">Total pour ' + qte.toLocaleString('fr-FR') + ' unité' + (qte > 1 ? 's' : '') + '</div>' +
+        '<div class="kpi-num duo" style="color:var(--green);">' + fmtArgent(Math.round(uMin * qte)) + ' – ' + fmtArgent(Math.round(uMax * qte)) + '</div>' +
+        '<div class="kpi-foot">en moyenne ' + fmtArgent(Math.round(uMoy * qte)) + '</div>' +
+      '</div>' +
+      (marge === null
+        ? '<div class="kpi" style="--kc:#7f8c8d;">' +
+            '<div class="kpi-label">Bénéfice</div>' +
+            '<div class="kpi-num duo">—</div>' +
+            '<div class="kpi-foot">renseigne le prix d\'achat plus bas</div>' +
+          '</div>'
+        : '<div class="kpi" style="--kc:' + (marge >= 0 ? '#2ecc71' : '#e0503f') + ';">' +
+            '<div class="kpi-label">Bénéfice estimé</div>' +
+            '<div class="kpi-num duo" style="color:' + (marge >= 0 ? 'var(--green)' : 'var(--red)') + ';">' +
+              (marge > 0 ? '+' : '') + fmtArgent(Math.round(marge)) + '</div>' +
+            '<div class="kpi-foot">achat ' + fmtArgent(achat) + ' l\'unité · ' +
+              (marge >= 0 ? 'gain' : 'perte') + ' de ' + fmtArgent(Math.abs(Math.round(uMoy - achat))) + ' par unité</div>' +
+          '</div>');
+
+    rendreComparatif(pur, avecZone, item);
+  }
+
+  // Le comparatif : à pureté égale, ce qui rapporte le plus à l'unité.
+  // Les produits sans pureté gardent leur tarif unique quel que soit le choix.
+  function rendreComparatif(pur, avecZone, itemChoisi) {
+    const box = document.getElementById('calc-comp');
+    if (!box) return;
+    const zones = avecZone ? (window.__zonesDernieres || []) : [];
+
+    const lignes = produitsBareme().map(item => {
+      const dispo = BAREME.filter(b => b.item === item);
+      const avecPurete = dispo.some(l => Number(l.purete) > 0);
+      const l = avecPurete ? dispo.filter(x => Number(x.purete) === pur)[0] : dispo[0];
+      if (!l) return null;
+      const b = avecZone ? meilleurBonusZone(item, zones) : { zone: null, facteur: 1, pct: 0 };
+      const moy = (Number(l.prix_min) + Number(l.prix_max)) / 2 * b.facteur;
+      const achat = PRIX_ACHAT[item] || 0;
+      return {
+        item: item, purete: avecPurete ? Number(l.purete) : null, moy: moy,
+        zone: b.zone, pct: b.pct, gain: achat > 0 ? moy - achat : null,
+      };
+    }).filter(l => l).sort((a, b) => b.moy - a.moy);
+
+    if (!lignes.length) { box.innerHTML = ''; return; }
+
+    box.innerHTML =
+      '<div class="bloc-t" style="margin-bottom:12px;">À pureté égale, ce qui rapporte le plus</div>' +
+      '<table class="vd-table"><thead><tr>' +
+        '<th>Produit</th><th class="num">Pureté</th><th class="num">Prix moyen à l\'unité</th>' +
+        '<th>Meilleure zone</th><th class="num">Bénéfice à l\'unité</th>' +
+      '</tr></thead><tbody>' +
+      lignes.map((l, i) => {
+        const vedette = memeProduit(l.item, itemChoisi);
+        return '<tr' + (vedette ? ' style="background:rgba(212,178,110,.07);"' : '') + '>' +
+          '<td>' + (i === 0 ? '<span class="rent-etoile">★</span> ' : '') + escT(cap(l.item)) + '</td>' +
+          '<td class="num">' + (l.purete === null ? '<span class="hint">—</span>' : l.purete + ' %') + '</td>' +
+          '<td class="num" style="color:var(--gold);font-weight:600;">' + fmtArgent(Math.round(l.moy)) + '</td>' +
+          '<td>' + (l.zone ? escT(l.zone) + ' <span class="hint">' + (l.pct > 0 ? '+' : '') + l.pct + ' %</span>' : '<span class="hint">—</span>') + '</td>' +
+          '<td class="num">' + (l.gain === null
+            ? '<span class="hint">—</span>'
+            : '<b style="color:' + (l.gain >= 0 ? 'var(--green)' : 'var(--red)') + ';">' +
+              (l.gain > 0 ? '+' : '') + fmtArgent(Math.round(l.gain)) + '</b>') + '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table>' +
+      '<div class="hint" style="margin-top:14px;line-height:1.75;">' +
+        'Le <b>barème</b> est la note officielle du serveur : le prix qu\'un PNJ paie l\'unité selon la pureté. ' +
+        'Le <b>bonus de zone</b> vient du dernier relevé du bot et s\'y ajoute. ' +
+        'Le <b>bénéfice</b> déduit le prix d\'achat fixé par la Donna, plus bas dans la page. ' +
+        'Ces montants sont des estimations : le jeu tire un prix au hasard dans la fourchette.' +
+      '</div>';
+  }
+
+  /* L'éditeur du barème — réservé à la Donna. Quand le serveur change ses
+     prix, elle les corrige ici : pas besoin de repasser par Supabase. */
+  function rendreEditeurBareme() {
+    const zone = document.getElementById('calc-admin-zone');
+    if (!zone) return;
+    if (!currentUser || currentUser.email !== 'syne@live.fr') { zone.innerHTML = ''; return; }
+
+    zone.innerHTML =
+      '<details id="calc-admin"><summary>Modifier le barème officiel</summary>' +
+      '<p class="hint" style="margin:14px 0;line-height:1.7;">' +
+        'À corriger seulement quand le serveur annonce de nouveaux prix. ' +
+        'Le plafond ne peut pas être inférieur au plancher : la base refuserait l\'enregistrement.' +
+      '</p>' +
+      '<table class="vd-table" id="bareme-table"><thead><tr>' +
+        '<th>Produit</th><th class="num">Pureté</th><th class="num">Prix mini</th><th class="num">Prix maxi</th>' +
+      '</tr></thead><tbody>' +
+      BAREME.map(b =>
+        '<tr data-item="' + escT(b.item) + '" data-purete="' + Number(b.purete) + '">' +
+          '<td>' + escT(cap(b.item)) + '</td>' +
+          '<td class="num">' + (Number(b.purete) > 0 ? Number(b.purete) + ' %' : '<span class="hint">unique</span>') + '</td>' +
+          '<td class="num"><input type="number" class="bareme-min" min="0" step="1" value="' + Number(b.prix_min) + '" /></td>' +
+          '<td class="num"><input type="number" class="bareme-max" min="0" step="1" value="' + Number(b.prix_max) + '" /></td>' +
+        '</tr>').join('') +
+      '</tbody></table>' +
+      '<button class="btn green" style="margin-top:16px;" onclick="saveBareme()">Enregistrer le barème</button>' +
+      '<div class="msg" id="bareme-msg"></div>' +
+      '</details>';
+  }
+
+  async function saveBareme() {
+    if (!currentUser || currentUser.email !== 'syne@live.fr') return;
+    hideMsg('bareme-msg');
+    const lignes = [].slice.call(document.querySelectorAll('#bareme-table tbody tr')).map(tr => {
+      const min = Math.max(0, Math.round(Number(tr.querySelector('.bareme-min').value) || 0));
+      const max = Math.max(min, Math.round(Number(tr.querySelector('.bareme-max').value) || 0));
+      return {
+        item: tr.dataset.item,
+        purete: Number(tr.dataset.purete),
+        prix_min: min,
+        prix_max: max,
+        updated_at: new Date().toISOString(),
+      };
+    });
+    if (!lignes.length) return;
+    const { error } = await sb.from('bareme_drogues').upsert(lignes, { onConflict: 'item,purete' });
+    if (error) { showMsg('bareme-msg', 'Erreur : ' + error.message, false); return; }
+    toast('Barème enregistré !');
+    loadPrix();
+  }
+
   async function loadPrix() {
     const box = document.getElementById('bd-prix');
     if (!box || !currentUser) return;
     const estAdmin = currentUser.email === 'syne@live.fr';
 
-    const [prixQ, stocksQ, bourseQ, zonesQ] = await Promise.all([
+    const [prixQ, stocksQ, bourseQ, zonesQ, baremeQ] = await Promise.all([
       sb.from('prix_drogues').select('*').order('item'),
       sb.from('bot_stocks').select('*'),
       // 800 relevés suffisent largement pour une dizaine de produits.
       sb.from('bot_drogue_bourse').select('*').order('ts', { ascending: false }).limit(800),
       sb.from('bot_zone_bonus').select('*').order('ts', { ascending: false }).limit(400),
+      // Le barème officiel par pureté — alimente le calculateur de vente.
+      sb.from('bareme_drogues').select('*'),
     ]);
 
     // Le cours et les zones sont indépendants : si le bot n'a pas encore
@@ -3502,6 +3793,9 @@
 
     if (prixQ.error) {
       box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql puis prix-drogues-2.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
+      // Le calculateur, lui, n'a pas besoin des prix d'achat : il continue
+      // de fonctionner, simplement sans afficher de marge.
+      rendreCalculateur(baremeQ, []);
       return;
     }
     const rows = prixQ.data || [];
@@ -3517,20 +3811,27 @@
       if (!c || r.ts > c.ts || (r.ts === c.ts && (r.id || 0) > (c.id || 0))) cours[r.item] = r;
     });
 
-    // Le croisement cours × zones a besoin des deux : on l'appelle ici.
-    if (!zonesQ.error && !bourseQ.error) {
+    // Le dernier relevé de CHAQUE zone, calculé une seule fois : le classement
+    // de rentabilité et le calculateur de vente s'appuient dessus tous les deux.
+    const zonesDernieres = [];
+    if (!zonesQ.error) {
       const derniereZone = {};
       (zonesQ.data || []).forEach(z => {
         const cle = z.categorie + '§' + z.zone;
         const d = derniereZone[cle];
         if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniereZone[cle] = z;
       });
-      const championne = rendreRentabilite(Object.values(derniereZone), cours, rows, (stocksQ && stocksQ.data) || []);
-      rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], championne);
-    } else {
-      const championne = rendreRentabilite([], cours, rows, (stocksQ && stocksQ.data) || []);
-      rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], championne);
+      Object.keys(derniereZone).forEach(k => zonesDernieres.push(derniereZone[k]));
     }
+    window.__zonesDernieres = zonesDernieres;
+
+    // Le croisement cours × zones a besoin des deux : sans l'un, pas de bonus.
+    const championne = rendreRentabilite(
+      (!zonesQ.error && !bourseQ.error) ? zonesDernieres : [],
+      cours, rows, (stocksQ && stocksQ.data) || []);
+    rendreResumePrix(cours, rows, (stocksQ && stocksQ.data) || [], championne);
+
+    rendreCalculateur(baremeQ, rows);
 
     const maj = rows.reduce((m, r) => (r.updated_at && (!m || r.updated_at > m)) ? r.updated_at : m, null);
     const majEl = document.getElementById('prix-maj');

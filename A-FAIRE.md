@@ -18,6 +18,18 @@ personne ne perd son accès.
 
 ---
 
+## 0 bis · Activer le calculateur de vente (2 min)
+
+1. Supabase → **SQL Editor** → colle **`bareme-drogues.sql`** → **Run**.
+2. Double-clique **`publier.bat`**.
+3. Espace membre → onglet **Prix drogues** : le calculateur est en haut.
+   Produit + pureté + quantité → ce que ça rapporte, bonus de zone compris.
+
+Quand le serveur change ses prix : **Modifier le barème officiel**, en bas
+du calculateur (visible seulement par toi).
+
+---
+
 ## 1 · Activer la carte de Roxwood (5 min + le temps de placer tes points)
 
 1. Supabase → **SQL Editor** → colle **`carte-points.sql`** → **Run**.
