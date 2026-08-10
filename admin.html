@@ -98,10 +98,32 @@
       transition: border-color 0.2s ease, transform 0.2s var(--ease);
     }
     .insc-row:hover { border-color: var(--border2); transform: translateX(3px); }
-    .insc-email { font-size: 14px; font-weight: 600; word-break: break-all; }
-    .insc-state { font-size: 12px; margin-top: 4px; }
+    .insc-state { font-size: 12px; margin-top: 7px; }
     .insc-state.attente { color: var(--amber); }
     .insc-state.ok { color: var(--green); }
+
+    /* ── L'identité, à gauche de la ligne ────────────────────────────────
+       En grand : le nom du personnage s'il est connu, sinon l'email. En
+       dessous, tous les repères qui permettent de reconnaître quelqu'un :
+       email, pseudo Discord, date d'inscription, dernière visite. */
+    .insc-qui { min-width: 0; }
+    .insc-nom {
+      display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+      font-size: 15px; font-weight: 650; word-break: break-word;
+    }
+    .insc-rang, .insc-tag {
+      font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 800;
+      border-radius: 4px; padding: 3px 7px; white-space: nowrap;
+    }
+    .insc-rang { color: var(--gold); background: rgba(212,178,110,0.12); border: 1px solid rgba(212,178,110,0.34); }
+    .insc-tag  { color: #1a1206; background: linear-gradient(160deg, var(--gold-soft), #c39c52); }
+    .insc-meta {
+      display: flex; flex-wrap: wrap; gap: 3px 15px; margin-top: 8px;
+      font-size: 11.5px; color: var(--dim); line-height: 1.6;
+    }
+    .insc-meta .mail { color: var(--muted); word-break: break-all; }
+    /* Le violet de Discord : le pseudo se repère sans avoir à lire l'étiquette. */
+    .insc-meta .discord { color: #8b9bf5; font-weight: 600; }
 
     /* Les commandes à droite de chaque ligne : niveau d'accès + bouton. */
     .insc-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -111,12 +133,11 @@
     }
     /* Repère visuel : un compte limité aux taxes se voit d'un coup d'œil. */
     .insc-row.limite { border-color: rgba(212,178,110,0.5); }
-    .insc-row.limite .insc-email::after {
-      content: 'Taxes'; margin-left: 9px; vertical-align: 2px;
-      font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 800;
-      color: #1a1206; background: linear-gradient(160deg, var(--gold-soft), #c39c52);
-      border-radius: 4px; padding: 2px 7px;
-    }
+
+    /* ── La barre du haut : compteur, recherche, rafraîchir ─────────────── */
+    .insc-outils { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .insc-outils input { margin-bottom: 0; width: 268px; padding: 10px 13px; font-size: 13px; }
+    .insc-rien { color: var(--dim); font-size: 13px; padding: 18px 2px; }
 
     /* ── Export ─────────────────────────────────────────────────────── */
     .export-pre {
@@ -130,10 +151,12 @@
     @media (max-width: 860px) {
       .membre-row { grid-template-columns: 1fr; }
       /* Sur téléphone, la ligne d'inscription se déplie en hauteur :
-         email au-dessus, commandes en dessous sur toute la largeur. */
+         identité au-dessus, commandes en dessous sur toute la largeur. */
       .insc-row { flex-direction: column; align-items: stretch; gap: 13px; }
       .insc-actions { flex-direction: column; align-items: stretch; }
       .insc-actions select, .insc-actions .btn { width: 100%; min-width: 0; }
+      .insc-outils { width: 100%; }
+      .insc-outils input { flex: 1; width: auto; min-width: 0; }
     }
   </style>
 </head>
@@ -374,38 +397,134 @@
   }
 
   // ── INSCRIPTIONS (approbation des comptes) ──
+  // COMPTES garde la dernière liste reçue : la recherche filtre en mémoire,
+  // sans rappeler la base à chaque lettre tapée.
+  var COMPTES = [];
+  var FILTRE = '';
+  var NOTE_INSC = '';
+
+  // « il y a 3 jours », « hier »… plus parlant qu'une date brute pour savoir
+  // qui est encore actif.
+  function depuis(v) {
+    if (!v) return null;
+    var j = Math.floor((Date.now() - new Date(v).getTime()) / 86400000);
+    if (j < 0) return null;
+    if (j === 0) return "aujourd'hui";
+    if (j === 1) return 'hier';
+    if (j < 31) return 'il y a ' + j + ' jours';
+    var m = Math.round(j / 30);
+    return 'il y a ' + m + ' mois';
+  }
+  function dateCourte(v) {
+    if (!v) return null;
+    return new Date(v).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
   async function renderInscriptions() {
     const list = document.getElementById('insc-list');
     if (!SB) { list.innerHTML = '<p class="hint">Supabase non chargé.</p>'; return; }
-    const { data: comptes, error } = await SB.from('comptes').select('*').order('created_at', { ascending: false });
-    if (error) { list.innerHTML = '<p style="color:var(--red);font-size:13px;">Erreur : ' + escHTML(error.message) + '</p>'; return; }
-    const enAttente = (comptes || []).filter(c => !c.approuve).length;
-    if (!comptes || !comptes.length) {
+
+    // On demande d'abord la version enrichie (pseudo Discord, personnage,
+    // dates). Si comptes-details.sql n'a pas encore été exécuté, on retombe
+    // sur la liste simple : le panneau continue de fonctionner.
+    NOTE_INSC = '';
+    var comptes = null;
+    const rpc = await SB.rpc('comptes_details');
+    if (!rpc.error && rpc.data && rpc.data.length) {
+      comptes = rpc.data;
+    } else {
+      const q = await SB.from('comptes').select('*').order('created_at', { ascending: false });
+      if (q.error) {
+        list.innerHTML = '<p style="color:var(--red);font-size:13px;">Erreur : ' + escHTML(q.error.message) + '</p>';
+        return;
+      }
+      comptes = q.data || [];
+      if (comptes.length) {
+        NOTE_INSC = 'Pour voir aussi le <b style="color:var(--text);">pseudo Discord</b> et le ' +
+          '<b style="color:var(--text);">nom du personnage</b>, exécute <code style="color:var(--gold);">comptes-details.sql</code> dans Supabase.';
+      }
+    }
+
+    COMPTES = comptes;
+    dessineInscriptions();
+  }
+
+  function dessineInscriptions() {
+    const list = document.getElementById('insc-list');
+    if (!list) return;
+
+    if (!COMPTES.length) {
       list.innerHTML = '<p class="hint">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres s\'inscriront sur l\'espace membre.</p>';
       return;
     }
+
+    const enAttente = COMPTES.filter(c => !c.approuve).length;
+    const q = FILTRE.trim().toLowerCase();
+    // La recherche regarde partout : email, pseudo Discord, personnage, rang.
+    const vus = q
+      ? COMPTES.filter(c => [c.email, c.discord_pseudo, c.nom, c.rang]
+          .some(v => String(v || '').toLowerCase().indexOf(q) !== -1))
+      : COMPTES;
+
     list.innerHTML =
-      '<div class="insc-bar"><div class="insc-count">' + comptes.length + ' compte(s) — ' + enAttente + ' en attente</div>' +
-      '<button class="btn ghost" style="padding:9px 16px;" onclick="renderInscriptions()">↻ Rafraîchir</button></div>' +
-      comptes.map(function (c) {
-        // « acces » vaut 'complet' ou 'taxes'. Si la colonne n'existe pas
-        // encore (script acces-comptes.sql pas encore exécuté), on retombe
-        // sur 'complet' : l'affichage reste correct, rien ne casse.
-        var acces = (c.acces === 'taxes') ? 'taxes' : 'complet';
-        var id = escHTML(c.id);
-        return '<div class="insc-row' + (acces === 'taxes' ? ' limite' : '') + '"><div>' +
-          '<div class="insc-email">' + escHTML(c.email || '(sans email)') + '</div>' +
-          '<div class="insc-state ' + (c.approuve ? 'ok' : 'attente') + '">' + (c.approuve ? '✅ Approuvé' : '⏳ En attente') + '</div>' +
-          '</div>' +
-          '<div class="insc-actions">' +
-          '<select aria-label="Niveau d\'accès" onchange="setAcces(\'' + id + '\', this.value)">' +
+      (NOTE_INSC ? '<p class="hint" style="margin-bottom:16px;line-height:1.7;">' + NOTE_INSC + '</p>' : '') +
+      '<div class="insc-bar">' +
+        '<div class="insc-count">' + COMPTES.length + ' compte(s) — ' + enAttente + ' en attente' +
+          (q ? ' · ' + vus.length + ' résultat(s)' : '') + '</div>' +
+        '<div class="insc-outils">' +
+          '<input type="search" id="insc-q" placeholder="Chercher un email, un pseudo, un personnage…" ' +
+            'value="' + escHTML(FILTRE) + '" oninput="FILTRE = this.value; dessineInscriptions();" />' +
+          '<button class="btn ghost" style="padding:10px 16px;" onclick="renderInscriptions()">↻ Rafraîchir</button>' +
+        '</div>' +
+      '</div>' +
+      (vus.length ? vus.map(ligneInscription).join('')
+                  : '<div class="insc-rien">Aucun compte ne correspond à « ' + escHTML(FILTRE) + ' ».</div>');
+
+    // Le curseur revient dans le champ de recherche : on peut continuer à
+    // taper alors que la liste vient d'être redessinée.
+    if (q) {
+      const inp = document.getElementById('insc-q');
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }
+  }
+
+  function ligneInscription(c) {
+    // « acces » vaut 'complet' ou 'taxes'. Si la colonne n'existe pas encore
+    // (acces-comptes.sql pas exécuté), on retombe sur 'complet'.
+    var acces = (c.acces === 'taxes') ? 'taxes' : 'complet';
+    var id = escHTML(c.id);
+    var email = c.email || '(sans email)';
+
+    // En grand : le personnage si on le connaît, sinon l'email.
+    var titre = c.nom ? escHTML(c.nom) : escHTML(email);
+
+    var meta = [];
+    if (c.nom) meta.push('<span class="mail">' + escHTML(email) + '</span>');
+    if (c.discord_pseudo) meta.push('<span class="discord">Discord : ' + escHTML(c.discord_pseudo) + '</span>');
+    // Chaque repère dans son propre <span> : sans ça, deux textes voisins
+    // fusionnent en un seul bloc et s'affichent collés l'un à l'autre.
+    if (c.created_at) meta.push('<span>Inscrit le ' + escHTML(dateCourte(c.created_at)) + '</span>');
+    var vu = depuis(c.derniere_connexion);
+    if (vu) meta.push('<span>Vu ' + escHTML(vu) + '</span>');
+
+    return '<div class="insc-row' + (acces === 'taxes' ? ' limite' : '') + '">' +
+      '<div class="insc-qui">' +
+        '<div class="insc-nom">' + titre +
+          (c.rang ? '<span class="insc-rang">' + escHTML(c.rang) + '</span>' : '') +
+          (acces === 'taxes' ? '<span class="insc-tag">Taxes</span>' : '') +
+        '</div>' +
+        (meta.length ? '<div class="insc-meta">' + meta.join('') + '</div>' : '') +
+        '<div class="insc-state ' + (c.approuve ? 'ok' : 'attente') + '">' +
+          (c.approuve ? '✅ Approuvé' : '⏳ En attente') + '</div>' +
+      '</div>' +
+      '<div class="insc-actions">' +
+        '<select aria-label="Niveau d\'accès" onchange="setAcces(\'' + id + '\', this.value)">' +
           '<option value="complet"' + (acces === 'complet' ? ' selected' : '') + '>Tout l\'espace membre</option>' +
           '<option value="taxes"' + (acces === 'taxes' ? ' selected' : '') + '>Taxes uniquement</option>' +
-          '</select>' +
-          '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:11px 16px;" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' +
+        '</select>' +
+        '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:11px 16px;" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' +
           (c.approuve ? 'Révoquer' : 'Approuver') + '</button>' +
-          '</div></div>';
-      }).join('');
+      '</div></div>';
   }
 
   async function setApprouve(id, val) {
