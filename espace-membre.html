@@ -526,121 +526,272 @@
     }
   
     /* ═══════════════════════════════════════════════════════════════════
-       REFONTE « APP ÉPURÉE » — 2026-08
-       Une seule idée : sobre, net, compact. Les couleurs ne crient plus,
-       la typographie fait le travail. Tout est surcharge : le HTML et le
-       JS n'ont pas bougé.
-       ═══════════════════════════════════════════════════════════════════ */
-    :root {
-      --bg: #08090a; --panel: #0e0f11; --panel2: #16171a;
-      --border: rgba(255,255,255,0.055); --border2: rgba(255,255,255,0.12);
-      --text: #f7f8f8; --muted: #9ba0a8; --dim: #63676f;
-      --red: #e5544a; --red-deep: #cf4a40; --gold: #d3ac68;
-      --green: #33c481; --amber: #f0a83c;
-    }
-    body { background-image: none; }           /* fini les halos de couleur */
-    #member-canvas { display: none; }          /* fini le fond étoilé */
+       THÈME « LUXE MAFIA » — 2026-08-10
 
-    /* ── Typographie : Inter partout, chiffres alignés ── */
-    h1.auth-title, .dash-title, .kpi-num, .bourse-prix, .bourse-rang,
-    .duel-num, .rent-hero-nom, .tx-carte .tx-nom, .event-day {
-      font-family: 'Inter', sans-serif; letter-spacing: -0.02em;
+       Ce bloc remplace la refonte « app épurée » de début août, qui
+       posait un calque gris sur tout le site : elle coupait les halos de
+       couleur, le fond étoilé, et remplaçait la typographie de caractère
+       par de l'Inter partout. Résultat : propre, mais terne.
+
+       On garde ce qu'elle avait apporté de bon — la densité des tableaux,
+       les boutons en casse normale, la navigation mobile — et on rend au
+       site sa matière : fond bordeaux nuit, or présent, cartes qui ont du
+       relief, gros titres en Playfair.
+
+       Comme avant, tout est en surcharge : le HTML et le JS n'ont pas
+       bougé d'une ligne.
+       ═══════════════════════════════════════════════════════════════════ */
+
+    /* ── 1. LA PALETTE ─────────────────────────────────────────────────
+       Le noir pur est ce qui faisait « terne » : il éteint toutes les
+       couleurs posées dessus. On passe à un noir chaud, teinté bordeaux.
+       Les trois niveaux de texte restent au-dessus du seuil de lisibilité
+       AA (4.5:1), y compris le plus discret. */
+    :root {
+      --bg:      #0d0709;
+      --panel:   #1a1114;
+      --panel2:  #23171b;
+      --panel3:  #2e1f24;
+
+      --border:  rgba(232,196,150,0.10);
+      --border2: rgba(232,196,150,0.20);
+      --border3: rgba(232,196,150,0.34);
+
+      --text:  #f8f1e9;
+      --muted: #bda99a;
+      --dim:   #9c8778;
+
+      --red:      #e0503f;
+      --red-soft: #ff8a78;
+      --red-deep: #a32418;
+      --gold:     #e3bd7c;
+      --gold-soft:#f5e0b4;
+      --green:    #4ad98a;
+      --amber:    #f0a83c;
+      --blue:     #5865f2;
+
+      --nav-w: 248px;
     }
-    h1.auth-title { font-size: 24px; font-weight: 700; }
-    .dash-title { font-size: 22px; font-weight: 700; }
+
+    /* Les halos reviennent, plus chauds : un rouge sang en haut à droite,
+       un or en bas à gauche. Ils ne se voient pas vraiment — ils empêchent
+       juste le fond d'être un aplat mort. */
+    body {
+      background-image:
+        radial-gradient(1200px 680px at 90% -14%, rgba(163,36,24,0.28), transparent 60%),
+        radial-gradient(900px 620px at -12% 110%, rgba(227,189,124,0.13), transparent 62%),
+        radial-gradient(700px 700px at 50% 50%, rgba(255,255,255,0.014), transparent 70%);
+      background-attachment: fixed;
+    }
+    #member-canvas { display: block; opacity: 0.34; }   /* le fond étoilé revient, discret */
+    ::selection { background: rgba(227,189,124,0.34); color: #1a1114; }
+
+    /* ── 2. TYPOGRAPHIE ────────────────────────────────────────────────
+       Playfair pour ce qui doit impressionner (titres, gros chiffres),
+       Inter pour tout le reste. Deux voix au lieu d'une seule : c'est ce
+       qui donne du caractère sans ajouter la moindre couleur. */
+    h1.auth-title, .dash-title, .kpi-num, .bourse-prix, .rent-hero-nom,
+    .duel-num, .tx-carte .tx-nom, .event-day, .vd-stat-num, .braq-num {
+      font-family: 'Playfair Display', Georgia, serif;
+      letter-spacing: -0.6px; font-weight: 700;
+    }
+    h1.auth-title { font-size: 30px; font-weight: 900; }
+    .dash-title   { font-size: 30px; font-weight: 900; }
+    .kpi-num      { font-size: 32px; margin-top: 10px; }
+    .bourse-prix  { font-size: 24px; }
+    .duel-num     { font-size: 26px; }
+    .rent-hero-nom{ font-size: 30px; }
+    .tx-carte .tx-nom { font-size: 18px; }
+    .event-day    { font-size: 24px; color: var(--gold); }
     .kpi-num, .bourse-prix, .vd-stat-num, .braq-num, .vd-table td,
     .cd-timer, .duel-num, .rent-val { font-variant-numeric: tabular-nums; }
-    .kpi-num { font-size: 27px; font-weight: 650; margin-top: 10px; }
-    .bourse-prix { font-size: 20px; font-weight: 650; }
-    .duel-num { font-size: 22px; font-weight: 700; }
-    .rent-hero-nom { font-size: 26px; font-weight: 700; }
-    .tx-carte .tx-nom { font-size: 16px; font-weight: 650; }
-    .event-day { font-size: 20px; }
-    .kpi-label, .vd-stat-label, .braq-lbl, .sb-group, .zone-cat, .bar-lbl,
-    .vd-table th, label { letter-spacing: 0.8px; }
+    /* Les petites étiquettes en capitales : espacées, dorées, discrètes. */
+    .kpi-label, .vd-stat-label, .braq-lbl, .sb-group, .zone-cat,
+    .bar-lbl, .vd-table th, label { letter-spacing: 1.5px; }
+    .bloc-t {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 17px; font-weight: 700; letter-spacing: -0.2px;
+    }
 
-    /* ── Cartes : plates, discrètes, coins 10px ── */
+    /* ── 3. LES CARTES ────────────────────────────────────────────────
+       Trois ingrédients donnent le relief : un dégradé très léger du haut
+       vers le bas, un filet doré sur l'arête supérieure, une vraie ombre
+       portée. Une carte plate paraît toujours bon marché. */
     .card, .bloc, .kpi, .goal, .bourse-carte, .zone-carte, .braq-card,
-    .vd-stat, .event-card, .tx-carte, .carte-fiche, .cal-card, .chip {
-      border-radius: 10px; box-shadow: none;
+    .vd-stat, .event-card, .tx-carte, .carte-fiche, .cal-card {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0) 120px),
+        var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 18px 40px -22px rgba(0,0,0,0.9);
     }
-    .kpi::before { display: none; }                      /* halos flous */
-    .kpi { padding: 18px; }
-    .kpi:hover { transform: none; border-color: var(--border2); box-shadow: none; }
-    .bourse-carte.top { background: var(--panel2); border-color: rgba(211,172,104,0.4); }
-    .bourse-carte:hover { transform: none; border-color: var(--border2); }
-    .tx-carte { background: var(--panel); }
-    .tx-carte:hover, .tx-carte:focus-visible { transform: none; border-color: var(--border2); background: var(--panel2); }
-    .rent-hero { background: rgba(51,196,129,0.06); border-color: rgba(51,196,129,0.22); border-radius: 10px; }
-    .card { box-shadow: 0 16px 48px rgba(0,0,0,0.5); border-radius: 12px; }
+    .bloc, .goal { padding: 22px 24px; }
+    .bloc::after, .card::after {
+      content: ''; position: absolute; left: 16px; right: 16px; top: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(227,189,124,0.5), transparent);
+      pointer-events: none;
+    }
+    .bloc, .card { position: relative; }
 
-    /* ── Menu latéral : neutre, précis ── */
-    .sb-nav { background: #0b0c0d; backdrop-filter: none; width: 222px; }
-    .dash { margin-left: 222px; }
-    .sb-logo .t1 { font-size: 13.5px; letter-spacing: 1.4px; }
-    .sb-logo .t2 { color: var(--dim); }
-    .sb-group { font-size: 10px; letter-spacing: 1.1px; }
-    .sb-item { border-radius: 8px; padding: 8px 10px; margin-bottom: 1px; }
+    .kpi { padding: 20px; overflow: hidden; }
+    .kpi::before {                                  /* le halo de couleur revient */
+      display: block; content: ''; position: absolute;
+      top: -58px; right: -48px; width: 156px; height: 156px; border-radius: 50%;
+      filter: blur(44px); opacity: 0.42; background: var(--kc, var(--red));
+      transition: opacity 0.3s ease;
+    }
+    .kpi:hover {
+      transform: translateY(-3px); border-color: var(--border2);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.45), 0 26px 54px -20px rgba(0,0,0,0.95);
+    }
+    .kpi:hover::before { opacity: 0.66; }
+    .bourse-carte:hover, .tx-carte:hover, .tx-carte:focus-visible {
+      transform: translateY(-2px); border-color: var(--border2); background: var(--panel2);
+    }
+    .bourse-carte.top {
+      border-color: rgba(227,189,124,0.45);
+      background: linear-gradient(180deg, rgba(227,189,124,0.10), rgba(227,189,124,0) 130px), var(--panel);
+    }
+    .rent-hero {
+      background: linear-gradient(180deg, rgba(74,217,138,0.12), rgba(74,217,138,0.02) 140px), var(--panel);
+      border-color: rgba(74,217,138,0.3); border-radius: 14px;
+    }
+    .card { box-shadow: 0 26px 70px rgba(0,0,0,0.72); border-radius: 16px; }
+    .chip {
+      background: var(--panel); border: 1px solid var(--border2);
+      border-radius: 999px; font-size: 11.5px;
+    }
+    .chip b { color: var(--gold); }
+
+    /* ── 4. LE MENU LATÉRAL ───────────────────────────────────────────
+       Verre teinté plutôt qu'aplat gris, et l'entrée active reçoit un
+       filet vertical rouge→or : on la repère à la couleur ET à la forme,
+       donc aussi en vision daltonienne. */
+    .sb-nav {
+      width: var(--nav-w);
+      background:
+        linear-gradient(180deg, rgba(163,36,24,0.16), transparent 260px),
+        rgba(15,9,11,0.9);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border-right: 1px solid var(--border);
+      box-shadow: 14px 0 44px -24px rgba(0,0,0,0.95);
+    }
+    .dash { margin-left: var(--nav-w); }
+    .sb-logo .t1 { font-size: 14.5px; letter-spacing: 2.2px; font-weight: 800; }
+    .sb-logo .t1 span { color: var(--red); }
+    .sb-logo .t2 { color: var(--gold); letter-spacing: 2.2px; }
+    .sb-group { font-size: 9.5px; color: var(--dim); }
+    .sb-item { border-radius: 9px; padding: 9px 11px; margin-bottom: 2px; }
+    .sb-item:hover { background: var(--panel2); color: var(--text); }
     .sb-item.active {
-      background: rgba(255,255,255,0.06); color: var(--text);
-      border-color: transparent; box-shadow: none;
+      background: linear-gradient(90deg, rgba(224,80,63,0.22), rgba(224,80,63,0.03));
+      color: #fff; border-color: rgba(224,80,63,0.3); box-shadow: none;
     }
-    .sb-item.active .ico { opacity: 1; color: var(--red); }
+    .sb-item.active::before {
+      content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 3px;
+      border-radius: 999px; background: linear-gradient(180deg, var(--red), var(--gold));
+    }
+    .sb-item.active .ico { opacity: 1; color: var(--gold); }
     .sb-out { color: var(--muted); }
-    .sb-out:hover { color: var(--red); }
+    .sb-out:hover { color: var(--red-soft); }
 
-    /* ── Boutons : casse normale, nets ── */
-    .btn {
-      text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 550;
-      border-radius: 8px; padding: 10px 14px;
+    /* ── 5. LE TITRE DE PAGE ──────────────────────────────────────────
+       Le mot mis en avant passe du rouge à l'or. Si un navigateur ne sait
+       pas dégrader du texte, il retombe simplement sur le rouge. */
+    .dash-head { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .dash-title em {
+      font-style: normal; color: var(--red);
+      background: linear-gradient(100deg, var(--red) 8%, var(--gold-soft) 94%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .btn:hover { background: var(--red); transform: none; }
-    .btn.green:hover { background: #1f8a4d; }
-    .cal-btn, .tx-retour, .file-label, .carte-btn { border-radius: 8px; }
+
+    /* ── 6. LES BOUTONS ───────────────────────────────────────────────
+       Casse normale (plus lisible que les capitales), mais avec de la
+       matière : dégradé, reflet en haut, ombre colorée au survol. */
+    .btn {
+      text-transform: none; letter-spacing: 0.1px; font-size: 13px; font-weight: 600;
+      border-radius: 9px; padding: 11px 17px;
+      background: linear-gradient(180deg, #e0503f, #a32418);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    .btn:hover {
+      background: linear-gradient(180deg, #ec5f4d, #b52a1c);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px -12px rgba(224,80,63,0.85), inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+    .btn.green { background: linear-gradient(180deg, #2fb56a, #1a7642); }
+    .btn.green:hover {
+      background: linear-gradient(180deg, #38c676, #1e8a4d);
+      box-shadow: 0 10px 26px -12px rgba(74,217,138,0.75), inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+    .btn.ghost {
+      background: var(--panel2); border: 1px solid var(--border2); color: var(--text);
+      box-shadow: none;
+    }
+    .btn.ghost:hover { background: var(--panel3); border-color: var(--border3); box-shadow: none; }
+    .btn.danger { background: transparent; border: 1px solid rgba(224,80,63,0.55); color: var(--red); box-shadow: none; }
+    .btn.danger:hover { background: rgba(224,80,63,0.15); box-shadow: none; }
+    .cal-btn, .tx-retour, .file-label, .carte-btn { border-radius: 9px; }
     .file-label { text-transform: none; letter-spacing: 0; font-size: 12.5px; }
-    input, select, textarea { border-radius: 8px; background: #101113; }
+    input, select, textarea { border-radius: 9px; background: var(--panel2); }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--gold); background: var(--panel3);
+      box-shadow: 0 0 0 3px rgba(227,189,124,0.18);
+    }
 
-    /* ── Objectif : barre fine, sans paillettes ── */
-    .goal-bar { height: 6px; border: none; background: rgba(255,255,255,0.07); }
-    .goal-bar > span { background: var(--red); }
-    .goal-bar > span::after { display: none; }           /* reflet animé */
+    /* ── 7. BARRES ET GRAPHIQUES ──────────────────────────────────────
+       Les jauges passent du rouge plat au dégradé rouge→or : on lit la
+       progression même du coin de l'œil. */
+    .goal-bar { height: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); }
+    .goal-bar > span { background: linear-gradient(90deg, var(--red), var(--gold)); }
+    .vd-progress { border: 1px solid var(--border); background: rgba(0,0,0,0.4); height: 8px; }
+    .vd-progress > span { background: linear-gradient(90deg, var(--red), var(--gold)); }
+    .vd-progress.done > span { background: linear-gradient(90deg, #2fb56a, var(--green)); }
+    .bar { background: linear-gradient(180deg, #e0503f, #a32418); border-radius: 5px 5px 2px 2px; }
+    .bar.top1 { background: linear-gradient(180deg, var(--gold-soft), #c39c52); }
+    .bar.done { background: linear-gradient(180deg, #4ad98a, #1a7642); }
+    .rent-barre.plus, .rent-ligne.champion .rent-barre.plus {
+      background: linear-gradient(90deg, #2fb56a, var(--green));
+    }
+    .rent-barre.moins { background: linear-gradient(90deg, var(--red-deep), var(--red)); }
+    .rent-val.plus, .marge.bonne, .ouv-gain { color: var(--green); }
+    .bourse-badge {
+      background: linear-gradient(160deg, var(--gold-soft), #c39c52);
+      color: #241608; letter-spacing: 1.2px; font-weight: 800;
+    }
 
-    /* ── Graphiques : couleurs pleines, pas de dégradés ── */
-    .bar { background: #e5544a; border-radius: 4px 4px 2px 2px; }
-    .bar.top1 { background: #d3ac68; }
-    .bar.done { background: #33c481; }
-    .vd-progress { border: none; background: rgba(255,255,255,0.07); height: 6px; }
-    .vd-progress > span { background: var(--red); }
-    .vd-progress.done > span { background: #33c481; }
-    .rent-barre.plus { background: #33c481; }
-    .rent-ligne.champion .rent-barre.plus { background: #33c481; }
-    .rent-barre.moins { background: #e5544a; }
-    .rent-val.plus { color: #33c481; }
-    .marge.bonne { color: #33c481; }
-    .ouv-gain { color: #33c481; }
-    .bourse-badge { background: rgba(211,172,104,0.16); color: var(--gold); letter-spacing: 0.8px; }
-
-    /* ── Tableaux : denses et lisibles ── */
+    /* ── 8. LES TABLEAUX ──────────────────────────────────────────────
+       On garde la densité gagnée en août — c'était le bon choix — et on
+       réchauffe simplement les en-têtes et la ligne survolée. */
     .vd-table { font-size: 13px; }
-    .vd-table th { font-size: 10.5px; letter-spacing: 0.6px; color: var(--dim); padding: 8px 10px; border-bottom: 1px solid var(--border2); }
-    .vd-table td { padding: 9px 10px; }
-    .vd-table tbody tr { transition: background 0.1s; }
-    .vd-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .vd-table th {
+      font-size: 10px; letter-spacing: 1.5px; color: var(--gold);
+      padding: 10px 11px; border-bottom: 1px solid var(--border2);
+    }
+    .vd-table td { padding: 11px; border-bottom: 1px solid var(--border); }
+    .vd-table tbody tr { transition: background 0.14s ease; }
+    .vd-table tbody tr:hover { background: rgba(227,189,124,0.05); }
 
-    /* ── Détails divers ── */
-    .chip { background: var(--panel); font-size: 11px; }
-    .chip b { color: var(--text); }
-    .avatar-big { border: 1px solid var(--border2); color: var(--muted); }
+    /* ── 9. DÉTAILS ───────────────────────────────────────────────────── */
+    .avatar-big { border: 2px solid var(--border2); color: var(--gold); }
     .event-date { border-color: var(--border2); }
-    .event-day { color: var(--text); }
-    .event-time { color: var(--muted); }
-    .event-type { background: rgba(229,84,74,0.12); }
-    .toast { border-radius: 8px; background: #17442d; border: 1px solid rgba(51,196,129,0.4); }
-    .msg { border-radius: 8px; }
+    .event-time { color: var(--red-soft); }
+    .event-type { background: rgba(224,80,63,0.16); color: var(--red-soft); }
+    .toast {
+      border-radius: 10px; border: 1px solid rgba(74,217,138,0.45);
+      background: linear-gradient(180deg, #24603f, #143b28);
+      box-shadow: 0 24px 60px -24px rgba(0,0,0,0.95);
+    }
+    .msg { border-radius: 9px; }
     .feed::-webkit-scrollbar { width: 8px; }
-    .feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-    .panel.active { animation-duration: 0.2s; }
-    .goal, .bloc { padding: 18px 20px; }
+    .feed::-webkit-scrollbar-thumb { background: rgba(227,189,124,0.18); border-radius: 4px; }
+    .panel.active { animation-duration: 0.34s; }
+    * { scrollbar-color: rgba(227,189,124,0.22) transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(227,189,124,0.18); background-clip: content-box; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(227,189,124,0.34); background-clip: content-box; }
   
     /* ═══ MODE APPLICATION (mobile) : navigation par le bas ═══ */
     #nav-mobile, #nav-plus { display: none; }
