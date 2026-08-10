@@ -1,32 +1,33 @@
-# Ce qu'il te reste à faire — état au 28 juillet
+# Ce qu'il te reste à faire — état au 8 août
 
-Tout le code est déjà écrit et testé. Ces trois chantiers n'attendent que
+Tout le code est déjà écrit et testé. Ces chantiers n'attendent que
 des clics de ta part, parce qu'ils demandent tes mots de passe. Ils sont
 indépendants : tu peux en faire un et t'arrêter là.
 
 ---
 
-## 0 · Activer le choix « accès complet / taxes uniquement » (2 min)
+## 0 · Les quatre nouveautés du 8 août (5 min en tout)
 
-1. Supabase → **SQL Editor** → colle **`acces-comptes.sql`** → **Run**.
-2. Double-clique **`publier.bat`**.
-3. Panneau Admin → **Inscriptions** : chaque ligne a maintenant un menu
-   déroulant. « Tout l'espace membre » ou « Taxes uniquement ».
+Même geste pour les quatre : Supabase → **SQL Editor** → **New query** →
+colle le fichier → **Run**. Puis, une seule fois à la fin, double-clique
+**`publier.bat`** et fais **Ctrl+F5** sur le site.
 
-Les quatre gérants des taxes déjà déclarés basculent automatiquement :
-personne ne perd son accès.
+| Fichier à coller | Ce que ça débloque |
+|---|---|
+| **`acces-comptes.sql`** | Le menu « Tout l'espace membre / Taxes uniquement » sur chaque compte |
+| **`bareme-drogues.sql`** | Le calculateur de vente (produit + pureté + quantité) |
+| **`comptes-details.sql`** | Le pseudo Discord et le nom du personnage dans la liste des inscriptions |
+| **`supprimer-compte.sql`** | Le bouton **Supprimer** définitif sur un compte révoqué |
 
----
+Quelques précisions :
 
-## 0 bis · Activer le calculateur de vente (2 min)
-
-1. Supabase → **SQL Editor** → colle **`bareme-drogues.sql`** → **Run**.
-2. Double-clique **`publier.bat`**.
-3. Espace membre → onglet **Prix drogues** : le calculateur est en haut.
-   Produit + pureté + quantité → ce que ça rapporte, bonus de zone compris.
-
-Quand le serveur change ses prix : **Modifier le barème officiel**, en bas
-du calculateur (visible seulement par toi).
+- Les quatre gérants des taxes déjà déclarés basculent automatiquement :
+  personne ne perd son accès.
+- Quand le serveur change ses prix : **Modifier le barème officiel**, en bas
+  du calculateur (visible seulement par toi).
+- Le bouton **Supprimer** n'apparaît que sur un compte dont l'accès est déjà
+  révoqué, et la suppression est définitive. Les photos de la galerie du
+  membre supprimé sont conservées.
 
 ---
 

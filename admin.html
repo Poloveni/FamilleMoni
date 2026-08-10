@@ -134,6 +134,18 @@
     /* Repère visuel : un compte limité aux taxes se voit d'un coup d'œil. */
     .insc-row.limite { border-color: rgba(212,178,110,0.5); }
 
+    /* La suppression définitive : volontairement discrète. On la trouve
+       quand on la cherche, on ne la clique pas par mégarde. */
+    .insc-suppr {
+      padding: 11px 15px; font-size: 12px;
+      background: transparent; border: 1px solid var(--border2); color: var(--dim);
+      box-shadow: none;
+    }
+    .insc-suppr:hover {
+      background: rgba(192,57,43,0.14); border-color: rgba(192,57,43,0.55); color: #ff9084;
+      box-shadow: none;
+    }
+
     /* ── La barre du haut : compteur, recherche, rafraîchir ─────────────── */
     .insc-outils { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .insc-outils input { margin-bottom: 0; width: 268px; padding: 10px 13px; font-size: 13px; }
@@ -338,6 +350,14 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  // Prépare un texte destiné à un onclick="maFonction('ici')" : on neutralise
+  // d'abord les caractères qui casseraient la chaîne JavaScript, puis ceux qui
+  // casseraient l'attribut HTML. Un nom contenant une apostrophe (« O'Neil »)
+  // ou du code passe alors sans danger.
+  function escJS(s) {
+    return escHTML(String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+  }
+
   const SB = (window.supabase && window.SUPABASE_URL)
     ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY) : null;
 
@@ -524,7 +544,32 @@
         '</select>' +
         '<button class="btn ' + (c.approuve ? 'danger' : 'green') + '" style="padding:11px 16px;" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' +
           (c.approuve ? 'Révoquer' : 'Approuver') + '</button>' +
+        // La suppression définitive n'apparaît que sur un compte sans accès :
+        // impossible de faire disparaître quelqu'un d'actif d'un clic de trop.
+        (c.approuve ? '' :
+          '<button class="btn insc-suppr" title="Supprimer définitivement ce compte" ' +
+            'onclick="supprimerCompte(\'' + id + '\', \'' + escJS(c.nom || email) + '\')">Supprimer</button>') +
       '</div></div>';
+  }
+
+  // Supprime le compte pour de bon : connexion, profil, photo, abonnements.
+  // La base applique ses propres garde-fous — ce n'est pas le navigateur qui
+  // décide, une page trafiquée n'obtiendrait rien de plus.
+  async function supprimerCompte(id, qui) {
+    if (!confirm('Supprimer définitivement le compte de ' + qui + ' ?\n\n' +
+                 'Sa connexion, sa fiche de profil et sa photo seront effacées.\n' +
+                 'Ses photos de la galerie sont conservées.\n\n' +
+                 'Cette action est irréversible.')) return;
+    const { data, error } = await SB.rpc('supprimer_compte', { p_id: id });
+    if (error) {
+      showToast(/supprimer_compte/i.test(error.message)
+        ? "Fonction absente : exécute supprimer-compte.sql dans Supabase."
+        : 'Suppression refusée : ' + error.message);
+      return;
+    }
+    showToast('Compte supprimé' + (data ? ' : ' + data : '') + '.');
+    renderInscriptions();
+    updateDashLive();
   }
 
   async function setApprouve(id, val) {
