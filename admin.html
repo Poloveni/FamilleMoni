@@ -560,6 +560,18 @@
                  'Sa connexion, sa fiche de profil et sa photo seront effacées.\n' +
                  'Ses photos de la galerie sont conservées.\n\n' +
                  'Cette action est irréversible.')) return;
+
+    // La photo de profil part par le chemin officiel de Supabase : depuis
+    // 2026, les fichiers ne peuvent plus être effacés en SQL. Si cette étape
+    // échoue, on continue quand même — l'essentiel est que le compte parte,
+    // et une photo orpheline ne donne accès à rien.
+    try {
+      const { data: fichiers } = await SB.storage.from('photos').list(id);
+      if (fichiers && fichiers.length) {
+        await SB.storage.from('photos').remove(fichiers.map(f => id + '/' + f.name));
+      }
+    } catch (e) { console.warn('[suppression] photo non retirée :', e); }
+
     const { data, error } = await SB.rpc('supprimer_compte', { p_id: id });
     if (error) {
       showToast(/supprimer_compte/i.test(error.message)

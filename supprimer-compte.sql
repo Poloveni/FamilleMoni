@@ -67,12 +67,12 @@ begin
   --    (le reste part tout seul en cascade avec auth.users)
   delete from public.push_abonnements where user_id = p_id;
 
-  -- La photo de profil, rangée dans le dossier « photos/<identifiant>/ ».
-  -- Les photos de la galerie ne sont PAS touchées : elles appartiennent
+  -- La photo de profil n'est PAS effacée ici : Supabase interdit de toucher
+  -- aux fichiers depuis le SQL (« Direct deletion from storage tables is not
+  -- allowed »). C'est le panneau Admin qui la retire juste avant, par le
+  -- chemin officiel. La règle de sécurité qui l'y autorise est plus bas.
+  -- Les photos de la galerie ne sont jamais touchées : elles appartiennent
   -- à la famille, pas au compte.
-  delete from storage.objects
-   where bucket_id = 'photos'
-     and name like p_id::text || '/%';
 
   -- ── Le compte lui-même. Emporte avec lui, en cascade : comptes,
   --    profils, participations, déclarations, imports et sessions.
@@ -85,7 +85,22 @@ revoke all on function public.supprimer_compte(uuid) from public, anon;
 grant execute on function public.supprimer_compte(uuid) to authenticated;
 
 comment on function public.supprimer_compte(uuid) is
-  'Supprime définitivement un compte révoqué (profil, photo, push, données liées). Réservé à syne@live.fr.';
+  'Supprime définitivement un compte révoqué (profil, push, données liées). Réservé à syne@live.fr.';
+
+
+-- ── L'administratrice peut retirer la photo de profil d'un membre ─────────
+--    Sans cette règle, le dossier « photos/<identifiant>/ » resterait en
+--    ligne après la suppression du compte. Personne d'autre ne peut effacer
+--    la photo de quelqu'un : un membre ne touche qu'à la sienne.
+drop policy if exists "Photo profil suppression admin" on storage.objects;
+create policy "Photo profil suppression admin" on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'photos'
+    and (
+      (auth.jwt() ->> 'email') = 'syne@live.fr'
+      or (storage.foldername(name))[1] = auth.uid()::text
+    )
+  );
 
 
 -- ============================================================================
