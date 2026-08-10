@@ -33,21 +33,30 @@ window.MONI_RANGS = [
   { nom: 'Associati',      color: '#8e8e8e', desc: 'Associés — Membres' }
 ];
 
-// Liste officielle des membres (nom -> rang). — Mise à jour 05/08/2026
+// Liste officielle des membres (nom -> rang). — Mise à jour 08/08/2026
 // Source : aperçu des membres du bot Discord.
+//
+// Changements du 08/08/2026 :
+//   • James Davis rejoint la famille (Associati)
+//   • Juan Malbi quitte la famille
+//   • Javier Cruz Silva promu Fedeli → Anziani
+//
+// Rappel : le bot affiche DEUX « Javier Silva ». Sur le site, celui dont
+// l'identifiant Discord figure dans MONI_NOM_FIX ci-dessus s'appelle
+// « Javier Cruz Silva » — sans quoi les deux se confondraient partout.
 window.MONI_MEMBRES = [
   { nom: 'Lov Moni',           rang: 'La Donna' },
   { nom: 'Raymond Carter',     rang: 'Braccio Destro' },
   { nom: 'Ezio Spallow',       rang: 'Anziani' },
+  { nom: 'Javier Cruz Silva',  rang: 'Anziani' },
   { nom: 'James Mendoza',      rang: 'Baroni' },
   { nom: 'Javier Silva',       rang: 'Baroni' },
   { nom: 'Bass Carter',        rang: 'Fedeli' },
   { nom: 'Dayon Reas',         rang: 'Fedeli' },
-  { nom: 'Javier Cruz Silva',  rang: 'Fedeli' },
   { nom: 'Oscar Santo',        rang: 'Fedeli' },
   { nom: 'Tommy Dane',         rang: 'Fedeli' },
   { nom: 'Gustavo Cardoso',    rang: 'Associati' },
-  { nom: 'Juan Malbi',         rang: 'Associati' },
+  { nom: 'James Davis',        rang: 'Associati' },
   { nom: 'Tiago Rodrigues',    rang: 'Associati' },
   { nom: 'Valentino Romano',   rang: 'Associati' },
   { nom: 'Valerio Moncini',    rang: 'Associati' },
