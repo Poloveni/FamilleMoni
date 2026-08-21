@@ -2833,6 +2833,34 @@
     return n(a) === n(b);
   }
 
+  /* ══ FRAÎCHEUR DES BONUS DE ZONE ══════════════════════════════════════
+     Les zones et leurs bonus changent chaque semaine en jeu. Un relevé
+     vieux de plusieurs jours n'est plus une information : c'est un piège.
+     Le site conseillerait de vendre dans une zone que la famille ne tient
+     peut-être plus, et le classement de rentabilité serait faux.
+
+     Passé le délai ci-dessous, on considère qu'on ne SAIT PAS : aucun bonus
+     n'est appliqué nulle part, et un message explique pourquoi. Dès que le
+     bot recommence à relever, tout se réactive tout seul — il n'y a rien à
+     faire à la main.
+     ══════════════════════════════════════════════════════════════════════ */
+  const ZONES_VALIDITE_H = 72;          // 3 jours
+  let zonesPerimees = null;             // { le, jours } quand le relevé est trop vieux
+
+  function zonesFraiches(lignes) {
+    zonesPerimees = null;
+    const l = lignes || [];
+    if (!l.length) return [];
+    const dernier = l.reduce((m, z) => (!m || z.ts > m) ? z.ts : m, null);
+    if (!dernier) return l;
+    const heures = (Date.now() - new Date(dernier).getTime()) / 3600000;
+    if (heures > ZONES_VALIDITE_H) {
+      zonesPerimees = { le: dernier, jours: Math.max(1, Math.round(heures / 24)) };
+      return [];
+    }
+    return l;
+  }
+
   /* Le meilleur bonus applicable à un produit, toutes zones confondues.
      Un seul endroit dans le fichier calcule ce bonus : le classement de
      rentabilité et le calculateur de vente affichent donc forcément le même
@@ -3078,6 +3106,30 @@
   function rendreZones(lignes) {
     const bloc = document.getElementById('bloc-zones');
     const box = document.getElementById('bd-zones');
+    const majEl0 = document.getElementById('zones-maj');
+
+    // Relevé trop ancien : on le dit franchement plutôt que de faire
+    // disparaître le bloc sans explication — un membre pourrait croire que
+    // la famille n'a aucun bonus alors qu'on n'en sait simplement rien.
+    if ((!lignes || !lignes.length) && zonesPerimees) {
+      bloc.style.display = '';
+      const d = new Date(zonesPerimees.le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      if (majEl0) majEl0.textContent = ' · information périmée';
+      box.innerHTML =
+        '<div class="locked" style="line-height:1.75;">' +
+          '<b style="color:var(--amber);">Les bonus de zone ne sont plus à jour.</b><br>' +
+          'Le dernier relevé du bot date du <b>' + escT(d) + '</b>, il y a environ ' +
+          zonesPerimees.jours + ' jours. Les zones changent chaque semaine : ces chiffres ' +
+          'ne veulent plus rien dire.<br><br>' +
+          'Par sécurité, <b>aucun bonus de zone n\'est appliqué</b> pour l\'instant — ' +
+          'ni dans le classement de rentabilité, ni dans le calculateur, ni sur la carte. ' +
+          'Les prix affichés sont donc les prix de base, sans bonus.<br><br>' +
+          '<span class="hint">Tout se réactivera tout seul dès que le bot recommencera à ' +
+          'relever les zones. Rien à faire de ton côté.</span>' +
+        '</div>';
+      return;
+    }
+
     if (!lignes || !lignes.length) { bloc.style.display = 'none'; return; }
     bloc.style.display = '';
 
@@ -3744,7 +3796,7 @@
           '<label>Quantité<input type="number" id="calc-qte" min="0" max="100000" step="1" value="10" inputmode="numeric" oninput="calcVente()" /></label>' +
         '</div>' +
         '<label class="calc-check"><input type="checkbox" id="calc-zone" checked onchange="calcVente()" />' +
-          'Vendre dans la zone la plus avantageuse du moment</label>' +
+          '<span id="calc-zone-txt">Vendre dans la zone la plus avantageuse du moment</span></label>' +
         '<div class="kpis" id="calc-res" style="margin-top:18px;margin-bottom:0;"></div>' +
         '<div id="calc-comp" style="margin-top:20px;"></div>' +
         '<div id="calc-admin-zone"></div>';
@@ -3760,6 +3812,20 @@
     const majEl = document.getElementById('calc-maj');
     if (majEl && maj) majEl.textContent = ' · barème du ' +
       new Date(maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    // Bonus de zone périmés : la case n'a plus de sens, on la neutralise
+    // plutôt que de laisser croire à un calcul plus précis qu'il ne l'est.
+    const zCase = document.getElementById('calc-zone');
+    const zTxt = document.getElementById('calc-zone-txt');
+    if (zCase && zonesPerimees) {
+      zCase.checked = false;
+      zCase.disabled = true;
+      if (zTxt) zTxt.innerHTML = 'Bonus de zone indisponibles — le relevé du bot est trop ancien ' +
+        '<span class="hint">(explication dans « Le détail de toutes les zones », plus bas)</span>';
+    } else if (zCase) {
+      zCase.disabled = false;
+      if (zTxt) zTxt.textContent = 'Vendre dans la zone la plus avantageuse du moment';
+    }
 
     majPuretes();
     calcVente();
@@ -3966,7 +4032,10 @@
     } else {
       rendreBourse(bourseQ.data || []);
     }
-    if (!zonesQ.error) rendreZones(zonesQ.data || []);
+    // Un seul filtrage, ici : tout ce qui suit (classement de rentabilité,
+    // plan du moment, calculateur) travaille sur des bonus vérifiés récents.
+    const zonesLignes = zonesQ.error ? [] : zonesFraiches(zonesQ.data || []);
+    rendreZones(zonesLignes);
     rendreAlertes(bourseQ.data || []);
     if (!window.__bourseLive) {
       window.__bourseLive = sb.channel('bourse-live')
@@ -3999,9 +4068,9 @@
     // Le dernier relevé de CHAQUE zone, calculé une seule fois : le classement
     // de rentabilité et le calculateur de vente s'appuient dessus tous les deux.
     const zonesDernieres = [];
-    if (!zonesQ.error) {
+    if (zonesLignes.length) {
       const derniereZone = {};
-      (zonesQ.data || []).forEach(z => {
+      zonesLignes.forEach(z => {
         const cle = z.categorie + '§' + z.zone;
         const d = derniereZone[cle];
         if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniereZone[cle] = z;
@@ -4192,10 +4261,11 @@
       return;
     }
 
-    // Dernier relevé de chaque zone, rangé par nom de zone.
+    // Dernier relevé de chaque zone, rangé par nom de zone. Même règle de
+    // fraîcheur qu'ailleurs : un relevé périmé ne colore plus la carte.
     carteZones = {};
     const derniers = {};
-    ((zonesQ && zonesQ.data) || []).forEach(z => {
+    zonesFraiches((zonesQ && zonesQ.data) || []).forEach(z => {
       const cle = z.categorie + '§' + z.zone;
       const d = derniers[cle];
       if (!d || z.ts > d.ts || (z.ts === d.ts && (z.id || 0) > (d.id || 0))) derniers[cle] = z;
