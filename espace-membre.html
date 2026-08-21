@@ -1954,7 +1954,27 @@
     fleeca: 'Fleeca', braq_armurerie: 'Braq. armurerie', bijouterie: 'Bijouterie', pinebank: 'Pinebank',
     labo_heroine: 'Labo héroïne', labo_sporex: 'Labo SporeX'
   };
-  const BD_DROGUES = ['cannabis', 'carte prépayée', 'b-magic', 'pochon de mexicana', 'ecstasy', 'tranq', 'cocaïne'];
+  /* Ce qui, dans le coffre, n'est PAS un produit à vendre : l'argent et le
+     matériel de braquage.
+
+     On raisonne à l'envers de l'ancienne version, qui énumérait les drogues
+     une par une. Dès que le serveur en ajoutait une — la cocaïne purifiée,
+     les psilocybes — elle restait invisible dans le graphique ET disparaissait
+     du total « drogue à vendre ». Ici, tout ce qui n'est pas listé ci-dessous
+     compte comme produit vendable : une nouvelle drogue apparaît toute seule,
+     sans que personne ait à toucher au code.
+
+     Si le serveur ajoute un jour un nouvel OUTIL de braquage, c'est lui qu'il
+     faudra ajouter à cette liste. */
+  const BD_NON_DROGUES = [
+    'argent', 'argent sale',
+    'munitions de pistolet', 'poudre à canon', 'fragment de métal',
+    'outil de crochettage', 'perceuse', 'boîtier de piratage', 'carte piratage fleeca'
+  ];
+  // Comparaison tolérante aux accents et à la casse, comme partout ailleurs.
+  function estDrogue(item) {
+    return !BD_NON_DROGUES.some(x => memeProduit(x, item));
+  }
   const DONUT_COLORS = ['#e0503f', '#d4b26e', '#2ecc71', '#5865f2', '#faa61a', '#9b59b6', '#1abc9c'];
 
   // ══ MOTEUR GRAPHIQUE CANVAS ══
@@ -2288,7 +2308,13 @@
     const nbMembres = Math.max((mapping.data || []).length, ids.length);
     const st = {};
     (stocks.data || []).forEach(s => { st[s.item] = s.quantite || 0; });
-    const drogueTotal = BD_DROGUES.reduce((t, d) => t + (st[d] || 0), 0);
+    // Toutes les drogues réellement présentes au coffre, la plus fournie
+    // d'abord. Le total ci-dessous alimente la tuile « Drogue à vendre ».
+    const droguesStock = (stocks.data || [])
+      .filter(s => estDrogue(s.item) && (Number(s.quantite) || 0) > 0)
+      .map(s => ({ nom: cap(s.item), val: Number(s.quantite) || 0 }))
+      .sort((a, b) => b.val - a.val);
+    const drogueTotal = droguesStock.reduce((t, d) => t + d.val, 0);
 
     // ── VUE D'ENSEMBLE : KPIs ──
     countUp(document.getElementById('kpi-ventes'), totalVentes);
@@ -2330,7 +2356,15 @@
 
     // ── Graphique : donut du stock de drogue ──
     const chartD = document.getElementById('chart-drogue');
-    const parts = BD_DROGUES.map(d => ({ nom: cap(d), val: st[d] || 0 })).filter(p => p.val > 0).sort((a, b) => b.val - a.val);
+    // Au-delà de sept tranches l'anneau devient illisible : les plus petites
+    // sont regroupées sous « Autres ». Le chiffre au centre, lui, reste le
+    // total complet — on ne cache jamais des unités.
+    const parts = droguesStock.length > 7
+      ? droguesStock.slice(0, 6).concat([{
+          nom: 'Autres (' + (droguesStock.length - 6) + ' produits)',
+          val: droguesStock.slice(6).reduce((t, d) => t + d.val, 0)
+        }])
+      : droguesStock;
     if (!parts.length) chartD.innerHTML = '<div class="locked">Aucune drogue en stock actuellement.</div>';
     else drawDonut(chartD, parts);
 
