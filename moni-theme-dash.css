@@ -35,9 +35,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 /* ── Formulaires ── */
 label { font-family: var(--caps); font-size: 10px; letter-spacing: .22em; color: var(--ink2); }
-input, select, textarea { font-family: var(--body); font-size: 16px; background: rgba(0,0,0,.35); border-color: var(--border2); }
-input:focus, select:focus, textarea:focus { border-color: var(--gold-hard); background: rgba(0,0,0,.45); box-shadow: 0 0 0 3px rgba(255,255,255,.14); }
-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d6d6db' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+input, select, textarea { font-family: var(--body); font-size: 16px; background-color: rgba(0,0,0,.35); border-color: var(--border2); }
+input:focus, select:focus, textarea:focus { border-color: var(--gold-hard); background-color: rgba(0,0,0,.45); box-shadow: 0 0 0 3px rgba(255,255,255,.14); }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d6d6db' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
 
 /* ── Boutons ── */
 .btn {
