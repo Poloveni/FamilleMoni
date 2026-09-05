@@ -50,7 +50,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://gc.zgo.at" />
   <link rel="preload" as="image" href="hero-bg.webp" fetchpriority="high" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,700;0,900;1,900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -981,12 +981,14 @@
       .footer-inner { grid-template-columns: 1fr; gap: 28px; }
     }
   </style>
+  <link rel="stylesheet" href="moni-theme.css?v=1">
   <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="supabase-config.js"></script>
 </head>
 <body>
+<div class="moni-grain" aria-hidden="true"></div>
 
 <div id="progress-bar" style="position:fixed;top:0;left:0;height:2px;width:0%;background:var(--red);z-index:9999;transition:width 0.1s linear;box-shadow:0 0 8px rgba(192,57,43,0.8);"></div>
 <button id="back-to-top" aria-label="Retour en haut" title="Retour en haut">&#8593;</button>
@@ -1020,7 +1022,7 @@
   <div class="hero-content">
     <a href="https://flashbackfa.fr/" target="_blank" rel="noopener noreferrer" class="hero-tag">
       <img src="logo-48.jpg" alt="" width="24" height="24" decoding="async">
-      Flashback FA &mdash; GTA RP
+      Flashback FA &middot; Roxwood &middot; Depuis Palerme
     </a>
     <h1>La Famille<br><em>Moni</em></h1>
     <p class="hero-sub typing-text" id="hero-sub-text" style="min-height:3.5em;">Née de la Famiglia Moncini d'Italie, la famille Moni bâtit à Roxwood l'empire discret que son père a laissé derrière lui.</p>
@@ -1029,7 +1031,7 @@
       <a href="#membres" class="btn-ghost">Les membres</a>
     </div>
   </div>
-  <div class="hero-photos" id="hero-photos"></div>
+  <div class="hero-photos" id="hero-photos"><div class="hero-stamp" aria-hidden="true">Famiglia<br>Moncini<br>&middot; Roxwood &middot;</div></div>
 </section>
 
 <div class="stats-bar">
@@ -1042,17 +1044,23 @@
 <section id="histoire">
   <div class="section-label">Notre origine</div>
   <div class="histoire-inner reveal">
-    <div class="histoire-text">
+    <div>
       <h2 class="section-title">L'histoire de la <em>Famille Moni</em></h2>
-      <p>Avant son arrivée à Los Santos, la famille Moni se prénommait <strong style="color:var(--text)">Famiglia Moncini</strong>, et était reconnue à travers toute l'Italie. À sa tête se trouvait le Don Gianni Moncini, qui dirigeait la famille sur des principes traditionnels tels que l'honneur et la loyauté.</p>
+    <div class="histoire-text paper">
+      <div class="paper-head">Dossier n° 13 &mdash; Famiglia Moncini <small>Palerme &rarr; Los Santos &rarr; Roxwood</small></div>
+      <p>Avant son arrivée à Los Santos, la famille Moni se prénommait <strong>Famiglia Moncini</strong>, et était reconnue à travers toute l'Italie. À sa tête se trouvait le Don Gianni Moncini, qui dirigeait la famille sur des principes traditionnels tels que l'honneur et la loyauté.</p>
       <p>Un soir, tout bascule lorsque Vitelli, son frère d'arme, qui nourrissait en secret une immense rancœur depuis des années, le trahit. Gianni, suspicieux, décide d'exfiltrer ses enfants vers Los Santos auprès d'un vieil ami, avant de mourir des mains de ses ennemis. Rosalia, son enfant la plus âgée, se voit contrainte de s'enfuir accompagnée de ses frères et sœurs.</p>
-      <p>Arrivés sur Los Santos, Raymond Carter, qui avait connu Gianni des années auparavant, les aide à changer de vie. Très attachés à leur nom de famille, ils en conservent la base pour se créer leur nouvelle identité. Moncini Rosalia devient alors <strong style="color:var(--text)">Moni Lov</strong>, et reprend les rênes de la famille.</p>
+      <p>Arrivés sur Los Santos, Raymond Carter, qui avait connu Gianni des années auparavant, les aide à changer de vie. Très attachés à leur nom de famille, ils en conservent la base pour se créer leur nouvelle identité. Moncini Rosalia devient alors <strong>Moni Lov</strong>, et reprend les rênes de la famille.</p>
       <div class="histoire-quote">« Bâtir à Los Santos ce que son père a auparavant bâti en Italie : un empire discret mais mémorable. »</div>
     </div>
+    </div>
+    <div class="evidence">
     <picture>
       <source srcset="histoire.webp" type="image/webp">
       <img src="histoire.jpg" alt="L'histoire de la Famille Moni — de la Famiglia Moncini d'Italie à Roxwood" loading="lazy" decoding="async" width="1920" height="1080" style="width:100%; height:auto; border: 1px solid var(--border); display: block;">
     </picture>
+    <div class="evidence-tag">Pièce à conviction</div>
+    </div>
   </div>
 </section>
 
@@ -1096,6 +1104,7 @@
     <div class="regle-item"><div class="regle-num">05</div><p><strong>Roxwood est sacré.</strong> On ne s'attaque pas à notre propre quartier.</p></div>
     <div class="regle-item"><div class="regle-num">06</div><p><strong>RP sérieux uniquement.</strong> On joue le jeu, on reste dans le personnage.</p></div>
   </div>
+  <div class="seal" aria-hidden="true"><div>M</div></div>
 </section>
 
 <section id="membres">
@@ -1743,12 +1752,12 @@
   ];
   // Emplacements pré-réglés (position, inclinaison, largeur) — jusqu'à 6 photos
   const HERO_SLOTS = [
-    { pos: "right:3%;",   top: "24%", rot: 5,  w: 178 },
-    { pos: "left:2.5%;",  top: "15%", rot: -7, w: 168 },
-    { pos: "right:7%;",   top: "6%",  rot: -4, w: 150 },
-    { pos: "left:5.5%;",  top: "50%", rot: 6,  w: 162 },
-    { pos: "right:10%;",  top: "54%", rot: 8,  w: 148 },
-    { pos: "left:9%;",    top: "5%",  rot: 4,  w: 142 },
+    { pos: "right:0;",    top: "0",   rot: 5,  w: 200 },
+    { pos: "left:0;",     top: "6%",  rot: -7, w: 190 },
+    { pos: "left:30%;",   top: "38%", rot: -2, w: 230 },
+    { pos: "right:2%;",   top: "46%", rot: 6,  w: 175 },
+    { pos: "left:0;",     top: "64%", rot: 4,  w: 170 },
+    { pos: "right:22%;",  top: "74%", rot: -5, w: 165 },
   ];
   (function initHeroPhotos() {
     const wrap = document.getElementById('hero-photos');
@@ -1757,7 +1766,7 @@
       const s = HERO_SLOTS[i % HERO_SLOTS.length];
       const fig = document.createElement('figure');
       fig.className = 'hero-photo';
-      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + (p.w || s.w) + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
+      fig.style.cssText = s.pos + 'top:' + s.top + ';--rot:' + s.rot + 'deg;--pw:' + s.w + 'px;animation-delay:' + (0.4 + i * 0.5) + 's;';
       fig.innerHTML = '<img src="' + p.src + '" alt="' + (p.caption || '') + '" loading="lazy" decoding="async">' +
         (p.caption ? '<figcaption class="cap">' + p.caption + '</figcaption>' : '');
       fig.addEventListener('click', () => openLightbox(HERO_PHOTOS, i));
