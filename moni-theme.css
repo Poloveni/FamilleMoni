@@ -75,7 +75,7 @@ nav::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height
               linear-gradient(to bottom, rgba(11,10,10,.5), transparent 30%);
 }
 .hero-grid, .hero-glow { display: none; }
-#particles-canvas { opacity: .45; }
+#particles-canvas { opacity: .35; filter: grayscale(1); -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%); mask-image: linear-gradient(to bottom, #000 55%, transparent 100%); }
 .hero-content { max-width: 620px; width: 52%; }
 .hero-tag {
   font-family: var(--caps); font-size: 11px; letter-spacing: .34em; color: var(--gold);
@@ -108,7 +108,8 @@ h1 em::after { display: none; }
 @media (max-width: 1200px) { .hero-content { width: auto; } }
 
 /* ── Bandeau chiffres ── */
-.stats-bar {
+.stats-bar { display: none; }
+.stats-bar--x {
   position: relative; z-index: 3; margin: -40px auto 0; max-width: 1180px; gap: 0; padding: 0;
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
   background: linear-gradient(180deg, #18181b, #0f0f11);
@@ -120,7 +121,8 @@ h1 em::after { display: none; }
 .stat-num { font-family: var(--serif); font-size: 44px; font-weight: 900; color: var(--gold); letter-spacing: 0; }
 .stat-label { font-family: var(--caps); font-size: 10px; letter-spacing: .3em; color: var(--ink2); margin-top: 8px; }
 @media (max-width: 640px) {
-  .stats-bar { margin-top: 0; }
+  .stats-bar { display: none; }
+.stats-bar--x { margin-top: 0; }
   .stat:nth-child(2) { border-right: 0 !important; }
   .stat:nth-child(3) { border-right: 1px solid var(--line) !important; border-top: 1px solid var(--line) !important; }
   .stat:nth-child(4) { border-top: 1px solid var(--line) !important; }
@@ -128,7 +130,7 @@ h1 em::after { display: none; }
 
 /* ── Sections ── */
 section { padding: 110px max(32px, calc((100% - 1180px) / 2)); }
-#histoire, #regles, #recrutement, #qg, #discord, #membres, #galerie, #evenements, #contact { background: var(--noir); }
+#histoire, #regles, #recrutement, #qg, #discord, #membres, #galerie, #contact { background: var(--noir); }
 #valeurs, #recrutement, #evenements, #contact {
   background: linear-gradient(180deg, #0e0e10, #131010 50%, #0e0e10);
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
