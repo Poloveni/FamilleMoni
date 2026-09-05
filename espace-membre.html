@@ -1831,10 +1831,9 @@
       sb.rpc('peut_importer_taxes').then(({ data, error }) => {
         if (error) { console.warn('[import] vérification impossible :', error.message); return; }
         blocImport.style.display = data === true ? '' : 'none';
-        // Le panneau Taxes ne contient que l'import : inutile de montrer
-        // l'entrée du menu à ceux qui n'y ont pas droit.
-        const sbTaxes = document.getElementById('sb-taxes');
-        if (sbTaxes) sbTaxes.style.display = (data === true || modeGerantTaxes) ? '' : 'none';
+        // Le panneau Taxes (liste des taxes, lisible par toute la famille
+        // approuvée) reste dans le menu pour tout le monde ; seul l'import
+        // Excel ci-dessus est réservé aux administrateurs.
       });
     }
 
