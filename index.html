@@ -1319,6 +1319,9 @@
           '<div class="rang-badge">' + romans[i] + '</div>' +
           '<div class="rang-info"><div class="rang-name">' + escHTML(r.nom) + '</div><div class="rang-desc">' + escHTML(r.desc) + '</div></div></div>';
       }).join('');
+      // Si l'animation d'apparition a déjà eu lieu, les nouvelles lignes
+      // s'affichent tout de suite au lieu de rester invisibles.
+      if (hier.classList.contains('visible-timeline')) hier.querySelectorAll('.hierarchie-item').forEach(function (it) { it.classList.add('visible-item'); });
     }
 
     // Cartes des membres (triées par rang, puis par nom)
@@ -1522,12 +1525,13 @@
 
   // ── TIMELINE HIÉRARCHIE ──
   const hierList = document.querySelector('.hierarchie-list');
-  const hierItems = document.querySelectorAll('.hierarchie-item');
   const hierObs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         hierList.classList.add('visible-timeline');
-        hierItems.forEach((item, i) => {
+        // Lus au moment de l'apparition : la liste peut avoir été
+        // régénérée depuis Supabase après le chargement de la page.
+        hierList.querySelectorAll('.hierarchie-item').forEach((item, i) => {
           setTimeout(() => item.classList.add('visible-item'), i * 80);
         });
         hierObs.unobserve(entry.target);
