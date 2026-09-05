@@ -919,6 +919,15 @@
     .al-item:last-child { border-bottom: none; }
     .al-suppr { margin-left: auto; background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 7px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 11px; }
     .al-suppr:hover { color: var(--red); border-color: var(--red); }
+    /* ── Hiérarchie (panneau admin) ── */
+    .hier-add { display: grid; grid-template-columns: 1fr 200px auto; gap: 10px; margin-bottom: 18px; }
+    .hier-add input, .hier-add select { margin: 0; }
+    .hier-table input, .hier-table select { margin: 0; padding: 8px 10px; font-size: 14px; }
+    .hier-table td:last-child { white-space: nowrap; text-align: right; }
+    .hier-table .btn { padding: 8px 14px; font-size: 10.5px; margin-left: 6px; }
+    .hier-table tr.is-dirty td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+    .hier-rang-pill { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+    @media (max-width: 640px) { .hier-add { grid-template-columns: 1fr; } }
   </style>
   <link rel="stylesheet" href="moni-theme-dash.css?v=2" />
 </head>
@@ -993,6 +1002,7 @@
     <button type="button" class="sb-item req-approve" data-panel="chronique" data-sub="Le récit de la semaine écoulée, écrit depuis les archives du bot." data-title="La &lt;em&gt;chronique&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M5 4v13a3 3 0 003 3"/><path d="M9.5 9h6M9.5 13h6"/></svg></span><span class="lbl">Chronique</span></button>
     <button type="button" class="sb-item req-approve" data-panel="carte" data-sub="Le territoire : QG, planques et zones avec leurs bonus." data-title="La &lt;em&gt;carte&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L4 6v14l5-2 6 2 5-2V4l-5 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span class="lbl">Carte</span></button>
     <button type="button" class="sb-item" data-panel="galerie" data-sub="Tes screens partent dans la galerie du site public." data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.8 6.5l1.2-2.3h4l1.2 2.3"/></svg></span><span class="lbl">Galerie</span></button>
+    <button type="button" class="sb-item req-approve" id="sb-hierarchie" data-panel="hierarchie" data-sub="Les membres et leurs rangs, tels qu'ils apparaissent sur le site public." data-title="La &lt;em&gt;hiérarchie&lt;/em&gt;" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4.5"/><rect x="3" y="16.5" width="6" height="4.5"/><rect x="15" y="16.5" width="6" height="4.5"/><path d="M12 7.5v4M6 16.5v-3h12v3"/></svg></span><span class="lbl">Hiérarchie</span></button>
 
     <div class="sb-group req-approve">Le business</div>
     <button type="button" class="sb-item req-approve" data-panel="prix" data-sub="Le cours du bot, tes prix d'achat, et ce qui rapporte le plus." data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 3.5H20v8.5l-8.7 8.7a1.5 1.5 0 01-2.1 0l-6.4-6.4a1.5 1.5 0 010-2.1z"/><circle cx="16.3" cy="7.7" r="1.2"/></svg></span><span class="lbl">Prix drogues</span></button>
@@ -1334,6 +1344,25 @@
     </div>
 
     <!-- GALERIE -->
+    <div class="panel" id="panel-hierarchie">
+      <div class="bloc">
+        <div class="bloc-t">Les membres <small id="hier-count"></small></div>
+        <p class="hint" style="margin-bottom:14px;">Change un rang, corrige un nom ou retire quelqu'un : la page d'accueil (organigramme et hiérarchie) se met à jour immédiatement, sans rien publier.</p>
+        <div class="hier-add">
+          <input type="text" id="hier-new-nom" placeholder="Prénom Nom du nouveau membre" autocomplete="off" />
+          <select id="hier-new-rang"></select>
+          <button class="btn" type="button" onclick="hierAjouter()">Ajouter</button>
+        </div>
+        <div style="overflow-x:auto;"><table class="vd-table hier-table"><thead><tr><th>Membre</th><th>Rang</th><th></th></tr></thead><tbody id="hier-rows"><tr><td colspan="3" class="hint">Chargement…</td></tr></tbody></table></div>
+        <div class="msg" id="hier-msg"></div>
+      </div>
+      <div class="bloc">
+        <div class="bloc-t">Les rangs <small>du plus haut au plus bas</small></div>
+        <p class="hint" style="margin-bottom:14px;">Le nom d'un rang ne se change pas ici (il relie les membres) ; sa description, elle, apparaît dans la liste « Hiérarchie » du site.</p>
+        <div style="overflow-x:auto;"><table class="vd-table hier-table"><thead><tr><th style="width:40px;">#</th><th>Rang</th><th>Description</th><th></th></tr></thead><tbody id="rang-rows"></tbody></table></div>
+      </div>
+    </div>
+
     <div class="panel" id="panel-galerie">
       <div class="bloc" style="max-width:560px;">
         <div class="bloc-t">Ajouter une photo à la galerie du site</div>
@@ -1577,11 +1606,109 @@
     });
   });
 
+  // ── HIÉRARCHIE : lecture depuis Supabase, édition par les admins ──
+  // Les tables « rangs » et « hierarchie » remplacent supabase-config.js
+  // dès qu'elles répondent ; sinon on garde la liste du fichier.
+  async function chargerHierarchie() {
+    try {
+      const [r, h] = await Promise.all([
+        sb.from('rangs').select('nom,color,description,ordre').order('ordre'),
+        sb.from('hierarchie').select('id,nom,rang').order('nom')
+      ]);
+      if (!r.error && r.data && r.data.length) window.MONI_RANGS = r.data.map(x => ({ nom: x.nom, color: x.color, desc: x.description }));
+      if (!h.error && h.data && h.data.length) {
+        window.MONI_MEMBRES = h.data.map(x => ({ id: x.id, nom: x.nom, rang: x.rang }));
+        const idx = {}; (window.MONI_RANGS || []).forEach((x, i) => idx[x.nom] = i);
+        window.MONI_MEMBRES.sort((a, b) => ((idx[a.rang] ?? 99) - (idx[b.rang] ?? 99)) || a.nom.localeCompare(b.nom));
+      }
+    } catch (e) { console.warn('[hierarchie] lecture impossible :', e); }
+  }
+  function hierMsg(txt, ok) {
+    const el = document.getElementById('hier-msg');
+    if (!el) return;
+    el.textContent = txt; el.className = 'msg ' + (ok ? 'ok' : 'error');
+    if (ok) setTimeout(() => { el.className = 'msg'; }, 2500);
+  }
+  function hierOptions(sel) {
+    return (window.MONI_RANGS || []).map(r => `<option value="${escT(r.nom)}" ${r.nom === sel ? 'selected' : ''}>${escT(r.nom)}</option>`).join('');
+  }
+  function hierRender() {
+    const rows = document.getElementById('hier-rows'), rrows = document.getElementById('rang-rows');
+    if (!rows) return;
+    const rangs = window.MONI_RANGS || [], membres = window.MONI_MEMBRES || [];
+    document.getElementById('hier-count').textContent = membres.length + ' membre' + (membres.length > 1 ? 's' : '');
+    document.getElementById('hier-new-rang').innerHTML = hierOptions(rangs.length ? rangs[rangs.length - 1].nom : '');
+    rows.innerHTML = membres.length ? membres.map(m => `<tr data-id="${escT(m.id || '')}" data-nom="${escT(m.nom)}">
+      <td><input type="text" value="${escT(m.nom)}" data-f="nom" /></td>
+      <td><select data-f="rang">${hierOptions(m.rang)}</select></td>
+      <td><button class="btn ghost" type="button" onclick="hierEnregistrer(this)">Enregistrer</button><button class="btn danger" type="button" onclick="hierRetirer(this)">Retirer</button></td>
+    </tr>`).join('') : '<tr><td colspan="3" class="hint">Aucun membre — ajoute le premier ci-dessus.</td></tr>';
+    rows.querySelectorAll('input,select').forEach(el => el.addEventListener('input', () => el.closest('tr').classList.add('is-dirty')));
+    rrows.innerHTML = rangs.map((r, i) => `<tr data-nom="${escT(r.nom)}">
+      <td class="hint">${i + 1}</td>
+      <td><span class="hier-rang-pill" style="background:${escT(r.color)}"></span><b>${escT(r.nom)}</b></td>
+      <td><input type="text" value="${escT(r.desc || '')}" data-f="desc" placeholder="Description" /></td>
+      <td><button class="btn ghost" type="button" onclick="rangEnregistrer(this)">Enregistrer</button></td>
+    </tr>`).join('');
+    rrows.querySelectorAll('input').forEach(el => el.addEventListener('input', () => el.closest('tr').classList.add('is-dirty')));
+  }
+  async function hierAjouter() {
+    const nomEl = document.getElementById('hier-new-nom'), rang = document.getElementById('hier-new-rang').value;
+    const nom = nomEl.value.trim().replace(/\s+/g, ' ');
+    if (nom.length < 2) { hierMsg('Indique le nom du membre.', false); nomEl.focus(); return; }
+    if ((window.MONI_MEMBRES || []).some(m => m.nom.toLowerCase() === nom.toLowerCase())) { hierMsg('Ce membre est déjà dans la liste.', false); return; }
+    const { error } = await sb.from('hierarchie').insert({ nom, rang });
+    if (error) { hierMsg('Ajout impossible : ' + error.message, false); return; }
+    nomEl.value = '';
+    await chargerHierarchie(); remplirNoms(); hierRender();
+    hierMsg(nom + ' rejoint la famille (' + rang + ').', true); toast('Membre ajouté');
+  }
+  async function hierEnregistrer(btn) {
+    const tr = btn.closest('tr'), id = tr.dataset.id, ancien = tr.dataset.nom;
+    const nom = tr.querySelector('[data-f="nom"]').value.trim().replace(/\s+/g, ' ');
+    const rang = tr.querySelector('[data-f="rang"]').value;
+    if (nom.length < 2) { hierMsg('Le nom ne peut pas être vide.', false); return; }
+    btn.disabled = true;
+    const q = id ? sb.from('hierarchie').update({ nom, rang }).eq('id', id) : sb.from('hierarchie').upsert({ nom, rang }, { onConflict: 'nom' });
+    const { error } = await q;
+    btn.disabled = false;
+    if (error) { hierMsg('Enregistrement impossible : ' + error.message, false); return; }
+    // Si le nom change, la fiche publique (profils) suit pour ne pas être perdue.
+    if (id && ancien && ancien !== nom) { try { await sb.from('profils').update({ nom }).eq('nom', ancien); } catch (e) {} }
+    await chargerHierarchie(); remplirNoms(); hierRender();
+    hierMsg(nom + ' — ' + rang + ' : enregistré.', true); toast('Hiérarchie mise à jour');
+  }
+  async function hierRetirer(btn) {
+    const tr = btn.closest('tr'), id = tr.dataset.id, nom = tr.dataset.nom;
+    if (!id) return;
+    if (!confirm('Retirer ' + nom + ' de la hiérarchie ? Sa fiche et son compte ne sont pas supprimés.')) return;
+    const { error } = await sb.from('hierarchie').delete().eq('id', id);
+    if (error) { hierMsg('Suppression impossible : ' + error.message, false); return; }
+    await chargerHierarchie(); remplirNoms(); hierRender();
+    hierMsg(nom + ' a été retiré de la hiérarchie.', true); toast('Membre retiré');
+  }
+  async function rangEnregistrer(btn) {
+    const tr = btn.closest('tr'), nom = tr.dataset.nom;
+    const description = tr.querySelector('[data-f="desc"]').value.trim();
+    btn.disabled = true;
+    const { error } = await sb.from('rangs').update({ description }).eq('nom', nom);
+    btn.disabled = false;
+    if (error) { hierMsg('Enregistrement impossible : ' + error.message, false); return; }
+    await chargerHierarchie(); hierRender();
+    toast('Rang « ' + nom + ' » mis à jour');
+  }
+
   // ── AUTH ──
+  function remplirNoms() {
+    const sel = document.getElementById('nom-select');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Choisis ton personnage —</option>' +
+      window.MONI_MEMBRES.map(m => `<option value="${escT(m.nom)}">${escT(m.nom)} (${escT(m.rang)})</option>`).join('');
+    if (cur) sel.value = cur;
+  }
   (function fillNoms() {
     const sel = document.getElementById('nom-select');
-    sel.innerHTML = '<option value="">— Choisis ton personnage —</option>' +
-      window.MONI_MEMBRES.map(m => `<option value="${m.nom}">${m.nom} (${m.rang})</option>`).join('');
+    remplirNoms();
     sel.addEventListener('change', () => {
       const m = window.MONI_MEMBRES.find(x => x.nom === sel.value);
       document.getElementById('rang-input').value = m ? m.rang : '';
@@ -1669,6 +1796,8 @@
 
   async function onLogged(user) {
     currentUser = user;
+    await chargerHierarchie();
+    remplirNoms();
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('reset-screen').style.display = 'none';
     document.getElementById('member-screen').style.display = 'block';
@@ -1683,6 +1812,13 @@
     // contournant dans le navigateur, la base refuserait le dépôt.
     const carteAdmin = document.getElementById('carte-admin');
     if (carteAdmin) carteAdmin.style.display = user.email === 'syne@live.fr' ? '' : 'none';
+    // Le panneau Hiérarchie suit la même règle que la base (peut_gerer_hierarchie).
+    sb.rpc('peut_gerer_hierarchie').then(({ data, error }) => {
+      if (error) { console.warn('[hierarchie] vérification impossible :', error.message); return; }
+      const b = document.getElementById('sb-hierarchie');
+      if (b) b.style.display = data === true ? '' : 'none';
+      if (data === true) hierRender();
+    });
     const blocImport = document.getElementById('bloc-import-taxes');
     if (blocImport) {
       blocImport.style.display = 'none';

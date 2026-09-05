@@ -981,7 +981,7 @@
       .footer-inner { grid-template-columns: 1fr; gap: 28px; }
     }
   </style>
-  <link rel="stylesheet" href="moni-theme.css?v=3">
+  <link rel="stylesheet" href="moni-theme.css?v=4">
   <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -1301,7 +1301,7 @@
       return ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c];
     });
   }
-  (function initMembres() {
+  function renderMembres() {
     var RANGS = window.MONI_RANGS || [];
     var MEMBRES = window.MONI_MEMBRES || [];
     var rangIndex = {}; RANGS.forEach(function (r, i) { rangIndex[r.nom] = i; });
@@ -1357,7 +1357,8 @@
     var n = MEMBRES.length;
     var statEl = document.getElementById('stat-membres'); if (statEl) statEl.textContent = n;
     var cntEl = document.getElementById('membres-count'); if (cntEl) cntEl.textContent = n;
-  })();
+  }
+  renderMembres();
 
   // ── FICHE MEMBRE (modale) ──
   // Les infos viennent de Supabase (table profils), remplies par chaque
@@ -1748,7 +1749,7 @@
   })();
 
   // ── ORGANIGRAMME DE LA FAMILLE (généré depuis supabase-config.js) ──
-  (function initOrganigramme() {
+  function renderOrganigramme() {
     var tree = document.getElementById('org-tree');
     if (!tree) return;
     var initials = function (n) { return n.split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase(); };
@@ -1760,7 +1761,7 @@
     }).filter(function (t) { return t.members.length; });
     tree.innerHTML = tiers.map(function (tier) {
       var nodes = tier.members.map(function (m) {
-        return '<div class="org-node' + (tier.donna ? ' donna' : '') + '">' +
+        return '<div class="org-node' + (tier.donna ? ' donna' : '') + '" data-nom="' + escHTML(m) + '" role="button" tabindex="0" aria-label="Voir la fiche de ' + escHTML(m) + '">' +
           '<div class="org-ava" style="background:' + tier.color + (tier.donna ? ';color:#1a1206' : '') + '">' + initials(m) + '</div>' +
           '<div class="org-node-name">' + escHTML(m) + '</div>' +
           '<div class="org-node-role" style="color:' + tier.color + '">' + escHTML(tier.rank) + '</div>' +
@@ -1768,7 +1769,15 @@
       }).join('');
       return '<div class="org-tier"><div class="org-rank">' + escHTML(tier.rank) + '</div><div class="org-nodes">' + nodes + '</div></div>';
     }).join('');
-  })();
+    // Un clic sur un membre ouvre sa fiche.
+    tree.querySelectorAll('.org-node').forEach(function (node) {
+      function ouvrir() { if (typeof openFiche === 'function') openFiche(node.getAttribute('data-nom')); }
+      node.addEventListener('click', ouvrir);
+      node.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); } });
+    });
+    if (window.MONI_PROFILS && typeof applyAllPhotos === 'function') applyAllPhotos();
+  }
+  renderOrganigramme();
 
   // ── SECTION LE QG ──
   // Ajoute/retire des photos ici (elles s'affichent côte à côte, clic = plein écran).
@@ -1970,6 +1979,16 @@
     var esc = window.escHTML || function (x) { return x; };
 
     function applyPhoto(nom, url) {
+      document.querySelectorAll('.org-node').forEach(function (node) {
+        if (node.getAttribute('data-nom') !== nom) return;
+        var ava = node.querySelector('.org-ava');
+        if (!ava || ava.querySelector('img')) return;
+        var initiales = ava.textContent;
+        var img = document.createElement('img');
+        img.alt = nom; img.loading = 'lazy';
+        img.onerror = function () { ava.textContent = initiales; };
+        ava.textContent = ''; ava.appendChild(img); img.src = url;
+      });
       document.querySelectorAll('.membre-card').forEach(function (card) {
         var nameEl = card.querySelector('.membre-name');
         if (!nameEl || nameEl.textContent.trim() !== nom) return;
@@ -1982,6 +2001,31 @@
         avatar.textContent = ''; avatar.appendChild(img); img.src = url;
       });
     }
+
+    window.applyAllPhotos = function () {
+      Object.keys(window.MONI_PROFILS || {}).forEach(function (nom) {
+        var p = window.MONI_PROFILS[nom];
+        if (p && p.photo_url) applyPhoto(nom, p.photo_url);
+      });
+    };
+
+    // Hiérarchie : les tables « rangs » et « hierarchie » (modifiables depuis
+    // l'espace membre) remplacent supabase-config.js dès qu'elles répondent.
+    Promise.all([
+      sb.from('rangs').select('nom,color,description,ordre').order('ordre'),
+      sb.from('hierarchie').select('nom,rang,ordre').order('ordre')
+    ]).then(function (res) {
+      var r = res[0], h = res[1], changed = false;
+      if (!r.error && r.data && r.data.length) {
+        window.MONI_RANGS = r.data.map(function (x) { return { nom: x.nom, color: x.color, desc: x.description }; });
+        changed = true;
+      }
+      if (!h.error && h.data && h.data.length) {
+        window.MONI_MEMBRES = h.data.map(function (x) { return { nom: x.nom, rang: x.rang }; });
+        changed = true;
+      }
+      if (changed) { renderMembres(); renderOrganigramme(); window.applyAllPhotos(); }
+    }).catch(function () {});
 
     // Profils publics : photos sur les cartes + données des fiches membres
     sb.from('profils').select('*').then(function (res) {

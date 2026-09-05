@@ -33,31 +33,33 @@ window.MONI_RANGS = [
   { nom: 'Associati',      color: '#8e8e8e', desc: 'Associés — Membres' }
 ];
 
-// Liste officielle des membres (nom -> rang). — Mise à jour 08/08/2026
-// Source : aperçu des membres du bot Discord.
+// Liste officielle des membres (nom -> rang). — Mise à jour 05/09/2026
+// Source : aperçu des membres du bot Discord (12 membres).
 //
-// Changements du 08/08/2026 :
-//   • James Davis rejoint la famille (Associati)
-//   • Juan Malbi quitte la famille
-//   • Javier Cruz Silva promu Fedeli → Anziani
+// ⚠ Depuis le 05/09/2026, cette liste n'est plus que la valeur DE SECOURS :
+//   la vraie liste vit dans Supabase (tables « hierarchie » et « rangs »,
+//   voir hierarchie.sql) et se modifie depuis l'espace membre, panneau
+//   « Hiérarchie ». Elle n'est lue ici que si la base ne répond pas.
+//
+// Changements du 05/09/2026 :
+//   • Andréas Kyros et Michel Duboisie rejoignent la famille (Associati)
+//   • James Mendoza, Oscar Santo, Tommy Dane, Valentino Romano et Valerio Moncini quittent la famille
+//   • Javier Cruz Silva → Braccio Destro, Javier Silva → Fedeli, Gustavo Cardoso → Baroni
 //
 // Rappel : le bot affiche DEUX « Javier Silva ». Sur le site, celui dont
 // l'identifiant Discord figure dans MONI_NOM_FIX ci-dessus s'appelle
 // « Javier Cruz Silva » — sans quoi les deux se confondraient partout.
 window.MONI_MEMBRES = [
-  { nom: 'Lov Moni',           rang: 'La Donna' },
-  { nom: 'Raymond Carter',     rang: 'Braccio Destro' },
-  { nom: 'Ezio Spallow',       rang: 'Anziani' },
-  { nom: 'Javier Cruz Silva',  rang: 'Anziani' },
-  { nom: 'James Mendoza',      rang: 'Baroni' },
-  { nom: 'Javier Silva',       rang: 'Baroni' },
-  { nom: 'Bass Carter',        rang: 'Fedeli' },
-  { nom: 'Dayon Reas',         rang: 'Fedeli' },
-  { nom: 'Oscar Santo',        rang: 'Fedeli' },
-  { nom: 'Tommy Dane',         rang: 'Fedeli' },
-  { nom: 'Gustavo Cardoso',    rang: 'Associati' },
-  { nom: 'James Davis',        rang: 'Associati' },
-  { nom: 'Tiago Rodrigues',    rang: 'Associati' },
-  { nom: 'Valentino Romano',   rang: 'Associati' },
-  { nom: 'Valerio Moncini',    rang: 'Associati' },
+  { nom: 'Lov Moni',          rang: 'La Donna' },
+  { nom: 'Raymond Carter',    rang: 'Braccio Destro' },
+  { nom: 'Javier Cruz Silva', rang: 'Braccio Destro' },
+  { nom: 'Ezio Spallow',      rang: 'Anziani' },
+  { nom: 'Gustavo Cardoso',   rang: 'Baroni' },
+  { nom: 'Bass Carter',       rang: 'Fedeli' },
+  { nom: 'Dayon Reas',        rang: 'Fedeli' },
+  { nom: 'Javier Silva',      rang: 'Fedeli' },
+  { nom: 'Andréas Kyros',     rang: 'Associati' },
+  { nom: 'James Davis',       rang: 'Associati' },
+  { nom: 'Michel Duboisie',   rang: 'Associati' },
+  { nom: 'Tiago Rodrigues',   rang: 'Associati' },
 ];
