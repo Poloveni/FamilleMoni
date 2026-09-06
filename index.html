@@ -49,38 +49,41 @@
   <link rel="preload" as="image" href="logo-m.png" fetchpriority="high" />
   <link rel="prefetch" href="accueil.html" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="accueil.css?v=1" />
+  <link rel="stylesheet" href="accueil.css?v=2" />
   <style>
     html, body { height: 100%; overflow: hidden; }
-    .entry { position: relative; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px;
-      background: radial-gradient(ellipse at 50% 45%, #1c1c20 0%, #0c0c0e 60%, #050506 100%); transition: opacity .7s ease, transform .7s ease; }
+    .entry { position: relative; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; background: #050506; transition: opacity .7s ease, transform .7s ease; }
     .entry.is-leaving { opacity: 0; transform: scale(1.04); pointer-events: none; }
+    .entry__cone { position: absolute; left: 50%; top: -10vh; width: 70vw; height: 120vh; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.16), rgba(255,255,255,.04) 35%, rgba(0,0,0,0) 62%); pointer-events: none; }
+    .entry__floor { position: absolute; left: 0; right: 0; bottom: 0; height: 38vh; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(255,255,255,.035)); pointer-events: none; }
     .entry__inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
-    .entry__eyebrow { font-size: 12px; letter-spacing: .38em; color: var(--ink2); animation: entryIn 1.4s .3s both; }
-    .entry__title { font-size: clamp(46px, 8vw, 92px); line-height: .95; margin-top: 12px; text-shadow: 0 6px 30px rgba(0,0,0,.8); animation: entryIn 1.4s .45s both; }
-    .entry__motto { font-size: 13px; letter-spacing: .34em; color: #c9c9cf; margin: 20px 0 34px; animation: entryIn 1.4s .6s both; }
-    .entry__motto i { font-style: normal; opacity: .45; margin: 0 8px; }
-    .entry__btn { animation: entryIn 1.4s .8s both; height: 56px; padding: 0 48px; letter-spacing: .34em; }
+    .emblem--entry { width: min(270px, 44vw); animation: entryIn 1.4s .3s both; }
+    .emblem--entry img { filter: drop-shadow(0 40px 60px rgba(0,0,0,.9)) drop-shadow(0 0 40px rgba(255,255,255,.12)); }
+    .entry__reflet { width: min(270px, 44vw); height: 110px; overflow: hidden; margin-top: -6px; transform: scaleY(-1); opacity: .14; -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0) 45%, #000 100%); mask-image: linear-gradient(180deg, rgba(0,0,0,0) 45%, #000 100%); pointer-events: none; }
+    .entry__reflet img { width: 100%; height: auto; filter: blur(1px); transform: translateY(calc(-100% + 110px)); }
+    .entry__name { margin: 6px 0 0; font-size: 12px; letter-spacing: .5em; color: var(--ink2); animation: entryIn 1.4s .45s both; }
+    .entry__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .entry__btn { margin-top: 34px; font-family: var(--caps); font-size: 12px; letter-spacing: .42em; text-transform: uppercase; color: var(--silver); border-bottom: 1px solid rgba(214,214,219,.5); padding-bottom: 8px; transition: .3s; animation: entryIn 1.4s .6s both; }
+    .entry__btn:hover, .entry__btn:focus-visible { color: #fff; border-color: #fff; letter-spacing: .5em; outline: none; }
     .entry__small { position: absolute; bottom: 22px; left: 0; right: 0; z-index: 2; font-size: 10px; letter-spacing: .3em; color: var(--mute); }
-    .emblem--entry { width: min(300px, 46vw); margin-bottom: 6vh; animation: entryIn 1.6s both; }
     @keyframes entryIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-    @media (max-height: 760px) { .emblem--entry { width: min(220px, 40vw); margin-bottom: 3vh; } }
-    @media (max-width: 720px) { .emblem--entry { width: min(200px, 42vw); } }
-    @media (prefers-reduced-motion: reduce) { .emblem--entry, .entry__eyebrow, .entry__title, .entry__motto, .entry__btn { animation: none; } }
+    @media (max-height: 700px) { .emblem--entry, .entry__reflet { width: min(200px, 40vw); } .entry__reflet { height: 70px; } .entry__reflet img { transform: translateY(calc(-100% + 70px)); } }
+    @media (prefers-reduced-motion: reduce) { .emblem--entry, .entry__name, .entry__btn { animation: none; } }
   </style>
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
 <main class="entry" id="entry">
+  <div class="entry__cone" aria-hidden="true"></div><div class="entry__floor" aria-hidden="true"></div>
   <div class="entry__inner">
-    <div class="emblem emblem--entry"><i class="ring r1"></i><i class="ring r2"></i><img src="logo-m.png" alt="Monogramme de la Famille Moni" width="558" height="760"></div>
-    <p class="entry__eyebrow caps">Roxwood · Flashback FA</p>
-    <h1 class="entry__title">La Famille <span class="silver">Moni</span></h1>
-    <p class="entry__motto caps">Silence <i>·</i> Loyauté <i>·</i> Famiglia</p>
-    <a class="btn btn-metal entry__btn" href="accueil.html" id="enter">Entrer</a>
+    <div class="emblem emblem--entry"><img src="logo-m.png" alt="Monogramme de la Famille Moni" width="558" height="760"></div>
+    <div class="entry__reflet" aria-hidden="true"><img src="logo-m.png" alt=""></div>
+    <h1 class="entry__title">La Famille Moni</h1>
+    <p class="entry__name caps">La Famille Moni</p>
+    <a class="entry__btn" href="accueil.html" id="enter">Entrer</a>
   </div>
-  <p class="entry__small caps"><a href="espace-membre.html">Espace membre</a> · Roleplay sur Flashback FA</p>
+  <p class="entry__small caps"><a href="espace-membre.html">Espace membre</a> · Roxwood · Flashback FA</p>
 </main>
 <script>
   document.getElementById('enter').addEventListener('click', function (e) {

@@ -52,21 +52,6 @@
   .lettrine::first-letter{font-family:var(--display);font-weight:900;font-size:3.3em;float:left;line-height:.85;margin:6px 10px 0 0;color:var(--paper-ink)}
   .mlogo{filter:drop-shadow(0 6px 14px rgba(0,0,0,.8))}
 
-  /* ---- entrée ---- */
-  #entry{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;
-    background:radial-gradient(ellipse at 50% 45%,#1c1c20 0%,#0c0c0e 60%,#050506 100%);transition:opacity .7s ease,transform .7s ease}
-  #entry.is-leaving{opacity:0;transform:scale(1.04);pointer-events:none}
-  #entry.is-gone{display:none}
-  .entry__inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;pointer-events:none}
-  .entry__inner>*{pointer-events:auto}
-  .entry__eyebrow{font-size:12px;letter-spacing:.38em;color:var(--ink2);animation:entryIn 1.4s .3s both}
-  .entry__title{font-size:clamp(46px,8vw,92px);line-height:.95;margin-top:12px;text-shadow:0 6px 30px rgba(0,0,0,.8);animation:entryIn 1.4s .45s both}
-  .entry__motto{font-size:13px;letter-spacing:.34em;color:#c9c9cf;margin:20px 0 34px;animation:entryIn 1.4s .6s both}
-  .entry__motto i{font-style:normal;opacity:.45;margin:0 8px}
-  .entry__btn{animation:entryIn 1.4s .8s both;height:56px;padding:0 48px;letter-spacing:.34em}
-  .entry__small{position:absolute;bottom:22px;left:0;right:0;z-index:2;font-size:10px;letter-spacing:.3em;color:var(--mute)}
-  .entry__hint{position:absolute;top:22px;right:26px;font-size:10px;letter-spacing:.3em;color:var(--mute)}
-  @keyframes entryIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 
   /* ---- nav ---- */
   .nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;
@@ -101,7 +86,7 @@
   .emblem::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.14),rgba(255,255,255,.04) 35%,rgba(0,0,0,0) 62%);pointer-events:none}
   .emblem .ring{position:absolute;border-radius:50%;border:1px dashed rgba(214,214,219,.25);transform:translate(calc(var(--tx) * -14px),calc(var(--ty) * -14px))}
   .emblem .r1{width:118%;aspect-ratio:1}.emblem .r2{width:146%;aspect-ratio:1;opacity:.5;transform:translate(calc(var(--tx) * -26px),calc(var(--ty) * -26px))}
-  .emblem--entry{width:min(300px,46vw);margin-bottom:6vh;animation:entryIn 1.6s both}
+
   .emblem--hero{position:absolute;right:8%;top:50%;transform:translateY(-52%);width:min(420px,32vw);z-index:1}
   .hero__hint{position:absolute;right:28px;bottom:28px;font-family:var(--caps);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
   .hero__scroll{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:22px;height:36px;border:1px solid var(--mute);border-radius:12px}
@@ -182,10 +167,10 @@
   .emblem::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.14),rgba(255,255,255,.04) 35%,rgba(0,0,0,0) 62%);pointer-events:none}
   .emblem .ring{position:absolute;border-radius:50%;border:1px dashed rgba(214,214,219,.25);transform:translate(calc(var(--tx) * -14px),calc(var(--ty) * -14px))}
   .emblem .r1{width:118%;aspect-ratio:1}.emblem .r2{width:146%;aspect-ratio:1;opacity:.5;transform:translate(calc(var(--tx) * -26px),calc(var(--ty) * -26px))}
-  .emblem--entry{width:min(300px,46vw);margin-bottom:6vh;animation:entryIn 1.6s both}
+
   .emblem--hero{position:absolute;right:8%;top:50%;transform:translateY(-52%);width:min(420px,32vw);z-index:1}
   .emblem--hero{right:50%;top:34vh;transform:translate(50%,-50%);width:min(240px,50vw)}.hero__content{text-align:center;padding-top:60vh;padding-bottom:70px}.hero__content>*{margin-left:auto;margin-right:auto}.hero__actions{justify-content:center}
-    .rank{min-width:0;flex:1 1 140px}.galerie .is-wide{grid-column:span 2}.emblem--entry{width:min(200px,42vw)}}
+    .rank{min-width:0;flex:1 1 140px}.galerie .is-wide{grid-column:span 2}}
 
 /* ══════════ Compléments : éléments dynamiques (Supabase / Discord) ══════════ */
 /* Organigramme généré */
