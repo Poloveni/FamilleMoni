@@ -1013,7 +1013,7 @@
 
     <div class="sb-group">Système</div>
     <button type="button" class="sb-item req-approve" id="tv-btn"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8.5 20.5h7"/></svg></span><span class="lbl">Mode TV</span></button>
-    <a class="sb-item" href="index.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-5.5h4V20"/></svg></span><span class="lbl">Retour au site</span></a>
+    <a class="sb-item" href="accueil.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-5.5h4V20"/></svg></span><span class="lbl">Retour au site</span></a>
     <a class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></span><span class="lbl">Panel admin</span></a>
 
     <div class="sb-foot">
@@ -1445,7 +1445,7 @@
     // On ne garde que : Taxes, Retour au site, Déconnexion.
     document.querySelectorAll('.sb-item').forEach(el => {
       const garder = el.dataset.panel === 'taxes' ||
-        (el.tagName === 'A' && (el.getAttribute('href') || '') === 'index.html');
+        (el.tagName === 'A' && (el.getAttribute('href') || '') === 'accueil.html');
       if (!garder) el.style.display = 'none';
     });
     document.querySelectorAll('.sb-group').forEach(g => { g.style.display = 'none'; });

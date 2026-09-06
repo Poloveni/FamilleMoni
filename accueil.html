@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Famille Moni — Roxwood GTA RP</title>
+  <meta name="description" content="La Famille Moni — organisation RP née de la Famiglia Moncini, active à Roxwood sur Flashback FA (GTA RP). Histoire, code d'honneur, hiérarchie, galerie." />
+  <link rel="icon" href="favicon.ico" sizes="32x32" />
+  <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0c0c0e" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Moni" />
+  <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+
+  <!-- Open Graph (aperçu Discord / réseaux) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Famille Moni" />
+  <meta property="og:title" content="La Famille Moni — Roxwood GTA RP" />
+  <meta property="og:description" content="Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable. Flashback FA — GTA RP." />
+  <meta property="og:image" content="https://famillemoni.com/hero-og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://famillemoni.com/accueil.html" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="La Famille Moni — Roxwood GTA RP" />
+  <meta name="twitter:description" content="Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable." />
+  <meta name="twitter:image" content="https://famillemoni.com/hero-og.jpg" />
+  <link rel="canonical" href="https://famillemoni.com/accueil.html" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="image" href="logo-m.png" fetchpriority="high" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="accueil.css?v=1" />
+
+  <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
+  <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="supabase-config.js"></script>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- Musique d'ambiance + retour en haut -->
+<audio id="bg-music" src="musique.m4a?v=4" loop preload="none"></audio>
+<button id="music-toggle" class="muted" aria-label="Couper ou activer la musique" title="Musique">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 9a4 4 0 010 6"/><path class="wave" d="M18.5 6.5a7.5 7.5 0 010 11"/><path class="cross" d="M16 9l5 6M21 9l-5 6"/></svg>
+</button>
+<button id="back-to-top" aria-label="Retour en haut" title="Retour en haut">&#8593;</button>
+
+<!-- ===== NAV ===== -->
+<header class="nav" id="nav">
+  <a class="nav__brand" href="#top"><img src="logo-m-petit.png" alt="" width="40" height="40">Famille <em>Moni</em></a>
+  <button class="nav__burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
+  <nav class="nav__links" id="navLinks">
+    <a href="#histoire">Histoire</a><a href="#code">Code d'honneur</a><a href="#famiglia">La Famiglia</a><a href="#galerie">Galerie</a><a href="#discord">Discord</a><a href="#contact">Contact</a>
+    <a class="nav__cta" href="espace-membre.html">Espace membre</a>
+  </nav>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="top">
+  <div class="emblem emblem--hero" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><img src="logo-m.png" alt="" width="558" height="760"></div>
+  <div class="hero__content">
+    <p class="eyebrow">Roxwood · Flashback FA · Depuis l'Italie</p>
+    <h1 class="hero__title">La<br>Famille<br><span class="silver">Moni</span></h1>
+    <p class="hero__motto">Silence <i>·</i> Loyauté <i>·</i> Famiglia</p>
+    <p class="hero__lead">Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable.</p>
+    <div class="hero__actions"><a class="btn btn-metal" href="#histoire">Notre histoire</a><a class="btn btn-line" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer">Rejoindre le Discord</a></div>
+  </div>
+  <a class="hero__scroll" href="#histoire" aria-label="Défiler"><span></span></a>
+</section>
+
+<div class="ribbon" aria-hidden="true"><div class="ribbon__track">
+  <span>Une fois Moni, toujours Moni</span><b>✦</b><span>Italie · Los Santos · Roxwood</span><b>✦</b><span>Silence · Loyauté · Famiglia</span><b>✦</b><span>Dossier Organisation</span><b>✦</b>
+  <span>Une fois Moni, toujours Moni</span><b>✦</b><span>Italie · Los Santos · Roxwood</span><b>✦</b><span>Silence · Loyauté · Famiglia</span><b>✦</b><span>Dossier Organisation</span><b>✦</b>
+</div></div>
+
+<!-- ===== I. HISTOIRE ===== -->
+<section class="section" id="histoire"><div class="wrap">
+  <div class="section__head reveal"><span class="plaque plaque--sm">I</span><h2 class="silver">Histoire</h2><p class="sub">De l'Italie à Los Santos</p></div>
+  <div class="paper corners histoire reveal"><i class="c3"></i><i class="c4"></i>
+    <div><h3>Les racines</h3><p class="lettrine">Avant son arrivée à Los Santos, la famille Moni se prénommait Famiglia Moncini, et était reconnue à travers toute l'Italie. À sa tête se trouvait le Don Gianni Moncini, qui dirigeait la famille sur des principes traditionnels tels que l'honneur et la loyauté.</p></div>
+    <div><h3>La trahison</h3><p class="lettrine">Un soir tout bascule lorsque Vitelli, son frère d'arme, qui nourrissait en secret une immense rancœur depuis des années, le trahit. Gianni, suspicieux, décide d'exfiltrer ses enfants vers Los Santos auprès d'un vieil ami, avant de mourir des mains de ses ennemis. Rosalia, son enfant la plus âgée, se voit contrainte de s'enfuir accompagnée de ses frères et sœurs.</p></div>
+    <div><h3>Los Santos</h3><p class="lettrine">Arrivés sur LS, Raymond Carter, qui avait connu Gianni des années auparavant, les aide à changer de vie. Très attachés à leur nom de famille, ils en conservent la base pour se créer leur nouvelle identité. Moncini Rosalia devient alors Moni Lov, et reprend les rênes de la famille afin de bâtir à Los Santos ce que son père a auparavant bâti en Italie : un empire discret mais mémorable.</p></div>
+  </div>
+  <blockquote class="serment reveal" style="margin-left:auto;margin-right:auto"><img class="mlogo" src="logo-m-petit.png" alt="" width="88" height="88">
+    <p>« Je jure de porter le nom de la famiglia avec respect, loyauté et silence. Je jure de ne jamais placer mon intérêt avant celui des miens. Que mes actes servent notre héritage, que mes paroles ne trahissent jamais notre nom, et que ma place soit méritée par ce que je donne, non par ce que je réclame. Dans l'ombre comme dans la lumière, je resterai fidèle à la famiglia. »</p>
+    <small>Le Serment</small>
+  </blockquote>
+</div></section>
+
+<!-- ===== II. LE CODE D'HONNEUR ===== -->
+<section class="section section--alt" id="code"><div class="wrap">
+  <div class="section__head reveal"><span class="plaque plaque--sm">II</span><h2 class="silver">Le Code d'honneur</h2><p class="sub">Ce qui fait tenir la Famiglia</p></div>
+  <div class="code">
+    <article class="tray stitch reveal"><div class="code__num">I</div><h3>L'Omertà</h3><p>L'interdiction formelle de parler aux autorités ou de révéler les secrets de la Famiglia sous peine de mort.</p></article>
+    <article class="tray stitch reveal"><div class="code__num">II</div><h3>La loyauté absolue</h3><p>Le dévouement total envers les membres de la Famiglia et l'obéissance aveugle à la hiérarchie.</p></article>
+    <article class="tray stitch reveal"><div class="code__num">III</div><h3>Le respect de la parole donnée</h3><p>Un engagement pris, même verbal, est sacré et irrévocable — le trahir équivaut à une trahison envers la Famiglia elle-même.</p></article>
+    <article class="tray stitch tray--warn reveal"><img class="mlogo" src="logo-m-petit.png" alt="" width="52" height="52"><h3>La vengeance</h3><p>Le devoir de venger toute offense ou trahison faite à la Famiglia.</p></article>
+  </div>
+</div></section>
+
+<!-- ===== III. LA FAMIGLIA (organigramme généré : supabase-config.js puis Supabase) ===== -->
+<section class="section" id="famiglia"><div class="wrap">
+  <div class="section__head reveal"><span class="plaque plaque--sm">III</span><h2 class="silver">La Famiglia</h2><p class="sub"><span id="membres-count">12</span> membres · Chacun connaît sa place</p></div>
+  <div class="org" id="org-tree"></div>
+</div></section>
+
+<!-- ===== IV. GALERIE (photos du site + photos envoyées par les membres) ===== -->
+<section class="section section--alt" id="galerie"><div class="wrap">
+  <div class="section__head reveal"><span class="plaque plaque--sm">IV</span><h2 class="silver">Galerie</h2><p class="sub">Clichés de la famille</p></div>
+  <div class="galerie reveal" id="galerie-grid"></div>
+</div></section>
+
+<!-- ===== V. DISCORD ===== -->
+<section class="section" id="discord"><div class="wrap">
+  <div class="section__head reveal"><span class="plaque plaque--sm">V</span><h2 class="silver">Le Discord</h2><p class="sub">Serveur principal · Serveur de recrutement</p></div>
+
+  <div class="tray stitch server-live reveal" id="server-live">
+    <div>
+      <div class="server-state" id="server-state"><span class="server-dot"></span> Vérification du serveur…</div>
+      <div class="server-name" id="server-name">Flashback FA — GTA RP</div>
+      <div class="server-players" id="server-players"></div>
+    </div>
+    <a class="btn btn-line" href="https://cfx.re/join/k4aqg7" target="_blank" rel="noopener noreferrer">Se connecter au serveur</a>
+  </div>
+
+  <div class="discord-inner reveal">
+    <!-- SERVEUR PRINCIPAL — réservé aux membres approuvés -->
+    <div class="tray stitch discord-card discord-locked" id="discord-principal-locked">
+      <div class="discord-role">Serveur principal</div>
+      <div class="lock-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 019 0v2.5"/><rect x="5" y="10.5" width="14" height="9" rx="2"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg></div>
+      <p>L'accès au serveur principal est réservé aux membres de la famille.</p>
+      <a href="espace-membre.html" class="btn btn-line" style="height:42px;font-size:11px">Espace membre</a>
+    </div>
+    <div class="tray stitch discord-card" id="discord-principal" style="display:none;">
+      <div class="discord-role">Serveur principal</div>
+      <div class="discord-server">
+        <img id="d-icone-1450234264305008693" src="https://cdn.discordapp.com/icons/1450234264305008693/f196c07d8171daa8bf532ce3627d28ee.png?size=128" alt="Icône serveur principal" onerror="this.style.display='none'" />
+        <div><div class="discord-server-name">Famille Moni 🇮🇹</div><div class="discord-server-tag">Flashback FA — GTA RP</div></div>
+      </div>
+      <div class="discord-stats">
+        <div class="discord-stat online"><div class="discord-stat-num"><span class="dot"></span><span class="d-online" data-guild="1450234264305008693">—</span></div><div class="discord-stat-label">En ligne</div></div>
+        <div class="discord-stat"><div class="discord-stat-num d-membres" data-guild="1450234264305008693">—</div><div class="discord-stat-label">Membres</div></div>
+      </div>
+      <a href="https://discord.gg/nM3ttEtYz" target="_blank" rel="noopener noreferrer" class="discord-cta-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.4 2.9a.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.42 0 12.6 12.6 0 0 0-.62-1.25.07.07 0 0 0-.08-.04c-1.7.29-3.33.8-4.92 1.47a.06.06 0 0 0-.03.03C.53 9.09-.32 13.68.1 18.21a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 0 0-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.92 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.01-3.03.08.08 0 0 0 .03-.05c.5-5.25-.84-9.8-3.55-13.81a.06.06 0 0 0-.03-.03ZM8.02 15.45c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z"/></svg>Rejoindre le serveur</a>
+    </div>
+    <!-- RECRUTEMENT -->
+    <div class="tray stitch discord-card">
+      <div class="discord-role">Recrutement</div>
+      <div class="discord-server">
+        <img id="d-icone-1489387311245558004" src="https://cdn.discordapp.com/icons/1489387311245558004/5ec6d1ac45679fd05693dd23b88cbc14.png?size=128" alt="Icône serveur recrutement" onerror="this.style.display='none'" />
+        <div><div class="discord-server-name">RC Famille Moni 🇮🇹</div><div class="discord-server-tag">Serveur de recrutement</div></div>
+      </div>
+      <div class="discord-stats">
+        <div class="discord-stat online"><div class="discord-stat-num"><span class="dot"></span><span class="d-online" data-guild="1489387311245558004">—</span></div><div class="discord-stat-label">En ligne</div></div>
+        <div class="discord-stat"><div class="discord-stat-num d-membres" data-guild="1489387311245558004">—</div><div class="discord-stat-label">Membres</div></div>
+      </div>
+      <a href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer" class="discord-cta-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.4 2.9a.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.42 0 12.6 12.6 0 0 0-.62-1.25.07.07 0 0 0-.08-.04c-1.7.29-3.33.8-4.92 1.47a.06.06 0 0 0-.03.03C.53 9.09-.32 13.68.1 18.21a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 0 0-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.92 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.01-3.03.08.08 0 0 0 .03-.05c.5-5.25-.84-9.8-3.55-13.81a.06.06 0 0 0-.03-.03ZM8.02 15.45c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z"/></svg>Rejoindre le serveur</a>
+    </div>
+  </div>
+
+  <div class="tray stitch online-wall reveal" id="online-wall" data-guild="1450234264305008693">
+    <div class="online-wall-head">
+      <span class="online-wall-title"><span class="dot"></span> En ligne maintenant</span>
+      <span class="online-wall-count" id="online-count">—</span>
+    </div>
+    <div class="online-wall-grid" id="online-grid"><div class="online-empty">Chargement…</div></div>
+  </div>
+</div></section>
+
+<!-- ===== CONTACT ===== -->
+<section class="contact" id="contact"><div class="wrap reveal">
+  <img class="mlogo" src="logo-m-petit.png" alt="" width="220" height="220">
+  <h2>Nell’ombra come nella luce.</h2>
+  <p>Un entretien, une période d'essai, puis le serment. La famille ne recrute pas : elle choisit.</p>
+  <div class="contact__actions"><a class="btn btn-metal" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer">Rejoindre le Discord</a><a class="btn btn-line" href="tel:555387093">La Donna · 555-387-093</a></div>
+</div></section>
+<footer class="footer"><div class="wrap"><span>Famille Moni · Roxwood · Flashback FA</span><span><a href="espace-membre.html">Espace membre</a> · <a href="admin.html">Administration</a> · Roleplay uniquement</span></div></footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lb-close" aria-label="Fermer">&times;</button>
+  <button class="lightbox-nav prev" id="lb-prev" aria-label="Précédent">&#8249;</button>
+  <img id="lb-img" src="" alt="" />
+  <button class="lightbox-nav next" id="lb-next" aria-label="Suivant">&#8250;</button>
+  <div class="lightbox-caption" id="lb-caption"></div>
+</div>
+
+<!-- FICHE MEMBRE (modale) -->
+<div class="fiche-overlay" id="fiche-overlay" aria-hidden="true">
+  <div class="tray stitch fiche-card">
+    <button class="fiche-close" id="fiche-close" aria-label="Fermer">&times;</button>
+    <div class="fiche-avatar" id="fiche-avatar">?</div>
+    <div class="fiche-nom" id="fiche-nom"></div>
+    <div class="fiche-rang" id="fiche-rang"></div>
+    <div id="fiche-body"></div>
+  </div>
+</div>
+
+<script>
+  function escHTML(s) {
+    return String(s == null ? '' : s).replace(/[<>&"']/g, function (c) {
+      return ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+  window.escHTML = escHTML;
+  const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── ORGANIGRAMME (source : supabase-config.js, remplacé par Supabase dès qu'il répond) ──
+  // La Donna : fiche photo. Rangs de 1 ou 2 membres : compartiments larges.
+  // Rangs plus nombreux : compartiments compacts.
+  // Photos par défaut (avant / à défaut d'une photo de profil dans l'espace membre)
+  var PHOTOS_FIXES = { 'Lov Moni': 'ladonna-balcon.webp' };
+  function initials(n) { return String(n).split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase(); }
+  function renderOrganigramme() {
+    var tree = document.getElementById('org-tree');
+    if (!tree) return;
+    var MEMBRES = window.MONI_MEMBRES || [];
+    var tiers = (window.MONI_RANGS || []).map(function (r) {
+      return { rank: r.nom, donna: r.nom === 'La Donna', members: MEMBRES.filter(function (m) { return m.rang === r.nom; }).map(function (m) { return m.nom; }) };
+    }).filter(function (t) { return t.members.length; });
+    var html = [];
+    tiers.forEach(function (tier, i) {
+      if (i > 0) html.push('<div class="org__line"></div>');
+      if (tier.donna) {
+        html.push(tier.members.map(function (m) {
+          return '<div class="tray stitch org__donna reveal is-in" data-nom="' + escHTML(m) + '" role="button" tabindex="0" aria-label="Voir la fiche de ' + escHTML(m) + '">' +
+            (PHOTOS_FIXES[m]
+              ? '<div class="photo corners"><i class="c3"></i><i class="c4"></i><img src="' + escHTML(PHOTOS_FIXES[m]) + '" alt="' + escHTML(m) + '" loading="lazy"></div>'
+              : '<div class="photo corners no-photo"><i class="c3"></i><i class="c4"></i><span class="ini">' + escHTML(initials(m)) + '</span></div>') +
+            '<span class="plaque plaque--sm">' + escHTML(tier.rank) + '</span><span class="name">' + escHTML(m) + '</span></div>';
+        }).join(''));
+        return;
+      }
+      var small = tier.members.length > 2;
+      html.push('<div class="org__row reveal is-in"' + (small ? ' style="gap:14px"' : '') + '>' + tier.members.map(function (m) {
+        return '<div class="tray ' + (small ? 'rank rank--sm' : 'stitch rank') + '" data-nom="' + escHTML(m) + '" role="button" tabindex="0" aria-label="Voir la fiche de ' + escHTML(m) + '">' +
+          (small ? '<span class="caps">' + escHTML(tier.rank) + '</span>' : '<span class="plaque plaque--sm">' + escHTML(tier.rank) + '</span>') +
+          '<span class="name">' + escHTML(m) + '</span></div>';
+      }).join('') + '</div>');
+    });
+    tree.innerHTML = html.join('');
+    tree.querySelectorAll('[data-nom]').forEach(function (node) {
+      function ouvrir() { openFiche(node.getAttribute('data-nom')); }
+      node.addEventListener('click', ouvrir);
+      node.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); } });
+    });
+    var cnt = document.getElementById('membres-count'); if (cnt) cnt.textContent = MEMBRES.length;
+    if (window.MONI_PROFILS && typeof applyAllPhotos === 'function') applyAllPhotos();
+  }
+  renderOrganigramme();
+
+  // ── FICHE MEMBRE (modale) — données Supabase (table profils) ──
+  window.MONI_PROFILS = window.MONI_PROFILS || {};
+  // Doit rester STRICTEMENT identique à slug() de outils/generer-passeports.mjs
+  function slugNom(n) {
+    return String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  function openFiche(nom) {
+    var ov = document.getElementById('fiche-overlay');
+    if (!ov) return;
+    var m = (window.MONI_MEMBRES || []).find(function (x) { return x.nom === nom; }) || { nom: nom, rang: '' };
+    var p = window.MONI_PROFILS[nom] || {};
+    var av = document.getElementById('fiche-avatar');
+    if (p.photo_url) av.innerHTML = '<img src="' + escHTML(p.photo_url) + '" alt="' + escHTML(nom) + '">';
+    else av.textContent = initials(nom);
+    document.getElementById('fiche-nom').textContent = nom;
+    document.getElementById('fiche-rang').textContent = m.rang || '';
+    var body = '';
+    if (p.specialite) body += '<div class="fiche-spec">' + escHTML(p.specialite) + '</div>';
+    if (p.citation) body += '<div class="fiche-citation">« ' + escHTML(p.citation) + ' »</div>';
+    if (p.bio) body += '<div class="fiche-bio">' + escHTML(p.bio) + '</div>';
+    if (!body) body = '<div class="fiche-empty">Cette fiche n\'a pas encore été remplie dans l\'espace membre.</div>';
+    body += '<a class="fiche-lien" href="membre/' + slugNom(nom) + '.html">Voir la page complète →</a>';
+    document.getElementById('fiche-body').innerHTML = body;
+    ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
+  }
+  (function ficheInit() {
+    var ov = document.getElementById('fiche-overlay');
+    function close() { ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); }
+    document.getElementById('fiche-close').addEventListener('click', close);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  })();
+
+  // ── NAV ──
+  const nav = document.getElementById('nav');
+  const burger = document.getElementById('burger');
+  burger.addEventListener('click', function () {
+    const ouvert = nav.classList.toggle('is-open');
+    burger.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+  });
+  document.querySelectorAll('.nav__links a').forEach(a => a.addEventListener('click', () => { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); }));
+  const backTop = document.getElementById('back-to-top');
+  let scrollEnAttente = false;
+  window.addEventListener('scroll', () => {
+    if (scrollEnAttente) return;
+    scrollEnAttente = true;
+    requestAnimationFrame(() => {
+      scrollEnAttente = false;
+      nav.classList.toggle('is-scrolled', window.scrollY > 40);
+      backTop.classList.toggle('show', window.scrollY > 500);
+    });
+  }, { passive: true });
+  backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // ── EMBLÈME : léger parallaxe + inclinaison à la souris ──
+  if (!REDUIT) {
+    const ems = document.querySelectorAll('.emblem');
+    addEventListener('pointermove', e => {
+      if (window.scrollY > window.innerHeight) return;
+      const x = e.clientX / innerWidth - 0.5, y = e.clientY / innerHeight - 0.5;
+      ems.forEach(el => { el.style.setProperty('--tx', x.toFixed(3)); el.style.setProperty('--ty', y.toFixed(3)); });
+    }, { passive: true });
+  }
+
+  // ── REVEAL AU SCROLL ──
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ── MUSIQUE D'AMBIANCE (coupée par défaut, préférence mémorisée) ──
+  (function bgMusic() {
+    const audio = document.getElementById('bg-music');
+    const btn = document.getElementById('music-toggle');
+    if (!audio || !btn) return;
+    audio.volume = 0.35;
+    let muted = true;
+    try { const pref = localStorage.getItem('moni-music-muted'); if (pref !== null) muted = (pref === '1'); } catch (e) {}
+    function render() { audio.muted = muted; btn.classList.toggle('muted', muted); btn.title = muted ? 'Activer la musique' : 'Couper la musique'; }
+    function tryPlay() { const p = audio.play(); if (p) p.then(render).catch(() => {}); }
+    render();
+    function firstGesture() { if (!muted) tryPlay(); ['pointerdown', 'keydown'].forEach(ev => window.removeEventListener(ev, firstGesture)); }
+    ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, firstGesture, { passive: true }));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); muted = !muted;
+      try { localStorage.setItem('moni-music-muted', muted ? '1' : '0'); } catch (e2) {}
+      if (!muted) tryPlay(); render();
+    });
+  })();
+
+  // ── LIGHTBOX partagée ──
+  const openLightbox = (function () {
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lb-img');
+    const lbCap = document.getElementById('lb-caption');
+    let items = [], idx = 0;
+    function show(i) { idx = (i + items.length) % items.length; const it = items[idx]; lbImg.src = it.src; lbImg.alt = it.caption || ''; lbCap.textContent = it.caption || ''; }
+    function close() { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); }
+    document.getElementById('lb-close').addEventListener('click', close);
+    document.getElementById('lb-prev').addEventListener('click', () => show(idx - 1));
+    document.getElementById('lb-next').addEventListener('click', () => show(idx + 1));
+    lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+    document.addEventListener('keydown', (e) => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') show(idx - 1); else if (e.key === 'ArrowRight') show(idx + 1);
+    });
+    return function (list, i) { items = list; show(i || 0); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); };
+  })();
+
+  // ── GALERIE ──
+  // Photos "en dur" du site (large = 2 colonnes) ; les photos envoyées par les
+  // membres depuis l'espace membre s'ajoutent ensuite (Supabase, plus bas).
+  const GALERIE = [
+    { src: "famille-manoir.webp",    caption: "La famille au complet",  large: true },
+    { src: "duo-nuit.webp",          caption: "Nuit à Roxwood" },
+    { src: "qg-nuit.webp",           caption: "Le QG — vue en jeu" },
+    { src: "famille-balcon.webp",    caption: "Le balcon" },
+    { src: "famille-escaliers.webp", caption: "Les escaliers",          large: true },
+    { src: "qg-carte.webp",          caption: "Le QG — position sur la carte" },
+  ];
+  let galerieItems = GALERIE.slice();
+  function renderGalerie() {
+    const grid = document.getElementById('galerie-grid');
+    if (!galerieItems.length) { grid.innerHTML = '<div class="galerie-empty">Aucune photo pour le moment.</div>'; return; }
+    grid.innerHTML = galerieItems.map((g, i) =>
+      '<figure class="photo corners' + (g.large ? ' is-wide' : '') + '" data-index="' + i + '"' + (g.id ? ' data-photo-id="' + escHTML(g.id) + '"' : '') + ' style="margin:0">' +
+      '<i class="c3"></i><i class="c4"></i><img src="' + escHTML(g.src) + '" alt="' + escHTML(g.caption || 'Photo Famille Moni') + '" loading="lazy" decoding="async">' +
+      (g.caption ? '<figcaption>' + escHTML(g.caption) + '</figcaption>' : '') + '</figure>'
+    ).join('') +
+    '<div class="tray stitch"><div><div class="caps" style="font-size:11px;color:#8a8a92">Déposer un cliché</div><div class="caps" style="font-size:10px;color:#6f6f76;margin-top:8px"><a href="espace-membre.html">Espace membre</a></div></div></div>';
+    grid.querySelectorAll('.photo[data-index]').forEach(item => item.addEventListener('click', () => openLightbox(galerieItems, parseInt(item.dataset.index, 10))));
+  }
+  window.addGaleriePhotos = function (items) { if (!items || !items.length) return; galerieItems = galerieItems.concat(items); renderGalerie(); };
+  renderGalerie();
+
+  // ── DISCORD : compteurs en direct (API d'invitation, repli widget) ──
+  (function cartesDiscord() {
+    const SERVEURS = [
+      { gid: '1450234264305008693', invite: 'nM3ttEtYz' },   // serveur principal
+      { gid: '1489387311245558004', invite: '8zBwmG4y3' },   // recrutement
+    ];
+    function maj(gid, sel, val) {
+      document.querySelectorAll(sel + '[data-guild="' + gid + '"]').forEach(e => { const dot = e.querySelector && e.querySelector('.dot'); e.textContent = val; if (dot) e.prepend(dot); });
+    }
+    function charge(svr) {
+      return fetch('https://discord.com/api/v9/invites/' + svr.invite + '?with_counts=true&_=' + Date.now(), { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          if (typeof d.approximate_presence_count === 'number') maj(svr.gid, '.d-online', d.approximate_presence_count);
+          if (typeof d.approximate_member_count === 'number') maj(svr.gid, '.d-membres', d.approximate_member_count);
+          const g = d.guild || {}; const img = document.getElementById('d-icone-' + svr.gid);
+          if (img && g.icon) { img.style.display = ''; img.src = 'https://cdn.discordapp.com/icons/' + svr.gid + '/' + g.icon + (String(g.icon).indexOf('a_') === 0 ? '.gif' : '.png') + '?size=128'; }
+        })
+        .catch(() => fetch('https://discord.com/api/guilds/' + svr.gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(d => { if (typeof d.presence_count === 'number') maj(svr.gid, '.d-online', d.presence_count); })
+          .catch(() => { maj(svr.gid, '.d-online', '—'); maj(svr.gid, '.d-membres', '—'); }));
+    }
+    function tout() { SERVEURS.forEach(charge); }
+    tout();
+    setInterval(() => { if (!document.hidden) tout(); }, 60000);
+  })();
+
+  // ── MUR DES MEMBRES EN LIGNE (widget Discord) ──
+  (function onlineWall() {
+    const wall = document.getElementById('online-wall');
+    const gid = wall.getAttribute('data-guild');
+    const grid = document.getElementById('online-grid');
+    const countEl = document.getElementById('online-count');
+    const BOTS = ['bot moni', 'ticket tool', 'moni v2', 'famille moni bot web', 'moni'];
+    function looksLikeName(u) {
+      if (!u) return false;
+      const low = u.trim().toLowerCase();
+      if (BOTS.includes(low) || /\bbot\b/i.test(u)) return false;
+      const parts = u.trim().split(/\s+/);
+      if (parts.length < 2) return false;
+      return parts.every(p => /^[A-Za-zÀ-ÿ'’.\-]+$/.test(p));
+    }
+    function load() {
+      fetch('https://discord.com/api/guilds/' + gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const chan = {}; (d.channels || []).forEach(c => { chan[c.id] = c.name; });
+          const members = (d.members || []).filter(m => looksLikeName(m.username));
+          countEl.textContent = members.length + ' en ligne';
+          if (!members.length) { grid.innerHTML = '<div class="online-empty">Aucun membre en ligne pour le moment.</div>'; return; }
+          grid.innerHTML = members.map(m => {
+            const st = (m.status === 'idle' || m.status === 'dnd' || m.status === 'online') ? m.status : 'online';
+            const voice = (m.channel_id && chan[m.channel_id]) ? '<div class="online-voice">' + escHTML(chan[m.channel_id]) + '</div>' : '';
+            const av = m.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
+            return '<div class="online-member"><div class="online-avatar"><img src="' + av + '" alt="" loading="lazy" decoding="async"><span class="st ' + st + '"></span></div><div class="online-name">' + escHTML(m.username) + '</div>' + voice + '</div>';
+          }).join('');
+        })
+        .catch(() => { grid.innerHTML = '<div class="online-empty">Widget Discord non disponible.</div>'; });
+    }
+    load();
+    setInterval(() => { if (!document.hidden) load(); }, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  })();
+
+  // ── STATUT DU SERVEUR FIVEM (fonction Edge fivem-status) ──
+  (function serverLive() {
+    const base = (window.SUPABASE_URL || '').replace(/\/$/, '');
+    const state = document.getElementById('server-state');
+    const players = document.getElementById('server-players');
+    const name = document.getElementById('server-name');
+    if (!base) { state.innerHTML = '<span class="server-dot off"></span> Statut indisponible'; return; }
+    const key = window.SUPABASE_KEY || '';
+    const headers = key ? { Authorization: 'Bearer ' + key, apikey: key } : {};
+    function load() {
+      fetch(base + '/functions/v1/fivem-status', { headers: headers }).then(r => r.json()).then(d => {
+        if (d && d.online) {
+          state.innerHTML = '<span class="server-dot on"></span> Serveur en ligne';
+          players.textContent = (d.clients || 0) + ' / ' + (d.maxclients || '?') + ' joueurs connectés';
+          if (d.hostname) name.textContent = d.hostname;
+        } else { state.innerHTML = '<span class="server-dot off"></span> Serveur hors ligne'; players.textContent = ''; }
+      }).catch(() => { state.innerHTML = '<span class="server-dot off"></span> Statut indisponible'; players.textContent = ''; });
+    }
+    load();
+    setInterval(() => { if (!document.hidden) load(); }, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  })();
+</script>
+
+<!-- Intégration Supabase : hiérarchie, profils (photos), galerie, accès Discord principal -->
+<script id="moni-supabase">
+(function () {
+  function run() {
+    if (!window.supabase || !window.SUPABASE_URL) { setTimeout(run, 100); return; }
+    var sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+
+    // Photo de profil (table profils) → fiche de l'organigramme
+    function applyPhoto(nom, url) {
+      document.querySelectorAll('#org-tree [data-nom]').forEach(function (node) {
+        if (node.getAttribute('data-nom') !== nom) return;
+        var ph = node.querySelector('.photo');
+        if (!ph) return;
+        var existing = ph.querySelector('img');
+        if (existing) { existing.src = url; return; }
+        var ini = ph.querySelector('.ini');
+        var img = document.createElement('img');
+        img.alt = nom; img.loading = 'lazy';
+        img.onerror = function () { img.remove(); ph.classList.add('no-photo'); if (ini) ini.style.display = ''; };
+        if (ini) ini.style.display = 'none';
+        ph.classList.remove('no-photo'); ph.appendChild(img); img.src = url;
+      });
+    }
+    window.applyAllPhotos = function () {
+      Object.keys(window.MONI_PROFILS || {}).forEach(function (nom) {
+        var p = window.MONI_PROFILS[nom]; if (p && p.photo_url) applyPhoto(nom, p.photo_url);
+      });
+    };
+
+    // Hiérarchie : tables « rangs » et « hierarchie » (modifiables depuis l'espace membre)
+    Promise.all([
+      sb.from('rangs').select('nom,color,description,ordre').order('ordre'),
+      sb.from('hierarchie').select('nom,rang,ordre').order('ordre')
+    ]).then(function (res) {
+      var r = res[0], h = res[1], changed = false;
+      if (!r.error && r.data && r.data.length) { window.MONI_RANGS = r.data.map(function (x) { return { nom: x.nom, color: x.color, desc: x.description }; }); changed = true; }
+      if (!h.error && h.data && h.data.length) { window.MONI_MEMBRES = h.data.map(function (x) { return { nom: x.nom, rang: x.rang }; }); changed = true; }
+      if (changed) { renderOrganigramme(); window.applyAllPhotos(); }
+    }).catch(function () {});
+
+    // Profils publics : photos + données des fiches
+    sb.from('profils').select('*').then(function (res) {
+      if (res.error || !res.data) return;
+      window.MONI_PROFILS = window.MONI_PROFILS || {};
+      res.data.forEach(function (p) { if (!p.nom) return; window.MONI_PROFILS[p.nom] = p; if (p.photo_url) applyPhoto(p.nom, p.photo_url); });
+    });
+
+    // Galerie : photos envoyées par les membres
+    sb.from('galerie_photos').select('*').order('created_at', { ascending: false }).then(function (res) {
+      if (res.error || !res.data || !res.data.length) return;
+      window.addGaleriePhotos(res.data.map(function (p) { return { src: p.url, caption: p.caption || '', id: p.id }; }));
+      sb.auth.getSession().then(function (r) {
+        var session = r.data && r.data.session;
+        var isAdmin = session && session.user && session.user.email === 'syne@live.fr';
+        if (!isAdmin) return;
+        document.querySelectorAll('.photo[data-photo-id]').forEach(function (el) {
+          if (el.querySelector('.galerie-del')) return;
+          var btn = document.createElement('button');
+          btn.className = 'galerie-del'; btn.innerHTML = '&times;'; btn.title = 'Supprimer cette photo';
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!confirm('Supprimer définitivement cette photo de la galerie ?')) return;
+            sb.from('galerie_photos').delete().eq('id', el.dataset.photoId).then(function (d) { if (d.error) { alert('Erreur : ' + d.error.message); return; } el.remove(); });
+          });
+          el.appendChild(btn);
+        });
+      });
+    });
+
+    // Serveur Discord principal : visible uniquement pour les membres APPROUVÉS
+    var discPrincipal = document.getElementById('discord-principal');
+    var discLocked = document.getElementById('discord-principal-locked');
+    function toggleDiscord(isMember) {
+      discPrincipal.style.display = isMember ? 'flex' : 'none';
+      discLocked.style.display = isMember ? 'none' : 'flex';
+    }
+    function refresh() {
+      sb.auth.getSession().then(function (r) {
+        var session = r.data && r.data.session;
+        if (!session) { toggleDiscord(false); return; }
+        sb.from('comptes').select('approuve').eq('id', session.user.id).maybeSingle().then(function (c) { toggleDiscord(!!(c.data && c.data.approuve)); });
+      });
+    }
+    refresh();
+    sb.auth.onAuthStateChange(function () { refresh(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
+</body>
+</html>

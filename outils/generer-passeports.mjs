@@ -167,8 +167,8 @@ function page(m, i) {
 <body>
 
 <header class="barre">
-  <a class="logo" href="../index.html">Famille <span>Moni</span></a>
-  <a class="retour" href="../index.html#membres">← Tous les membres</a>
+  <a class="logo" href="../accueil.html">Famille <span>Moni</span></a>
+  <a class="retour" href="../accueil.html#famiglia">← Tous les membres</a>
 </header>
 
 <main>
@@ -204,7 +204,7 @@ function page(m, i) {
   <div class="actions">
     <a class="btn plein" href="https://discord.gg/8zBwmG4y3" target="_blank" rel="noopener noreferrer">Rejoindre la famille</a>
     <button class="btn" id="partager" type="button">Copier le lien</button>
-    <a class="btn" href="../index.html#membres">Voir la famille</a>
+    <a class="btn" href="../accueil.html#famiglia">Voir la famille</a>
   </div>
 
   <nav class="voisins">
