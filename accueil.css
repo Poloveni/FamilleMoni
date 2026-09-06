@@ -84,6 +84,8 @@
   .emblem{position:relative;display:flex;align-items:center;justify-content:center;--tx:0;--ty:0}
   .emblem img{position:relative;z-index:2;width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 30px 50px rgba(0,0,0,.85)) drop-shadow(0 0 24px rgba(255,255,255,.08));animation:float 7s ease-in-out infinite;transform:perspective(900px) rotateY(calc(var(--tx) * 14deg)) rotateX(calc(var(--ty) * -10deg));transition:transform .25s ease-out}
   .emblem::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.14),rgba(255,255,255,.04) 35%,rgba(0,0,0,0) 62%);pointer-events:none}
+  .emblem canvas{position:absolute;left:-30%;top:-22%;width:160%;height:144%;z-index:3;opacity:0;transition:opacity .8s;cursor:grab;touch-action:pan-y}
+  .emblem canvas:active{cursor:grabbing}
   .emblem .ring{position:absolute;border-radius:50%;border:1px dashed rgba(214,214,219,.25);transform:translate(calc(var(--tx) * -14px),calc(var(--ty) * -14px))}
   .emblem .r1{width:118%;aspect-ratio:1}.emblem .r2{width:146%;aspect-ratio:1;opacity:.5;transform:translate(calc(var(--tx) * -26px),calc(var(--ty) * -26px))}
 
@@ -165,6 +167,8 @@
     .emblem{position:relative;display:flex;align-items:center;justify-content:center;--tx:0;--ty:0}
   .emblem img{position:relative;z-index:2;width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 30px 50px rgba(0,0,0,.85)) drop-shadow(0 0 24px rgba(255,255,255,.08));animation:float 7s ease-in-out infinite;transform:perspective(900px) rotateY(calc(var(--tx) * 14deg)) rotateX(calc(var(--ty) * -10deg));transition:transform .25s ease-out}
   .emblem::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.14),rgba(255,255,255,.04) 35%,rgba(0,0,0,0) 62%);pointer-events:none}
+  .emblem canvas{position:absolute;left:-30%;top:-22%;width:160%;height:144%;z-index:3;opacity:0;transition:opacity .8s;cursor:grab;touch-action:pan-y}
+  .emblem canvas:active{cursor:grabbing}
   .emblem .ring{position:absolute;border-radius:50%;border:1px dashed rgba(214,214,219,.25);transform:translate(calc(var(--tx) * -14px),calc(var(--ty) * -14px))}
   .emblem .r1{width:118%;aspect-ratio:1}.emblem .r2{width:146%;aspect-ratio:1;opacity:.5;transform:translate(calc(var(--tx) * -26px),calc(var(--ty) * -26px))}
 
