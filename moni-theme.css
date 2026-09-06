@@ -91,9 +91,9 @@ h1 em::after { display: none; }
 .hero-btns { justify-content: flex-start; gap: 14px; }
 
 /* pile de polaroïds, à droite du texte */
-.hero-photos { left: 55%; right: max(24px, calc((100% - 1180px) / 2)); top: 16%; bottom: 14%; }
+.hero-photos { left: 55%; right: max(24px, calc((100% - 1180px) / 2)); top: 14%; bottom: 4%; }
 .hero-photo { background: var(--paper2); padding: 12px 12px 40px; border-radius: 0; box-shadow: 0 30px 60px rgba(0,0,0,.7); }
-.hero-photo img { border-radius: 0; filter: sepia(.12) contrast(1.05); }
+.hero-photo img { border-radius: 0; filter: sepia(.12) contrast(1.05); max-height: 230px; object-fit: cover; object-position: center top; }
 .hero-photo .cap { font-family: var(--serif); font-style: italic; font-size: 14px; color: #3a2f24; bottom: 12px; }
 .hero-photo:hover { box-shadow: 0 40px 70px rgba(0,0,0,.75); }
 .hero-photo:hover img { filter: sepia(.1) contrast(1.05); }
