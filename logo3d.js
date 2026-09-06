@@ -79,7 +79,7 @@ function monogramme3D(canvas, opts) {
     renderer.render(scene, camera);
   }
 
-  new THREE.GLTFLoader().load(opts.src || 'logo-m.glb', function (gltf) {
+  new THREE.GLTFLoader().load(opts.src || (document.body.dataset.glb || 'logo-m.glb'), function (gltf) {
     var model = gltf.scene;
     // Centre + mise à l'échelle (la hauteur du M = opts.scale unités)
     var box = new THREE.Box3().setFromObject(model), size = new THREE.Vector3(), center = new THREE.Vector3();
