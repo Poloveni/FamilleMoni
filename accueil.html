@@ -146,13 +146,6 @@
     </div>
   </div>
 
-  <div class="tray stitch online-wall reveal" id="online-wall" data-guild="1450234264305008693">
-    <div class="online-wall-head">
-      <span class="online-wall-title"><span class="dot"></span> En ligne maintenant</span>
-      <span class="online-wall-count" id="online-count">—</span>
-    </div>
-    <div class="online-wall-grid" id="online-grid"><div class="online-empty">Chargement…</div></div>
-  </div>
 </div></section>
 
 <!-- ===== CONTACT ===== -->
@@ -396,43 +389,6 @@
     function tout() { SERVEURS.forEach(charge); }
     tout();
     setInterval(() => { if (!document.hidden) tout(); }, 60000);
-  })();
-
-  // ── MUR DES MEMBRES EN LIGNE (widget Discord) ──
-  (function onlineWall() {
-    const wall = document.getElementById('online-wall');
-    const gid = wall.getAttribute('data-guild');
-    const grid = document.getElementById('online-grid');
-    const countEl = document.getElementById('online-count');
-    const BOTS = ['bot moni', 'ticket tool', 'moni v2', 'famille moni bot web', 'moni'];
-    function looksLikeName(u) {
-      if (!u) return false;
-      const low = u.trim().toLowerCase();
-      if (BOTS.includes(low) || /\bbot\b/i.test(u)) return false;
-      const parts = u.trim().split(/\s+/);
-      if (parts.length < 2) return false;
-      return parts.every(p => /^[A-Za-zÀ-ÿ'’.\-]+$/.test(p));
-    }
-    function load() {
-      fetch('https://discord.com/api/guilds/' + gid + '/widget.json?_=' + Date.now(), { cache: 'no-store' })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => {
-          const chan = {}; (d.channels || []).forEach(c => { chan[c.id] = c.name; });
-          const members = (d.members || []).filter(m => looksLikeName(m.username));
-          countEl.textContent = members.length + ' en ligne';
-          if (!members.length) { grid.innerHTML = '<div class="online-empty">Aucun membre en ligne pour le moment.</div>'; return; }
-          grid.innerHTML = members.map(m => {
-            const st = (m.status === 'idle' || m.status === 'dnd' || m.status === 'online') ? m.status : 'online';
-            const voice = (m.channel_id && chan[m.channel_id]) ? '<div class="online-voice">' + escHTML(chan[m.channel_id]) + '</div>' : '';
-            const av = m.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
-            return '<div class="online-member"><div class="online-avatar"><img src="' + av + '" alt="" loading="lazy" decoding="async"><span class="st ' + st + '"></span></div><div class="online-name">' + escHTML(m.username) + '</div>' + voice + '</div>';
-          }).join('');
-        })
-        .catch(() => { grid.innerHTML = '<div class="online-empty">Widget Discord non disponible.</div>'; });
-    }
-    load();
-    setInterval(() => { if (!document.hidden) load(); }, 60000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
   })();
 
   // ── STATUT DU SERVEUR FIVEM (fonction Edge fivem-status) ──
