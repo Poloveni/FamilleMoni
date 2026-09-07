@@ -35,7 +35,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" as="image" href="logo-m.png" fetchpriority="high" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="accueil.css?v=3" />
+  <link rel="stylesheet" href="accueil.css?v=4" />
 
   <!-- Compteur de visites GoatCounter (sans cookies, sans données personnelles) -->
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -119,7 +119,7 @@
 
 <!-- ===== V. DISCORD ===== -->
 <section class="section" id="discord"><div class="wrap">
-  <div class="section__head reveal"><span class="plaque plaque--sm">V</span><h2 class="silver">Le Discord</h2><p class="sub">Serveur principal · Serveur de recrutement</p></div>
+  <div class="section__head reveal"><span class="plaque plaque--sm">V</span><h2 class="silver">Le Discord</h2><p class="sub">Rejoindre la famille</p></div>
 
   <div class="tray stitch server-live reveal" id="server-live">
     <div>
@@ -131,25 +131,6 @@
   </div>
 
   <div class="discord-inner reveal">
-    <!-- SERVEUR PRINCIPAL — réservé aux membres approuvés -->
-    <div class="tray stitch discord-card discord-locked" id="discord-principal-locked">
-      <div class="discord-role">Serveur principal</div>
-      <div class="lock-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 019 0v2.5"/><rect x="5" y="10.5" width="14" height="9" rx="2"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg></div>
-      <p>L'accès au serveur principal est réservé aux membres de la famille.</p>
-      <a href="espace-membre.html" class="btn btn-line" style="height:42px;font-size:11px">Espace membre</a>
-    </div>
-    <div class="tray stitch discord-card" id="discord-principal" style="display:none;">
-      <div class="discord-role">Serveur principal</div>
-      <div class="discord-server">
-        <img id="d-icone-1450234264305008693" src="https://cdn.discordapp.com/icons/1450234264305008693/f196c07d8171daa8bf532ce3627d28ee.png?size=128" alt="Icône serveur principal" onerror="this.style.display='none'" />
-        <div><div class="discord-server-name">Famille Moni 🇮🇹</div><div class="discord-server-tag">Flashback FA — GTA RP</div></div>
-      </div>
-      <div class="discord-stats">
-        <div class="discord-stat online"><div class="discord-stat-num"><span class="dot"></span><span class="d-online" data-guild="1450234264305008693">—</span></div><div class="discord-stat-label">En ligne</div></div>
-        <div class="discord-stat"><div class="discord-stat-num d-membres" data-guild="1450234264305008693">—</div><div class="discord-stat-label">Membres</div></div>
-      </div>
-      <a href="https://discord.gg/nM3ttEtYz" target="_blank" rel="noopener noreferrer" class="discord-cta-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.4 2.9a.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.42 0 12.6 12.6 0 0 0-.62-1.25.07.07 0 0 0-.08-.04c-1.7.29-3.33.8-4.92 1.47a.06.06 0 0 0-.03.03C.53 9.09-.32 13.68.1 18.21a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 0 0-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.92 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.01-3.03.08.08 0 0 0 .03-.05c.5-5.25-.84-9.8-3.55-13.81a.06.06 0 0 0-.03-.03ZM8.02 15.45c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.09 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z"/></svg>Rejoindre le serveur</a>
-    </div>
     <!-- RECRUTEMENT -->
     <div class="tray stitch discord-card">
       <div class="discord-role">Recrutement</div>
@@ -552,22 +533,6 @@
       });
     });
 
-    // Serveur Discord principal : visible uniquement pour les membres APPROUVÉS
-    var discPrincipal = document.getElementById('discord-principal');
-    var discLocked = document.getElementById('discord-principal-locked');
-    function toggleDiscord(isMember) {
-      discPrincipal.style.display = isMember ? 'flex' : 'none';
-      discLocked.style.display = isMember ? 'none' : 'flex';
-    }
-    function refresh() {
-      sb.auth.getSession().then(function (r) {
-        var session = r.data && r.data.session;
-        if (!session) { toggleDiscord(false); return; }
-        sb.from('comptes').select('approuve').eq('id', session.user.id).maybeSingle().then(function (c) { toggleDiscord(!!(c.data && c.data.approuve)); });
-      });
-    }
-    refresh();
-    sb.auth.onAuthStateChange(function () { refresh(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
   else run();

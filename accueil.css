@@ -226,7 +226,7 @@
 .server-dot.off{background:#3a3a40}
 .server-name{font-family:var(--display);font-size:26px;font-weight:700;margin-top:6px}
 .server-players{color:var(--ink2);font-size:16px}
-.discord-inner{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.discord-inner{display:grid;grid-template-columns:minmax(0,640px);justify-content:center;gap:24px}
 .discord-card{padding:34px 30px;display:flex;flex-direction:column;gap:18px;align-items:flex-start}
 .discord-locked{align-items:center;text-align:center;justify-content:center}
 .discord-locked p{color:var(--ink2);margin:0}
