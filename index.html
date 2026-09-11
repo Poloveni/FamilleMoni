@@ -51,35 +51,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="accueil.css?v=3" />
   <style>
-    html, body { height: 100%; overflow: hidden; }
-    .entry { position: relative; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; background: #050506; transition: opacity .7s ease, transform .7s ease; }
+    html, body { height: 100%; overflow: hidden; background: #050506; }
+    .entry { position: relative; min-height: 100vh; min-height: 100dvh; background: #050506; transition: opacity .7s ease, transform .7s ease; }
     .entry.is-leaving { opacity: 0; transform: scale(1.04); pointer-events: none; }
-    .entry__cone { position: absolute; left: 50%; top: -10vh; width: 70vw; height: 120vh; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.16), rgba(255,255,255,.04) 35%, rgba(0,0,0,0) 62%); pointer-events: none; }
-    .entry__floor { position: absolute; left: 0; right: 0; bottom: 0; height: 38vh; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(255,255,255,.035)); pointer-events: none; }
-    .entry__inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
-    .emblem--entry { width: min(270px, 44vw); animation: entryIn 1.4s .3s both; }
-    .emblem--entry img { filter: drop-shadow(0 40px 60px rgba(0,0,0,.9)) drop-shadow(0 0 40px rgba(255,255,255,.12)); }
-    .entry__reflet { width: min(270px, 44vw); height: 110px; overflow: hidden; margin-top: -6px; transform: scaleY(-1); opacity: .14; -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0) 45%, #000 100%); mask-image: linear-gradient(180deg, rgba(0,0,0,0) 45%, #000 100%); pointer-events: none; }
-    .entry__reflet img { width: 100%; height: auto; filter: blur(1px); transform: translateY(calc(-100% + 110px)); }
-    .entry__name { margin: 6px 0 0; font-size: 12px; letter-spacing: .5em; color: var(--ink2); animation: entryIn 1.4s .45s both; }
+    /* La scène 3D occupe tout l'écran ; le texte est posé par-dessus. */
+    #scene3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; touch-action: pan-y; }
+    /* Image de secours, centrée au même endroit que la plaque 3D ; cachée dès que la 3D est prête. */
+    .entry__fallback { position: absolute; left: 50%; top: 44%; width: min(270px, 60vw); transform: translate(-50%, -50%); z-index: 1; transition: opacity .8s; filter: drop-shadow(0 40px 60px rgba(0,0,0,.9)); }
+    .entry__fallback img { width: 100%; height: auto; display: block; }
+    .entry__inner { position: absolute; left: 0; right: 0; top: 66%; z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 24px; pointer-events: none; }
+    .entry__inner > * { pointer-events: auto; }
+    .entry__name { margin: 0; font-family: var(--caps); font-weight: 500; font-size: clamp(18px, 2.4vw, 30px); letter-spacing: .34em; text-indent: .34em; text-transform: uppercase; color: var(--silver); animation: entryIn 1.4s .45s both; text-shadow: 0 2px 24px rgba(0,0,0,.95), 0 0 40px rgba(0,0,0,.8); }
+    .entry__name::after { content: ""; display: block; width: 72px; height: 1px; margin: 18px auto 0; background: linear-gradient(90deg, transparent, rgba(214,214,219,.6), transparent); }
     .entry__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-    .entry__btn { margin-top: 34px; font-family: var(--caps); font-size: 12px; letter-spacing: .42em; text-transform: uppercase; color: var(--silver); border-bottom: 1px solid rgba(214,214,219,.5); padding-bottom: 8px; transition: .3s; animation: entryIn 1.4s .6s both; }
-    .entry__btn:hover, .entry__btn:focus-visible { color: #fff; border-color: #fff; letter-spacing: .5em; outline: none; }
-    .entry__small { position: absolute; bottom: 22px; left: 0; right: 0; z-index: 2; font-size: 10px; letter-spacing: .3em; color: var(--mute); }
+    .entry__btn { margin-top: 26px; font-family: var(--caps); font-weight: 600; font-size: clamp(13px, 1.3vw, 16px); letter-spacing: .4em; text-indent: .4em; text-transform: uppercase; color: var(--silver); border: 1px solid rgba(214,214,219,.45); background: rgba(5,5,6,.35); padding: 16px 40px; min-width: 200px; min-height: 48px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; transition: .3s; animation: entryIn 1.4s .6s both; }
+    .entry__btn:hover, .entry__btn:focus-visible { color: #fff; border-color: #fff; background: rgba(214,214,219,.08); box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 12px 40px rgba(0,0,0,.6); outline: none; }
+    .entry__small { position: absolute; bottom: 22px; left: 0; right: 0; z-index: 2; font-size: 11px; letter-spacing: .3em; color: var(--ink2); text-align: center; }
     @keyframes entryIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-    .emblem--entry canvas { left: -60%; top: -50%; width: 220%; height: 200%; }
-    @media (max-height: 700px) { .emblem--entry, .entry__reflet { width: min(200px, 40vw); } .entry__reflet { height: 70px; } .entry__reflet img { transform: translateY(calc(-100% + 70px)); } }
-    @media (prefers-reduced-motion: reduce) { .emblem--entry, .entry__name, .entry__btn { animation: none; } }
+    @media (max-height: 600px) { .entry__inner { top: 70%; } .entry__btn { margin-top: 16px; padding: 12px 30px; } }
+    @media (max-width: 600px) { .entry__inner { top: 64%; } .entry__fallback { top: 40%; } }
+    @media (prefers-reduced-motion: reduce) { .entry__name, .entry__btn { animation: none; } }
   </style>
   <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
 <main class="entry" id="entry">
-  <div class="entry__cone" aria-hidden="true"></div><div class="entry__floor" aria-hidden="true"></div>
+  <canvas id="scene3d" aria-hidden="true"></canvas>
+  <div class="entry__fallback" id="fallback" aria-hidden="true"><img src="logo-m-rond.webp" alt="" width="768" height="768"></div>
   <div class="entry__inner">
-    <div class="emblem emblem--entry"><img src="logo-m-rond.webp" alt="Monogramme de la Famille Moni" width="768" height="768" id="m-img"><canvas id="m3d" aria-hidden="true"></canvas></div>
-    <div class="entry__reflet" aria-hidden="true"><img src="logo-m-rond.webp" alt=""></div>
     <h1 class="entry__title">La Famille Moni</h1>
     <p class="entry__name caps">La Famille Moni</p>
     <a class="entry__btn" href="accueil.html" id="enter">Entrer</a>
@@ -94,16 +94,162 @@
     setTimeout(function () { location.href = 'accueil.html'; }, 650);
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('enter').click(); });
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var em = document.querySelector('.emblem');
-    addEventListener('pointermove', function (e) {
-      em.style.setProperty('--tx', (e.clientX / innerWidth - 0.5).toFixed(3));
-      em.style.setProperty('--ty', (e.clientY / innerHeight - 0.5).toFixed(3));
-    }, { passive: true });
-  }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="logo3d.js?v=6"></script>
-<script>monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 3.4, camZ: 10, exposure: 1.15 });</script>
+<script>
+/* ── Page d'entrée en 3D : la plaque argentée sous un projecteur, dans la poussière ── */
+(function () {
+  if (typeof THREE === 'undefined') return;
+  var canvas = document.getElementById('scene3d'), fallback = document.getElementById('fallback');
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true }); } catch (e) { return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  var FOND = 0x050506;
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(0, 0.1, 7.4);
+
+  // Reflets neutres (gris) : le logo garde son argenté
+  function degrade(h, m, b) {
+    var c = document.createElement('canvas'); c.width = 8; c.height = 64;
+    var g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64);
+    gr.addColorStop(0, h); gr.addColorStop(0.5, m); gr.addColorStop(1, b);
+    g.fillStyle = gr; g.fillRect(0, 0, 8, 64); return c;
+  }
+  var cote = degrade('#7a7a7a', '#1c1c1c', '#040404');
+  var envMap = new THREE.CubeTexture([cote, cote, degrade('#b0b0b0', '#8a8a8a', '#7a7a7a'), degrade('#050505', '#030303', '#000'), cote, cote]);
+  envMap.needsUpdate = true; envMap.encoding = THREE.sRGBEncoding;
+
+  // Lumières blanches uniquement
+  scene.add(new THREE.AmbientLight(0x707070, 0.5));
+  var key = new THREE.SpotLight(0xffffff, 2.8, 30, Math.PI / 6, 0.6, 1);
+  key.position.set(0, 7, 4); scene.add(key, key.target);
+  var fillG = new THREE.PointLight(0xe6e6e6, 1.1, 20); fillG.position.set(-4, 1.5, 3); scene.add(fillG);
+  var fillD = new THREE.PointLight(0xdcdcdc, 0.8, 20); fillD.position.set(4, -1, 3); scene.add(fillD);
+  var rim = new THREE.PointLight(0xffffff, 1.0, 20); rim.position.set(0, 1, -5); scene.add(rim);
+
+  // Le faisceau du projecteur : une image floue (dégradé peint sur un canvas), posée
+  // derrière la plaque et fondue en additif. Aucun bord géométrique, tout est diffus.
+  function texFaisceau() {
+    var W = 512, H = 1024, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    function trapeze(hautDemi, basDemi, alphaHaut, flou) {
+      g.save(); g.filter = 'blur(' + flou + 'px)';
+      var gr = g.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, 'rgba(255,255,255,' + alphaHaut + ')');
+      gr.addColorStop(0.45, 'rgba(255,255,255,' + (alphaHaut * 0.35) + ')');
+      gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.beginPath();
+      g.moveTo(W / 2 - hautDemi, -40); g.lineTo(W / 2 + hautDemi, -40);
+      g.lineTo(W / 2 + basDemi, H + 40); g.lineTo(W / 2 - basDemi, H + 40); g.closePath(); g.fill(); g.restore();
+    }
+    trapeze(40, 250, 0.55, 46);   // faisceau large, très flou
+    trapeze(22, 120, 0.45, 22);   // cœur du faisceau
+    var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+  }
+  var faisceau = new THREE.Mesh(new THREE.PlaneGeometry(1, 2),
+    new THREE.MeshBasicMaterial({ map: texFaisceau(), transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  faisceau.position.set(0, 0, -1.6); scene.add(faisceau);
+
+  // Le sol : de la couleur du fond, il s'efface progressivement vers les bords (masque radial),
+  // donc aucune ligne d'horizon ni rectangle visible.
+  function texMasqueSol() {
+    var c = document.createElement('canvas'); c.width = c.height = 256; var g = c.getContext('2d');
+    var r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    r.addColorStop(0, '#fff'); r.addColorStop(0.25, '#bbb'); r.addColorStop(0.6, '#333'); r.addColorStop(1, '#000');
+    g.fillStyle = r; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c);
+  }
+  var sol = new THREE.Mesh(new THREE.PlaneGeometry(26, 26),
+    new THREE.MeshStandardMaterial({ color: FOND, metalness: 0.2, roughness: 0.85, envMap: envMap, envMapIntensity: 0.08, transparent: true, alphaMap: texMasqueSol(), depthWrite: false }));
+  sol.rotation.x = -Math.PI / 2; sol.position.set(0, -2.3, -4); sol.layers.set(1); scene.add(sol);
+  // Le sol n'est éclairé que par cette lampe douce (calque 1) : une flaque de lumière discrète, jamais surexposée
+  var lampeSol = new THREE.PointLight(0xffffff, 0.55, 14, 2); lampeSol.position.set(0, 1.5, -1); lampeSol.layers.set(1); scene.add(lampeSol);
+  camera.layers.enable(1);
+
+  // Poussière fine qui tombe lentement
+  var N = 700, dp = new Float32Array(N * 3), vit = new Float32Array(N);
+  for (var i = 0; i < N; i++) {
+    dp[i * 3] = (Math.random() - 0.5) * 16; dp[i * 3 + 1] = Math.random() * 10 - 3; dp[i * 3 + 2] = (Math.random() - 0.5) * 8 - 1;
+    vit[i] = 0.0012 + Math.random() * 0.0035;
+  }
+  var dustGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(dp, 3));
+  var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xc9cdd6, size: 0.028, transparent: true, opacity: 0.5, depthWrite: false }));
+  scene.add(dust);
+
+  // La plaque
+  var world = new THREE.Group(); scene.add(world);
+  var TAILLE = 3.4, baseY = 0.45;
+  var dragging = false, px = 0, py = 0, targetX = 0, targetY = 0, autoSpin = true, mouseX = 0, mouseY = 0;
+  canvas.addEventListener('pointerdown', function (e) { dragging = true; autoSpin = false; px = e.clientX; py = e.clientY; canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); });
+  addEventListener('pointerup', function () { if (dragging) { dragging = false; setTimeout(function () { autoSpin = true; }, 2500); } });
+  addEventListener('pointermove', function (e) {
+    if (dragging) { targetY += (e.clientX - px) * 0.008; targetX += (e.clientY - py) * 0.008; px = e.clientX; py = e.clientY; }
+    else { mouseX = e.clientX / innerWidth - 0.5; mouseY = e.clientY / innerHeight - 0.5; }
+  }, { passive: true });
+  canvas.addEventListener('dblclick', function () { targetX = 0; targetY = Math.round(targetY / (2 * Math.PI)) * 2 * Math.PI; });
+
+  // Taille de la plaque à l'écran : ~44 % de la hauteur, sans dépasser 62 % de la largeur
+  function resize() {
+    var w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    var visibleH = 2 * 7.4 * Math.tan(camera.fov * Math.PI / 360), visibleW = visibleH * camera.aspect;
+    var s = Math.min(0.36 * visibleH, 0.64 * visibleW) / TAILLE;
+    world.scale.setScalar(s);
+    // Le plan du faisceau est plus loin que la plaque (z = -1.6) : on le dimensionne pour couvrir l'écran à cette distance
+    var k = (7.4 + 1.6) / 7.4, fh = visibleH * k * 1.15, fw = Math.max(visibleW * k, fh * 0.9);
+    faisceau.scale.set(fw, fh, 1); faisceau.position.y = visibleH * k * 0.5 - fh * 0.5 + fh * 0.08;
+    // Centre de la plaque à ~40 % de la hauteur (le texte occupe le tiers bas)
+    baseY = visibleH * 0.10;
+  }
+  addEventListener('resize', resize); resize();
+
+  var clock = new THREE.Clock(), running = false;
+  function animate() {
+    requestAnimationFrame(animate);
+    var t = clock.getElapsedTime();
+    if (autoSpin && !dragging && !reduced) targetY += 0.006;
+    var wantX = THREE.MathUtils.clamp(targetX, -0.6, 0.6) + (dragging ? 0 : -mouseY * 0.2) + (reduced ? 0 : Math.sin(t * 0.4) * 0.06);
+    var wantY = targetY + (dragging ? 0 : mouseX * 0.3);
+    world.rotation.x += (wantX - world.rotation.x) * 0.08;
+    world.rotation.y += (wantY - world.rotation.y) * 0.08;
+    world.position.y = baseY + (reduced ? 0 : Math.sin(t * 0.9) * 0.05);
+    key.position.x = Math.sin(t * 0.5) * 2.5;
+    var souffle = 0.9 + Math.sin(t * 1.3) * 0.06 + Math.sin(t * 7.1) * 0.02;
+    key.intensity = 2.8 * souffle; faisceau.material.opacity = 0.42 * souffle;
+    camera.position.x += ((dragging ? 0 : mouseX * 0.5) - camera.position.x) * 0.04;
+    camera.position.y += ((0.1 - (dragging ? 0 : mouseY * 0.3)) - camera.position.y) * 0.04;
+    camera.lookAt(0, 0.25, 0);
+    if (!reduced) {
+      var p = dustGeo.attributes.position.array;
+      for (var i = 0; i < N; i++) { p[i * 3 + 1] -= vit[i]; if (p[i * 3 + 1] < -3) p[i * 3 + 1] = 7; }
+      dustGeo.attributes.position.needsUpdate = true;
+    }
+    renderer.render(scene, camera);
+  }
+
+  new THREE.TextureLoader().load('logo-m-rond.webp', function (tex) {
+    tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    var mat = new THREE.MeshStandardMaterial({
+      map: tex, transparent: true, alphaTest: 0.08,
+      metalness: 0.8, roughness: 0.32, roughnessMap: tex,
+      envMap: envMap, envMapIntensity: 1.6, side: THREE.DoubleSide
+    });
+    var geo = new THREE.PlaneGeometry(TAILLE, TAILLE);
+    var face = new THREE.Mesh(geo, mat); face.position.z = 0.035;
+    var dos = new THREE.Mesh(geo, mat); dos.position.z = -0.035; dos.rotation.y = Math.PI;
+    world.add(face, dos);
+    resize();
+    if (!running) { running = true; animate(); }
+    fallback.style.opacity = '0';
+    setTimeout(function () { fallback.style.visibility = 'hidden'; }, 900);
+  }, undefined, function (err) { console.warn('[entrée 3D] logo non chargé :', err); });
+})();
+</script>
 </body>
 </html>

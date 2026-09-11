@@ -17,7 +17,6 @@ function monogramme3D(canvas, opts) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = opts.exposure || 1.15;
 
-  var host = canvas.parentElement;
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
   camera.position.set(0, 0, opts.camZ || 7.2);
@@ -42,42 +41,14 @@ function monogramme3D(canvas, opts) {
   var fillD = new THREE.PointLight(0xdcdcdc, 0.8, 20); fillD.position.set(4, -1, 3); scene.add(fillD);
   var rim = new THREE.PointLight(0xffffff, 1.0, 20); rim.position.set(0, 1, -5); scene.add(rim);
 
-  // ── Jeux de lumière ─────────────────────────────────────────
-  // 1. Un balayage : une lumière vive qui traverse lentement la plaque de gauche à droite
-  var balayage = new THREE.PointLight(0xffffff, 0, 12, 2); balayage.position.set(0, 0.5, 2.2); scene.add(balayage);
-  // 2. Un liseré tournant derrière le logo (bord lumineux qui se déplace)
-  var orbite = new THREE.PointLight(0xdfe6f2, 1.6, 14, 2); scene.add(orbite);
-  // 3. Un halo doux derrière la plaque, qui respire (contenu dans le canvas, sans bord visible)
-  function texHalo() {
-    var c = document.createElement('canvas'); c.width = c.height = 256; var g = c.getContext('2d');
-    var r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-    r.addColorStop(0, 'rgba(255,255,255,.55)'); r.addColorStop(0.35, 'rgba(255,255,255,.14)'); r.addColorStop(0.7, 'rgba(255,255,255,.03)'); r.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = r; g.fillRect(0, 0, 256, 256);
-    return new THREE.CanvasTexture(c);
-  }
-  var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texHalo(), transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }));
-  halo.position.z = -0.8; scene.add(halo);
-  // 4. L'éclat : une étincelle qui apparaît quand la plaque fait face à la caméra
-  function texEclat() {
-    var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
-    var r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.15, 'rgba(255,255,255,.6)'); r.addColorStop(0.5, 'rgba(255,255,255,.08)'); r.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = r; g.fillRect(0, 0, 128, 128);
-    g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.9)';
-    g.fillRect(63, 4, 2, 120); g.fillRect(4, 63, 120, 2);
-    return new THREE.CanvasTexture(c);
-  }
-  var eclat = new THREE.Sprite(new THREE.SpriteMaterial({ map: texEclat(), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
-  eclat.scale.setScalar(1.2); scene.add(eclat);
-
-  // Poussière argentée en suspension
-  var N = 500, dp = new Float32Array(N * 3), vit = new Float32Array(N);
+  // Poussière argentée en suspension (fine, et elle tombe lentement)
+  var N = 350, dp = new Float32Array(N * 3), vit = new Float32Array(N);
   for (var i = 0; i < N; i++) {
-    dp[i * 3] = (Math.random() - 0.5) * 12; dp[i * 3 + 1] = (Math.random() - 0.5) * 10; dp[i * 3 + 2] = (Math.random() - 0.5) * 6 - 1;
-    vit[i] = 0.0015 + Math.random() * 0.004;
+    dp[i * 3] = (Math.random() - 0.5) * 9; dp[i * 3 + 1] = (Math.random() - 0.5) * 9; dp[i * 3 + 2] = (Math.random() - 0.5) * 5 - 1;
+    vit[i] = 0.001 + Math.random() * 0.003;
   }
   var dustGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(dp, 3));
-  var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xbfc4d0, size: 0.03, transparent: true, opacity: 0.5, depthWrite: false }));
+  var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xbfc4d0, size: 0.022, transparent: true, opacity: 0.45, depthWrite: false }));
   scene.add(dust);
 
   var world = new THREE.Group(); scene.add(world);
@@ -91,13 +62,17 @@ function monogramme3D(canvas, opts) {
   }, { passive: true });
   canvas.addEventListener('dblclick', function () { targetX = 0; targetY = Math.round(targetY / (2 * Math.PI)) * 2 * Math.PI; });
 
+  // Taille : on suit la taille RÉELLE du canvas à l'écran (et pas celle de son parent),
+  // sinon l'image est étirée. Un ResizeObserver rattrape le cas où la taille n'est
+  // connue qu'après le chargement de l'image de secours.
   function resize() {
-    var w = host.clientWidth, h = host.clientHeight;
+    var w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
     world.position.x = (opts.offsetX || 0) * (w / h);
   }
   addEventListener('resize', resize); resize();
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
   var clock = new THREE.Clock();
   function animate() {
@@ -110,27 +85,10 @@ function monogramme3D(canvas, opts) {
     world.rotation.x += (wantX - world.rotation.x) * 0.08;
     world.rotation.y += (wantY - world.rotation.y) * 0.08;
     key.position.x = Math.sin(t * 0.5) * 2.5;
-    // Balayage toutes les ~9 s : la lumière traverse la plaque puis s'éteint
-    var cycle = (t % 9) / 9, actif = cycle < 0.28, u = cycle / 0.28;
-    balayage.position.x = -3.5 + u * 7;
-    balayage.intensity = actif ? Math.sin(u * Math.PI) * 5 : 0;
-    // Liseré qui tourne derrière le logo
-    orbite.position.set(Math.cos(t * 0.6) * 3.2, Math.sin(t * 0.45) * 1.4, -1.6);
-    // Respiration du projecteur et de son faisceau
-    var souffle = 0.85 + Math.sin(t * 1.3) * 0.08 + Math.sin(t * 7.1) * 0.03;
-    key.intensity = 2.6 * souffle;
-    var haloT = (opts.scale || 3.4) * 1.7 * (0.96 + Math.sin(t * 0.8) * 0.04);
-    halo.scale.set(haloT, haloT, 1); halo.material.opacity = 0.32 * souffle; halo.position.y = world.position.y;
-    // Éclat quand la plaque fait face à la caméra (rotation proche d'un multiple d'un demi-tour)
-    var face = Math.abs(Math.cos(world.rotation.y)), force = Math.max(0, (face - 0.985) / 0.015);
-    eclat.material.opacity += (force * 0.9 - eclat.material.opacity) * 0.15;
-    eclat.material.rotation = t * 0.6;
-    var brasX = Math.sin(world.rotation.y) > 0 ? 1 : -1;
-    eclat.position.set(brasX * 0.95 * (opts.scale || 3.4) / 3.4, 0.9 + world.position.y, 0.4);
     world.position.y = (opts.offsetY || 0) + (reduced ? 0 : Math.sin(t * 0.9) * 0.05);
     if (!reduced) {
       var p = dustGeo.attributes.position.array;
-      for (var i = 0; i < N; i++) { p[i * 3 + 1] -= vit[i]; if (p[i * 3 + 1] < -5) p[i * 3 + 1] = 5; }
+      for (var i = 0; i < N; i++) { p[i * 3 + 1] -= vit[i]; if (p[i * 3 + 1] < -4.5) p[i * 3 + 1] = 4.5; }
       dustGeo.attributes.position.needsUpdate = true;
       dust.rotation.y = t * 0.02;
     }
@@ -150,6 +108,7 @@ function monogramme3D(canvas, opts) {
     var dos = new THREE.Mesh(geo, mat); dos.position.z = -0.035; dos.rotation.y = Math.PI;
     world.add(face, dos);
     loaded = true;
+    resize();
     if (opts.fallback) { opts.fallback.style.transition = 'opacity .8s'; opts.fallback.style.opacity = '0'; setTimeout(function () { opts.fallback.style.visibility = 'hidden'; }, 900); }
     canvas.style.opacity = '1';
     animate();
