@@ -64,13 +64,17 @@
 
 <!-- ===== HERO ===== -->
 <section class="hero" id="top">
-  <div class="emblem emblem--hero" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><img src="logo-m-rond.webp" alt="" width="768" height="768" id="m-img"><canvas id="m3d"></canvas></div>
   <div class="hero__content">
-    <p class="eyebrow">Roxwood · Flashback FA · Depuis l'Italie</p>
-    <h1 class="hero__title">La<br>Famille<br><span class="silver">Moni</span></h1>
-    <p class="hero__motto">Silence <i>·</i> Loyauté <i>·</i> Famiglia</p>
-    <p class="hero__lead">Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable.</p>
-    <div class="hero__actions"><a class="btn btn-metal" href="#histoire">Notre histoire</a><a class="btn btn-line" href="https://discord.gg/ZsjmegQxca" target="_blank" rel="noopener noreferrer">Rejoindre le Discord</a></div>
+    <div class="hero__text">
+      <p class="eyebrow">Roxwood · Flashback FA · Depuis l'Italie</p>
+      <h1 class="hero__title">La Famille<br><span class="silver">Moni</span></h1>
+      <p class="hero__motto">Silence <i>·</i> Loyauté <i>·</i> Famiglia</p>
+      <p class="hero__lead">Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable.</p>
+      <div class="hero__actions"><a class="btn btn-metal" href="#histoire">Notre histoire</a><a class="btn btn-line" href="https://discord.gg/ZsjmegQxca" target="_blank" rel="noopener noreferrer">Rejoindre le Discord</a></div>
+    </div>
+    <div class="hero__visual">
+      <div class="emblem emblem--hero" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><img src="logo-m-rond.webp" alt="" width="768" height="768" id="m-img"><canvas id="m3d"></canvas></div>
+    </div>
   </div>
   <a class="hero__scroll" href="#histoire" aria-label="Défiler"><span></span></a>
 </section>
@@ -416,8 +420,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer></script>
-<script src="logo3d.js?v=6" defer></script>
-<script>addEventListener('load', function () { if (window.monogramme3D) monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 3.4, camZ: 7.2 }); });</script>
+<script src="logo3d.js?v=7" defer></script>
+<script>addEventListener('load', function () { if (window.monogramme3D) monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 3.4, camZ: 7.2, swing: true }); });</script>
 
 <!-- Intégration Supabase : hiérarchie, profils (photos), galerie, accès Discord principal -->
 <script id="moni-supabase">

@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════
    logo3d.js — le monogramme M en 3D (three.js r128, sans GLTFLoader)
-   Utilisation : monogramme3D(canvas, { fallback: img, scale, camZ, exposure, offsetX, offsetY, src })
+   Utilisation : monogramme3D(canvas, { fallback: img, scale, camZ, exposure, offsetX, offsetY, src, swing })
    Le logo (logo-m-rond.webp) est posé sur une plaque métallique argentée
    à deux faces qui tourne lentement, avec des reflets et de la poussière.
    Sans WebGL ou en cas d'erreur, l'image de secours reste affichée.
@@ -79,7 +79,9 @@ function monogramme3D(canvas, opts) {
     if (!running) return;
     requestAnimationFrame(animate);
     var t = clock.getElapsedTime();
-    if (autoSpin && !dragging && !reduced) targetY += 0.006;
+    // opts.swing : au lieu d'un tour complet (la plaque passe alors de profil et devient un trait),
+    // la plaque oscille doucement de gauche à droite et reste toujours lisible.
+    if (autoSpin && !dragging && !reduced) { if (opts.swing) targetY += (Math.sin(t * 0.45) * 0.55 - targetY) * 0.05; else targetY += 0.006; }
     var wantX = THREE.MathUtils.clamp(targetX, -0.6, 0.6) + (dragging ? 0 : -mouseY * 0.2) + (reduced ? 0 : Math.sin(t * 0.4) * 0.06);
     var wantY = targetY + (dragging ? 0 : mouseX * 0.3);
     world.rotation.x += (wantX - world.rotation.x) * 0.08;
