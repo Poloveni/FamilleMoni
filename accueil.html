@@ -33,7 +33,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" as="image" href="logo-m.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="logo-m-rond.webp" fetchpriority="high" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="accueil.css?v=4" />
 
@@ -64,7 +64,7 @@
 
 <!-- ===== HERO ===== -->
 <section class="hero" id="top">
-  <div class="emblem emblem--hero" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><img src="logo-m.png" alt="" width="558" height="760" id="m-img"><canvas id="m3d"></canvas></div>
+  <div class="emblem emblem--hero" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><img src="logo-m-rond.webp" alt="" width="768" height="768" id="m-img"><canvas id="m3d"></canvas></div>
   <div class="hero__content">
     <p class="eyebrow">Roxwood · Flashback FA · Depuis l'Italie</p>
     <h1 class="hero__title">La<br>Famille<br><span class="silver">Moni</span></h1>
@@ -416,9 +416,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" defer></script>
-<script src="logo3d.js?v=2" defer></script>
-<script>addEventListener('load', function () { if (window.monogramme3D) monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 2.4, camZ: 6.2 }); });</script>
+<script src="logo3d.js?v=4" defer></script>
+<script>addEventListener('load', function () { if (window.monogramme3D) monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 3.4, camZ: 7.2 }); });</script>
 
 <!-- Intégration Supabase : hiérarchie, profils (photos), galerie, accès Discord principal -->
 <script id="moni-supabase">

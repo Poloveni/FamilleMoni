@@ -1,7 +1,7 @@
 /* Service Worker — Famille Moni (PWA) */
-const CACHE = 'moni-v10';
+const CACHE = 'moni-v11';
 const CORE = [
-  './', './index.html', './accueil.html', './accueil.css', './logo-m.png', './logo-m-petit.png', './espace-membre.html',
+  './', './index.html', './accueil.html', './accueil.css', './logo-m.png', './logo-m-rond.webp', './logo-m-petit.png', './espace-membre.html',
   './logo.jpg', './hero-bg.webp', './icon-192.png', './icon-512.png',
   './manifest.json', './404.html', './theme.css', './utils.js'
 ];
