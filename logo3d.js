@@ -35,7 +35,7 @@ function monogramme3D(canvas, opts) {
   envMap.needsUpdate = true; envMap.encoding = THREE.sRGBEncoding;
 
   // Lumières blanches uniquement : aucune teinte sur le métal
-  scene.add(new THREE.AmbientLight(0x5a5a5a, 0.4));
+  scene.add(new THREE.AmbientLight(0x707070, 0.55));
   var key = new THREE.SpotLight(0xffffff, 2.6, 30, Math.PI / 6, 0.6, 1);
   key.position.set(0, 7, 4); scene.add(key, key.target);
   var fillG = new THREE.PointLight(0xe6e6e6, 1.2, 20); fillG.position.set(-4, 1.5, 3); scene.add(fillG);
@@ -47,12 +47,16 @@ function monogramme3D(canvas, opts) {
   var balayage = new THREE.PointLight(0xffffff, 0, 12, 2); balayage.position.set(0, 0.5, 2.2); scene.add(balayage);
   // 2. Un liseré tournant derrière le logo (bord lumineux qui se déplace)
   var orbite = new THREE.PointLight(0xdfe6f2, 1.6, 14, 2); scene.add(orbite);
-  // 3. Le faisceau du projecteur, visible dans la poussière (cône translucide)
-  var coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.045, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-  var cone = new THREE.Mesh(new THREE.ConeGeometry(3.2, 9, 48, 1, true), coneMat);
-  cone.position.set(0, 3.2, -0.6); cone.rotation.x = Math.PI; scene.add(cone);
-  var cone2 = new THREE.Mesh(new THREE.ConeGeometry(1.6, 9, 48, 1, true), coneMat.clone()); cone2.material.opacity = 0.035;
-  cone2.position.copy(cone.position); cone2.rotation.x = Math.PI; scene.add(cone2);
+  // 3. Un halo doux derrière la plaque, qui respire (contenu dans le canvas, sans bord visible)
+  function texHalo() {
+    var c = document.createElement('canvas'); c.width = c.height = 256; var g = c.getContext('2d');
+    var r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    r.addColorStop(0, 'rgba(255,255,255,.55)'); r.addColorStop(0.35, 'rgba(255,255,255,.14)'); r.addColorStop(0.7, 'rgba(255,255,255,.03)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(c);
+  }
+  var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texHalo(), transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.position.z = -0.8; scene.add(halo);
   // 4. L'éclat : une étincelle qui apparaît quand la plaque fait face à la caméra
   function texEclat() {
     var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
@@ -65,9 +69,6 @@ function monogramme3D(canvas, opts) {
   }
   var eclat = new THREE.Sprite(new THREE.SpriteMaterial({ map: texEclat(), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
   eclat.scale.setScalar(1.2); scene.add(eclat);
-  // 5. Un sol sombre qui reflète la plaque
-  var sol = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x0b0b0d, metalness: 0.7, roughness: 0.3, envMap: envMap, envMapIntensity: 0.5 }));
-  sol.rotation.x = -Math.PI / 2; sol.position.y = -2.6; scene.add(sol);
 
   // Poussière argentée en suspension
   var N = 500, dp = new Float32Array(N * 3), vit = new Float32Array(N);
@@ -117,7 +118,9 @@ function monogramme3D(canvas, opts) {
     orbite.position.set(Math.cos(t * 0.6) * 3.2, Math.sin(t * 0.45) * 1.4, -1.6);
     // Respiration du projecteur et de son faisceau
     var souffle = 0.85 + Math.sin(t * 1.3) * 0.08 + Math.sin(t * 7.1) * 0.03;
-    key.intensity = 2.6 * souffle; cone.material.opacity = 0.045 * souffle; cone2.material.opacity = 0.035 * souffle;
+    key.intensity = 2.6 * souffle;
+    var haloT = (opts.scale || 3.4) * 1.7 * (0.96 + Math.sin(t * 0.8) * 0.04);
+    halo.scale.set(haloT, haloT, 1); halo.material.opacity = 0.32 * souffle; halo.position.y = world.position.y;
     // Éclat quand la plaque fait face à la caméra (rotation proche d'un multiple d'un demi-tour)
     var face = Math.abs(Math.cos(world.rotation.y)), force = Math.max(0, (face - 0.985) / 0.015);
     eclat.material.opacity += (force * 0.9 - eclat.material.opacity) * 0.15;
@@ -140,7 +143,7 @@ function monogramme3D(canvas, opts) {
     var mat = new THREE.MeshStandardMaterial({
       map: tex, transparent: true, alphaTest: 0.08,
       metalness: 0.8, roughness: 0.32, roughnessMap: tex,
-      envMap: envMap, envMapIntensity: 1.4, side: THREE.DoubleSide
+      envMap: envMap, envMapIntensity: 1.6, side: THREE.DoubleSide
     });
     var taille = opts.scale || 3.4, geo = new THREE.PlaneGeometry(taille, taille);
     var face = new THREE.Mesh(geo, mat); face.position.z = 0.035;

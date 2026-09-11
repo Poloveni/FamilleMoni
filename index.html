@@ -67,6 +67,7 @@
     .entry__btn:hover, .entry__btn:focus-visible { color: #fff; border-color: #fff; letter-spacing: .5em; outline: none; }
     .entry__small { position: absolute; bottom: 22px; left: 0; right: 0; z-index: 2; font-size: 10px; letter-spacing: .3em; color: var(--mute); }
     @keyframes entryIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    .emblem--entry canvas { left: -60%; top: -50%; width: 220%; height: 200%; }
     @media (max-height: 700px) { .emblem--entry, .entry__reflet { width: min(200px, 40vw); } .entry__reflet { height: 70px; } .entry__reflet img { transform: translateY(calc(-100% + 70px)); } }
     @media (prefers-reduced-motion: reduce) { .emblem--entry, .entry__name, .entry__btn { animation: none; } }
   </style>
@@ -102,7 +103,7 @@
   }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="logo3d.js?v=4"></script>
-<script>monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 3.4, camZ: 7.2, exposure: 1.15 });</script>
+<script src="logo3d.js?v=5"></script>
+<script>monogramme3D(document.getElementById('m3d'), { fallback: document.getElementById('m-img'), scale: 3.4, camZ: 10, exposure: 1.15 });</script>
 </body>
 </html>
