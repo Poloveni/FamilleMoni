@@ -705,6 +705,33 @@ body.tv-mode .panel { max-width: none; }
 .tx-carte .tx-retard { color: #e0a0a0; }
 .tx-carte.tx-toutes { border-style: dashed; }
 .tx-retour { font-family: var(--caps); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; border-color: var(--border2); }
+/* La barre de recherche des taxes : champ, filtres d'état, compteur. */
+.tx-outils { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.tx-recherche {
+  display: flex; align-items: center; gap: 8px; flex: 1 1 260px; max-width: 420px; margin: 0;
+  padding: 0 8px 0 12px; background: rgba(0,0,0,.35); border: 1px solid var(--border2);
+  transition: border-color var(--t) ease, box-shadow var(--t) ease; cursor: text;
+  font-family: var(--body); text-transform: none; letter-spacing: 0;
+}
+.tx-recherche:focus-within { border-color: var(--gold-hard); box-shadow: 0 0 0 3px rgba(255,255,255,.14); }
+.tx-recherche svg { width: 16px; height: 16px; color: var(--dim); flex-shrink: 0; }
+.tx-recherche input { flex: 1; min-width: 0; margin: 0; padding: 10px 0; border: 0; background: transparent; box-shadow: none; }
+.tx-recherche input:focus { border: 0; box-shadow: none; background: transparent; }
+.tx-recherche input:focus-visible { outline: none; }   /* c'est la barre entière qui montre le focus */
+.tx-recherche input::-webkit-search-cancel-button { display: none; }
+.tx-effacer { border: 0; background: none; color: var(--dim); font-size: 20px; line-height: 1; cursor: pointer; padding: 4px 6px; transition: color var(--t) ease; }
+.tx-effacer:hover { color: var(--ink); }
+.tx-filtres { display: flex; border: 1px solid var(--border2); }
+.tx-filtre {
+  border: 0; background: none; cursor: pointer; padding: 9px 13px;
+  font-family: var(--caps); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink2);
+  transition: color var(--t) ease, background var(--t) ease;
+}
+.tx-filtre + .tx-filtre { border-left: 1px solid var(--border2); }
+.tx-filtre:hover { color: var(--ink); background: rgba(255,255,255,.05); }
+.tx-filtre.active { color: #1a1208; background: var(--paper); }
+.tx-compte { font-family: var(--caps); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); margin-left: auto; }
+.taxes-table mark { background: rgba(233,223,201,.22); color: var(--ink); padding: 0 1px; }
 .taxes-table tr.tx-payee td { opacity: .45; }
 .taxes-table tr.tx-retard td:first-child { box-shadow: inset 3px 0 0 #c25c5c; }
 .taxes-table tr.tx-urgent td:first-child { box-shadow: inset 3px 0 0 #e0b062; }

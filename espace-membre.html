@@ -925,7 +925,7 @@
     .hier-rang-pill { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
     @media (max-width: 640px) { .hier-add { grid-template-columns: 1fr; } }
   </style>
-  <link rel="stylesheet" href="moni-theme-dash.css?v=6" />
+  <link rel="stylesheet" href="moni-theme-dash.css?v=7" />
 </head>
 <body>
 <canvas id="member-canvas"></canvas>
@@ -1229,6 +1229,21 @@
           <button type="button" class="tx-retour" onclick="taxesRetour()">&#8592; Choisir une autre taxe</button>
         </div>
         <div id="taxes-kpis"></div>
+        <!-- Recherche : filtre la liste au fil de la frappe (nom du groupe,
+             type, statut). Les boutons restreignent aux dues ou aux payées. -->
+        <div class="tx-outils">
+          <label class="tx-recherche" for="taxes-q">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            <input type="search" id="taxes-q" placeholder="Chercher un groupe…" autocomplete="off" spellcheck="false" aria-label="Chercher une taxe" />
+            <button type="button" class="tx-effacer" id="taxes-q-x" aria-label="Effacer la recherche" hidden>×</button>
+          </label>
+          <div class="tx-filtres" role="group" aria-label="Filtrer par statut">
+            <button type="button" class="tx-filtre active" data-f="tout">Toutes</button>
+            <button type="button" class="tx-filtre" data-f="dues">À encaisser</button>
+            <button type="button" class="tx-filtre" data-f="payees">Payées</button>
+          </div>
+          <span class="tx-compte" id="taxes-compte" aria-live="polite"></span>
+        </div>
         <div id="taxes-liste"></div>
       </div>
     </div>
@@ -3883,21 +3898,77 @@
 
     // La colonne Type n'apparaît que sur la vue « Toutes » (sinon elle répète le titre).
     const avecType = type === null;
+    // Le tableau est construit une fois, complet ; la recherche et les filtres
+    // ne font que masquer des lignes. Chaque ligne porte son texte de recherche
+    // (nom, type, statut) sans accents ni majuscules.
     document.getElementById('taxes-liste').innerHTML =
       '<div class="table-wrap"><table class="vd-table taxes-table"><thead><tr><th>Groupe</th>' + (avecType ? '<th>Type</th>' : '') + '<th>Échéance</th><th>Statut</th></tr></thead><tbody>' +
       liste.map(({ t, e }) => {
         const dte = t.echeance ? new Date(t.echeance).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
         const pill = { retard: 'bad', urgent: 'warn', payee: 'ok', ok: '', attente: '' }[e.k] || '';
-        return '<tr class="tx-' + e.k + '">' +
-          '<td><b>' + escT(t.nom || '?') + '</b></td>' +
+        const cle = txNormalise([t.nom, __taxesLabels[t.type] || t.type, e.txt, dte].join(' '));
+        return '<tr class="tx-' + e.k + '" data-cle="' + escT(cle) + '" data-etat="' + (e.k === 'payee' ? 'payee' : 'due') + '">' +
+          '<td><b class="tx-nom">' + escT(t.nom || '?') + '</b></td>' +
           (avecType ? '<td>' + escT(__taxesLabels[t.type] || t.type || '—') + '</td>' : '') +
           '<td>' + escT(dte) + '</td>' +
           '<td><span class="pill ' + pill + '">' + e.txt + '</span></td>' +
         '</tr>';
       }).join('') +
       '</tbody></table></div>' +
+      '<div class="locked" id="taxes-vide" hidden>Aucune taxe ne correspond.</div>' +
       '<div class="hint" style="margin-top:12px;">Synchronisé depuis le bot toutes les 5 minutes — le paiement se gère sur Discord, dans le salon #taxes.</div>';
+    // Nouveau type ouvert : la recherche repart de zéro, le filtre reste.
+    const q = document.getElementById('taxes-q');
+    if (q) { q.value = ''; }
+    txFiltrer();
   };
+
+  // Sans accents ni majuscules : « Sporex », « SPOREX » et « spôrex » se trouvent pareil.
+  function txNormalise(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  let txFiltreEtat = 'tout';
+  function txFiltrer() {
+    const q = document.getElementById('taxes-q');
+    const mots = txNormalise(q ? q.value : '').split(' ').filter(Boolean);
+    const lignes = document.querySelectorAll('#taxes-liste tbody tr');
+    let visibles = 0;
+    lignes.forEach(tr => {
+      const okEtat = txFiltreEtat === 'tout' || (txFiltreEtat === 'dues' ? tr.dataset.etat === 'due' : tr.dataset.etat === 'payee');
+      const okMots = mots.every(m => tr.dataset.cle.indexOf(m) !== -1);
+      const ok = okEtat && okMots;
+      tr.hidden = !ok;
+      if (ok) visibles++;
+      // Le nom du groupe surligne la partie qui correspond.
+      const nom = tr.querySelector('.tx-nom');
+      if (nom) {
+        const brut = nom.textContent;
+        if (ok && mots.length) {
+          const idx = txNormalise(brut).indexOf(mots[0]);
+          nom.innerHTML = idx === -1 ? escT(brut)
+            : escT(brut.slice(0, idx)) + '<mark>' + escT(brut.slice(idx, idx + mots[0].length)) + '</mark>' + escT(brut.slice(idx + mots[0].length));
+        } else nom.textContent = brut;
+      }
+    });
+    const vide = document.getElementById('taxes-vide'); if (vide) vide.hidden = visibles > 0;
+    const compte = document.getElementById('taxes-compte');
+    if (compte) compte.textContent = (mots.length || txFiltreEtat !== 'tout')
+      ? visibles + ' sur ' + lignes.length : '';
+    const x = document.getElementById('taxes-q-x'); if (x && q) x.hidden = !q.value;
+  }
+  (function initTaxesRecherche() {
+    const q = document.getElementById('taxes-q');
+    if (!q) return;
+    q.addEventListener('input', txFiltrer);
+    q.addEventListener('keydown', e => { if (e.key === 'Escape') { q.value = ''; txFiltrer(); } });
+    const x = document.getElementById('taxes-q-x');
+    if (x) x.addEventListener('click', () => { q.value = ''; txFiltrer(); q.focus(); });
+    document.querySelectorAll('.tx-filtre').forEach(b => b.addEventListener('click', () => {
+      txFiltreEtat = b.dataset.f;
+      document.querySelectorAll('.tx-filtre').forEach(o => o.classList.toggle('active', o === b));
+      txFiltrer();
+    }));
+  })();
 
   window.taxesRetour = function () {
     document.getElementById('bloc-taxes-detail').style.display = 'none';
