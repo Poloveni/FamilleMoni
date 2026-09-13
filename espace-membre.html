@@ -5453,9 +5453,17 @@
   })();
 </script>
 
-<!-- Le fond en profondeur (grille en fuite, particules, parallaxe) — voir fond3d.js.
+<!-- Le fond : une pièce en WebGL (sol poli, grille, monogramme dans la brume,
+     poussière) — voir fond3d-gl.js. Sur tactile, sans WebGL ou avec « réduire
+     les animations », la version canvas 2D (fond3d.js) prend le relais.
      L'ancien fond étoilé (starfield.js) reste utilisé par le panneau admin. -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="fond3d-gl.js?v=1"></script>
 <script src="fond3d.js?v=1"></script>
-<script>fond3d('member-canvas', { particules: 260 });</script>
+<script>
+  if (!(window.fond3dGL && fond3dGL('member-canvas', { logo: 'logo-m-rond.webp' }))) {
+    fond3d('member-canvas', { particules: 260 });
+  }
+</script>
 </body>
 </html>
