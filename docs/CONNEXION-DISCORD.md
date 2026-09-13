@@ -60,7 +60,7 @@ Sans ça, Discord te renverra vers une page d'erreur après la connexion.
 ## Étape 4 — Exécuter le SQL (2 min)
 
 Dans Supabase → **SQL Editor** → **New query**, colle le contenu de
-**`discord-admin.sql`** et clique **Run**.
+**`migrations/discord-admin.sql`** et clique **Run**.
 
 Il crée la vérification des droits et ajoute la colonne `is_admin` si ton
 bot ne l'a pas encore créée.
@@ -117,10 +117,10 @@ membres basculeront.
 
 ## L'accès de secours
 
-`discord-admin.sql` garde ton email `syne@live.fr` comme accès de secours à
+`migrations/discord-admin.sql` garde ton email `syne@live.fr` comme accès de secours à
 l'import, pour éviter que tu te retrouves enfermée dehors pendant la bascule.
 
-Quand tout le monde sera passé par Discord, ouvre `discord-admin.sql`,
+Quand tout le monde sera passé par Discord, ouvre `migrations/discord-admin.sql`,
 trouve le bloc `peut_importer_taxes`, et remplace la liste d'emails par
 `and false` :
 

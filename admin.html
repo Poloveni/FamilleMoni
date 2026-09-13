@@ -257,7 +257,7 @@
       const q = await SB.from('comptes').select('*').order('created_at', { ascending: false });
       if (q.error) { list.innerHTML = '<p class="hint">Erreur : ' + escHTML(q.error.message) + '</p>'; return; }
       comptes = q.data || [];
-      if (comptes.length) NOTE_INSC = 'Pour voir aussi le <b>pseudo Discord</b> et le <b>nom du personnage</b>, exécute <code>comptes-details.sql</code> dans Supabase.';
+      if (comptes.length) NOTE_INSC = 'Pour voir aussi le <b>pseudo Discord</b> et le <b>nom du personnage</b>, exécute <code>migrations/comptes-details.sql</code> dans Supabase.';
     }
     COMPTES = comptes; dessineInscriptions();
   }
@@ -291,7 +291,7 @@
     if (!await moniConfirm('Supprimer le compte de ' + qui + ' ?', 'Sa connexion, sa fiche de profil et sa photo seront effacées. Ses photos de la galerie sont conservées.\nCette action est irréversible.', 'Supprimer')) return;
     try { const { data: fichiers } = await SB.storage.from('photos').list(id); if (fichiers && fichiers.length) await SB.storage.from('photos').remove(fichiers.map(f => id + '/' + f.name)); } catch (e) { console.warn('[suppression] photo non retirée :', e); }
     const { data, error } = await SB.rpc('supprimer_compte', { p_id: id });
-    if (error) { showToast(/supprimer_compte/i.test(error.message) ? 'Fonction absente : exécute supprimer-compte.sql dans Supabase.' : 'Suppression refusée : ' + error.message); return; }
+    if (error) { showToast(/supprimer_compte/i.test(error.message) ? 'Fonction absente : exécute migrations/supprimer-compte.sql dans Supabase.' : 'Suppression refusée : ' + error.message); return; }
     showToast('Compte supprimé' + (data ? ' : ' + data : '') + '.'); renderInscriptions(); updateDashLive();
   }
   async function setApprouve(id, val) {
@@ -301,7 +301,7 @@
   }
   async function setAcces(id, val) {
     const { error } = await SB.from('comptes').update({ acces: val }).eq('id', id);
-    if (error) { showToast(/acces/i.test(error.message) ? "La colonne « acces » n'existe pas encore : exécute acces-comptes.sql dans Supabase." : 'Erreur : ' + error.message); renderInscriptions(); return; }
+    if (error) { showToast(/acces/i.test(error.message) ? "La colonne « acces » n'existe pas encore : exécute migrations/acces-comptes.sql dans Supabase." : 'Erreur : ' + error.message); renderInscriptions(); return; }
     showToast(val === 'taxes' ? 'Ce compte ne verra plus que le panneau Taxes.' : "Ce compte a de nouveau accès à tout l'espace membre."); renderInscriptions();
   }
 

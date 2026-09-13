@@ -34,7 +34,7 @@ Navigateur de la Donna          Supabase                    Bot (VPS)
 
 ## Prérequis
 
-Exécuter `import-taxes.sql` (à la racine du dépôt du site) dans
+Exécuter `migrations/import-taxes.sql` (dossier `migrations/` du dépôt du site) dans
 Supabase → SQL Editor. Il crée `import_taxes` et `bot_taxes_types`.
 
 ## Ce que le bot reçoit

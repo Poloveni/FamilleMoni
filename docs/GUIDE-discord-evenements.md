@@ -33,7 +33,7 @@ Point mensuel de la famille au QG. Présence obligatoire.
 
 ## Étape 3 — Préparer la base (Supabase)
 
-- **SQL Editor** → colle le contenu de `discord-sync-schema.sql` → **Run**.
+- **SQL Editor** → colle le contenu de `migrations/discord-sync-schema.sql` → **Run**.
 
 ## Étape 4 — Créer la fonction Edge
 

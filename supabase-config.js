@@ -1,6 +1,6 @@
 // ── Configuration Supabase — Famille Moni ──
 // La clé "publishable" est conçue pour être publique : elle est protégée
-// côté serveur par les règles de sécurité (RLS) définies dans supabase-schema.sql.
+// côté serveur par les règles de sécurité (RLS) définies dans migrations/supabase-schema.sql.
 window.SUPABASE_URL = 'https://prwdtdmdkhzwfyivaepw.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_qgN4fRX9eVdKn3SWAjtmhw_F00rlqXz';
 
@@ -38,7 +38,7 @@ window.MONI_RANGS = [
 //
 // ⚠ Depuis le 05/09/2026, cette liste n'est plus que la valeur DE SECOURS :
 //   la vraie liste vit dans Supabase (tables « hierarchie » et « rangs »,
-//   voir hierarchie.sql) et se modifie depuis l'espace membre, panneau
+//   voir migrations/hierarchie.sql) et se modifie depuis l'espace membre, panneau
 //   « Hiérarchie ». Elle n'est lue ici que si la base ne répond pas.
 //
 // Changements du 05/09/2026 :

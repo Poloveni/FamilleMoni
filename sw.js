@@ -1,9 +1,10 @@
 /* Service Worker — Famille Moni (PWA) */
-const CACHE = 'moni-v11';
+const CACHE = 'moni-v12';
+// Uniquement des fichiers qui existent : un chemin fantôme ne casse rien
+// (allSettled), mais il coûte une requête 404 à chaque installation.
 const CORE = [
-  './', './index.html', './accueil.html', './accueil.css', './logo-m.png', './logo-m-rond.webp', './logo-m-petit.png', './espace-membre.html',
-  './logo.jpg', './hero-bg.webp', './icon-192.png', './icon-512.png',
-  './manifest.json', './404.html', './theme.css', './utils.js'
+  './', './index.html', './accueil.html', './accueil.css', './logo-m-rond.webp', './logo-m-petit.png', './espace-membre.html',
+  './icon-192.png', './icon-512.png', './manifest.json', './404.html'
 ];
 
 self.addEventListener('install', e => {

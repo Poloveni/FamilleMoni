@@ -1,6 +1,6 @@
 # Base de données — ordre d'exécution des fichiers SQL
 
-Les fichiers `.sql` à la racine du projet ont été appliqués dans cet ordre.
+Les fichiers `.sql` de ce dossier ont été appliqués dans cet ordre.
 Si tu dois un jour reconstruire la base à zéro (nouveau projet Supabase),
 exécute-les dans **cet ordre exact**, dans Supabase → SQL Editor.
 

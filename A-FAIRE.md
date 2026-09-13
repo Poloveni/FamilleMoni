@@ -14,10 +14,10 @@ colle le fichier → **Run**. Puis, une seule fois à la fin, double-clique
 
 | Fichier à coller | Ce que ça débloque |
 |---|---|
-| **`acces-comptes.sql`** | Le menu « Tout l'espace membre / Taxes uniquement » sur chaque compte |
-| **`bareme-drogues.sql`** | Le calculateur de vente (produit + pureté + quantité) |
-| **`comptes-details.sql`** | Le pseudo Discord et le nom du personnage dans la liste des inscriptions |
-| **`supprimer-compte.sql`** | Le bouton **Supprimer** définitif sur un compte révoqué |
+| **`migrations/acces-comptes.sql`** | Le menu « Tout l'espace membre / Taxes uniquement » sur chaque compte |
+| **`migrations/bareme-drogues.sql`** | Le calculateur de vente (produit + pureté + quantité) |
+| **`migrations/comptes-details.sql`** | Le pseudo Discord et le nom du personnage dans la liste des inscriptions |
+| **`migrations/supprimer-compte.sql`** | Le bouton **Supprimer** définitif sur un compte révoqué |
 
 Quelques précisions :
 
@@ -33,7 +33,7 @@ Quelques précisions :
 
 ## 1 · Activer la carte de Roxwood (5 min + le temps de placer tes points)
 
-1. Supabase → **SQL Editor** → colle **`carte-points.sql`** → **Run**.
+1. Supabase → **SQL Editor** → colle **`migrations/carte-points.sql`** → **Run**.
 2. Double-clique **`publier.bat`**.
 3. Espace membre → onglet **Carte** → **Modifier la carte**.
    Clique pour poser un point, glisse pour le déplacer, renseigne le nom
@@ -77,7 +77,7 @@ Sans cette configuration, le bouton « Se connecter avec Discord » de
 l'espace membre affiche une erreur — le reste fonctionne normalement.
 
 Ordre conseillé : configure Discord + Supabase d'abord (étapes 1 à 3 du
-guide), puis exécute `discord-admin.sql`. Ton email et celui de Raymond
+guide), puis exécute `migrations/discord-admin.sql`. Ton email et celui de Raymond
 restent en accès de secours pour l'import de taxes pendant toute la
 transition : personne ne se retrouve enfermé dehors.
 

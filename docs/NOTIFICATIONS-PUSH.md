@@ -6,7 +6,7 @@ il reste 3 étapes de ton côté — une seule fois.
 
 ## Étape 1 — La table (2 min)
 
-Supabase → **SQL Editor** → colle le contenu de `push-notifications.sql` → **Run**.
+Supabase → **SQL Editor** → colle le contenu de `migrations/push-notifications.sql` → **Run**.
 
 ## Étape 2 — Les 2 secrets GitHub (3 min)
 

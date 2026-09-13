@@ -2812,7 +2812,7 @@
     ]);
     const err = meta.error || stats.error || mapping.error || stocks.error || armes.error;
     if (err) {
-      elC.innerHTML = '<div class="locked">Dashboard indisponible — exécute bot-sync-schema.sql dans Supabase. (' + escT(err.message) + ')</div>';
+      elC.innerHTML = '<div class="locked">Dashboard indisponible — exécute migrations/bot-sync-schema.sql dans Supabase. (' + escT(err.message) + ')</div>';
       return;
     }
     const metaMap = {};
@@ -4444,7 +4444,7 @@
     (rows || []).forEach(r => { PRIX_ACHAT[r.item] = Number(r.prix) || 0; });
 
     if (baremeQ && baremeQ.error) {
-      box.innerHTML = '<div class="locked">Calculateur indisponible — exécute <code>bareme-drogues.sql</code> dans Supabase. (' +
+      box.innerHTML = '<div class="locked">Calculateur indisponible — exécute <code>migrations/bareme-drogues.sql</code> dans Supabase. (' +
         escT(baremeQ.error.message) + ')</div>';
       return;
     }
@@ -4454,7 +4454,7 @@
       (Number(a.purete) - Number(b.purete)));
 
     if (!BAREME.length) {
-      box.innerHTML = '<div class="locked">Le barème est vide — exécute <code>bareme-drogues.sql</code> dans Supabase pour charger les prix officiels.</div>';
+      box.innerHTML = '<div class="locked">Le barème est vide — exécute <code>migrations/bareme-drogues.sql</code> dans Supabase pour charger les prix officiels.</div>';
       return;
     }
 
@@ -4718,7 +4718,7 @@
     }
 
     if (prixQ.error) {
-      box.innerHTML = '<div class="locked">Indisponible — exécute prix-drogues.sql puis prix-drogues-2.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
+      box.innerHTML = '<div class="locked">Indisponible — exécute migrations/prix-drogues.sql puis migrations/prix-drogues-2.sql dans Supabase. (' + escT(prixQ.error.message) + ')</div>';
       // Le calculateur, lui, n'a pas besoin des prix d'achat : il continue
       // de fonctionner, simplement sans afficher de marge.
       rendreCalculateur(baremeQ, []);
@@ -4928,7 +4928,7 @@
     ]);
 
     if (ptsQ.error) {
-      if (note) note.textContent = ' · exécute carte-points.sql dans Supabase pour activer la carte';
+      if (note) note.textContent = ' · exécute migrations/carte-points.sql dans Supabase pour activer la carte';
       calque.innerHTML = '';
       return;
     }
@@ -5327,7 +5327,7 @@
       if (typesValides) return typesValides;
       const { data, error } = await sb.from('bot_taxes_types').select('type,label,ordre').order('ordre');
       if (error || !data || !data.length) {
-        throw new Error('Liste des types de taxe indisponible — exécute import-taxes.sql dans Supabase.');
+        throw new Error('Liste des types de taxe indisponible — exécute migrations/import-taxes.sql dans Supabase.');
       }
       typesValides = data;
       return typesValides;
