@@ -5453,7 +5453,9 @@
   })();
 </script>
 
-<script src="starfield.js"></script>
-<script>starfield('member-canvas', { max: 140, densite: 14000 });</script>
+<!-- Le fond en profondeur (grille en fuite, particules, parallaxe) — voir fond3d.js.
+     L'ancien fond étoilé (starfield.js) reste utilisé par le panneau admin. -->
+<script src="fond3d.js?v=1"></script>
+<script>fond3d('member-canvas', { particules: 260 });</script>
 </body>
 </html>
