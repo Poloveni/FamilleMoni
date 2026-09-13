@@ -924,7 +924,7 @@
     .hier-rang-pill { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
     @media (max-width: 640px) { .hier-add { grid-template-columns: 1fr; } }
   </style>
-  <link rel="stylesheet" href="moni-theme-dash.css?v=5" />
+  <link rel="stylesheet" href="moni-theme-dash.css?v=6" />
 </head>
 <body>
 <canvas id="member-canvas"></canvas>
@@ -1110,8 +1110,9 @@
       </div>
     </div>
 
-    <!-- CLASSEMENT -->
+    <!-- CLASSEMENT : le podium d'abord, le tableau complet ensuite -->
     <div class="panel" id="panel-business">
+      <div id="bd-podium"></div>
       <div class="bloc"><div id="bd-classement"><div class="locked">Chargement…</div></div></div>
     </div>
 
@@ -1141,6 +1142,12 @@
       <!-- RÉSUMÉ — les 4 réponses qu'on vient chercher en premier -->
       <div class="kpis" id="prix-kpis" style="display:none;"></div>
 
+      <!-- Sous-navigation : le panneau est long, on saute directement à la section voulue -->
+      <nav class="sousnav" aria-label="Sections du panneau">
+        <a href="#bloc-calc">Calculateur</a><a href="#bloc-rentabilite">Rentabilité</a><a href="#bloc-bourse">Le cours</a>
+        <a href="#bloc-prix-achat">Tes prix</a><a href="#bloc-zones">Zones</a><a href="#bloc-alertes">Alertes</a>
+      </nav>
+
       <!-- LE CALCULATEUR — produit + pureté + quantité = combien ça rapporte -->
       <div class="bloc" id="bloc-calc">
         <div class="bloc-t">Le calculateur de vente <span class="hint" id="calc-maj" style="text-transform:none;letter-spacing:0;"></span></div>
@@ -1154,13 +1161,13 @@
       </div>
 
       <!-- LE COURS — données du bot, horodatées : on peut montrer l'évolution -->
-      <div class="bloc">
+      <div class="bloc" id="bloc-bourse">
         <div class="bloc-t">Le cours des drogues <span class="hint" id="bourse-maj" style="text-transform:none;letter-spacing:0;"></span></div>
         <div id="bd-bourse"><div class="locked">Chargement…</div></div>
       </div>
 
       <!-- TES PRIX — saisie manuelle, sert au calcul de la valeur du coffre -->
-      <div class="bloc">
+      <div class="bloc" id="bloc-prix-achat">
         <div class="bloc-t">Tes prix à l'unité <span class="hint" id="prix-maj" style="text-transform:none;letter-spacing:0;"></span></div>
         <div id="bd-prix"><div class="locked">Chargement…</div></div>
       </div>
@@ -1226,16 +1233,22 @@
     </div>
 
 
-    <!-- BILAN MENSUEL -->
+    <!-- BILAN MENSUEL : la carte à gauche, les trophées à droite -->
     <div class="panel" id="panel-bilan">
-      <div class="bloc">
-        <div class="bloc-t" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">🎖️ Ma carte du mois
-          <select class="field" id="bil-mois" style="width:auto;display:inline-block;padding:6px 10px;margin:0;"></select>
-          <button class="btn" id="bil-dl" type="button" style="width:auto;padding:9px 16px;display:none;">⬇ Télécharger l'image</button>
+      <div class="bilan-tete">
+        <label for="bil-mois" class="bilan-lbl">Mois</label>
+        <select class="field" id="bil-mois"></select>
+        <button class="btn" id="bil-dl" type="button" style="display:none;">Télécharger l'image</button>
+      </div>
+      <div class="bilan-grid">
+        <div class="bloc bilan-carte">
+          <div class="bloc-t">Ma carte du mois <small>à poster sur Discord</small></div>
+          <canvas id="bilan-canvas" width="1200" height="675" style="display:none;"></canvas>
+          <div class="hint" id="bilan-hint" style="display:none;">Télécharge l'image et poste-la sur Discord — elle est à ta gloire.</div>
         </div>
-        <div id="bilan-zone"><div class="locked">Chargement…</div></div>
-        <canvas id="bilan-canvas" width="1200" height="675" style="width:100%;max-width:760px;border:1px solid var(--border2);border-radius:10px;display:none;margin-top:6px;"></canvas>
-        <div class="hint" id="bilan-hint" style="display:none;">Télécharge l'image et poste-la sur Discord — elle est à ta gloire. 🍷</div>
+        <div class="bloc bilan-trophees">
+          <div id="bilan-zone"><div class="locked">Chargement…</div></div>
+        </div>
       </div>
     </div>
 
@@ -1264,6 +1277,12 @@
     <!-- ÉVÉNEMENTS : PLANNING HEBDOMADAIRE -->
 
     <div class="panel" id="panel-events">
+      <!-- L'agenda : ce qui arrive, en cartes, avec la réponse en un clic.
+           La grille horaire reste dessous pour situer la semaine. -->
+      <div class="bloc" id="bloc-agenda">
+        <div class="bloc-t">Prochains rendez-vous <small>les 14 prochains jours</small></div>
+        <div id="cal-agenda"><div class="locked">Chargement…</div></div>
+      </div>
       <div class="bloc">
         <div class="cal-head">
           <div>
@@ -1391,17 +1410,29 @@
     </div>
 
     <div class="panel" id="panel-galerie">
-      <div class="bloc" style="max-width:560px;">
-        <div class="bloc-t">Ajouter une photo à la galerie du site</div>
-        <p class="hint" style="margin-bottom:14px;">Partage tes meilleurs screenshots RP — ils apparaissent aussitôt dans la galerie publique.</p>
-        <div class="file-row" style="margin-top:0;">
-          <label class="file-label" for="galerie-input">Choisir une image</label>
-          <input type="file" id="galerie-input" accept="image/*" onchange="onGalerieChosen(event)" />
+      <div class="galerie-grid">
+        <div class="bloc galerie-depot">
+          <div class="bloc-t">Publier une photo <small>dans la galerie du site</small></div>
+          <p class="hint" style="margin-bottom:16px;">Partage tes meilleurs screenshots RP — ils apparaissent aussitôt dans la galerie publique.</p>
+          <div class="galerie-zone" id="galerie-zone">
+            <div id="galerie-preview"></div>
+            <div class="galerie-zone-txt" id="galerie-zone-txt">
+              <button type="button" class="btn ghost" onclick="document.getElementById('galerie-input').click()">Choisir une image</button>
+              <span class="hint">JPG, PNG ou WebP</span>
+            </div>
+            <input type="file" id="galerie-input" accept="image/*" onchange="onGalerieChosen(event)" />
+          </div>
+          <label for="galerie-caption" style="margin-top:16px;">Légende <span class="f-opt">(optionnel)</span></label>
+          <input type="text" id="galerie-caption" placeholder="Une nuit à Roxwood…" maxlength="120" />
+          <div class="f-actions" style="margin-top:6px;">
+            <button class="btn green btn-save" id="galerie-btn" onclick="uploadGalerie()"><span class="spin-dot" aria-hidden="true"></span><span class="btn-lbl">Publier dans la galerie</span></button>
+            <div class="msg" id="galerie-msg"></div>
+          </div>
         </div>
-        <input type="text" id="galerie-caption" placeholder="Légende (optionnelle)" style="margin-top:14px;" />
-        <div id="galerie-preview" style="margin-bottom:12px;"></div>
-        <button class="btn green" onclick="uploadGalerie()">↑ Publier dans la galerie</button>
-        <div class="msg" id="galerie-msg"></div>
+        <div class="bloc galerie-recentes">
+          <div class="bloc-t">Dernières photos publiées <small id="galerie-count"></small></div>
+          <div id="galerie-recentes"><div class="locked">Chargement…</div></div>
+        </div>
       </div>
     </div>
 
@@ -1577,6 +1608,8 @@
     // On retient où on était : à la prochaine visite, on rouvre au même endroit.
     if (name !== 'pending') { try { localStorage.setItem('moni-panel', name); } catch (e) {} }
     majNavMobile();
+    // Les graphiques du panneau qui vient de s'ouvrir prennent leur vraie largeur.
+    if (typeof redessinerGraphiques === 'function') requestAnimationFrame(redessinerGraphiques);
   }
   // ── Navigation mobile « application » ────────────────────────────────
   // La barre du bas et la feuille « Plus » sont de simples MIROIRS du menu
@@ -1706,6 +1739,7 @@
       if (item.dataset.panel === 'taxes') loadTaxes();
       if (item.dataset.panel === 'chronique') loadChronique();
       if (item.dataset.panel === 'bilan') loadBilan();
+      if (item.dataset.panel === 'galerie' && typeof loadGalerieRecentes === 'function') loadGalerieRecentes();
     });
   });
 
@@ -2183,27 +2217,59 @@
     const f = e.target.files[0];
     galeriePendingFile = f || null;
     const prev = document.getElementById('galerie-preview');
-    prev.innerHTML = f ? '<img src="' + URL.createObjectURL(f) + '" style="max-width:200px;border-radius:10px;margin-top:12px;" />' : '';
+    const zone = document.getElementById('galerie-zone');
+    prev.innerHTML = f ? '<img src="' + URL.createObjectURL(f) + '" alt="Aperçu de la photo choisie" />' : '';
+    if (zone) zone.classList.toggle('a-photo', !!f);
   }
   async function uploadGalerie() {
-    if (!currentUser) { showMsg('galerie-msg', 'Tu dois être connecté.', false); return; }
-    if (!galeriePendingFile) { showMsg('galerie-msg', 'Choisis d’abord une image.', false); return; }
+    const btn = document.getElementById('galerie-btn');
+    const lbl = btn && btn.querySelector('.btn-lbl');
+    const fin = (ok, txt) => {
+      if (btn) { btn.classList.remove('is-loading'); btn.classList.add(ok ? 'is-ok' : 'is-err'); setTimeout(() => btn.classList.remove('is-ok', 'is-err'), 2200); }
+      if (lbl) { lbl.textContent = ok ? '✓ Publiée' : 'Réessayer'; setTimeout(() => { lbl.textContent = 'Publier dans la galerie'; }, 2200); }
+      if (!ok) { showMsg('galerie-msg', txt, false); toast(txt, 'err'); }
+    };
+    if (!currentUser) { fin(false, 'Tu dois être connecté.'); return; }
+    if (!galeriePendingFile) { fin(false, 'Choisis d’abord une image.'); return; }
     hideMsg('galerie-msg');
+    if (btn) btn.classList.add('is-loading');
+    if (lbl) lbl.textContent = 'Publication…';
     const file = galeriePendingFile;
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const path = currentUser.id + '/' + Date.now() + '.' + ext;
     const up = await sb.storage.from('galerie').upload(path, file, { cacheControl: '3600' });
-    if (up.error) { showMsg('galerie-msg', 'Erreur upload : ' + up.error.message, false); return; }
+    if (up.error) { fin(false, 'Erreur upload : ' + up.error.message); return; }
     const pub = sb.storage.from('galerie').getPublicUrl(path);
     const caption = document.getElementById('galerie-caption').value.trim();
     const { error } = await sb.from('galerie_photos').insert({ url: pub.data.publicUrl, caption: caption, user_id: currentUser.id });
-    if (error) { showMsg('galerie-msg', 'Erreur : ' + error.message, false); return; }
+    if (error) { fin(false, 'Erreur : ' + error.message); return; }
     galeriePendingFile = null;
     document.getElementById('galerie-input').value = '';
     document.getElementById('galerie-caption').value = '';
     document.getElementById('galerie-preview').innerHTML = '';
-    toast('Photo publiée !');
+    const zone = document.getElementById('galerie-zone'); if (zone) zone.classList.remove('a-photo');
+    fin(true);
+    toast('Photo publiée');
     showMsg('galerie-msg', 'Photo publiée ! Elle apparaît maintenant dans la galerie du site.', true);
+    loadGalerieRecentes();
+  }
+  // Les dernières photos de la galerie publique : on voit ce que la famille
+  // a posté, et sa propre photo y apparaît juste après la publication.
+  async function loadGalerieRecentes() {
+    const box = document.getElementById('galerie-recentes');
+    if (!box) return;
+    let r = await sb.from('galerie_photos').select('url,caption,user_id,created_at').order('created_at', { ascending: false }).limit(12);
+    if (r.error) r = await sb.from('galerie_photos').select('url,caption,user_id').limit(12);
+    const rows = (r && r.data) || [];
+    const count = document.getElementById('galerie-count');
+    if (count) count.textContent = rows.length ? rows.length + ' dernière' + (rows.length > 1 ? 's' : '') : '';
+    box.innerHTML = !rows.length
+      ? '<div class="locked">Aucune photo pour l\'instant — la tienne sera la première.</div>'
+      : '<div class="galerie-mur">' + rows.map(p =>
+          '<figure class="galerie-photo' + (currentUser && p.user_id === currentUser.id ? ' moi' : '') + '">' +
+            '<img src="' + escT(p.url) + '" alt="' + escT(p.caption || 'Photo de la galerie') + '" loading="lazy" />' +
+            (p.caption ? '<figcaption>' + escT(p.caption) + '</figcaption>' : '') +
+          '</figure>').join('') + '</div>';
   }
 
   // ── PLANNING HEBDOMADAIRE (événements + présences Discord) ──
@@ -2252,6 +2318,44 @@
       calItems.push({ kind: 'pr', d: new Date(p.date_evt), titre: p.titre || 'Présence', texte: p.texte || '', auteur: p.auteur || '', reactions: p.reactions || null });
     });
     renderCal();
+    renderAgenda();
+  }
+
+  // L'agenda : les rendez-vous des 14 prochains jours, en cartes, avec la
+  // réponse « je participe » directement dessus. La grille reste dessous.
+  function renderAgenda() {
+    const box = document.getElementById('cal-agenda');
+    if (!box) return;
+    const auj = new Date(); auj.setHours(0, 0, 0, 0);
+    const fin = new Date(auj); fin.setDate(fin.getDate() + 14);
+    const prochains = calItems.map((it, idx) => ({ it, idx }))
+      .filter(x => x.it.d >= auj && x.it.d < fin)
+      .sort((a, b) => a.it.d - b.it.d);
+    if (!prochains.length) {
+      box.innerHTML = '<div class="locked">Rien de prévu dans les deux prochaines semaines — la famille se repose, ou prépare quelque chose.</div>';
+      return;
+    }
+    const demain = new Date(auj); demain.setDate(demain.getDate() + 1);
+    box.innerHTML = '<div class="agenda">' + prochains.map(({ it, idx }) => {
+      const quand = it.d < demain ? "Aujourd'hui" : it.d < new Date(demain.getTime() + 86400000) ? 'Demain' : it.d.toLocaleDateString('fr-FR', { weekday: 'long' });
+      const heure = String(it.d.getHours()).padStart(2, '0') + 'h' + String(it.d.getMinutes()).padStart(2, '0');
+      const nb = it.kind === 'ev' ? it.count : ((it.reactions && it.reactions.oui) || []).length;
+      return '<article class="agenda-item ' + it.kind + '">' +
+        '<div class="agenda-date"><b>' + it.d.getDate() + '</b><span>' + it.d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '') + '</span></div>' +
+        '<div class="agenda-corps">' +
+          '<div class="agenda-meta">' + escT(cap(quand)) + ' · ' + heure +
+            (it.kind === 'ev' ? (it.type ? ' <span class="pill">' + escT(it.type) + '</span>' : '') : ' <span class="pill ok">présence</span>') + '</div>' +
+          '<div class="agenda-titre">' + escT(it.titre) + '</div>' +
+          (it.texte ? '<div class="agenda-txt">' + escT(it.texte) + '</div>' : '') +
+        '</div>' +
+        '<div class="agenda-act">' +
+          (it.kind === 'ev'
+            ? '<button type="button" class="btn ' + (it.going ? 'ghost' : 'green') + ' agenda-btn" onclick="calRsvp(' + idx + ')">' + (it.going ? '✓ J\'y serai' : 'Je participe') + '</button>'
+            : '<button type="button" class="btn ghost agenda-btn" onclick="calShow(' + idx + ');document.getElementById(\'cal-detail\').scrollIntoView({behavior:\'smooth\',block:\'center\'})">Qui vient ?</button>') +
+          '<span class="agenda-nb">' + nb + ' participant' + (nb > 1 ? 's' : '') + '</span>' +
+        '</div>' +
+      '</article>';
+    }).join('') + '</div>';
   }
 
   function calMonday() {
@@ -2373,13 +2477,35 @@
   function estDrogue(item) {
     return !BD_NON_DROGUES.some(x => memeProduit(x, item));
   }
-  const DONUT_COLORS = ['#e0503f', '#d4b26e', '#2ecc71', '#5865f2', '#faa61a', '#9b59b6', '#1abc9c'];
+  // Palette des graphiques, accordée au thème Ardoise : or, bordeaux, vert
+  // forêt, ardoise, ivoire, prune, cuivre. Sept teintes distinctes sans le
+  // moindre fluo.
+  const DONUT_COLORS = ['#d4b26e', '#8b2f2f', '#2a7a45', '#6f7f96', '#e9dfc9', '#6b4a7a', '#b06a3b'];
+  const CH = {   // couleurs et polices partagées par les trois moteurs canvas
+    caps: '600 9px Cinzel, Georgia, serif', num: '700 11px "Playfair Display", Georgia, serif',
+    lbl: '500 10.5px "Crimson Pro", Georgia, serif',
+    ink: 'rgba(239,230,211,0.92)', ink2: 'rgba(168,156,136,0.95)', dim: 'rgba(151,138,118,0.9)',
+    accent: 'rgba(233,223,201,0.55)', green: '#45d97f',
+  };
 
   // ══ MOTEUR GRAPHIQUE CANVAS ══
   // Animations forcées pour tout le monde (choix du proprio), quel que soit le réglage système.
   // Respecte le réglage système « réduire les animations » (accessibilité).
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const lastCharts = { bars: null, donut: null };
+  // Chaque graphique mémorise comment se redessiner, par conteneur : on les
+  // rejoue au redimensionnement ET à l'ouverture d'un panneau, car un canvas
+  // dessiné dans un panneau masqué (largeur 0) retombe à 280 px.
+  const lastCharts = {};
+  function memoChart(fn, args) { const c = args[0]; if (c) lastCharts[c.id || 'chart-' + Math.random()] = { fn, args }; }
+  function redessinerGraphiques() {
+    Object.keys(lastCharts).forEach(k => {
+      const c = lastCharts[k], el = c.args[0];
+      if (!el || !el.isConnected) { delete lastCharts[k]; return; }
+      if (el.offsetParent === null) return;               // panneau masqué : on attend
+      if (Math.abs(el.clientWidth - 2 - (el.dataset.chartW || 0)) < 4) return;   // déjà à la bonne taille
+      c.fn.apply(null, c.args);
+    });
+  }
   function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
   // Compteur animé (les chiffres "défilent" jusqu'à leur valeur)
@@ -2398,6 +2524,7 @@
   function makeCanvas(container, h) {
     container.innerHTML = '';
     const w = Math.max(280, container.clientWidth - 2);
+    container.dataset.chartW = w;
     const dpr = window.devicePixelRatio || 1;
     const cv = document.createElement('canvas');
     cv.width = w * dpr; cv.height = h * dpr;
@@ -2421,7 +2548,7 @@
 
   // Graphique en barres lumineuses + ligne de quota
   function drawBarChart(container, data, quota) {
-    lastCharts.bars = { container, data, quota };
+    memoChart(drawBarChart, [container, data, quota]);
     const { cv, ctx, w, h } = makeCanvas(container, 250);
     const padB = 26, padT = 22;
     const zone = h - padB - padT;
@@ -2435,46 +2562,49 @@
       ctx.clearRect(0, 0, w, h);
       const qy = padT + zone * (1 - quota / maxV);
       ctx.save();
-      ctx.strokeStyle = 'rgba(212,178,110,0.4)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 1;
+      ctx.strokeStyle = CH.accent; ctx.setLineDash([5, 5]); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, qy); ctx.lineTo(w, qy); ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(212,178,110,0.75)'; ctx.font = '600 9px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillStyle = CH.accent; ctx.font = CH.caps; ctx.textAlign = 'right';
       ctx.fillText('QUOTA ' + quota, w - 4, qy - 5);
       ctx.restore();
+      // Largeur de l'espace disponible par étiquette : au-delà on tronque,
+      // sinon les noms se marchaient dessus dès douze membres.
+      const slot = bw + gap;
+      const maxCar = Math.max(4, Math.floor(slot / 6.2));
+      const coupe = s => s.length > maxCar ? s.slice(0, maxCar - 1) + '…' : s;
       data.forEach((d, i) => {
         const x = x0 + i * (bw + gap);
         const bh = Math.max(2, zone * (d.value / maxV) * p);
         const y = padT + zone - bh;
         const done = d.value >= quota;
         const grad = ctx.createLinearGradient(0, y, 0, y + bh);
-        if (done) { grad.addColorStop(0, '#3ee88a'); grad.addColorStop(1, '#12673a'); }
-        else if (i === 0) { grad.addColorStop(0, '#ecc987'); grad.addColorStop(1, '#7d5f28'); }
-        else { grad.addColorStop(0, '#f0604c'); grad.addColorStop(1, '#6e2118'); }
+        // Quota atteint : vert forêt. Premier : ivoire. Les autres : ardoise.
+        if (done) { grad.addColorStop(0, '#45d97f'); grad.addColorStop(1, '#1a5230'); }
+        else if (i === 0) { grad.addColorStop(0, '#f1ead9'); grad.addColorStop(1, '#8a7d69'); }
+        else { grad.addColorStop(0, '#8d8d96'); grad.addColorStop(1, '#3a3a40'); }
         ctx.save();
-        ctx.shadowColor = done ? 'rgba(46,204,113,0.55)' : (i === 0 ? 'rgba(212,178,110,0.55)' : 'rgba(224,80,63,0.45)');
-        ctx.shadowBlur = hoverIdx === i ? 22 : 10;
+        ctx.shadowColor = done ? 'rgba(69,217,127,0.35)' : 'rgba(233,223,201,0.18)';
+        ctx.shadowBlur = hoverIdx === i ? 18 : 6;
         ctx.fillStyle = grad;
-        roundTopRect(ctx, x, y, bw, bh, 5);
+        roundTopRect(ctx, x, y, bw, bh, 2);
         ctx.fill();
         ctx.restore();
-        ctx.fillStyle = 'rgba(255,255,255,0.14)';
-        roundTopRect(ctx, x, y, bw, Math.min(4, bh), 5); ctx.fill();
-        ctx.fillStyle = hoverIdx === i ? '#fff' : 'rgba(238,240,244,0.85)';
-        ctx.font = '600 10px Inter, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        roundTopRect(ctx, x, y, bw, Math.min(3, bh), 2); ctx.fill();
+        ctx.fillStyle = hoverIdx === i ? '#fff' : CH.ink;
+        ctx.font = CH.num; ctx.textAlign = 'center';
         ctx.fillText(Math.round(d.value * p), x + bw / 2, y - 6);
-        ctx.fillStyle = hoverIdx === i ? 'rgba(238,240,244,0.95)' : 'rgba(139,145,160,0.9)';
-        ctx.font = '600 8.5px Inter, sans-serif';
-        // Étiquette : les noms à deux mots (homonymes) s'écrivent sur deux lignes
-        // au lieu d'être tronqués, pour rester lisibles.
+        ctx.fillStyle = hoverIdx === i ? CH.ink : CH.dim;
+        ctx.font = CH.caps;
+        // Étiquette : les noms à deux mots (homonymes) s'écrivent sur deux lignes.
         const mots = d.label.split(/\s+/);
         const cx = x + bw / 2;
         if (mots.length >= 2) {
-          ctx.fillText(mots[0].toUpperCase(), cx, h - 17);
-          const l2 = mots.slice(1).join(' ');
-          ctx.fillText((l2.length > 9 ? l2.slice(0, 8) + '…' : l2).toUpperCase(), cx, h - 8);
+          ctx.fillText(coupe(mots[0]).toUpperCase(), cx, h - 17);
+          ctx.fillText(coupe(mots.slice(1).join(' ')).toUpperCase(), cx, h - 7);
         } else {
-          const l = mots[0] || '';
-          ctx.fillText((l.length > 9 ? l.slice(0, 8) + '…' : l).toUpperCase(), cx, h - 10);
+          ctx.fillText(coupe(mots[0] || '').toUpperCase(), cx, h - 10);
         }
       });
     }
@@ -2503,8 +2633,9 @@
 
   // Donut animé avec halo + total au centre
   function drawDonut(container, parts) {
-    lastCharts.donut = { container, parts };
+    memoChart(drawDonut, [container, parts]);
     container.innerHTML = '';
+    container.dataset.chartW = container.clientWidth - 2;
     const wrap = document.createElement('div'); wrap.className = 'donut-wrap';
     const cvBox = document.createElement('div');
     const leg = document.createElement('div'); leg.className = 'legend';
@@ -2534,18 +2665,16 @@
         ctx.save();
         ctx.strokeStyle = DONUT_COLORS[i % DONUT_COLORS.length];
         ctx.lineWidth = LW;
-        ctx.shadowColor = DONUT_COLORS[i % DONUT_COLORS.length];
-        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.arc(cx, cy, R, start + 0.015, end - 0.015);
         ctx.stroke();
         ctx.restore();
       });
-      ctx.fillStyle = '#eef0f4';
-      ctx.font = '700 24px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = CH.ink;
+      ctx.font = '900 28px "Playfair Display", Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(Math.round(total * p).toLocaleString('fr-FR'), cx, cy - 8);
-      ctx.fillStyle = 'rgba(139,145,160,0.9)'; ctx.font = '600 9px Inter, sans-serif';
-      ctx.fillText('UNITÉS EN STOCK', cx, cy + 14);
+      ctx.fillStyle = CH.dim; ctx.font = CH.caps;
+      ctx.fillText('UNITÉS EN STOCK', cx, cy + 16);
     }
     if (REDUCED) render(1);
     else {
@@ -2560,7 +2689,7 @@
 
   // Courbe animée (aire + ligne lumineuse) — évolution de l'argent sale
   function drawLineChart(container, pts) {
-    lastCharts.line = { container, pts };
+    memoChart(drawLineChart, [container, pts]);
     const { cv, ctx, w, h } = makeCanvas(container, 240);
     const padL = 8, padR = 10, padT = 26, padB = 14;
     const xs = pts.map(p => p.t), ys = pts.map(p => p.y);
@@ -2579,26 +2708,30 @@
       ctx.lineTo(X(vis[vis.length - 1].t), h - padB);
       ctx.closePath();
       const grad = ctx.createLinearGradient(0, padT, 0, h - padB);
-      grad.addColorStop(0, 'rgba(46,204,113,0.30)');
-      grad.addColorStop(1, 'rgba(46,204,113,0)');
+      grad.addColorStop(0, 'rgba(69,217,127,0.22)');
+      grad.addColorStop(1, 'rgba(69,217,127,0)');
       ctx.fillStyle = grad;
       ctx.fill();
+      // Repères horizontaux discrets : quatre lignes, pour situer l'échelle.
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+      for (let g = 1; g <= 3; g++) { const gy = padT + (h - padT - padB) * g / 4; ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(w - padR, gy); ctx.stroke(); }
+      ctx.restore();
       ctx.save();
       ctx.beginPath();
       vis.forEach((pt, i) => i ? ctx.lineTo(X(pt.t), Y(pt.y)) : ctx.moveTo(X(pt.t), Y(pt.y)));
-      ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
-      ctx.shadowColor = 'rgba(46,204,113,0.6)'; ctx.shadowBlur = 9;
+      ctx.strokeStyle = CH.green; ctx.lineWidth = 2; ctx.lineJoin = 'round';
       ctx.stroke();
       ctx.restore();
       const last = vis[vis.length - 1];
       ctx.save();
-      ctx.fillStyle = '#2ecc71'; ctx.shadowColor = '#2ecc71'; ctx.shadowBlur = 12;
+      ctx.fillStyle = CH.green; ctx.shadowColor = CH.green; ctx.shadowBlur = 10;
       ctx.beginPath(); ctx.arc(X(last.t), Y(last.y), 4, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
-      ctx.fillStyle = 'rgba(238,240,244,0.92)'; ctx.font = '700 12px Inter, sans-serif'; ctx.textAlign = 'left';
-      ctx.fillText(fmtArgent(Math.round(last.y)), padL + 2, 14);
-      ctx.fillStyle = 'rgba(139,145,160,0.8)'; ctx.font = '600 9px Inter, sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText('max ' + fmtArgent(yMax), w - 4, 14);
+      ctx.fillStyle = CH.ink; ctx.font = '700 15px "Playfair Display", Georgia, serif'; ctx.textAlign = 'left';
+      ctx.fillText(fmtArgent(Math.round(last.y)), padL + 2, 16);
+      ctx.fillStyle = CH.dim; ctx.font = CH.caps; ctx.textAlign = 'right';
+      ctx.fillText('MAX ' + fmtArgent(yMax), w - 4, 14);
     }
     if (REDUCED) render(1);
     else {
@@ -2643,11 +2776,7 @@
   let rsTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(rsTimer);
-    rsTimer = setTimeout(() => {
-      if (lastCharts.bars) drawBarChart(lastCharts.bars.container, lastCharts.bars.data, lastCharts.bars.quota);
-      if (lastCharts.donut) drawDonut(lastCharts.donut.container, lastCharts.donut.parts);
-      if (lastCharts.line) drawLineChart(lastCharts.line.container, lastCharts.line.pts);
-    }, 200);
+    rsTimer = setTimeout(redessinerGraphiques, 200);
   });
 
   async function loadBotDashboards() {
@@ -2765,44 +2894,72 @@
     if (!parts.length) chartD.innerHTML = '<div class="locked">Aucune drogue en stock actuellement.</div>';
     else drawDonut(chartD, parts);
 
-    // ── CLASSEMENT (tableau complet) ──
+    // ── CLASSEMENT : podium des trois premiers, puis le tableau complet ──
+    const salaire = Number(metaMap.salaire_par_vente || 30) || 30;
+    const nomOu = id => nomDe[id] || 'Membre #' + String(id).slice(-4);
+    const rangDe = nom => { const m = (window.MONI_MEMBRES || []).find(x => x.nom === nom); return m ? m.rang : ''; };
+    const podium = ids.slice(0, 3).filter(id => joueurs[id].ventes > 0);
+    const elPod = document.getElementById('bd-podium');
+    if (elPod) {
+      elPod.innerHTML = !podium.length ? '' :
+        '<div class="podium">' + podium.map((id, i) => {
+          const nom = nomOu(id), rang = rangDe(nom), v = Math.round(joueurs[id].ventes);
+          return '<div class="pod pod-' + (i + 1) + '" style="--rc:' + rangCouleur(rang) + '">' +
+            '<div class="pod-place">' + ['I', 'II', 'III'][i] + '</div>' +
+            '<div class="pod-ava">' + escT(initiales(nom)) + '</div>' +
+            '<div class="pod-nom">' + escT(nom) + '</div>' +
+            (rang ? '<div class="pod-rang">' + escT(rang) + '</div>' : '') +
+            '<div class="pod-num">' + v + '<small> ventes</small></div>' +
+            '<div class="pod-bonus">bonus ' + fmtArgent([30000, 20000, 15000][i]) + '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+    }
     elC.innerHTML = !ids.length
       ? '<div class="locked">Aucune activité enregistrée cette semaine.</div>'
       : '<div class="vd-stats3">' +
-          '<div class="vd-stat"><div class="vd-stat-num">' + totalVentes + '</div><div class="vd-stat-label">Ventes famille</div></div>' +
-          '<div class="vd-stat"><div class="vd-stat-num">' + nbOk + ' / ' + nbMembres + '</div><div class="vd-stat-label">Quotas atteints</div></div>' +
+          '<div class="vd-stat"><div class="vd-stat-num">' + totalVentes.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">Ventes famille</div></div>' +
+          '<div class="vd-stat"><div class="vd-stat-num">' + nbOk + '<small> / ' + nbMembres + '</small></div><div class="vd-stat-label">Quotas atteints</div></div>' +
           '<div class="vd-stat"><div class="vd-stat-num">' + ids.length + '</div><div class="vd-stat-label">Membres actifs</div></div>' +
         '</div>' +
-        '<table class="vd-table"><thead><tr><th>Membre</th><th style="width:28%;">Ventes / ' + quotaVente + '</th><th>Récolte</th><th>Activités</th><th>Paie estimée</th></tr></thead><tbody>' +
+        '<div class="table-wrap"><table class="vd-table classement"><thead><tr><th class="num rk">#</th><th>Membre</th><th style="width:26%;">Ventes / ' + quotaVente + '</th><th class="num">Récolte</th><th class="num">Activités</th><th class="num">Paie estimée</th></tr></thead><tbody>' +
         ids.map((id, idx) => {
           const j = joueurs[id];
           const v = Math.round(j.ventes);
           const pct = Math.min(100, Math.round(v / quotaVente * 100));
           const done = v >= quotaVente;
-          const salaire = Number(metaMap.salaire_par_vente || 30) || 30;
           const bonus = (idx < 3 && v > 0) ? [30000, 20000, 15000][idx] : 0;
-          const medaille = (idx < 3 && v > 0) ? ' ' + ['🥇', '🥈', '🥉'][idx] : '';
-          return '<tr><td>' + (done ? '✅ ' : '') + escT(nomDe[id] || 'Membre #' + String(id).slice(-4)) + '</td>' +
+          const moi = nomOu(id) === currentNom;
+          return '<tr class="' + (done ? 'ok' : '') + (moi ? ' moi' : '') + '">' +
+            '<td class="num rk">' + (idx + 1) + '</td>' +
+            '<td><b>' + escT(nomOu(id)) + '</b>' + (moi ? ' <span class="cd-me">toi</span>' : '') + (done ? ' <span class="pill ok">quota</span>' : '') + '</td>' +
             '<td><div class="vd-progress' + (done ? ' done' : '') + '"><span style="width:' + pct + '%"></span></div>' +
-            '<div class="vd-progress-txt">' + v + ' (' + pct + '%)</div></td>' +
-            '<td>' + Math.round(j.recolte) + '</td>' +
-            '<td title="' + escT(j.detail.join(', ')) + '">' + Math.round(j.activites) + '</td>' +
-            '<td style="color:var(--gold);font-weight:600;" title="' + v + ' ventes × ' + salaire + ' $' + (bonus ? ' + bonus ' + bonus.toLocaleString('fr-FR') + ' $' : '') + '">' + fmtArgent(v * salaire + bonus) + medaille + '</td></tr>';
-        }).join('') + '</tbody></table>';
+            '<div class="vd-progress-txt">' + v + ' · ' + pct + ' %</div></td>' +
+            '<td class="num">' + Math.round(j.recolte) + '</td>' +
+            '<td class="num" title="' + escT(j.detail.join(', ')) + '">' + Math.round(j.activites) + '</td>' +
+            '<td class="num paie" title="' + v + ' ventes × ' + salaire + ' $' + (bonus ? ' + bonus ' + bonus.toLocaleString('fr-FR') + ' $' : '') + '">' + fmtArgent(v * salaire + bonus) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
 
-    // ── COFFRE ──
+    // ── COFFRE : chaque produit avec sa part du stock vendable ──
     const autres = (stocks.data || [])
       .filter(s => s.item !== 'argent' && s.item !== 'argent sale' && (s.quantite || 0) > 0)
       .sort((a, b) => b.quantite - a.quantite);
+    const maxStock = Math.max(1, ...autres.map(s => Number(s.quantite) || 0));
     document.getElementById('bd-coffre').innerHTML =
       '<div class="vd-stats3">' +
         '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">' + fmtArgent(st['argent sale']) + '</div><div class="vd-stat-label">Argent sale</div></div>' +
         '<div class="vd-stat"><div class="vd-stat-num">' + fmtArgent(st['argent']) + '</div><div class="vd-stat-label">Argent propre</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--red);">' + drogueTotal.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">Drogue à vendre</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num">' + drogueTotal.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">Unités de drogue</div></div>' +
       '</div>' +
-      '<table class="vd-table"><tbody>' +
-      autres.map(s => '<tr><td>' + escT(cap(s.item)) + '</td><td style="text-align:right;font-weight:600;">' + Number(s.quantite).toLocaleString('fr-FR') + '</td></tr>').join('') +
-      '</tbody></table>';
+      '<div class="stock-liste">' +
+      autres.map(s => {
+        const q = Number(s.quantite) || 0, drogue = estDrogue(s.item);
+        return '<div class="stock-ligne' + (drogue ? '' : ' materiel') + '">' +
+          '<span class="stock-nom">' + escT(cap(s.item)) + (drogue ? '' : ' <span class="pill">matériel</span>') + '</span>' +
+          '<span class="stock-barre"><span style="width:' + Math.round(q / maxStock * 100) + '%"></span></span>' +
+          '<span class="stock-qte">' + q.toLocaleString('fr-FR') + '</span>' +
+        '</div>';
+      }).join('') + '</div>' +
+      '<div class="hint" style="margin-top:12px;">La barre montre la part de chaque produit par rapport au plus fourni.</div>';
 
     // L'enquête a besoin de la liste des produits et du stock affiché.
     window.__stocksMap = st;
@@ -2817,21 +2974,30 @@
 
     // ── ARMURERIE ──
     const arm = armes.data || [];
-    const statutDe = a => String(a.statut || '').toLowerCase();
+    // « Prêtée », « pretee », « PRÊTÉE » : même statut. On enlève les accents avant de comparer.
+    const statutDe = a => String(a.statut || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const pretees = arm.filter(a => statutDe(a).indexOf('pret') === 0);
     const perdues = arm.filter(a => statutDe(a).indexOf('perdu') === 0);
     const enStock = arm.length - pretees.length - perdues.length;
+    // Toutes les armes, les prêtées d'abord, puis les perdues, puis le stock ;
+    // chaque statut a sa pastille — et son mot, pas seulement sa couleur.
+    const etatArme = a => { const s = statutDe(a); return s.indexOf('pret') === 0 ? 'pret' : s.indexOf('perdu') === 0 ? 'perdu' : 'stock'; };
+    const ordreArme = { pret: 0, perdu: 1, stock: 2 };
+    const armesTriees = arm.slice().sort((a, b) => (ordreArme[etatArme(a)] - ordreArme[etatArme(b)]) || String(a.nom).localeCompare(String(b.nom)));
     document.getElementById('bd-armurerie').innerHTML =
       '<div class="vd-stats3">' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">' + enStock + '</div><div class="vd-stat-label">🟢 En stock</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--amber);">' + pretees.length + '</div><div class="vd-stat-label">🟡 Prêtées</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--red);">' + perdues.length + '</div><div class="vd-stat-label">🔴 Perdues</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">' + enStock + '</div><div class="vd-stat-label">En stock</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--amber);">' + pretees.length + '</div><div class="vd-stat-label">Prêtées</div></div>' +
+        '<div class="vd-stat"><div class="vd-stat-num" style="color:#e0a0a0;">' + perdues.length + '</div><div class="vd-stat-label">Perdues</div></div>' +
       '</div>' +
-      (pretees.length
-        ? '<table class="vd-table"><thead><tr><th>Arme prêtée</th><th>Référence</th><th>À</th></tr></thead><tbody>' +
-          pretees.map(a => '<tr><td>' + escT(a.nom) + '</td><td>' + escT(a.reference) + '</td><td>' + escT(a.pretee_a || '?') + '</td></tr>').join('') +
-          '</tbody></table>'
-        : '<div class="hint">Aucune arme prêtée en ce moment.</div>');
+      (!arm.length ? '<div class="locked">Aucune arme enregistrée par le bot.</div>' :
+        '<div class="table-wrap"><table class="vd-table"><thead><tr><th>Arme</th><th>Référence</th><th>Statut</th><th>Entre les mains de</th></tr></thead><tbody>' +
+        armesTriees.map(a => {
+          const e = etatArme(a);
+          return '<tr class="arme-' + e + '"><td><b>' + escT(a.nom) + '</b></td><td class="ref">' + escT(a.reference || '—') + '</td>' +
+            '<td><span class="pill ' + (e === 'pret' ? 'warn' : e === 'perdu' ? 'bad' : 'ok') + '">' + (e === 'pret' ? 'Prêtée' : e === 'perdu' ? 'Perdue' : 'En stock') + '</span></td>' +
+            '<td>' + (e === 'pret' ? escT(a.pretee_a || '?') : '<span class="hint">—</span>') + '</td></tr>';
+        }).join('') + '</tbody></table></div>');
 
     // ── CHIFFRE D'AFFAIRES (depuis lundi) ──
     // Source principale : montants des ventes confirmées ; si le bot ne les
@@ -2869,8 +3035,8 @@
       feed.innerHTML = !rows.length ? '<div class="locked">Aucun mouvement enregistré.</div>' :
         rows.map(r => {
           const depot = r.action === 'depose';
-          return '<div class="feed-item"><span class="feed-dot" style="background:' + (depot ? 'var(--green)' : 'var(--red)') + '"></span>' +
-            '<span><b>' + escT(r.joueur) + '</b> a ' + (depot ? 'déposé' : 'retiré') + ' <b>' + Number(r.quantite).toLocaleString('fr-FR') + '×</b> ' + escT(cap(r.item)) + '</span>' +
+          return '<div class="feed-item ' + (depot ? 'in' : 'out') + '"><span class="feed-dot"></span>' +
+            '<span class="feed-txt"><b>' + escT(r.joueur) + '</b> a ' + (depot ? 'déposé' : 'retiré') + ' <b>' + Number(r.quantite).toLocaleString('fr-FR') + '×</b> ' + escT(cap(r.item)) + '</span>' +
             '<span class="feed-time">' + timeAgo(r.ts) + '</span></div>';
         }).join('');
     }
@@ -2886,9 +3052,12 @@
       bRows.forEach(b => { used[b.action] = (used[b.action] || 0) + 1; });
       elB.innerHTML = '<div class="braq-grid">' + Object.keys(limits).map(k => {
         const total = limits[k], u = used[k] || 0, dispo = Math.max(0, total - u);
-        return '<div class="braq-card"><div class="braq-name">' + (dispo > 0 ? '🟢' : '🔴') + ' ' + escT(BD_ACTIVITES[k] || k) + '</div>' +
-          '<div class="braq-num" style="color:' + (dispo > 0 ? 'var(--green)' : 'var(--red)') + ';">' + dispo + '<span style="font-size:13px;color:var(--dim);"> / ' + total + '</span></div>' +
-          '<div class="braq-lbl">restants cette semaine</div></div>';
+        const pct = total ? Math.round(dispo / total * 100) : 0;
+        return '<div class="braq-card' + (dispo > 0 ? ' dispo' : ' epuise') + '">' +
+          '<div class="braq-name">' + escT(BD_ACTIVITES[k] || k) + '</div>' +
+          '<div class="braq-num">' + dispo + '<span class="braq-sur"> / ' + total + '</span></div>' +
+          '<div class="braq-jauge"><span style="width:' + pct + '%"></span></div>' +
+          '<div class="braq-lbl">' + (dispo > 0 ? 'restant' + (dispo > 1 ? 's' : '') + ' cette semaine' : 'épuisé cette semaine') + '</div></div>';
       }).join('') + '</div>';
     }
 
@@ -2899,12 +3068,12 @@
         .sort((a, b) => new Date(a.expires_at) - new Date(b.expires_at));
       const monDiscord = Object.keys(nomDe).find(k => nomDe[k] === currentNom) || null;
       elCd.innerHTML = !cds.length
-        ? '<div class="hint">Aucun cooldown en cours — tout est disponible ! 🟢</div>'
+        ? '<div class="locked">Aucun cooldown en cours — tout est disponible.</div>'
         : cds.map(c => {
             const moi = monDiscord && c.user_id === monDiscord;
-            return '<div class="cd-row"><span><b>' + escT(nomDe[c.user_id] || 'Membre #' + String(c.user_id).slice(-4)) + '</b></span>' +
-              (moi ? '<span class="cd-me">toi</span>' : '') +
-              '<span style="color:var(--muted);">· ' + escT(BD_ACTIVITES[c.action] || c.action) + '</span>' +
+            return '<div class="cd-row' + (moi ? ' moi' : '') + '"><span class="cd-qui"><b>' + escT(nomDe[c.user_id] || 'Membre #' + String(c.user_id).slice(-4)) + '</b>' +
+              (moi ? ' <span class="cd-me">toi</span>' : '') + '</span>' +
+              '<span class="cd-quoi">' + escT(BD_ACTIVITES[c.action] || c.action) + '</span>' +
               '<span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>';
           }).join('');
       startCdTicker();
@@ -2980,37 +3149,44 @@
           .map(k => ({ nom: BD_ACTIVITES[k] || k, reste: Math.max(0, limitsM[k] - (usedM[k] || 0)) }))
           .filter(d => d.reste > 0);
 
+        // La carte héros : le chiffre qui compte (mes ventes), sa jauge et le
+        // tempo, en une seule lecture. Les trois autres chiffres l'accompagnent.
+        const restant = Math.max(0, quotaVente - vM);
         elMoi.innerHTML =
-          '<div class="kpis">' +
-            '<div class="kpi" style="--kc:#e0503f;"><div class="kpi-label">Mes ventes</div><div class="kpi-num">' + vM + '<small> / ' + quotaVente + '</small></div><div class="kpi-foot">' + (vM >= quotaVente ? '✅ quota atteint, la Donna est fière' : (quotaVente - vM) + ' restantes cette semaine') + '</div></div>' +
-            '<div class="kpi" style="--kc:#d4b26e;"><div class="kpi-label">Ma paie estimée</div><div class="kpi-num" style="color:var(--gold);">' + fmtArgent(vM * salaireM + bonusM) + '</div><div class="kpi-foot">' + (bonusM ? 'dont bonus podium ' + fmtArgent(bonusM) : salaireM + ' $ par vente') + '</div></div>' +
-            '<div class="kpi" style="--kc:#5865f2;"><div class="kpi-label">Mon rang</div><div class="kpi-num">' + (rangM >= 0 ? '#' + (rangM + 1) : '—') + '</div><div class="kpi-foot">sur ' + ids.length + ' membres actifs</div></div>' +
-            '<div class="kpi" style="--kc:#2ecc71;"><div class="kpi-label">Récolte · activités</div><div class="kpi-num">' + Math.round(jm.recolte) + ' <small>· ' + Math.round(jm.activites) + '</small></div><div class="kpi-foot" title="' + escT(jm.detail.join(', ')) + '">' + escT(jm.detail.slice(0, 2).join(', ') || 'aucune activité') + '</div></div>' +
+          '<div class="moi-tete">' +
+            '<div class="bloc moi-hero' + (vM >= quotaVente ? ' atteint' : '') + '">' +
+              '<div class="moi-hero-lbl">Mes ventes cette semaine</div>' +
+              '<div class="moi-hero-num">' + vM + '<small> / ' + quotaVente + '</small></div>' +
+              '<div class="goal-bar"><span style="width:' + pctM + '%"></span></div>' +
+              '<div class="moi-hero-foot"><span class="' + (dansLesTemps ? 'ok' : 'warn') + '">' + tempo + '</span><span class="moi-hero-pct">' + pctM + ' %</span></div>' +
+              '<div class="moi-hero-note">' + (vM >= quotaVente ? 'La Donna est fière. Chaque vente de plus compte pour le classement et le bonus podium.' : restant + ' vente' + (restant > 1 ? 's' : '') + ' restante' + (restant > 1 ? 's' : '') + ' avant dimanche 19 h.') + '</div>' +
+            '</div>' +
+            '<div class="moi-kpis">' +
+              '<div class="kpi" style="--kc:#d4b26e;"><div class="kpi-label">Ma paie estimée</div><div class="kpi-num" style="color:var(--gold);">' + fmtArgent(vM * salaireM + bonusM) + '</div><div class="kpi-foot">' + (bonusM ? 'dont bonus podium ' + fmtArgent(bonusM) : salaireM + ' $ par vente') + '</div></div>' +
+              '<div class="kpi" style="--kc:#6f7f96;"><div class="kpi-label">Mon rang</div><div class="kpi-num">' + (rangM >= 0 ? '#' + (rangM + 1) : '—') + '<small> / ' + ids.length + '</small></div><div class="kpi-foot">membres actifs cette semaine</div></div>' +
+              '<div class="kpi" style="--kc:#2a7a45;"><div class="kpi-label">Récolte · activités</div><div class="kpi-num">' + Math.round(jm.recolte) + ' <small>· ' + Math.round(jm.activites) + '</small></div><div class="kpi-foot" title="' + escT(jm.detail.join(', ')) + '">' + escT(jm.detail.slice(0, 2).join(', ') || 'aucune activité') + '</div></div>' +
+            '</div>' +
           '</div>' +
-          '<div class="goal"><div class="goal-head"><b>Ma progression</b><span class="val"><b>' + vM + '</b> / ' + quotaVente + ' ventes</span></div>' +
-          '<div class="goal-bar"><span style="width:' + pctM + '%"></span></div>' +
-          '<div class="goal-pct" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
-            '<span style="color:' + (dansLesTemps ? 'var(--green)' : 'var(--amber)') + ';">' + tempo + '</span><span>' + pctM + '%</span></div></div>' +
           '<div class="grid2">' +
             '<div class="bloc">' + duel + '</div>' +
             '<div class="bloc"><div class="bloc-t">Le bon plan du moment</div><div id="moi-plan-txt" class="hint">Calcul en cours…</div></div>' +
           '</div>' +
-          '<div class="bloc" style="margin-top:14px;"><div class="bloc-t">Mon rythme <small>(unités vendues par jour · objectif ' + Math.ceil(quotaVente / 7) + '/jour)</small></div><div id="chart-moi-rythme"></div></div>' +
-          '<div class="grid2" style="margin-top:14px;">' +
+          '<div class="bloc" style="margin-top:16px;"><div class="bloc-t">Mon rythme <small>unités vendues par jour · objectif ' + Math.ceil(quotaVente / 7) + ' / jour</small></div><div id="chart-moi-rythme"></div></div>' +
+          '<div class="grid2" style="margin-top:16px;">' +
             '<div class="bloc"><div class="bloc-t">Mes cooldowns</div>' +
             (!mesCd.length
-              ? '<div class="hint" style="margin-bottom:10px;">Aucun — tout est disponible.</div>' +
+              ? '<div class="hint" style="margin-bottom:12px;">Aucun — tout est disponible.</div>' +
                 (dispos.length ? '<div class="zone-puces">' + dispos.map(d =>
                   '<span class="zone-puce all">' + escT(d.nom) + ' ×' + d.reste + '</span>').join('') + '</div>' +
                   '<div class="hint" style="margin-top:8px;">restants pour la famille cette semaine</div>' : '')
-              : mesCd.map(c => '<div class="cd-row"><span>' + escT(BD_ACTIVITES[c.action] || c.action) + '</span><span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>').join('')) +
+              : mesCd.map(c => '<div class="cd-row"><span class="cd-quoi">' + escT(BD_ACTIVITES[c.action] || c.action) + '</span><span class="cd-timer" data-cd="' + escT(c.expires_at) + '">…</span></div>').join('')) +
             '</div>' +
             '<div class="bloc"><div class="bloc-t">Mes dernières ventes confirmées</div>' +
             (!mesVentes.length ? '<div class="hint">Aucune vente confirmée cette semaine.</div>' :
-              mesVentes.map(x => '<div class="cd-row"><span>' + Number(x.quantite).toLocaleString('fr-FR') + '× ' + escT(cap(x.item)) + '</span>' +
-                '<span class="feed-time" style="margin-left:10px;">' + timeAgo(x.ts) + '</span>' +
-                '<span style="margin-left:auto;color:var(--gold);font-weight:600;">' +
-                (x.montant ? fmtArgent(x.montant) : '<span class="hint" title="Montant non transmis par le bot">—</span>') + '</span></div>').join('')) +
+              '<div class="ventes-liste">' + mesVentes.map(x => '<div class="vente-ligne"><span class="vente-qte">' + Number(x.quantite).toLocaleString('fr-FR') + '×</span><span class="vente-item">' + escT(cap(x.item)) + '</span>' +
+                '<span class="feed-time">' + timeAgo(x.ts) + '</span>' +
+                '<span class="vente-montant">' +
+                (x.montant ? fmtArgent(x.montant) : '<span class="hint" title="Montant non transmis par le bot">—</span>') + '</span></div>').join('') + '</div>') +
             '</div>' +
           '</div>';
 
@@ -3038,20 +3214,41 @@
         });
         const semaines = Object.keys(parSem).sort().reverse();
         const record = bilRows.reduce((r, b) => ((b.ventes || 0) > (r ? r.ventes : -1) ? b : r), null);
+        // Combien de fois chacun a fini premier : le tableau d'honneur.
+        const titres = {};
+        semaines.forEach(s2 => { const b = parSem[s2].best; if (b && b.ventes > 0) titres[b.user_id] = (titres[b.user_id] || 0) + 1; });
+        const honneur = Object.keys(titres).sort((a, b) => titres[b] - titres[a]).slice(0, 5);
+        const maxTot = Math.max(1, ...semaines.map(s2 => parSem[s2].total));
         elP.innerHTML =
-          '<div class="vd-stats3">' +
-            '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--gold);">' + escT(nomDe[record.user_id] || 'Membre #' + String(record.user_id).slice(-4)) + '</div><div class="vd-stat-label">🏆 Record all-time</div></div>' +
-            '<div class="vd-stat"><div class="vd-stat-num">' + Math.round(record.ventes) + '</div><div class="vd-stat-label">ventes en une semaine</div></div>' +
-            '<div class="vd-stat"><div class="vd-stat-num">' + semaines.length + '</div><div class="vd-stat-label">semaine' + (semaines.length > 1 ? 's' : '') + ' archivée' + (semaines.length > 1 ? 's' : '') + '</div></div>' +
+          '<div class="record-hero">' +
+            '<div class="record-lbl">Record absolu</div>' +
+            '<div class="record-nom">' + escT(nomOu(record.user_id)) + '</div>' +
+            '<div class="record-txt"><b>' + Math.round(record.ventes) + ' ventes</b> en une seule semaine — celle du ' +
+              new Date(record.semaine + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + '.</div>' +
           '</div>' +
-          '<table class="vd-table"><thead><tr><th>Semaine du</th><th>🥇 Meilleur vendeur</th><th>Ses ventes</th><th>Total famille</th></tr></thead><tbody>' +
-          semaines.map((s2, i2) => {
-            const w2 = parSem[s2];
-            return '<tr><td>' + new Date(s2 + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
-              (i2 === 0 ? ' <span style="color:var(--green);font-size:10px;">(en cours)</span>' : '') + '</td>' +
-              '<td>' + escT(nomDe[w2.best.user_id] || 'Membre #' + String(w2.best.user_id).slice(-4)) + '</td>' +
-              '<td>' + Math.round(w2.best.ventes) + '</td><td>' + Math.round(w2.total) + '</td></tr>';
-          }).join('') + '</tbody></table>';
+          '<div class="grid2 palm-grid">' +
+            '<div>' +
+              '<div class="bloc-t">Semaine après semaine <small>' + semaines.length + ' archivée' + (semaines.length > 1 ? 's' : '') + '</small></div>' +
+              '<div class="table-wrap"><table class="vd-table"><thead><tr><th>Semaine du</th><th>Meilleur vendeur</th><th class="num">Ses ventes</th><th style="width:34%;">Total famille</th></tr></thead><tbody>' +
+              semaines.map((s2, i2) => {
+                const w2 = parSem[s2];
+                return '<tr><td>' + new Date(s2 + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
+                  (i2 === 0 ? ' <span class="pill ok">en cours</span>' : '') + '</td>' +
+                  '<td><b>' + escT(nomOu(w2.best.user_id)) + '</b></td>' +
+                  '<td class="num">' + Math.round(w2.best.ventes) + '</td>' +
+                  '<td><div class="stock-ligne compact"><span class="stock-barre"><span style="width:' + Math.round(w2.total / maxTot * 100) + '%"></span></span><span class="stock-qte">' + Math.round(w2.total).toLocaleString('fr-FR') + '</span></div></td></tr>';
+              }).join('') + '</tbody></table></div>' +
+            '</div>' +
+            '<div>' +
+              '<div class="bloc-t">Tableau d\'honneur <small>semaines terminées en tête</small></div>' +
+              '<div class="honneur">' + honneur.map((id, i) => {
+                const nom = nomOu(id), rang = rangDe(nom);
+                return '<div class="honneur-ligne" style="--rc:' + rangCouleur(rang) + '"><span class="pod-ava">' + escT(initiales(nom)) + '</span>' +
+                  '<span class="honneur-nom"><b>' + escT(nom) + '</b>' + (rang ? '<span class="hint">' + escT(rang) + '</span>' : '') + '</span>' +
+                  '<span class="honneur-n">' + titres[id] + '<small> ' + (titres[id] > 1 ? 'titres' : 'titre') + '</small></span></div>';
+              }).join('') + '</div>' +
+            '</div>' +
+          '</div>';
       }
     }
   }
@@ -3686,18 +3883,19 @@
     // La colonne Type n'apparaît que sur la vue « Toutes » (sinon elle répète le titre).
     const avecType = type === null;
     document.getElementById('taxes-liste').innerHTML =
-      '<table class="vd-table"><thead><tr><th>Groupe</th>' + (avecType ? '<th>Type</th>' : '') + '<th>Échéance</th><th>Statut</th></tr></thead><tbody>' +
+      '<div class="table-wrap"><table class="vd-table taxes-table"><thead><tr><th>Groupe</th>' + (avecType ? '<th>Type</th>' : '') + '<th>Échéance</th><th>Statut</th></tr></thead><tbody>' +
       liste.map(({ t, e }) => {
         const dte = t.echeance ? new Date(t.echeance).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
-        return '<tr style="' + (e.k === 'payee' ? 'opacity:0.45;' : '') + '">' +
-          '<td>' + escT(t.nom || '?') + '</td>' +
+        const pill = { retard: 'bad', urgent: 'warn', payee: 'ok', ok: '', attente: '' }[e.k] || '';
+        return '<tr class="tx-' + e.k + '">' +
+          '<td><b>' + escT(t.nom || '?') + '</b></td>' +
           (avecType ? '<td>' + escT(__taxesLabels[t.type] || t.type || '—') + '</td>' : '') +
           '<td>' + escT(dte) + '</td>' +
-          '<td><span style="color:' + e.c + ';font-weight:600;">' + e.txt + '</span></td>' +
+          '<td><span class="pill ' + pill + '">' + e.txt + '</span></td>' +
         '</tr>';
       }).join('') +
-      '</tbody></table>' +
-      '<div class="hint" style="margin-top:10px;">Synchronisé depuis le bot toutes les 5 minutes — le paiement se gère sur Discord, dans le salon #taxes.</div>';
+      '</tbody></table></div>' +
+      '<div class="hint" style="margin-top:12px;">Synchronisé depuis le bot toutes les 5 minutes — le paiement se gère sur Discord, dans le salon #taxes.</div>';
   };
 
   window.taxesRetour = function () {
@@ -4022,21 +4220,26 @@
       const btn = document.getElementById('bil-dl');
       cv.style.display = ''; hint.style.display = ''; btn.style.display = '';
       const ctx = cv.getContext('2d');
+      // La carte reprend la typographie du site : Cinzel pour les capitales
+      // espacées, Playfair pour le nom et les chiffres, ivoire sur noir.
+      const CAPS = '"Cinzel", Georgia, serif', SERIF = '"Playfair Display", Georgia, serif', BODY = '"Crimson Pro", Georgia, serif';
+      const IVOIRE = '#e9dfc9', ENCRE = '#efe6d3', ENCRE2 = '#a89c88', ARGENT = '#d6d6db';
+      const espace = (txt, x, y, pas) => { let cx = x; for (const c of txt) { ctx.fillText(c, cx, y); cx += ctx.measureText(c).width + pas; } };
       const dessiner = (logo) => {
-        ctx.fillStyle = '#0a0b0d'; ctx.fillRect(0, 0, 1200, 675);
+        ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, 1200, 675);
         const grad = ctx.createRadialGradient(1050, 120, 40, 1050, 120, 700);
-        grad.addColorStop(0, 'rgba(211,172,104,0.10)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+        grad.addColorStop(0, 'rgba(233,223,201,0.08)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = grad; ctx.fillRect(0, 0, 1200, 675);
-        ctx.strokeStyle = '#d3ac68'; ctx.lineWidth = 3; ctx.strokeRect(24, 24, 1152, 627);
-        ctx.strokeStyle = 'rgba(211,172,104,0.35)'; ctx.lineWidth = 1; ctx.strokeRect(34, 34, 1132, 607);
+        ctx.strokeStyle = IVOIRE; ctx.lineWidth = 2; ctx.strokeRect(24, 24, 1152, 627);
+        ctx.strokeStyle = 'rgba(233,223,201,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(36, 36, 1128, 603);
         if (logo) { ctx.globalAlpha = 0.9; ctx.drawImage(logo, 950, 60, 180, 180); ctx.globalAlpha = 1; }
-        ctx.fillStyle = '#d3ac68'; ctx.font = '600 22px Inter, sans-serif';
-        ctx.fillText('F A M I L L E   M O N I', 70, 96);
-        ctx.fillStyle = '#9ba0a8'; ctx.font = '500 26px Inter, sans-serif';
-        ctx.fillText('Bilan de ' + lblMois(mo), 70, 138);
-        ctx.fillStyle = '#f7f8f8'; ctx.font = '700 58px Inter, sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = IVOIRE; ctx.font = '600 18px ' + CAPS; espace('FAMILLE MONI', 70, 96, 7);
+        ctx.fillStyle = ENCRE2; ctx.font = 'italic 400 26px ' + BODY;
+        ctx.fillText('Bilan de ' + lblMois(mo), 70, 134);
+        ctx.fillStyle = ENCRE; ctx.font = '900 60px ' + SERIF;
         ctx.fillText(currentNom || '?', 70, 212);
-        if (membre) { ctx.fillStyle = '#d3ac68'; ctx.font = '600 26px Inter, sans-serif'; ctx.fillText(membre.rang, 70, 252); }
+        if (membre) { ctx.fillStyle = ARGENT; ctx.font = '600 16px ' + CAPS; espace(String(membre.rang).toUpperCase(), 72, 250, 5); }
         const stats = [
           ['VENTES', Math.round(moi.ventes).toLocaleString('fr-FR')],
           ['RÉCOLTE', Math.round(moi.recolte).toLocaleString('fr-FR')],
@@ -4045,21 +4248,21 @@
         ];
         stats.forEach((st, i) => {
           const x = 70 + i * 270;
-          ctx.fillStyle = 'rgba(255,255,255,0.05)';
+          ctx.fillStyle = 'rgba(255,255,255,0.04)';
           ctx.fillRect(x, 320, 240, 140);
-          ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.strokeRect(x, 320, 240, 140);
-          ctx.fillStyle = '#9ba0a8'; ctx.font = '600 17px Inter, sans-serif'; ctx.fillText(st[0], x + 22, 358);
-          ctx.fillStyle = i === 3 ? '#d3ac68' : '#f7f8f8'; ctx.font = '700 42px Inter, sans-serif'; ctx.fillText(st[1], x + 22, 420);
+          ctx.strokeStyle = 'rgba(233,223,201,0.22)'; ctx.lineWidth = 1; ctx.strokeRect(x, 320, 240, 140);
+          ctx.fillStyle = ENCRE2; ctx.font = '600 13px ' + CAPS; espace(st[0], x + 22, 356, 3);
+          ctx.fillStyle = i === 3 ? IVOIRE : ENCRE; ctx.font = '900 44px ' + SERIF; ctx.fillText(st[1], x + 22, 422);
         });
-        ctx.fillStyle = '#f7f8f8'; ctx.font = '600 32px Inter, sans-serif';
+        ctx.fillStyle = ENCRE; ctx.font = '700 30px ' + SERIF;
         ctx.fillText((medaille ? medaille + '  ' : '') + '#' + rang + ' sur ' + classement.length + ' au classement du mois', 70, 540);
         const trOk = (typeof trophees !== 'undefined' ? trophees : []).filter(t => t.ok).slice(0, 8);
         if (trOk.length) {
           ctx.font = '30px serif';
-          trOk.forEach((t, i) => ctx.fillText(t.ico, 700 + i * 44, 545));
+          trOk.forEach((t, i) => ctx.fillText(t.ico, 720 + i * 44, 545));
         }
-        ctx.fillStyle = '#63676f'; ctx.font = '500 20px Inter, sans-serif';
-        ctx.fillText('famillemoni.com — Roxwood, Flashback FA', 70, 610);
+        ctx.fillStyle = '#6f6f76'; ctx.font = '600 12px ' + CAPS;
+        espace('FAMILLEMONI.COM — ROXWOOD, FLASHBACK FA', 70, 610, 3);
       };
       const img = new Image();
       img.onload = () => dessiner(img);
