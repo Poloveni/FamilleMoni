@@ -56,7 +56,11 @@ window.fond3dGL = function (id, opts) {
   // ── Lumières : blanc pour le métal, un souffle d'or et de bordeaux pour l'ambiance ──
   scene.add(new THREE.AmbientLight(0x6a6a70, 0.55));
   // Le spot vise le monogramme (sans cible, il pointerait l'origine et le raterait).
-  const PLAQUE = { x: 0, y: 7.4, z: -19 };     // assez haut pour se voir entre le titre et la cloche
+  // Le monogramme se place dans la marge libre, à gauche du contenu : sa
+  // position horizontale est recalculée d'après la mise en page réelle
+  // (menu latéral, bord gauche des cartes) — voir placerPlaque().
+  const PLAQUE = { x: -12, y: 5.2, z: -19 };
+  let plaqueCibleX = PLAQUE.x;
   const key = new THREE.SpotLight(0xffffff, 2.0, 70, Math.PI / 7, 0.9, 1);
   key.position.set(0, 16, -4); key.target.position.set(PLAQUE.x, PLAQUE.y, PLAQUE.z); scene.add(key, key.target);
   const rim = new THREE.PointLight(0xffffff, 1.0, 50); rim.position.set(0, 6, -32); scene.add(rim);
@@ -149,13 +153,35 @@ window.fond3dGL = function (id, opts) {
   }, { passive: true });
   window.addEventListener('scroll', () => { scrollT = window.scrollY || 0; }, { passive: true });
 
+  // Où est la marge libre ? Entre le menu latéral (s'il est affiché) et le
+  // bord gauche du panneau actif. On vise le milieu de cet espace ; s'il est
+  // trop étroit, le M se cale juste à droite du menu et dépasse un peu.
+  function placerPlaque() {
+    const w = window.innerWidth, h = window.innerHeight;
+    const sb = document.querySelector('.sb-nav');
+    const navW = sb && getComputedStyle(sb).display !== 'none' && getComputedStyle(sb).position === 'fixed' && sb.getBoundingClientRect().height > 200
+      ? sb.getBoundingClientRect().width : 0;
+    const panneau = document.querySelector('.panel.active');
+    const contenuG = panneau ? panneau.getBoundingClientRect().left : w * 0.3;
+    const gap = contenuG - navW;
+    const xEcran = navW + Math.max(gap / 2, 110);
+    // De l'écran vers l'espace : demi-largeur visible à la profondeur de la plaque.
+    const dist = CAM.z - PLAQUE.z;
+    const demiL = dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (w / h);
+    plaqueCibleX = (xEcran / w * 2 - 1) * demiL;
+    // Marge étroite (menu large sur un 1920) : le M rétrécit pour y tenir.
+    plaqueCibleS = THREE.MathUtils.clamp(gap / 440, 0.5, 1);
+  }
+  let plaqueCibleS = 1, plaqueS = 1;
   function resize() {
     const w = window.innerWidth, h = window.innerHeight;
     renderer.setSize(w, h, false);
     canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
     camera.aspect = w / h; camera.updateProjectionMatrix();
+    placerPlaque();
   }
   window.addEventListener('resize', resize); resize();
+  setInterval(placerPlaque, 800);   // le menu se replie, le panneau change : on suit
 
   const clock = new THREE.Clock();
   let running = true;
@@ -176,6 +202,11 @@ window.fond3dGL = function (id, opts) {
     const ry = Math.sin(t * 0.35) * 0.5, rx = Math.sin(t * 0.4) * 0.05;
     world.rotation.set(rx, ry, 0); reflet.rotation.set(-rx, ry, 0);
     world.position.y = PLAQUE.y + Math.sin(t * 0.8) * 0.12; reflet.position.y = -world.position.y;
+    // Glisse vers sa place dans la marge, sans à-coup.
+    PLAQUE.x += (plaqueCibleX - PLAQUE.x) * 0.03;
+    plaqueS += (plaqueCibleS - plaqueS) * 0.03;
+    world.position.x = reflet.position.x = key.target.position.x = PLAQUE.x;
+    world.scale.setScalar(plaqueS); reflet.scale.set(plaqueS, -plaqueS, plaqueS);
     key.position.x = Math.sin(t * 0.3) * 4;
     // La grille défile vers nous ; la poussière monte et tourne.
     grilleTex.offset.y = (grilleTex.offset.y - dt * 0.06) % 1;
