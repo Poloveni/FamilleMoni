@@ -49,17 +49,12 @@ pas-à-pas complet : **`docs/SUIVI-FAMILLE.md`**. En résumé :
 
 ---
 
-## 1 · Activer la carte de Roxwood (5 min + le temps de placer tes points)
+## 1 · Carte de Roxwood — abandonnée
 
-1. Supabase → **SQL Editor** → colle **`migrations/carte-points.sql`** → **Run**.
-2. Double-clique **`publier.bat`**.
-3. Espace membre → onglet **Carte** → **Modifier la carte**.
-   Clique pour poser un point, glisse pour le déplacer, renseigne le nom
-   et le type. Pour une **zone de vente**, choisis le nom exact proposé
-   dans le champ « Zone du bot » : l'anneau du point suivra automatiquement
-   le bonus en cours. Termine par **Enregistrer la carte**.
-
-Seule toi peux modifier la carte ; les membres approuvés la consultent.
+Le panneau Carte a disparu de l'espace membre lors de la refonte des treize
+panneaux, et son code (≈ 350 lignes) a été retiré le 17 septembre. Le
+fichier `migrations/carte-points.sql` reste dans le dépôt pour mémoire :
+inutile de l'exécuter.
 
 ---
 
