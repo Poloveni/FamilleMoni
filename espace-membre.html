@@ -886,7 +886,7 @@
     .hier-rang-pill { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
     @media (max-width: 640px) { .hier-add { grid-template-columns: 1fr; } }
   </style>
-  <link rel="stylesheet" href="moni-theme-dash.css?v=8" />
+  <link rel="stylesheet" href="moni-theme-dash.css?v=9" />
 </head>
 <body>
 <canvas id="member-canvas"></canvas>
@@ -2604,9 +2604,16 @@
     cvBox.appendChild(cv);
     const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
     const total = parts.reduce((t, p) => t + p.val, 0);
-    leg.innerHTML = parts.map((p, i) =>
-      '<div class="leg"><span class="dot" style="background:' + DONUT_COLORS[i % DONUT_COLORS.length] + '"></span>' +
-      escT(p.nom) + '<b>' + p.val.toLocaleString('fr-FR') + '</b></div>').join('');
+    // Une part regroupée (« Autres ») porte son détail : la ligne devient
+    // dépliable et liste chaque produit, sans toucher à l'anneau.
+    leg.innerHTML = parts.map((p, i) => {
+      const ligne = '<span class="dot" style="background:' + DONUT_COLORS[i % DONUT_COLORS.length] + '"></span>' +
+        escT(p.nom) + '<b>' + p.val.toLocaleString('fr-FR') + '</b>';
+      if (!p.detail || !p.detail.length) return '<div class="leg">' + ligne + '</div>';
+      return '<details class="leg-autres"><summary class="leg">' + ligne + '</summary>' +
+        p.detail.map(d => '<div class="leg sous">' + escT(d.nom) + '<b>' + d.val.toLocaleString('fr-FR') + '</b></div>').join('') +
+        '</details>';
+    }).join('');
     const cx = size / 2, cy = size / 2, R = size / 2 - 16, LW = 26;
     function render(p) {
       ctx.clearRect(0, 0, size, size);
@@ -2843,7 +2850,8 @@
     const parts = droguesStock.length > 7
       ? droguesStock.slice(0, 6).concat([{
           nom: 'Autres (' + (droguesStock.length - 6) + ' produits)',
-          val: droguesStock.slice(6).reduce((t, d) => t + d.val, 0)
+          val: droguesStock.slice(6).reduce((t, d) => t + d.val, 0),
+          detail: droguesStock.slice(6)   // dépliable dans la légende
         }])
       : droguesStock;
     if (!parts.length) chartD.innerHTML = '<div class="locked">Aucune drogue en stock actuellement.</div>';

@@ -751,6 +751,15 @@ body.tv-mode .panel { max-width: none; }
 .leg { font-family: var(--body); font-size: 14px; color: var(--ink2); }
 .leg .dot { border-radius: 2px; }
 .leg b { font-family: var(--serif); color: var(--ink); }
+/* « Autres » dépliable : le résumé garde l'allure d'une ligne de légende,
+   avec un petit chevron ; les produits regroupés s'indentent dessous. */
+.leg-autres summary { cursor: pointer; list-style: none; }
+.leg-autres summary::-webkit-details-marker { display: none; }
+.leg-autres summary::after { content: '▾'; margin-left: 6px; font-size: 11px; color: var(--dim); transition: transform var(--t) ease; }
+.leg-autres[open] summary::after { transform: rotate(180deg); }
+.leg-autres summary:hover { color: var(--ink); }
+.leg.sous { padding: 4px 0 0 19px; font-size: 13px; color: var(--dim); }
+.leg.sous b { font-size: 13px; color: var(--ink2); }
 
 /* ── L. Mobile / tablette ── */
 @media (max-width: 1080px) {
