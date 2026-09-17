@@ -2,6 +2,10 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <!-- Filet de sécurité : si le bot Discord renvoie un jeton ici (#token=…)
+       au lieu de la page de retour, on le relaie tout de suite à
+       suivi-connexion.html — le fragment ne quitte jamais le navigateur. -->
+  <script>if(/(^#|[#&])token=/.test(location.hash)){location.replace('suivi-connexion.html'+location.hash);}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Famille Moni — Roxwood GTA RP</title>
   <meta name="description" content="La Famille Moni — organisation RP née de la Famiglia Moncini, active à Roxwood sur Flashback FA (GTA RP). Histoire, code d'honneur, hiérarchie, galerie." />
