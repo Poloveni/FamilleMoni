@@ -133,6 +133,7 @@
       case 'unavailable': aide = 'Le bot est peut-être arrêté ou son API n\'est pas joignable depuis le site. Réessaie plus tard.'; break;
       case 'reconnect': aide = 'Relance simplement la connexion depuis l\'espace membre.'; break;
       case 'forbidden': aide = 'Il faut être membre du serveur Discord de la famille pour entrer.'; break;
+      case 'discord_pris': aide = 'Deux comptes du site pour un même Discord : supprime le doublon (celui en attente) dans le panel admin, puis relance la liaison.'; break;
     }
     fin(false, msg.replace(/[<>&"]/g, ''), aide, connexion ? 'Connexion impossible.' : undefined);
   } catch (e) {

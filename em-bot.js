@@ -198,6 +198,7 @@
       case 'site_forbidden': return locked('<b>Accès non ouvert</b> pour ce compte du site.<br><small>' + msg + '</small>');
       case 'unauthorized': return locked('<b>Session du site expirée.</b> Recharge la page et reconnecte-toi.');
       case 'no_discord_identity': return locked('Ton compte du site n\'est <b>pas relié à Discord</b>.<br><small>Déconnecte-toi puis utilise « Se connecter avec Discord » : c\'est ce qui prouve que les données du bot sont bien les tiennes.</small>');
+      case 'discord_pris': return locked('<b>Ce compte Discord est déjà rattaché à un autre compte du site.</b><br><small>' + msg + '</small>');
       case 'mismatch': case 'wrong_guild': return locked('<b>Liaison refusée.</b><br><small>' + msg + '</small><div class="sv-cta">' + boutonConnexion('Recommencer la connexion') + '</div>');
       default: return locked('<b>Erreur</b> : ' + msg);
     }

@@ -327,7 +327,6 @@ Deno.serve(async (req: Request) => {
     if (!configure) return refus(503, "not_configured", "La liaison avec le bot n'est pas encore configurée sur le site (BOT_API_URL / BOT_GUILD_ID).", base);
     const token = typeof body.token === "string" ? body.token.trim() : "";
     if (!token || token.length > 4096 || token.split(".").length !== 3) return refus(400, "bad_request", "Jeton absent ou mal formé.", base);
-    if (!discordIdSite) return refus(403, "no_discord_identity", "Ton compte du site n'est pas relié à Discord : déconnecte-toi puis utilise « Se connecter avec Discord ».", base);
 
     let me: unknown;
     try {
@@ -341,7 +340,20 @@ Deno.serve(async (req: Request) => {
     }
     if (!estMeBot(me)) return refus(502, "unavailable", "Réponse du bot illisible.", base);
     if (me.guildId !== BOT_GUILD_ID) return refus(403, "wrong_guild", "Ce jeton concerne un autre serveur Discord que la Famille Moni.", base);
-    if (me.id !== discordIdSite) return refus(403, "mismatch", "Le compte Discord utilisé chez le bot n'est pas celui relié à ton compte du site. Reconnecte-toi sur Discord avec le bon compte puis recommence.", base);
+    if (discordIdSite) {
+      if (me.id !== discordIdSite) return refus(403, "mismatch", "Le compte Discord utilisé chez le bot n'est pas celui relié à ton compte du site. Reconnecte-toi sur Discord avec le bon compte puis recommence.", base);
+    } else {
+      // Compte du site sans Discord (créé par e-mail) : le jeton prouve que la
+      // personne contrôle CE compte Discord — on le rattache, une fois pour
+      // toutes, sauf s'il appartient déjà à un autre compte du site (par
+      // exemple un doublon créé par la connexion par le bot) : dans ce cas
+      // c'est ce doublon qu'il faut supprimer, pas partager un identifiant.
+      let autre: Utilisateur | null = null;
+      try { autre = await trouverCompteParDiscord(admin, me.id); } catch (e) { return refus(500, "site_error", String((e as Error).message ?? e), base); }
+      if (autre && autre.id !== user.id) {
+        return refus(409, "discord_pris", "Cet identifiant Discord est déjà rattaché à un autre compte du site (" + String(autre.email ?? "sans adresse") + "). Si c'est un doublon créé par la connexion par le bot, supprime-le dans le panel admin, puis recommence.", base);
+      }
+    }
 
     const expiresAt = expirationDuJeton(token) ?? new Date(Date.now() + 7 * 24 * 3600 * 1000);
     if (expiresAt.getTime() <= Date.now()) return refus(401, "reconnect", "Ce jeton est déjà expiré.", base);
