@@ -36,7 +36,13 @@
 //  Appel depuis le site : POST JSON { action, ... } avec
 //    Authorization: Bearer <access_token de la session Supabase du membre>
 //    apikey: <clé publishable>
-//  Actions : status | link { token } | unlink | api { path, query }
+//  Actions avec session du site : status | link { token } | unlink | api { path, query }
+//  Actions SANS session (page de connexion) : config | login { token }
+//    `login` = connexion au site PAR le bot : le jeton du bot, vérifié auprès
+//    de lui, désigne un compte Discord ; on retrouve (ou crée) le compte du
+//    site qui porte cet identifiant et on lui ouvre une session Supabase via
+//    un lien magique consommé côté client (verifyOtp). Un seul écran Discord
+//    pour le site et le bot.
 // ─────────────────────────────────────────────────────────────────────────────
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -150,10 +156,125 @@ function loginUrl(): string {
   return `${BOT_API_URL}/auth/login?guild=${encodeURIComponent(BOT_GUILD_ID)}`;
 }
 
+// ─── Comptes du site ↔ identifiant Discord ───────────────────────────────────
+// deno-lint-ignore no-explicit-any
+type Utilisateur = any;
+// Client service_role : typé `any` pour ne pas se battre avec les génériques de supabase-js (pas de types de schéma ici).
+// deno-lint-ignore no-explicit-any
+type Admin = any;
+
+/** Identifiant Discord d'un compte du site : l'identité OAuth Discord (connexion classique) ou `app_metadata.discord_id` (posé par `login`/`link`, hors de portée de l'utilisateur — jamais `user_metadata`, qu'il peut modifier). */
+function discordIdDe(user: Utilisateur): string | null {
+  const identite = (user.identities ?? []).find((i: Utilisateur) => i.provider === "discord");
+  if (identite) {
+    const id = String(identite.identity_data?.provider_id ?? identite.identity_data?.sub ?? identite.id ?? "");
+    if (id) return id;
+  }
+  const meta = user.app_metadata?.discord_id;
+  return meta ? String(meta) : null;
+}
+
+/** Retrouve le compte du site portant cet identifiant Discord (identité OAuth ou app_metadata), ou `null`. La famille compte quelques dizaines de comptes : parcourir la liste suffit. */
+async function trouverCompteParDiscord(admin: Admin, discordId: string): Promise<Utilisateur | null> {
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) throw new Error("Lecture des comptes impossible : " + error.message);
+    const users: Utilisateur[] = data?.users ?? [];
+    const trouve = users.find((u) => discordIdDe(u) === discordId);
+    if (trouve) return trouve;
+    if (users.length < 200) break;
+  }
+  return null;
+}
+
+/** Pose `app_metadata.discord_id` sur un compte qui ne l'a pas encore — pour qu'un compte créé par e-mail puis lié au bot soit ensuite retrouvé par `login`. */
+async function memoriserDiscordId(admin: Admin, user: Utilisateur, discordId: string): Promise<void> {
+  if (user.app_metadata?.discord_id === discordId) return;
+  await admin.auth.admin.updateUserById(user.id, { app_metadata: { ...(user.app_metadata ?? {}), discord_id: discordId } });
+}
+
+/** Adresse technique d'un compte créé par le bot — aucun mail n'y est jamais envoyé (compte confirmé d'office, session ouverte par lien magique consommé directement). */
+function emailTechnique(me: MeBot): string {
+  const base = String(me.username || "membre").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || "membre";
+  return `${base}.${me.id}@bot.famillemoni.com`;
+}
+
+/**
+ * action `login` — connexion au site par le bot. Le jeton du bot (obtenu via
+ * SON écran Discord) est vérifié auprès de lui ; il désigne un compte Discord
+ * du serveur Famille Moni. On retrouve le compte du site correspondant (ou on
+ * le crée, en attente de validation comme n'importe quelle inscription), on
+ * range le jeton, puis on ouvre une session Supabase pour ce compte : un lien
+ * magique généré côté serveur, dont seul le `hashed_token` (usage unique,
+ * courte durée) repart au navigateur, qui l'échange contre une session avec
+ * `verifyOtp`. Aucun mail n'est envoyé.
+ */
+async function connexionParLeBot(admin: Admin, body: Record<string, unknown>, configure: boolean): Promise<Response> {
+  const base = { configured: configure, loginUrl: configure ? loginUrl() : null };
+  if (!configure) return refus(503, "not_configured", "La connexion par le bot n'est pas encore configurée (BOT_API_URL / BOT_GUILD_ID).", base);
+  const token = typeof body.token === "string" ? body.token.trim() : "";
+  if (!token || token.length > 4096 || token.split(".").length !== 3) return refus(400, "bad_request", "Jeton absent ou mal formé.", base);
+
+  let me: unknown;
+  try {
+    const r = await appelBot("/api/me", token);
+    if (r.status === 401) return refus(401, "reconnect", "Le bot a refusé ce jeton (expiré ou invalide) — relance la connexion.", base);
+    if (r.status === 403) return refus(403, "forbidden", "Le bot indique que tu n'es pas membre du serveur Discord de la famille.", base);
+    if (r.status !== 200) return refus(502, "unavailable", `Réponse inattendue du bot (${r.status}).`, base);
+    me = r.body;
+  } catch (e) {
+    return refus(503, "unavailable", "Le bot ne répond pas : " + String((e as Error).message ?? e), base);
+  }
+  if (!estMeBot(me)) return refus(502, "unavailable", "Réponse du bot illisible.", base);
+  if (me.guildId !== BOT_GUILD_ID) return refus(403, "wrong_guild", "Ce jeton concerne un autre serveur Discord que la Famille Moni.", base);
+
+  let user: Utilisateur | null;
+  try { user = await trouverCompteParDiscord(admin, me.id); }
+  catch (e) { return refus(500, "site_error", String((e as Error).message ?? e), base); }
+  let nouveau = false;
+  if (!user) {
+    const { data, error } = await admin.auth.admin.createUser({
+      email: emailTechnique(me),
+      email_confirm: true,
+      app_metadata: { discord_id: me.id, via: "bot" },
+      user_metadata: { user_name: me.username, full_name: me.username },
+    });
+    if (error || !data?.user) return refus(500, "site_error", "Création du compte impossible : " + (error?.message ?? "?"), base);
+    user = data.user; nouveau = true;
+  } else {
+    try { await memoriserDiscordId(admin, user, me.id); } catch { /* non bloquant */ }
+  }
+  if (!user.email) return refus(500, "site_error", "Ce compte n'a pas d'adresse : impossible d'ouvrir une session.", base);
+
+  const expiresAt = expirationDuJeton(token) ?? new Date(Date.now() + 7 * 24 * 3600 * 1000);
+  if (expiresAt.getTime() > Date.now()) {
+    await admin.from("bot_sessions").upsert({
+      user_id: user.id, discord_id: me.id, username: me.username, token,
+      expires_at: expiresAt.toISOString(), is_admin: !!me.isAdmin, is_taxes: !!me.isTaxes,
+      linked_at: new Date().toISOString(), last_used: new Date().toISOString(),
+    });
+  }
+
+  const { data: lien, error: lienErr } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.email });
+  const tokenHash = lien?.properties?.hashed_token;
+  if (lienErr || !tokenHash) return refus(500, "site_error", "Ouverture de session impossible : " + (lienErr?.message ?? "lien vide"), base);
+  return json({ ok: true, ...base, tokenHash, nouveau, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin, isTaxes: !!me.isTaxes } });
+}
+
 // ─── Serveur ─────────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return refus(405, "method", "POST attendu.");
+
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* corps vide toléré pour status */ }
+  const action = typeof body.action === "string" ? body.action : "status";
+  const configure = !!BOT_API_URL && !!BOT_GUILD_ID;
+  const admin = createClient(SB_URL, SB_SERVICE, { auth: { persistSession: false } });
+
+  // ── Actions publiques : pas encore de session du site ──
+  if (action === "config") return json({ ok: true, configured: configure, loginUrl: configure ? loginUrl() : null });
+  if (action === "login") return await connexionParLeBot(admin, body, configure);
 
   // 1. Qui appelle ? Le JWT de session du membre, vérifié par Supabase Auth.
   const authHeader = req.headers.get("Authorization") ?? "";
@@ -168,7 +289,6 @@ Deno.serve(async (req: Request) => {
   // 2. Le site l'autorise-t-il ? Compte approuvé et accès complet (un compte
   //    « taxes uniquement » ne voit que le panneau Taxes du site, pas cette
   //    rubrique — même règle que le menu, appliquée ici pour de vrai).
-  const admin = createClient(SB_URL, SB_SERVICE, { auth: { persistSession: false } });
   const { data: compte, error: compteErr } = await admin
     .from("comptes").select("approuve, acces").eq("id", user.id).maybeSingle();
   if (compteErr) return refus(500, "site_error", "Vérification du compte impossible : " + compteErr.message);
@@ -178,20 +298,11 @@ Deno.serve(async (req: Request) => {
   const taxesSeulement = compte.acces === "taxes";
 
   // 3. Quelle action ?
-  let body: Record<string, unknown> = {};
-  try { body = await req.json(); } catch { /* corps vide toléré pour status */ }
-  const action = typeof body.action === "string" ? body.action : "status";
-
-  const configure = !!BOT_API_URL && !!BOT_GUILD_ID;
-
   // Identité Discord côté site : celle enregistrée par Supabase Auth lors de la
   // connexion OAuth (auth.identities) — pas user_metadata, que l'utilisateur
   // peut modifier lui-même. Un compte email sans identité Discord ne peut pas
   // être lié : on ne saurait pas prouver que le jeton du bot est le sien.
-  const identiteDiscord = (user.identities ?? []).find((i) => i.provider === "discord");
-  const discordIdSite: string | null = identiteDiscord
-    ? String(identiteDiscord.identity_data?.provider_id ?? identiteDiscord.identity_data?.sub ?? identiteDiscord.id ?? "") || null
-    : null;
+  const discordIdSite: string | null = discordIdDe(user);
 
   const { data: session } = await admin
     .from("bot_sessions").select("discord_id, username, token, expires_at, is_admin, is_taxes, linked_at")
@@ -235,6 +346,7 @@ Deno.serve(async (req: Request) => {
     const expiresAt = expirationDuJeton(token) ?? new Date(Date.now() + 7 * 24 * 3600 * 1000);
     if (expiresAt.getTime() <= Date.now()) return refus(401, "reconnect", "Ce jeton est déjà expiré.", base);
 
+    await memoriserDiscordId(admin, user, me.id);
     const { error: upErr } = await admin.from("bot_sessions").upsert({
       user_id: user.id,
       discord_id: me.id,

@@ -152,22 +152,41 @@ guilde.
 `publier.bat` (ou `git push`). Fichiers concernés : `espace-membre.html`,
 `suivi-famille.js`, `suivi-connexion.html`, `moni-theme-dash.css`.
 
-## Parcours d'un membre
+## Parcours d'un membre : la connexion par le bot
 
-1. Espace membre → **Suivi de la famille** → « Connecter mon compte Discord au bot ».
-2. Redirection vers `<API_BASE_URL>/auth/login?guild=<ID>` → Discord → retour
-   sur `suivi-connexion.html#token=…`.
-3. La page efface le fragment, envoie le jeton à `bot-suivi` (action `link`),
-   qui vérifie auprès du bot (`/api/me`) que l'identifiant Discord est celui
-   relié au compte du site et que la guilde est la bonne, puis le range.
-4. Retour automatique sur l'espace membre, rubrique ouverte.
+Depuis le 17 septembre au soir, **la connexion au site passe par le bot** :
+un seul écran Discord (application Moni V3) ouvre la session du site et la
+liaison au bot. L'application « Oil Roxwood Logs » (fournisseur Discord de
+Supabase) ne sert plus qu'en secours.
 
-Le jeton du bot dure **7 jours** ; ensuite la rubrique affiche « Me
-reconnecter au bot ». « Délier » efface le jeton côté serveur.
+1. Écran de connexion → **Se connecter avec Discord**. Le bouton pointe vers
+   `<API_BASE_URL>/auth/login?guild=<ID>` (adresse fournie par la passerelle,
+   action `config`).
+2. Discord → retour sur `suivi-connexion.html#token=…`, fragment effacé
+   aussitôt.
+3. Pas de session du site → action `login` : la passerelle vérifie le jeton
+   auprès du bot (`/api/me`), retrouve le compte du site portant cet
+   identifiant Discord (identité OAuth historique ou `app_metadata.discord_id`),
+   ou le crée (adresse technique `pseudo.<id>@bot.famillemoni.com`, en
+   attente de validation comme toute inscription), range le jeton du bot,
+   puis renvoie un lien magique à usage unique que la page échange contre
+   une session Supabase (`verifyOtp`). Aucun mail n'est envoyé.
+4. Session déjà ouverte → action `link`, comme avant : le jeton est vérifié
+   (même compte Discord, même serveur) et rangé.
 
-**Prérequis pour le membre** : compte du site connecté **via Discord** (sinon
-le site ne peut pas prouver que le jeton du bot est le sien : message
-explicite), approuvé, en accès complet.
+Le jeton du bot dure **7 jours** ; ensuite les panneaux affichent « Me
+reconnecter au bot » : même bouton, même écran. La session du site, elle,
+tient plusieurs semaines.
+
+**Secours** : le bloc « Connexion par e-mail » (replié) reste disponible pour
+l'administratrice et les comptes historiques. Si la passerelle ne répond pas
+ou n'est pas configurée, il s'ouvre tout seul avec, en plus, l'ancienne
+connexion Discord classique.
+
+**Comptes historiques** : ceux qui s'étaient connectés via Discord sont
+retrouvés automatiquement. Un compte créé par e-mail sans Discord se connecte
+une dernière fois par e-mail puis lie le bot depuis un panneau : à partir de
+là, la connexion par le bot le retrouve aussi.
 
 ## Qui voit quoi
 
@@ -242,7 +261,8 @@ membre ne contient plus les lignes des coffres admin.
 | Discord renvoie une erreur `redirect_uri` | L'URI `<API_BASE_URL>/auth/callback` manque dans le Developer Portal |
 | Page bot « Aucun site externe configuré » | `/config site-externe set` pas fait pour cette guilde |
 | « Le compte Discord utilisé chez le bot n'est pas celui relié à ton compte du site » | Le membre s'est connecté sur Discord (navigateur) avec un autre compte |
-| « Ton compte du site n'est pas relié à Discord » | Compte email/mot de passe : se reconnecter avec le bouton Discord |
+| « Ton compte du site n'est pas relié à Discord » | Compte email/mot de passe : se connecter par le bot une fois (ou lier depuis un panneau) |
+| Après connexion par le bot, « Compte en attente de validation » | Nouveau compte créé par le bot : à approuver dans le panel admin (il apparaît avec son pseudo Discord si `migrations/comptes-details.sql` a été rejoué) |
 | Onglet Taxes absent alors que le rôle est donné | Sans le correctif 0001 du bot, il faut se reconnecter au bot (les rôles étaient figés dans le jeton) |
 | « pas encore exposé par ce bot » (braquages, cooldowns, labos, drogue à vendre) | Correctif 0002 pas appliqué, ou fonction `bot-suivi` pas redéployée |
 | Les membres apparaissent comme « Membre …1234 » | Correctif 0002 pas appliqué (`/api/users` ne renvoyait que soi-même) |

@@ -43,7 +43,9 @@ as $$
     c.approuve,
     c.acces,
     c.created_at,
-    d.pseudo,
+    -- compte créé par la connexion par le bot (pas d'identité OAuth) : le
+    -- pseudo est posé dans les métadonnées à la création
+    coalesce(d.pseudo, u.raw_user_meta_data ->> 'user_name'),
     u.last_sign_in_at,
     p.nom,
     p.rang

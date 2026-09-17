@@ -49,7 +49,9 @@ pas-à-pas complet : **`docs/SUIVI-FAMILLE.md`**. En résumé :
    (à relancer après le correctif 0002 : la fonction en ligne doit connaître les nouvelles routes).
 
 État au 17 septembre au soir : DNS, secret, fonction, `/config site-externe` et
-liaison testée ✔ — reste le correctif 0002 côté dev et le redéploiement de la fonction.
+liaison testée ✔. Reste : le correctif 0002 côté dev, **redéployer la fonction**
+(elle porte maintenant aussi la connexion au site par le bot), et rejouer
+`migrations/comptes-details.sql` pour voir le pseudo des comptes créés par le bot.
 
 ---
 

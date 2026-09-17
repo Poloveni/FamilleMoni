@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="dashboard.css" />
   <link rel="stylesheet" href="espace-membre.css?v=1" />
-  <link rel="stylesheet" href="moni-theme-dash.css?v=10" />
+  <link rel="stylesheet" href="moni-theme-dash.css?v=11" />
   <!--
     L'espace membre est bâti autour de l'API REST du bot Discord (bot-moni-v3),
     en lecture seule : Ma semaine, La famille, Stocks, Armurerie, Braquages,
@@ -34,31 +34,37 @@
 <div id="auth-screen" class="auth-wrap">
   <div class="card narrow">
     <h1 class="auth-title">Espace <span>Membre</span></h1>
-    <div class="sub" id="auth-sub">Connecte-toi pour accéder au dashboard de la famille.</div>
+    <div class="sub" id="auth-sub">Connecte-toi avec ton compte Discord : c'est lui qui te relie au bot Moni et à ton rôle sur le serveur.</div>
 
-    <label>Email</label>
-    <input type="email" id="email" placeholder="ton@email.com" autocomplete="email" />
-
-    <label>Mot de passe</label>
-    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()" />
-
-    <button class="btn" id="auth-btn" onclick="doAuth()">Se connecter</button>
+    <!-- Connexion principale : par le bot. Un seul écran Discord (Moni V3)
+         ouvre la session du site ET la liaison au bot. L'adresse de départ
+         vient de la passerelle (action `config`), jamais écrite en dur ici. -->
+    <a class="btn discord" id="auth-bot" href="#" onclick="return connexionParLeBot(event)">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:18px;height:18px;vertical-align:-4px;margin-right:8px;"><path d="M20.3 4.5A19.8 19.8 0 0 0 15.4 3l-.25.5a18.3 18.3 0 0 1 4.3 1.4 15.6 15.6 0 0 0-12.9 0A18.3 18.3 0 0 1 10.85 3.5L10.6 3a19.8 19.8 0 0 0-4.9 1.5C2.6 9.1 1.8 13.6 2.2 18a19.9 19.9 0 0 0 6 3l1.2-1.7a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1L19.8 21a19.9 19.9 0 0 0 6-3c.5-5.1-.8-9.5-3.5-13.5zM9.7 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm4.6 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg><span id="auth-bot-lbl">Se connecter avec Discord</span>
+    </a>
+    <p class="hint" id="auth-bot-hint" style="margin-top:10px;line-height:1.6;">Tu passes par Discord (application Moni V3), puis tu reviens ici connecté(e).</p>
     <div class="msg" id="auth-msg"></div>
 
-    <div class="auth-sep"><span>ou</span></div>
-    <button type="button" class="btn discord" onclick="connexionDiscord()">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:18px;height:18px;vertical-align:-4px;margin-right:8px;"><path d="M20.3 4.5A19.8 19.8 0 0 0 15.4 3l-.25.5a18.3 18.3 0 0 1 4.3 1.4 15.6 15.6 0 0 0-12.9 0A18.3 18.3 0 0 1 10.85 3.5L10.6 3a19.8 19.8 0 0 0-4.9 1.5C2.6 9.1 1.8 13.6 2.2 18a19.9 19.9 0 0 0 6 3l1.2-1.7a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1L19.8 21a19.9 19.9 0 0 0 6-3c.5-5.1-.8-9.5-3.5-13.5zM9.7 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm4.6 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg>Se connecter avec Discord
-    </button>
-    <p class="hint" style="margin-top:10px;line-height:1.6;">
-      Recommandé : c'est ce qui relie ton compte au bot Moni et à ton rôle sur le serveur.
-    </p>
-
-    <div class="switch" id="auth-switch">
-      Pas encore de compte ? <button type="button" class="lien" onclick="setMode('signup')">Créer un compte</button>
-    </div>
-    <div class="switch" style="margin-top:10px;">
-      <button type="button" class="lien" onclick="motDePasseOublie()">Mot de passe oublié ?</button>
-    </div>
+    <!-- Secours : compte e-mail (administratrice, comptes historiques) — replié par défaut. -->
+    <details class="auth-secours" id="auth-secours">
+      <summary>Connexion par e-mail</summary>
+      <label>Email</label>
+      <input type="email" id="email" placeholder="ton@email.com" autocomplete="email" />
+      <label>Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()" />
+      <button class="btn" id="auth-btn" onclick="doAuth()">Se connecter</button>
+      <div class="switch" id="auth-switch">
+        Pas encore de compte ? <button type="button" class="lien" onclick="setMode('signup')">Créer un compte</button>
+      </div>
+      <div class="switch" style="margin-top:10px;">
+        <button type="button" class="lien" onclick="motDePasseOublie()">Mot de passe oublié ?</button>
+      </div>
+      <!-- Ancienne connexion Discord (fournisseur Supabase) : proposée seulement si le bot est injoignable. -->
+      <div id="auth-discord-secours" hidden>
+        <div class="auth-sep"><span>ou</span></div>
+        <button type="button" class="btn discord" onclick="connexionDiscord()">Connexion Discord classique</button>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -335,7 +341,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
-<script src="em-core.js?v=1"></script>
+<script src="em-core.js?v=2"></script>
 <script src="em-charts.js?v=1"></script>
 <script src="em-site.js?v=1"></script>
 <script src="em-bot.js?v=1"></script>

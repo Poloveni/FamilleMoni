@@ -307,6 +307,36 @@ async function doAuth() {
   }
 }
 
+// ── Connexion par le bot : un seul écran Discord (Moni V3) pour le site et le bot ──
+// L'adresse de départ vient de la passerelle ; si elle ne répond pas ou n'est
+// pas configurée, on replie sur l'e-mail et l'ancienne connexion Discord.
+let botLoginUrl = null;
+(async function preparerConnexionBot() {
+  const btn = document.getElementById('auth-bot'), hint = document.getElementById('auth-bot-hint');
+  if (!btn) return;
+  try {
+    const r = await fetch(String(window.SUPABASE_URL || '').replace(/\/$/, '') + '/functions/v1/bot-suivi', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: window.SUPABASE_KEY || '' }, body: JSON.stringify({ action: 'config' }),
+    });
+    const d = await r.json();
+    if (d && d.ok && d.configured && d.loginUrl) { botLoginUrl = d.loginUrl; btn.href = botLoginUrl; return; }
+    throw new Error(d && d.configured === false ? 'non configurée' : 'réponse inattendue');
+  } catch (e) {
+    btn.classList.add('indispo');
+    if (hint) hint.textContent = 'Connexion par le bot indisponible pour le moment (' + (e && e.message || e) + '). Utilise la connexion par e-mail ou la connexion Discord classique ci-dessous.';
+    const sec = document.getElementById('auth-secours'); if (sec) sec.open = true;
+    const alt = document.getElementById('auth-discord-secours'); if (alt) alt.hidden = false;
+  }
+})();
+function connexionParLeBot(ev) {
+  if (ev) ev.preventDefault();
+  hideMsg('auth-msg');
+  if (!botLoginUrl) { showMsg('auth-msg', "La connexion par le bot n'est pas disponible : utilise la connexion par e-mail ci-dessous.", false); return false; }
+  const lbl = document.getElementById('auth-bot-lbl'); if (lbl) lbl.textContent = 'Redirection vers Discord…';
+  window.location.href = botLoginUrl;
+  return false;
+}
+
 async function connexionDiscord() {
   hideMsg('auth-msg');
   // redirectTo doit figurer dans Supabase → Authentication → URL Configuration → Redirect URLs.
@@ -360,7 +390,8 @@ async function onLogged(user) {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('reset-screen').style.display = 'none';
   document.getElementById('member-screen').style.display = 'block';
-  document.getElementById('who-email').textContent = user.email;
+  const viaBot = /@bot\.famillemoni\.com$/i.test(user.email || '');
+  document.getElementById('who-email').textContent = viaBot ? ((user.user_metadata && user.user_metadata.user_name) || 'membre Discord') : user.email;
   const sbAdmin = document.getElementById('sb-admin');
   if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
   // Les droits viennent de la base, qui applique exactement les mêmes fonctions

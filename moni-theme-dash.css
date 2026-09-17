@@ -680,3 +680,14 @@ body.tv-mode .panel { max-width: none; }
 .cd-liste .cd-row { grid-template-columns: minmax(0, 1fr) auto; }
 .cd-liste .cd-row .ref { grid-column: 1 / -1; font-size: 12.5px; }
 }
+
+/* ── O. Écran de connexion : le bot d'abord, l'e-mail en secours ── */
+#auth-bot { display: block; text-align: center; text-decoration: none; }
+#auth-bot.indispo { opacity: .45; }
+.auth-secours { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 6px; }
+.auth-secours summary { cursor: pointer; list-style: none; font-family: var(--caps); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); padding: 10px 0; transition: color var(--t) ease; }
+.auth-secours summary::-webkit-details-marker { display: none; }
+.auth-secours summary::after { content: '▾'; margin-left: 8px; font-size: 11px; }
+.auth-secours[open] summary::after { content: '▴'; }
+.auth-secours summary:hover { color: var(--ink); }
+.auth-secours label { margin-top: 12px; }
