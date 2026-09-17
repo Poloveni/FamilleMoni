@@ -36,7 +36,7 @@ Dans le `.env` du bot (voir `.env.example` du bot) :
 
 ```env
 API_PORT=3001
-API_BASE_URL=https://bot.famillemoni.com        # URL PUBLIQUE de l'API, sans slash final
+API_BASE_URL=https://api.famillemoni.com        # URL PUBLIQUE de l'API, sans slash final
 DISCORD_CLIENT_SECRET=<Developer Portal > OAuth2 > Client Secret>
 API_JWT_SECRET=<longue chaîne aléatoire, ex. : openssl rand -hex 48>
 ```
@@ -46,7 +46,7 @@ appelle le bot depuis ses serveurs). Le bot écoute en HTTP sur `API_PORT` :
 mets un reverse proxy TLS devant. Exemple avec Caddy (certificat automatique) :
 
 ```caddyfile
-bot.famillemoni.com {
+api.famillemoni.com {
     reverse_proxy 127.0.0.1:3001
 }
 ```
@@ -56,9 +56,9 @@ Ou nginx + certbot :
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name bot.famillemoni.com;
-    ssl_certificate     /etc/letsencrypt/live/bot.famillemoni.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/bot.famillemoni.com/privkey.pem;
+    server_name api.famillemoni.com;
+    ssl_certificate     /etc/letsencrypt/live/api.famillemoni.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.famillemoni.com/privkey.pem;
     location / {
         proxy_pass http://127.0.0.1:3001;
         proxy_set_header Host $host;
@@ -88,7 +88,7 @@ npm run typecheck
 Application du bot → **OAuth2** → **Redirects** → ajouter exactement :
 
 ```
-https://bot.famillemoni.com/auth/callback
+https://api.famillemoni.com/auth/callback
 ```
 
 (c'est `<API_BASE_URL>/auth/callback`, au caractère près).
@@ -110,7 +110,7 @@ Si le rôle « taxes » doit voir l'onglet Taxes du site :
 
 1. **SQL Editor** → coller `migrations/bot-sessions.sql` → **Run**.
 2. **Edge Functions** → **Secrets** :
-   - `BOT_API_URL` = `https://bot.famillemoni.com` (même valeur que
+   - `BOT_API_URL` = `https://api.famillemoni.com` (même valeur que
      `API_BASE_URL` du bot)
    - `BOT_GUILD_ID` = identifiant du serveur Discord Famille Moni
      (clic droit sur le serveur → *Copier l'identifiant du serveur*). Le
