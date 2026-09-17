@@ -103,11 +103,9 @@ const ROUTES_AUTORISEES: RegExp[] = [
   /^\/api\/taxes\/search$/,
   /^\/api\/taxes\/[0-9]{1,12}$/,
   // Ajoutées par le second correctif du bot (docs/bot-moni-v3-correctifs/) :
-  /^\/api\/stocks\/items$/,
   /^\/api\/braquages$/,
   /^\/api\/cooldowns$/,
   new RegExp(`^/api/cooldowns/${SNOWFLAKE}$`),
-  /^\/api\/labos$/,
 ];
 
 /** Un compte du site en accès « taxes uniquement » ne relaie que ce qui concerne les taxes (et son identité). */

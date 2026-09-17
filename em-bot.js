@@ -24,7 +24,6 @@
     me: null,              // { id, username, isAdmin, isTaxes } vu par le bot
     week: '',              // '' = semaine en cours (depuis le reset du bot), sinon 'AAAA-Www'
     config: undefined,     // /api/quotas/config (objectifs, taux, plage) — null si le bot ne l'expose pas
-    items: null,           // /api/stocks/items — null si le bot ne l'expose pas
     cache: {},
     derniereOk: null,
     noms: {},
@@ -128,6 +127,7 @@
     var cle = path + '?' + Object.keys(query).sort().map(function (k) { return k + '=' + query[k]; }).join('&');
     if (S.cache[cle]) return S.cache[cle];
     var p = appel({ action: 'api', path: path, query: query }).then(function (d) {
+      absorberNoms(d.data);
       var res = { data: d.data, at: new Date(d.fetchedAt || Date.now()) };
       S.cache[cle] = res; S.derniereOk = res.at; majChip();
       return res;
@@ -137,7 +137,17 @@
   }
   function wk() { return S.week ? { week: S.week } : {}; }
 
-  // ── Noms, items, config ───────────────────────────────────────────────────
+  // ── Noms, config ──────────────────────────────────────────────────────────
+  /** Les routes de groupe du bot (classement, paie, ventes…) portent le nom de chaque joueur sur la ligne : on le retient au passage. */
+  function absorberNoms(data) {
+    var fix = window.MONI_NOM_FIX || {};
+    var lignes = Array.isArray(data) ? data : (data && Array.isArray(data.players) ? data.players : []);
+    lignes.forEach(function (l) {
+      if (!l || typeof l !== 'object' || !l.name) return;
+      var id = l.userId || l.acheteur_id;
+      if (id) S.noms[id] = fix[id] || titre(l.name);
+    });
+  }
   async function chargerNoms() {
     if (S.nomsCharges) return;
     S.nomsCharges = true;
@@ -157,17 +167,9 @@
       S.config = (r.data && r.data.range && r.data.targets) ? r.data : null;
     } catch (e) { S.config = null; }
   }
-  async function chargerItems() {
-    if (S.items !== null) return;
-    try { var r = await api('/api/stocks/items'); S.items = Array.isArray(r.data) ? r.data : false; }
-    catch (e) { S.items = false; }
-  }
-  function itemInfo(nom) {
-    if (!S.items) return null;
-    var k = String(nom || '').toLowerCase();
-    for (var i = 0; i < S.items.length; i++) if (S.items[i].item === k) return S.items[i];
-    return null;
-  }
+  /** Vrai si les lignes de stock portent la configuration des items (bot à jour du correctif n°2) — `vente` y est alors un booléen ou null, jamais absent. */
+  function stocksConfigures(liste) { return liste.length > 0 && Object.prototype.hasOwnProperty.call(liste[0], 'vente'); }
+  function nomItem(s) { return s && s.name ? s.name : titre(s ? s.item : ''); }
 
   // ── Pastille d'état dans l'en-tête ────────────────────────────────────────
   function majChip() {
@@ -451,21 +453,20 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   async function rendreStocks(cible) {
-    await chargerItems();
     var r = await Promise.allSettled([api('/api/stocks'), api('/api/stocks/channels'), api('/api/stocks/history', { item: 'argent sale', limit: '200' })]);
     var stocks = r[0], canaux = r[1], histArgent = r[2];
     var liste = stocks.status === 'fulfilled' ? (stocks.value.data || []) : [];
     var canauxL = canaux.status === 'fulfilled' ? (canaux.value.data || []) : [];
     var st = {}; liste.forEach(function (s) { st[s.item] = s.quantite; });
-    var estVente = function (item) { var i = itemInfo(item); return i ? !!i.vente : false; };
-    var drogues = liste.filter(function (s) { return estVente(s.item) && s.quantite > 0; }).sort(function (a, b) { return b.quantite - a.quantite; });
+    var configure = stocksConfigures(liste);
+    var drogues = liste.filter(function (s) { return s.vente === true && s.quantite > 0; }).sort(function (a, b) { return b.quantite - a.quantite; });
     var totalDrogue = drogues.reduce(function (t, s) { return t + s.quantite; }, 0);
     var html = '';
 
     html += '<div class="kpis sv-kpis">'
       + kpi('Argent sale', stocks.status === 'fulfilled' ? fmt$(st['argent sale'] || 0) : null, 'à blanchir', stocks)
       + kpi('Argent propre', stocks.status === 'fulfilled' ? fmt$(st['argent'] || 0) : null, 'au coffre', stocks)
-      + kpi('Drogue à vendre', stocks.status === 'fulfilled' ? (S.items ? fmtN(totalDrogue) : '—') : null, S.items ? drogues.length + ' produit(s) vendables aux PNJ' : 'liste des items non exposée par ce bot', stocks)
+      + kpi('Drogue à vendre', stocks.status === 'fulfilled' ? (configure ? fmtN(totalDrogue) : '—') : null, configure ? drogues.length + ' produit(s) vendables aux PNJ' : 'configuration des items non exposée par ce bot', stocks)
       + kpi('Items suivis', stocks.status === 'fulfilled' ? String(liste.length) : null, 'tous coffres confondus', stocks)
       + '</div>';
 
@@ -496,7 +497,7 @@
     return function apres(reel) {
     if (stocks.status === 'fulfilled') {
       var dEl = reel.querySelector('#stk-donut');
-      if (!S.items) dEl.innerHTML = locked('Ce bot n\'expose pas encore la liste des items : impossible de distinguer la drogue du matériel. <small>(correctif n°2 du bot)</small>');
+      if (!configure) dEl.innerHTML = locked('Ce bot n\'expose pas encore la configuration des items : impossible de distinguer la drogue du matériel. <small>(correctif n°2 du bot)</small>');
       else if (!drogues.length) dEl.innerHTML = locked('Aucune drogue vendable en stock actuellement.');
       else {
         var parts = drogues.map(function (s) { return { nom: titre(s.item), val: s.quantite }; });
@@ -519,8 +520,8 @@
     var rows = liste.filter(function (s) { return !q || String(s.item).toLowerCase().indexOf(q) >= 0; });
     if (!rows.length) return locked(liste.length ? 'Aucun item ne correspond.' : 'Aucun stock connu du bot.');
     return tableau(['Item', 'Groupe', 'Quantité'], rows.map(function (s) {
-      var i = itemInfo(s.item), grp = i ? (i.group || (i.vente ? 'Vente PNJ' : (i.laboLie ? 'Labo' : '—'))) : '';
-      return ['<b>' + esc(i ? i.name : titre(s.item)) + '</b>' + (i && i.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(grp) + '</span>', fmtN(s.quantite)];
+      var grp = s.group || (s.vente ? 'Vente PNJ' : (s.laboLie ? 'Labo' : '—'));
+      return ['<b>' + esc(nomItem(s)) + '</b>' + (s.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(grp) + '</span>', fmtN(s.quantite)];
     }), ['', '', 'num']) + '<p class="hint sv-note">' + rows.length + ' item(s).</p>';
   }
   async function chargerCoffre(canauxL) {
@@ -529,7 +530,7 @@
     try {
       var r = await api('/api/stocks/' + F.coffre), rows = r.data || [];
       el.innerHTML = '<p class="hint">' + esc(c && c.label || 'Coffre') + (c && c.role === 'logs_coffres_admin' ? ' ' + pill('coffre admin', 'warn') : '') + '</p>'
-        + (rows.length ? tableau(['Item', 'Quantité'], rows.map(function (s) { var i = itemInfo(s.item); return ['<b>' + esc(i ? i.name : titre(s.item)) + '</b>', fmtN(s.quantite)]; }), ['', 'num']) : locked('Aucun mouvement enregistré pour ce coffre.'));
+        + (rows.length ? tableau(['Item', 'Quantité'], rows.map(function (s) { return ['<b>' + esc(nomItem(s)) + '</b>', fmtN(s.quantite)]; }), ['', 'num']) : locked('Aucun mouvement enregistré pour ce coffre.'));
     } catch (e) { el.innerHTML = blocErr(e); }
   }
   async function chargerHistorique(canauxL) {
@@ -593,8 +594,8 @@
   //  BRAQUAGES, COOLDOWNS, LABOS
   // ═══════════════════════════════════════════════════════════════════════════
   async function rendreBraquages(cible) {
-    var r = await Promise.allSettled([api('/api/braquages'), api('/api/cooldowns'), api('/api/labos')]);
-    var br = r[0], cd = r[1], lb = r[2], html = '';
+    var r = await Promise.allSettled([api('/api/braquages'), api('/api/cooldowns')]);
+    var br = r[0], cd = r[1], html = '';
     var pasExpose = function (res) { return res.status === 'rejected' && (res.reason.code === 'bad_request' || res.reason.code === 'not_found'); };
 
     html += '<div class="bloc"><div class="bloc-t">Braquages <small>créneaux de la semaine glissante (7 jours)</small></div>';
@@ -609,19 +610,12 @@
     } else html += pasExpose(br) ? locked('Ce bot n\'expose pas encore les plafonds de braquage. <small>(correctif n°2 du bot)</small>') : blocErr(br.reason);
     html += '</div>';
 
-    html += '<div class="grid2 sv-grid">';
     html += '<div class="bloc"><div class="bloc-t">Mes cooldowns <small>décompte en direct</small></div>';
     if (cd.status === 'fulfilled') {
       var cds = (cd.value.data && cd.value.data.cooldowns) || [];
       html += cds.length ? '<div class="cd-liste">' + cds.map(function (c) { return '<div class="cd-row"><span class="cd-quoi">' + esc(c.label) + '</span><span class="cd-reste" data-fin="' + Number(c.expiresAt) + '">…</span><span class="ref">' + esc(fmtDateHeure(c.expiresAt)) + '</span></div>'; }).join('') + '</div>' : locked('Aucun cooldown en cours : tout est disponible.');
     } else html += pasExpose(cd) ? locked('Ce bot n\'expose pas encore les cooldowns. <small>(correctif n°2 du bot)</small>') : blocErr(cd.reason);
     html += '</div>';
-    html += '<div class="bloc"><div class="bloc-t">Labos <small>disponibilité</small></div>';
-    if (lb.status === 'fulfilled') {
-      var labos = lb.value.data || [];
-      html += labos.length ? '<div class="cd-liste">' + labos.map(function (x) { return '<div class="cd-row"><span class="cd-quoi">' + esc(x.label) + '</span>' + (x.available ? pill('disponible', 'ok') : pill('occupé', 'warn')) + '<span class="ref">' + (x.endsAt ? 'libre <span class="cd-reste" data-fin="' + Number(x.endsAt) + '">…</span>' : '') + '</span></div>'; }).join('') + '</div>' : locked('Aucun labo pour le type de groupe actuel.');
-    } else html += pasExpose(lb) ? locked('Ce bot n\'expose pas encore l\'état des labos. <small>(correctif n°2 du bot)</small>') : blocErr(lb.reason);
-    html += '</div></div>';
     cible.innerHTML = html;
     ticker(function () { cible.querySelectorAll('.cd-reste').forEach(function (el) { var fin = Number(el.dataset.fin); el.textContent = fin > Date.now() ? 'dans ' + fmtDuree(fin - Date.now()) : 'terminé'; el.classList.toggle('fini', fin <= Date.now()); }); });
   }
@@ -813,7 +807,7 @@
     ouvrir: function (panneau) { S.panneau = panneau; rendre(panneau); },
     /** Recharge tout ce qui est en cache et redessine le panneau courant. */
     actualiser: async function () {
-      S.cache = {}; S.config = undefined; S.items = null; S.nomsCharges = false;
+      S.cache = {}; S.config = undefined; S.nomsCharges = false;
       await chargerStatut(true);
       if (S.panneau) await rendre(S.panneau);
     },

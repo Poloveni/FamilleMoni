@@ -9,9 +9,9 @@ en lecture seule. Les tables miroir `bot_*` de Supabase ne sont plus lues.
 | Ma semaine | mes ventes face à l'objectif, ma paie, mon rang, mon quota, mes cooldowns | `/quotas/:me`, `/quotas/pay/:me`, `/ventes/:me`, `/quotas/ranking`, `/cooldowns`, `/quotas/config` |
 | Mon bilan | la carte du mois (image à poster), semaine par semaine | `/ventes`, `/quotas`, `/quotas/pay` avec `?week=` |
 | La famille | ventes, classement, paie et bilan du groupe, sélecteur de semaine | `/ventes`, `/quotas`, `/quotas/ranking`, `/quotas/pay`, `/quotas/summary`, `/stocks` |
-| Stocks | stock général, drogue à vendre, coffres, historique, courbe d'argent sale | `/stocks`, `/stocks/items`, `/stocks/channels`, `/stocks/:id`, `/stocks/history` |
+| Stocks | stock général, drogue à vendre, coffres, historique, courbe d'argent sale | `/stocks`, `/stocks/channels`, `/stocks/:id`, `/stocks/history` |
 | Armurerie | armes, munitions, ventes de munitions | `/armurerie*` |
-| Braquages | créneaux de la semaine glissante, mes cooldowns, labos | `/braquages`, `/cooldowns`, `/labos` |
+| Braquages | créneaux de la semaine glissante, mes cooldowns | `/braquages`, `/cooldowns` |
 | Taxes | rôle taxes / admin uniquement | `/taxes*` |
 | Profil, Planning, Galerie, Hiérarchie | données propres du site | Supabase, inchangé |
 
@@ -205,19 +205,20 @@ barrière — la requête correspondante est refusée par le bot.
 
 ## Les correctifs du bot (`docs/bot-moni-v3-correctifs/`)
 
-### 0002 — braquages, cooldowns, labos, items, noms
+### 0002 — braquages, cooldowns, config des items, noms
 
 - `GET /api/braquages` : plafonds de la semaine glissante (7 j), consommé,
   restant, prochain créneau libre — même calcul que `checkBraquageLimit`.
 - `GET /api/cooldowns` (les siens), `/api/cooldowns/:userId` (soi-même ou admin).
-- `GET /api/labos` : disponibilité de chaque labo actif et heure de fin.
-- `GET /api/stocks/items` : configuration des items (groupe, vendable PNJ,
-  visible, lien labo, multiplicateur) — sans elle, impossible de distinguer
-  la drogue du matériel dans `/api/stocks`.
-- `GET /api/users` : liste (userId, pseudo, nom en jeu) renvoyée à tout
-  membre. Les routes de groupe exposent déjà les `userId` de chacun, comme le
-  classement sur Discord montre les noms ; cacher les pseudos ne protégeait
-  rien et rendait ces vues illisibles. Rien d'autre n'est ajouté.
+- `GET /api/stocks` et `/api/stocks/:channelId` : chaque ligne porte la
+  configuration de son item (`name`, `group`, `vente`, `visibleStock`,
+  `laboLie`, `stockMultiplier`). Champs ajoutés, rien de retiré. Sans eux,
+  impossible de distinguer la drogue du matériel.
+- Routes de groupe (`/api/quotas`, `/pay`, `/ranking`, `/api/ventes`,
+  `/api/armurerie/ammo/history`) : chaque ligne porte le nom du joueur
+  (`name`). Elles renvoyaient déjà les identifiants de chacun à tout membre,
+  comme le classement Discord montre les noms ; le nom est mis là où il sert.
+  `/api/users` reste réservé aux admins.
 
 **Après l'ajout de ces routes, redéployer la fonction** `bot-suivi` (sa
 liste blanche les connaît déjà, mais la version en ligne doit être à jour) :
@@ -264,5 +265,5 @@ membre ne contient plus les lignes des coffres admin.
 | « Ton compte du site n'est pas relié à Discord » | Compte email/mot de passe : se connecter par le bot une fois (ou lier depuis un panneau) |
 | Après connexion par le bot, « Compte en attente de validation » | Nouveau compte créé par le bot : à approuver dans le panel admin (il apparaît avec son pseudo Discord si `migrations/comptes-details.sql` a été rejoué) |
 | Onglet Taxes absent alors que le rôle est donné | Sans le correctif 0001 du bot, il faut se reconnecter au bot (les rôles étaient figés dans le jeton) |
-| « pas encore exposé par ce bot » (braquages, cooldowns, labos, drogue à vendre) | Correctif 0002 pas appliqué, ou fonction `bot-suivi` pas redéployée |
-| Les membres apparaissent comme « Membre …1234 » | Correctif 0002 pas appliqué (`/api/users` ne renvoyait que soi-même) |
+| « pas encore exposé par ce bot » (braquages, cooldowns, drogue à vendre) | Correctif 0002 pas appliqué, ou fonction `bot-suivi` pas redéployée |
+| Les membres apparaissent comme « Membre …1234 » | Correctif 0002 pas appliqué (les routes de groupe ne portaient pas encore les noms) |
