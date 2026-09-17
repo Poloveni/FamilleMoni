@@ -1,10 +1,23 @@
-# Suivi de la famille — brancher l'espace membre sur l'API du bot
+# L'espace membre et l'API du bot
 
-La rubrique **Suivi de la famille** de l'espace membre affiche, en lecture
-seule, ce que calcule le bot Discord
-[bot-moni-v3](https://github.com/poulpizar01/bot-moni-v3) : stocks, coffres,
-historique, quotas, paie, classement, ventes, armurerie, munitions et (pour le
-rôle taxes / les admins) les taxes. Toute la gestion reste sur Discord.
+Depuis le 17 septembre 2026, l'espace membre est **bâti autour de l'API REST
+du bot Discord** [bot-moni-v3](https://github.com/poulpizar01/bot-moni-v3),
+en lecture seule. Les tables miroir `bot_*` de Supabase ne sont plus lues.
+
+| Panneau | Ce qu'il montre | Routes du bot |
+|---|---|---|
+| Ma semaine | mes ventes face à l'objectif, ma paie, mon rang, mon quota, mes cooldowns | `/quotas/:me`, `/quotas/pay/:me`, `/ventes/:me`, `/quotas/ranking`, `/cooldowns`, `/quotas/config` |
+| Mon bilan | la carte du mois (image à poster), semaine par semaine | `/ventes`, `/quotas`, `/quotas/pay` avec `?week=` |
+| La famille | ventes, classement, paie et bilan du groupe, sélecteur de semaine | `/ventes`, `/quotas`, `/quotas/ranking`, `/quotas/pay`, `/quotas/summary`, `/stocks` |
+| Stocks | stock général, drogue à vendre, coffres, historique, courbe d'argent sale | `/stocks`, `/stocks/items`, `/stocks/channels`, `/stocks/:id`, `/stocks/history` |
+| Armurerie | armes, munitions, ventes de munitions | `/armurerie*` |
+| Braquages | créneaux de la semaine glissante, mes cooldowns, labos | `/braquages`, `/cooldowns`, `/labos` |
+| Taxes | rôle taxes / admin uniquement | `/taxes*` |
+| Profil, Planning, Galerie, Hiérarchie | données propres du site | Supabase, inchangé |
+
+Code : `em-core.js` (socle), `em-bot.js` (bot), `em-site.js` (site),
+`em-charts.js` (graphiques), `espace-membre.css` (styles propres à la page).
+Toute la gestion reste sur Discord.
 
 ## Comment ça circule
 
@@ -72,14 +85,16 @@ N'ouvre que 443 dans le pare-feu ; le port 3001 reste local. Puis
 (ou `docker compose up -d --build`). Dans les logs :
 `✅ API REST en écoute sur le port 3001`.
 
-**Applique aussi le correctif** `docs/bot-moni-v3-correctifs/0001-*.patch`
-(voir plus bas) avant de mettre en production : il corrige deux points de
-sécurité de l'API et ajoute la route dont le site se sert pour afficher les
-objectifs.
+**Applique aussi les deux correctifs** de `docs/bot-moni-v3-correctifs/`
+(voir plus bas), dans l'ordre : le premier corrige deux points de sécurité de
+l'API et ajoute les objectifs, le second ajoute braquages, cooldowns, labos,
+la configuration des items et les noms des membres. Sans eux, l'espace membre
+fonctionne mais affiche « pas encore exposé par ce bot » aux endroits
+concernés.
 
 ```bash
 cd bot-moni-v3
-git am /chemin/vers/0001-API-r-les-rev-rifi-s-chaque-requ-te-historique-des-c.patch
+git am /chemin/vers/0001-*.patch /chemin/vers/0002-*.patch
 npm run typecheck
 ```
 
@@ -169,7 +184,27 @@ Ces règles sont celles du bot ; le site n'en ajoute qu'une, la sienne :
 compte approuvé en accès complet. Un onglet masqué n'est jamais la seule
 barrière — la requête correspondante est refusée par le bot.
 
-## Le correctif du bot (`docs/bot-moni-v3-correctifs/`)
+## Les correctifs du bot (`docs/bot-moni-v3-correctifs/`)
+
+### 0002 — braquages, cooldowns, labos, items, noms
+
+- `GET /api/braquages` : plafonds de la semaine glissante (7 j), consommé,
+  restant, prochain créneau libre — même calcul que `checkBraquageLimit`.
+- `GET /api/cooldowns` (les siens), `/api/cooldowns/:userId` (soi-même ou admin).
+- `GET /api/labos` : disponibilité de chaque labo actif et heure de fin.
+- `GET /api/stocks/items` : configuration des items (groupe, vendable PNJ,
+  visible, lien labo, multiplicateur) — sans elle, impossible de distinguer
+  la drogue du matériel dans `/api/stocks`.
+- `GET /api/users` : liste (userId, pseudo, nom en jeu) renvoyée à tout
+  membre. Les routes de groupe exposent déjà les `userId` de chacun, comme le
+  classement sur Discord montre les noms ; cacher les pseudos ne protégeait
+  rien et rendait ces vues illisibles. Rien d'autre n'est ajouté.
+
+**Après l'ajout de ces routes, redéployer la fonction** `bot-suivi` (sa
+liste blanche les connaît déjà, mais la version en ligne doit être à jour) :
+`npx -y supabase@latest functions deploy bot-suivi --no-verify-jwt --project-ref prwdtdmdkhzwfyivaepw`.
+
+### 0001 — sécurité et objectifs
 
 Un seul commit, trois changements, tous dans `src/api/` (+ une signature dans
 `src/db.ts`) :
@@ -208,4 +243,6 @@ membre ne contient plus les lignes des coffres admin.
 | Page bot « Aucun site externe configuré » | `/config site-externe set` pas fait pour cette guilde |
 | « Le compte Discord utilisé chez le bot n'est pas celui relié à ton compte du site » | Le membre s'est connecté sur Discord (navigateur) avec un autre compte |
 | « Ton compte du site n'est pas relié à Discord » | Compte email/mot de passe : se reconnecter avec le bouton Discord |
-| Onglet Taxes absent alors que le rôle est donné | Sans le correctif du bot, il faut se reconnecter au bot (les rôles étaient figés dans le jeton) |
+| Onglet Taxes absent alors que le rôle est donné | Sans le correctif 0001 du bot, il faut se reconnecter au bot (les rôles étaient figés dans le jeton) |
+| « pas encore exposé par ce bot » (braquages, cooldowns, labos, drogue à vendre) | Correctif 0002 pas appliqué, ou fonction `bot-suivi` pas redéployée |
+| Les membres apparaissent comme « Membre …1234 » | Correctif 0002 pas appliqué (`/api/users` ne renvoyait que soi-même) |

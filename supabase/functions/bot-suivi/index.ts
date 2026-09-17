@@ -10,7 +10,8 @@
 //
 //  Ce que la fonction garantit, quoi que fasse le navigateur :
 //   • l'appelant est un membre connecté au site (JWT Supabase vérifié) ;
-//   • son compte est approuvé ET en accès complet (table comptes) ;
+//   • son compte est approuvé (table comptes) ; un accès « taxes uniquement »
+//     ne peut relayer que les routes taxes ;
 //   • le jeton du bot qu'il tente de lier correspond à SON compte Discord
 //     (identité Discord de Supabase, jamais user_metadata) et à la guilde
 //     Famille Moni ;
@@ -95,7 +96,16 @@ const ROUTES_AUTORISEES: RegExp[] = [
   /^\/api\/taxes$/,
   /^\/api\/taxes\/search$/,
   /^\/api\/taxes\/[0-9]{1,12}$/,
+  // Ajoutées par le second correctif du bot (docs/bot-moni-v3-correctifs/) :
+  /^\/api\/stocks\/items$/,
+  /^\/api\/braquages$/,
+  /^\/api\/cooldowns$/,
+  new RegExp(`^/api/cooldowns/${SNOWFLAKE}$`),
+  /^\/api\/labos$/,
 ];
+
+/** Un compte du site en accès « taxes uniquement » ne relaie que ce qui concerne les taxes (et son identité). */
+const ROUTES_TAXES_SEULEMENT: RegExp[] = [/^\/api\/me$/, /^\/api\/users$/, /^\/api\/taxes(\/.*)?$/];
 
 /** Paramètres de requête relayés tels quels (tout autre paramètre est ignoré). Valeurs bornées : jamais de chaîne géante vers le bot. */
 const PARAMS_AUTORISES = new Set(["week", "item", "channelId", "limit", "status", "q", "type"]);
@@ -163,7 +173,9 @@ Deno.serve(async (req: Request) => {
     .from("comptes").select("approuve, acces").eq("id", user.id).maybeSingle();
   if (compteErr) return refus(500, "site_error", "Vérification du compte impossible : " + compteErr.message);
   if (!compte || compte.approuve !== true) return refus(403, "site_forbidden", "Compte en attente de validation par un administrateur.");
-  if (compte.acces && compte.acces !== "complet") return refus(403, "site_forbidden", "Cette rubrique n'est pas ouverte à ce type d'accès.");
+  // Accès « taxes uniquement » (comptes.acces = 'taxes') : même règle que le
+  // menu du site, appliquée ici pour de vrai — seules les routes taxes passent.
+  const taxesSeulement = compte.acces === "taxes";
 
   // 3. Quelle action ?
   let body: Record<string, unknown> = {};
@@ -275,6 +287,7 @@ Deno.serve(async (req: Request) => {
 
     const path = typeof body.path === "string" ? body.path : "";
     if (!ROUTES_AUTORISEES.some((re) => re.test(path))) return refus(400, "bad_request", "Route non autorisée : " + path.slice(0, 80), base);
+    if (taxesSeulement && !ROUTES_TAXES_SEULEMENT.some((re) => re.test(path))) return refus(403, "site_forbidden", "Ton accès au site est limité aux taxes.", base);
 
     const query = new URLSearchParams();
     const q = (body.query && typeof body.query === "object") ? body.query as Record<string, unknown> : {};

@@ -38,14 +38,18 @@ Le code du site est en place (rubrique « Suivi de la famille », page
 configuré, la rubrique affiche simplement « pas encore configurée ». Le
 pas-à-pas complet : **`docs/SUIVI-FAMILLE.md`**. En résumé :
 
-1. **Bot (VPS)** : appliquer `docs/bot-moni-v3-correctifs/0001-*.patch`,
+1. **Bot (VPS)** : appliquer `docs/bot-moni-v3-correctifs/0001-*.patch` puis `0002-*.patch`,
    renseigner `API_PORT`, `API_BASE_URL`, `DISCORD_CLIENT_SECRET`,
    `API_JWT_SECRET` dans le `.env`, mettre un HTTPS devant (Caddy/nginx),
    redémarrer.
 2. **Discord Developer Portal** : Redirect URI `<API_BASE_URL>/auth/callback`.
 3. **Sur Discord** : `/config site-externe set url:https://famillemoni.com/suivi-connexion.html`.
 4. **Supabase** : coller `migrations/bot-sessions.sql` ; secrets
-   `BOT_API_URL` et `BOT_GUILD_ID` ; `supabase functions deploy bot-suivi --no-verify-jwt`.
+   `BOT_API_URL` et `BOT_GUILD_ID` ; `supabase functions deploy bot-suivi --no-verify-jwt`
+   (à relancer après le correctif 0002 : la fonction en ligne doit connaître les nouvelles routes).
+
+État au 17 septembre au soir : DNS, secret, fonction, `/config site-externe` et
+liaison testée ✔ — reste le correctif 0002 côté dev et le redéploiement de la fonction.
 
 ---
 
