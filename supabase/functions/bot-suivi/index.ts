@@ -22,7 +22,8 @@
 //  Secrets attendus (Supabase → Edge Functions → Secrets) :
 //    BOT_API_URL      URL publique de l'API du bot, sans slash final
 //                     (= API_BASE_URL côté bot, ex. https://bot.exemple.fr)
-//    BOT_GUILD_ID     Identifiant du serveur Discord Famille Moni
+//    BOT_GUILD_ID     Identifiant du serveur Discord Famille Moni (à défaut,
+//                     DISCORD_GUILD_ID déjà présent est utilisé)
 //    SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (fournis
 //    automatiquement par Supabase)
 //
@@ -42,7 +43,8 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const BOT_API_URL = (Deno.env.get("BOT_API_URL") ?? "").replace(/\/+$/, "");
-const BOT_GUILD_ID = Deno.env.get("BOT_GUILD_ID") ?? "";
+// BOT_GUILD_ID en priorité ; à défaut DISCORD_GUILD_ID, déjà posé pour le bot de présences (même serveur).
+const BOT_GUILD_ID = Deno.env.get("BOT_GUILD_ID") || Deno.env.get("DISCORD_GUILD_ID") || "";
 
 /** Délai maximal d'attente du bot — au-delà, on répond « indisponible » plutôt que de laisser le navigateur pendu. */
 const BOT_TIMEOUT_MS = 10_000;

@@ -116,6 +116,8 @@ Si le rôle « taxes » doit voir l'onglet Taxes du site :
      (clic droit sur le serveur → *Copier l'identifiant du serveur*). Le
      serveur principal référencé par le site public est `1450234264305008693`
      — à confirmer, c'est celui sur lequel le bot est invité qui compte.
+     Si ce secret manque, la fonction utilise `DISCORD_GUILD_ID`, déjà posé
+     pour le bot de présences.
 3. Déployer la fonction depuis le dossier du site :
 
    ```bash
