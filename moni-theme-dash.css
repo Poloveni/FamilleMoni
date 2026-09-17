@@ -691,3 +691,10 @@ body.tv-mode .panel { max-width: none; }
 .auth-secours[open] summary::after { content: '▴'; }
 .auth-secours summary:hover { color: var(--ink); }
 .auth-secours label { margin-top: 12px; }
+
+/* Noms cliquables (fiche d'un membre) et la fiche elle-même. */
+.sv-nom { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); cursor: pointer; border-bottom: 1px dotted var(--gold2); transition: color var(--t) ease, border-color var(--t) ease; }
+.sv-nom:hover { color: var(--paper); border-bottom-color: var(--paper); }
+.sv-fiche { border-color: rgba(233,223,201,.35); margin-bottom: 16px; }
+.sv-fiche .bloc-t .sv-lien { margin-left: auto; }
+.sv-fiche .sv-grid > div { min-width: 0; }

@@ -66,6 +66,12 @@
   function pill(txt, cls) { return '<span class="pill' + (cls ? ' ' + cls : '') + '">' + esc(txt) + '</span>'; }
   function locked(html) { return '<div class="locked">' + html + '</div>'; }
   function nomDe(id) { return S.noms[id] || (window.MONI_NOM_FIX || {})[id] || ('Membre …' + String(id || '').slice(-4)); }
+  /** Nom d'un membre, cliquable vers sa fiche quand le bot l'autorisera (soi-même ou admin — sinon il répondrait 403). */
+  function nomLien(id) {
+    var n = esc(nomDe(id));
+    if (!S.me || !(S.me.isAdmin || estMoi(id))) return n;
+    return '<button type="button" class="sv-nom" onclick="emBot.membre(\'' + esc(id) + '\')" title="Voir la fiche">' + n + '</button>';
+  }
   function estMoi(id) { return !!(S.me && S.me.id === id); }
   function monNom() { return currentNom || (S.me ? nomDe(S.me.id) : ''); }
 
@@ -341,7 +347,7 @@
       api('/api/ventes', wk()), api('/api/quotas', wk()), api('/api/quotas/ranking', wk()), api('/api/quotas/pay', wk()), api('/api/quotas/summary', wk()), api('/api/stocks'),
     ]);
     var ventes = r[0], quotas = r[1], rang = r[2], paies = r[3], bilan = r[4], stocks = r[5];
-    var html = barreSemaine();
+    var html = barreSemaine() + '<div id="fam-membre"></div>';
 
     var nbActifs = quotas.status === 'fulfilled' ? (quotas.value.data || []).length : null;
     var nbOk = (quotas.status === 'fulfilled' && cibles && cibles.vente) ? (quotas.value.data || []).filter(function (q) { return (q.byQuotaType && q.byQuotaType.vente || 0) >= cibles.vente; }).length : null;
@@ -361,13 +367,13 @@
     html += '<div class="bloc"><div class="bloc-t">Classement <small>par points, décroissant</small></div>';
     if (rang.status === 'fulfilled') {
       var l = rang.value.data || [];
-      html += l.length ? tableau(['#', 'Membre', 'Points'], l.map(function (x, i) { return { cls: estMoi(x.userId) ? 'moi' : '', cells: [String(i + 1), esc(nomDe(x.userId)) + (estMoi(x.userId) ? ' <span class="cd-me">toi</span>' : ''), '<b>' + fmtN(x.points) + '</b>'] }; }), ['rk', '', 'num']) : locked('Personne n\'a encore de points sur cette période.');
+      html += l.length ? tableau(['#', 'Membre', 'Points'], l.map(function (x, i) { return { cls: estMoi(x.userId) ? 'moi' : '', cells: [String(i + 1), nomLien(x.userId) + (estMoi(x.userId) ? ' <span class="cd-me">toi</span>' : ''), '<b>' + fmtN(x.points) + '</b>'] }; }), ['rk', '', 'num']) : locked('Personne n\'a encore de points sur cette période.');
     } else html += blocErr(rang.reason);
     html += '</div>';
     html += '<div class="bloc"><div class="bloc-t">Paie du groupe <small>tous les membres suivis</small></div>';
     if (paies.status === 'fulfilled') {
       var lp = (paies.value.data || []).slice().sort(function (a, b) { return b.salaire - a.salaire; });
-      html += lp.length ? tableau(['Membre', 'Paie'], lp.map(function (x) { return { cls: estMoi(x.userId) ? 'moi' : '', cells: [esc(nomDe(x.userId)), '<span class="paie">' + esc(fmt$(x.salaire)) + '</span>'] }; }), ['', 'num']) : locked('Aucun membre suivi sur cette période.');
+      html += lp.length ? tableau(['Membre', 'Paie'], lp.map(function (x) { return { cls: estMoi(x.userId) ? 'moi' : '', cells: [nomLien(x.userId), '<span class="paie">' + esc(fmt$(x.salaire)) + '</span>'] }; }), ['', 'num']) : locked('Aucun membre suivi sur cette période.');
     } else html += blocErr(paies.reason);
     html += '</div></div>';
 
@@ -375,7 +381,7 @@
     html += '<div class="bloc"><div class="bloc-t">Ventes par membre <small>et part du total</small></div>';
     if (ventes.status === 'fulfilled') {
       var g = ventes.value.data, pl = g.players || [];
-      html += pl.length ? tableau(['#', 'Membre', 'Vendu', 'Part'], pl.map(function (p, i) { return { cls: estMoi(p.userId) ? 'moi' : '', cells: [String(i + 1), esc(nomDe(p.userId)), '<b>' + fmtN(p.total) + '</b>', '<span class="ref">' + (g.groupTotal ? Math.round(100 * p.total / g.groupTotal) : 0) + ' %</span>'] }; }), ['rk', '', 'num', 'num']) : locked('Aucune vente confirmée sur cette période.');
+      html += pl.length ? tableau(['#', 'Membre', 'Vendu', 'Part'], pl.map(function (p, i) { return { cls: estMoi(p.userId) ? 'moi' : '', cells: [String(i + 1), nomLien(p.userId), '<b>' + fmtN(p.total) + '</b>', '<span class="ref">' + (g.groupTotal ? Math.round(100 * p.total / g.groupTotal) : 0) + ' %</span>'] }; }), ['rk', '', 'num', 'num']) : locked('Aucune vente confirmée sur cette période.');
     } else html += blocErr(ventes.reason);
     html += '</div>';
     html += '<div class="bloc"><div class="bloc-t">Bilan du groupe <small>par activité</small></div>';
@@ -387,6 +393,7 @@
 
     cible.innerHTML = html;
     return function apres(reel) {
+      if (F.membre) chargerFicheMembre(F.membre);
       if (ventes.status !== 'fulfilled') return;
       var pls = (ventes.value.data.players || []).slice(0, 12);
       var el = reel.querySelector('#fam-chart');
@@ -396,9 +403,52 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  //  FICHE D'UN MEMBRE (le bot ne la sert qu'à l'intéressé ou à un admin)
+  // ═══════════════════════════════════════════════════════════════════════════
+  var F = { membre: '', stockQ: '', coffre: '', histItem: '', histCoffre: '', histLimit: '50', armeStatut: '', armeQ: '', taxeType: '', taxeStatut: 'active', taxeQ: '' };
+
+  async function chargerFicheMembre(id) {
+    var el = $('fam-membre'); if (!el) return;
+    var tete = '<div class="bloc-t">' + esc(nomDe(id)) + ' <small>fiche de la période</small><button type="button" class="sv-lien" onclick="emBot.membre(\'\')">Fermer</button></div>';
+    el.innerHTML = '<div class="bloc sv-fiche">' + tete + locked('Chargement…') + '</div>';
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    await chargerConfig();
+    var cibles = S.config && S.config.targets ? S.config.targets : null, acts = S.config && S.config.activities ? S.config.activities : {};
+    var r = await Promise.allSettled([api('/api/quotas/' + id, wk()), api('/api/quotas/pay/' + id, wk()), api('/api/ventes/' + id, wk()), api('/api/cooldowns/' + id), api('/api/quotas/ranking', wk())]);
+    if (F.membre !== id || !$('fam-membre')) return;
+    var quota = r[0], paie = r[1], ventes = r[2], cd = r[3], rang = r[4];
+    var rangTxt = '—';
+    if (rang.status === 'fulfilled') { var l = rang.value.data || [], k = l.findIndex(function (x) { return x.userId === id; }); rangTxt = k >= 0 ? (k + 1) + ' / ' + l.length + ' · ' + fmtN(l[k].points) + ' pts' : 'aucun point'; }
+    var html = '<div class="bloc sv-fiche">' + tete;
+    html += '<div class="kpis sv-kpis">'
+      + kpi('Ventes', ventes.status === 'fulfilled' ? fmtN(ventes.value.data.total) : null, cibles && cibles.vente ? 'objectif ' + fmtN(cibles.vente) : 'unités confirmées', ventes)
+      + kpi('Paie', paie.status === 'fulfilled' ? fmt$(paie.value.data.salaire) : null, 'calculée par le bot', paie)
+      + kpi('Rang', rangTxt, 'classement par points', rang)
+      + kpi('Cooldowns', cd.status === 'fulfilled' ? String((cd.value.data.cooldowns || []).length) : null, 'en cours', cd)
+      + '</div><div class="grid2 sv-grid">';
+    html += '<div><div class="bloc-t" style="margin-bottom:10px;">Quota <small>par catégorie</small></div>';
+    if (quota.status === 'fulfilled') {
+      html += tableQuota(quota.value.data.byQuotaType, cibles);
+      var map = quota.value.data.map || {}, det = Object.keys(map).filter(function (x) { return map[x] && map[x].count; });
+      if (det.length) html += '<details class="sv-details"><summary>Détail par activité</summary>' + tableau(['Activité', 'Fait'], det.map(function (x) { return [esc(acts[x] ? acts[x].label : titre(x)), fmtN(map[x].count)]; }), ['', 'num']) + '</details>';
+    } else html += blocErr(quota.reason);
+    html += '</div><div><div class="bloc-t" style="margin-bottom:10px;">Ventes <small>par drogue</small></div>';
+    if (ventes.status === 'fulfilled') {
+      var d = (ventes.value.data.detail || []).slice().sort(function (a, b) { return b.quantite - a.quantite; });
+      html += d.length ? tableau(['Drogue', 'Quantité'], d.map(function (x) { return ['<b>' + esc(x.item) + '</b>', fmtN(x.quantite)]; }), ['', 'num']) : locked('Pas de vente confirmée sur cette période.');
+    } else html += blocErr(ventes.reason);
+    if (cd.status === 'fulfilled') {
+      var cds = cd.value.data.cooldowns || [];
+      html += '<div class="bloc-t" style="margin:16px 0 10px;">Cooldowns</div>' + (cds.length ? '<div class="cd-liste">' + cds.map(function (c) { return '<div class="cd-row"><span class="cd-quoi">' + esc(c.label) + '</span><span class="cd-reste" data-fin="' + Number(c.expiresAt) + '">…</span><span class="ref">' + esc(fmtDateHeure(c.expiresAt)) + '</span></div>'; }).join('') + '</div>' : locked('Aucun cooldown en cours.'));
+    }
+    html += '</div></div></div>';
+    el.innerHTML = html;
+    ticker(function () { el.querySelectorAll('.cd-reste').forEach(function (x) { var fin = Number(x.dataset.fin); x.textContent = fin > Date.now() ? 'dans ' + fmtDuree(fin - Date.now()) : 'terminé'; }); });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   //  STOCKS
   // ═══════════════════════════════════════════════════════════════════════════
-  var F = { stockQ: '', coffre: '', histItem: '', histCoffre: '', histLimit: '50', armeStatut: '', armeQ: '', taxeType: '', taxeStatut: 'active', taxeQ: '' };
 
   async function rendreStocks(cible) {
     await chargerItems();
@@ -774,6 +824,15 @@
       if (S.panneau) rendre(S.panneau);
     },
     mois: function (mo) { B.mois = mo; if (S.panneau === 'bilan') rendre('bilan'); },
+    /** Ouvre la fiche d'un membre dans La famille (soi-même → Ma semaine ; vide → ferme). */
+    membre: function (id) {
+      if (id && estMoi(id)) { ouvrirPanneau('moi'); return; }
+      F.membre = id || '';
+      var el = $('fam-membre');
+      if (!F.membre) { stopTickers(); if (el) el.innerHTML = ''; return; }
+      if (S.panneau !== 'famille') { ouvrirPanneau('famille'); return; }   // la fiche se charge après le rendu
+      chargerFicheMembre(F.membre);
+    },
     filtre: function (cle, valeur) {
       F[cle] = valeur;
       if (cle === 'stockQ') { var t = $('stk-table'), c = S.cache['/api/stocks?']; if (t && c && c.data) t.innerHTML = tableStocks(c.data, valeur); return; }
