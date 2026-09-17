@@ -1,0 +1,293 @@
+From 19c696f01a910dfd90456d1696e6a848a5be7c94 Mon Sep 17 00:00:00 2001
+From: "Claude (pour Famille Moni)" <noreply@anthropic.com>
+Date: Thu, 17 Sep 2026 15:16:23 +0200
+Subject: [PATCH] =?UTF-8?q?API=20:=20r=C3=B4les=20rev=C3=A9rifi=C3=A9s=20?=
+ =?UTF-8?q?=C3=A0=20chaque=20requ=C3=AAte,=20historique=20des=20coffres=20?=
+ =?UTF-8?q?admin=20prot=C3=A9g=C3=A9,=20GET=20/api/quotas/config?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Trois correctifs demandés par l'intégration du site Famille Moni (rubrique
+« Suivi de la famille », lecture seule) :
+
+1. `requireAuth(client)` re-résout l'appartenance et les rôles (isAdmin /
+   isTaxes) via le client du bot à chaque requête, au lieu de faire confiance
+   aux claims du JWT figés au login. Sans ça, un membre à qui l'on retire le
+   rôle taxes/admin (ou qui est expulsé) gardait ses accès jusqu'à 7 jours.
+   Le token ne sert plus que de preuve d'identité (id + guilde).
+
+2. `GET /api/stocks/history` excluait rien : un non-admin pouvait lire les
+   mouvements des coffres admin (avec `?channelId=` ou sans filtre), alors
+   que `/api/stocks/channels` et `/api/stocks/:channelId` les lui cachent.
+   Même règle désormais : exclus de la liste, 403 s'ils sont demandés.
+
+3. `GET /api/quotas/config?week=` expose la plage résolue, les objectifs et
+   les taux actuels, et les libellés d'activités : un client peut afficher
+   une progression et expliquer une paie sans recalculer ni deviner.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+---
+ README.md                |  4 ++-
+ src/api/auth.ts          | 68 ++++++++++++++++++++++++++++------------
+ src/api/routes/quotas.ts | 33 ++++++++++++++++++-
+ src/api/routes/stocks.ts | 25 +++++++++++----
+ src/api/server.ts        |  5 ++-
+ src/db.ts                |  5 ++-
+ 6 files changed, 110 insertions(+), 30 deletions(-)
+
+diff --git a/README.md b/README.md
+index 15b3772..395f7b5 100644
+--- a/README.md
++++ b/README.md
+@@ -158,6 +158,7 @@ Pas de clé API statique : l'utilisateur se connecte avec son compte Discord, et
+ 1. Le site externe redirige le navigateur vers `<API_BASE_URL>/auth/login?guild=<ID_DU_SERVEUR>` (l'ID du serveur Discord concerné — refusé si ce serveur n'a jamais invité le bot, ou si aucun site n'y est configuré via `/config site-externe`).
+ 2. Après connexion Discord, l'utilisateur revient sur `<url_du_site>#token=<jwt>` (l'URL configurée via `/config site-externe set` PAR CE SERVEUR) — le site récupère ce token côté client (fragment d'URL, jamais envoyé à un serveur) et le stocke.
+ 3. Chaque appel à `/api/*` doit inclure `Authorization: Bearer <jwt>`. Le token expire au bout de 7 jours (pas de refresh token — se reconnecter via `/auth/login`) et reste scopé au serveur choisi à l'étape 1 : impossible de l'utiliser pour lire les données d'un autre serveur.
++4. Les **rôles ne sont pas figés dans le token** : à chaque requête, l'API revérifie via le client du bot que l'utilisateur est toujours membre du serveur et recalcule `isAdmin`/`isTaxes` depuis ses rôles actuels. Un rôle retiré (ou une expulsion) prend effet immédiatement, pas à l'expiration du token. `/api/me` renvoie donc toujours les droits du moment.
+ 
+ Plusieurs niveaux d'accès : **membre du serveur Discord** (suffit pour la plupart des routes de groupe) ; **rôle taxes ou admin** (requis en plus pour `/api/taxes` — le rôle `TAXES_ROLE_ID` de `/config role`, jusqu'ici sans utilisateur réel, sert enfin à ça) ; **soi-même ou admin** (routes `:userId` de `/api/quotas`/`/api/ventes` — un membre ne peut consulter que ses propres données) ; **membre ou admin** (`/api/stocks/channels`/`/api/stocks/:channelId` — les coffres admin ne sont visibles que pour un admin, mais le total global `/api/stocks` reste le même pour tous).
+ 
+@@ -170,8 +171,9 @@ Plusieurs niveaux d'accès : **membre du serveur Discord** (suffit pour la plupa
+ | `GET /api/stocks` | Membre | Stock actuel de chaque item suivi, tous coffres confondus (total réel, coffres admin inclus pour tout le monde) |
+ | `GET /api/stocks/channels` | Membre/Admin | Liste des salons de logs de coffre suivis (avec leur nom) — coffres admin visibles uniquement pour un admin |
+ | `GET /api/stocks/:channelId` | Membre/Admin | Stock actuel de chaque item pour UN coffre précis — 403 si ce coffre est un coffre admin et que le requérant ne l'est pas |
+-| `GET /api/stocks/history?item=&channelId=&limit=` | Membre | Derniers mouvements, filtrables par item et/ou coffre (défaut 20, max 200) |
++| `GET /api/stocks/history?item=&channelId=&limit=` | Membre/Admin | Derniers mouvements, filtrables par item et/ou coffre (défaut 20, max 200) — les mouvements des coffres admin n'apparaissent que pour un admin (403 si un non-admin les demande explicitement) |
+ | `GET /api/quotas?week=` | Membre | Quota (somme par catégorie + détail brut) de tous les joueurs suivis |
++| `GET /api/quotas/config?week=` | Membre | De quoi interpréter les autres réponses : plage `[since, until)` résolue, objectifs (`/config quota`) et taux (`/config salaire`, `/config classement`) **actuels**, libellés des activités |
+ | `GET /api/quotas/:userId?week=` | Soi-même/Admin | Quota d'un joueur précis |
+ | `GET /api/quotas/pay?week=` | Membre | Paie de tous les joueurs suivis, y compris à 0$ |
+ | `GET /api/quotas/pay/:userId?week=` | Soi-même/Admin | Paie d'un joueur précis |
+diff --git a/src/api/auth.ts b/src/api/auth.ts
+index 234c480..762447c 100644
+--- a/src/api/auth.ts
++++ b/src/api/auth.ts
+@@ -217,27 +217,55 @@ export function handleCallback(client: Client): (req: Request, res: Response) =>
+  * la guilde est toujours active — sans ça, un token émis avant un
+  * `/config site-externe remove` ou un retrait du bot resterait valable
+  * jusqu'à expiration (7 jours), à l'encontre du message affiché à l'admin.
++ *
++ * Les droits (`isAdmin`/`isTaxes`) et l'appartenance à la guilde sont
++ * RE-RÉSOLUS À CHAQUE REQUÊTE depuis le client du bot (`guild.members`,
++ * tenu à jour par l'intent `GuildMembers`) plutôt que lus tels quels dans le
++ * token : sans ça, un membre dont on retire le rôle taxes/admin (ou qui est
++ * expulsé du serveur) garderait ses accès jusqu'à l'expiration du token, 7
++ * jours plus tard. Le token ne sert donc plus que de preuve d'identité
++ * (id + guilde) ; les rôles qu'il embarque ne sont qu'un instantané
++ * informatif, jamais une autorité. Coût : un `members.fetch` uniquement
++ * quand le membre n'est pas déjà en cache (une fois par membre, ensuite le
++ * cache suit les événements Discord).
+  */
+-export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+-  const header = req.headers.authorization;
+-  const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : null;
+-  if (!token) {
+-    res.status(401).json({ error: 'Authentification requise (voir /auth/login).' });
+-    return;
+-  }
+-  let user: ApiUser;
+-  try {
+-    user = jwt.verify(token, API_JWT_SECRET!) as ApiUser;
+-  } catch {
+-    res.status(401).json({ error: 'Token invalide ou expiré — reconnecte-toi via /auth/login.' });
+-    return;
+-  }
+-  if (!(await guildRegistry.isAuthorizedGuild(user.guildId))) {
+-    res.status(401).json({ error: 'Accès révoqué pour cette guilde — reconnecte-toi via /auth/login.' });
+-    return;
+-  }
+-  req.apiUser = user;
+-  next();
++export function requireAuth(client: Client): (req: Request, res: Response, next: NextFunction) => Promise<void> {
++  return async (req, res, next) => {
++    const header = req.headers.authorization;
++    const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : null;
++    if (!token) {
++      res.status(401).json({ error: 'Authentification requise (voir /auth/login).' });
++      return;
++    }
++    let claims: ApiUser;
++    try {
++      claims = jwt.verify(token, API_JWT_SECRET!) as ApiUser;
++    } catch {
++      res.status(401).json({ error: 'Token invalide ou expiré — reconnecte-toi via /auth/login.' });
++      return;
++    }
++    if (!(await guildRegistry.isAuthorizedGuild(claims.guildId))) {
++      res.status(401).json({ error: 'Accès révoqué pour cette guilde — reconnecte-toi via /auth/login.' });
++      return;
++    }
++
++    const guild = client.guilds.cache.get(claims.guildId);
++    if (!guild) {
++      res.status(503).json({ error: "Le bot Discord n'est pas prêt sur cette guilde — réessaie dans quelques secondes." });
++      return;
++    }
++    const member = guild.members.cache.get(claims.id) ?? await guild.members.fetch(claims.id).catch(() => null);
++    if (!member) {
++      res.status(403).json({ error: "Tu n'es plus membre du serveur Discord de cette organisation." });
++      return;
++    }
++    const admin = isAdmin(claims.guildId, member);
++    const taxesRoleId = configStore.get(claims.guildId).TAXES_ROLE_ID;
++    const taxes = admin || (!!taxesRoleId && member.roles.cache.has(taxesRoleId));
++
++    req.apiUser = { id: claims.id, username: member.user.username, isAdmin: admin, isTaxes: taxes, guildId: claims.guildId };
++    next();
++  };
+ }
+ 
+ /** Middleware à chaîner après `requireAuth` : exige en plus l'accès "taxes" (rôle `TAXES_ROLE_ID` ou admin — même règle que `isAdmin()` partout ailleurs dans le bot). */
+diff --git a/src/api/routes/quotas.ts b/src/api/routes/quotas.ts
+index 07b1f1e..90fa25a 100644
+--- a/src/api/routes/quotas.ts
++++ b/src/api/routes/quotas.ts
+@@ -8,7 +8,7 @@
+  * appliqués sont ceux ACTUELLEMENT configurés, pas historisés.
+  *
+  * Ordre des routes : l'endpoint générique (`/`) en premier, puis les plus
+- * spécifiques (`/summary`, `/ranking`, `/pay`), et `/:userId` (le paramètre
++ * spécifiques (`/config`, `/summary`, `/ranking`, `/pay`), et `/:userId` (le paramètre
+  * dynamique) toujours en dernier — sinon Express interpréterait
+  * `/quotas/ranking` comme une recherche de l'utilisateur "ranking".
+  *
+@@ -17,6 +17,8 @@
+  */
+ import { Router } from 'express';
+ import * as quotas from '../../modules/quotas';
++import * as configStore from '../../config-store';
++import { activityDisplayLabel } from '../../config-store';
+ import { resolveWeekRange } from '../week';
+ import { requireSelfOrAdmin } from '../auth';
+ 
+@@ -30,6 +32,35 @@ router.get('/', async (req, res) => {
+   res.json(await quotas.getAllUserQuotaSummariesForRange(guildId, range));
+ });
+ 
++/**
++ * GET /api/quotas/config?week= — ce qu'un client a besoin de connaître pour
++ * INTERPRÉTER les autres réponses de ce groupe, sans le recalculer lui-même :
++ * la plage `[since, until)` effectivement résolue (semaine en cours = depuis
++ * le dernier reset hebdo, sinon la semaine ISO demandée), les objectifs
++ * hebdomadaires (`/config quota`) et les taux de paie (`/config salaire`)
++ * ACTUELS — ce sont ceux appliqués à n'importe quelle plage, voir la limite
++ * documentée en tête de fichier. Les catégories de quota et leurs libellés
++ * viennent du même registre `ACTIVITY_TYPES` que les calculs.
++ */
++router.get('/config', async (req, res) => {
++  const guildId = req.apiUser!.guildId;
++  const range = await resolveWeekRange(req, res, guildId);
++  if (!range) return;
++  const c = configStore.get(guildId);
++  const activities = Object.fromEntries(
++    Object.entries(c.ACTIVITY_TYPES).map(([key, cfg]) => [key, { label: activityDisplayLabel(cfg), quotaType: cfg.quotaType, enabled: cfg.enabled }]),
++  );
++  res.json({
++    range,
++    isCurrentWeek: req.query.week === undefined,
++    targets: c.QUOTA_TARGETS,
++    salaryRates: c.SALARY_RATES,
++    itemSalaryRates: c.ITEM_SALARY_RATES,
++    classementRates: c.CLASSEMENT_RATES,
++    activities,
++  });
++});
++
+ /** GET /api/quotas/summary?week= — bilan groupe : total par activité sur la plage. */
+ router.get('/summary', async (req, res) => {
+   const guildId = req.apiUser!.guildId;
+diff --git a/src/api/routes/stocks.ts b/src/api/routes/stocks.ts
+index 65eb55e..fbe7f45 100644
+--- a/src/api/routes/stocks.ts
++++ b/src/api/routes/stocks.ts
+@@ -12,10 +12,10 @@
+  * `/api/quotas`, `/:userId` toujours en dernier).
+  *
+  * `logs_coffres_admin` (coffres admin) est réservé aux admins : absent de
+- * `/channels` pour un non-admin, et `/:channelId` renvoie 403 si le salon
+- * demandé en fait partie — mais `/` (le total global) reste inchangé et
+- * inclut toujours leur contribution pour tout le monde, sinon le total
+- * afficherait un stock faux.
++ * `/channels` pour un non-admin, `/:channelId` renvoie 403 si le salon
++ * demandé en fait partie, et `/history` exclut leurs mouvements — mais `/`
++ * (le total global) reste inchangé et inclut toujours leur contribution pour
++ * tout le monde, sinon le total afficherait un stock faux.
+  *
+  * Chaque route filtre par `req.apiUser.guildId` (posé par `requireAuth`,
+  * voir src/api/auth.ts) — jamais les données d'une autre guilde.
+@@ -31,12 +31,25 @@ router.get('/', async (req, res) => {
+   res.json(await db.getAllStocks(req.apiUser!.guildId));
+ });
+ 
+-/** GET /api/stocks/history?item=&channelId=&limit= — derniers mouvements, filtrables par item (nom exact) et/ou par coffre. */
++/**
++ * GET /api/stocks/history?item=&channelId=&limit= — derniers mouvements,
++ * filtrables par item (nom exact) et/ou par coffre. Même règle que
++ * `/:channelId` pour les coffres admin : un non-admin ne voit pas leurs
++ * mouvements (exclus de la liste, 403 s'il les demande explicitement) —
++ * sinon l'historique global contournait la restriction du détail par coffre.
++ */
+ router.get('/history', async (req, res) => {
++  const apiUser = req.apiUser!;
+   const item = typeof req.query.item === 'string' ? req.query.item : null;
+   const channelId = typeof req.query.channelId === 'string' ? req.query.channelId : null;
+   const limit = Math.min(Number(req.query.limit) || 20, 200);
+-  res.json(await db.getRecentStockHistory(req.apiUser!.guildId, item, limit, channelId));
++  const adminChannels = configStore.get(apiUser.guildId).CHANNELS.logs_coffres_admin;
++  if (!apiUser.isAdmin && channelId && adminChannels.includes(channelId)) {
++    res.status(403).json({ error: 'Accès réservé aux administrateurs pour ce coffre.' });
++    return;
++  }
++  const excludeChannelIds = apiUser.isAdmin ? [] : adminChannels;
++  res.json(await db.getRecentStockHistory(apiUser.guildId, item, limit, channelId, excludeChannelIds));
+ });
+ 
+ /** GET /api/stocks/channels — liste des salons de logs de coffre suivis (avec leur `label`). `logs_coffres_admin` n'est inclus que pour un admin. */
+diff --git a/src/api/server.ts b/src/api/server.ts
+index dfed2f0..85670cf 100644
+--- a/src/api/server.ts
++++ b/src/api/server.ts
+@@ -9,6 +9,9 @@
+  * membre de LA guilde portée par le JWT (`req.apiUser.guildId`, résolu au
+  * login via `?guild=`), et `/api/taxes` exige en plus le rôle taxes (ou
+  * admin) de cette guilde — voir `requireAuth`/`requireTaxesAccess`.
++ * L'appartenance et les rôles sont revérifiés à chaque requête via le client
++ * du bot (d'où `requireAuth(client)`), pas seulement au login — un retrait
++ * de rôle ou une expulsion prend effet immédiatement, pas 7 jours plus tard.
+  *
+  * Le CORS est décidé sur "cet `Origin` correspond-il au site d'AU MOINS une
+  * guilde active connue" (voir `guild-registry.isKnownCorsOrigin`) — grossier
+@@ -69,7 +72,7 @@ export function startApiServer(client: Client): void {
+   app.get('/auth/callback', handleCallback(client));
+ 
+   const api = express.Router();
+-  api.use(requireAuth);
++  api.use(requireAuth(client));
+   api.get('/me', (req, res) => res.json(req.apiUser));
+   api.use('/users', usersRouter);
+   api.use('/stocks', stocksRouter);
+diff --git a/src/db.ts b/src/db.ts
+index 3bdec3b..763d37c 100644
+--- a/src/db.ts
++++ b/src/db.ts
+@@ -448,12 +448,15 @@ export async function addStockHistory(guildId: string, data: StockHistoryInput):
+  * suivi (voir `channelId` dans le modèle StockHistory — `null` sur les
+  * lignes plus anciennes, jamais retournées par ce filtre).
+  */
+-export async function getRecentStockHistory(guildId: string, item: string | null = null, limit = 20, channelId: string | null = null) {
++export async function getRecentStockHistory(guildId: string, item: string | null = null, limit = 20, channelId: string | null = null, excludeChannelIds: string[] = []) {
+   const rows = await prisma.stockHistory.findMany({
+     where: {
+       guildId,
+       ...(item ? { item: item.toLowerCase() } : {}),
+       ...(channelId ? { channelId } : {}),
++      // `OR` avec `null` : les lignes antérieures au suivi par coffre (channelId
++      // jamais backfillé) ne sont pas des mouvements de coffre admin, on les garde.
++      ...(excludeChannelIds.length ? { OR: [{ channelId: null }, { channelId: { notIn: excludeChannelIds } }] } : {}),
+     },
+     orderBy: { id: 'desc' },
+     take: limit,
+-- 
+2.55.0.windows.4
+

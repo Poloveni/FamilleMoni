@@ -31,6 +31,24 @@ Quelques précisions :
 
 ---
 
+## 0 bis · Suivi de la famille — brancher le bot (17 septembre)
+
+Le code du site est en place (rubrique « Suivi de la famille », page
+`suivi-connexion.html`, Edge Function `bot-suivi`). Tant que ce n'est pas
+configuré, la rubrique affiche simplement « pas encore configurée ». Le
+pas-à-pas complet : **`docs/SUIVI-FAMILLE.md`**. En résumé :
+
+1. **Bot (VPS)** : appliquer `docs/bot-moni-v3-correctifs/0001-*.patch`,
+   renseigner `API_PORT`, `API_BASE_URL`, `DISCORD_CLIENT_SECRET`,
+   `API_JWT_SECRET` dans le `.env`, mettre un HTTPS devant (Caddy/nginx),
+   redémarrer.
+2. **Discord Developer Portal** : Redirect URI `<API_BASE_URL>/auth/callback`.
+3. **Sur Discord** : `/config site-externe set url:https://famillemoni.com/suivi-connexion.html`.
+4. **Supabase** : coller `migrations/bot-sessions.sql` ; secrets
+   `BOT_API_URL` et `BOT_GUILD_ID` ; `supabase functions deploy bot-suivi --no-verify-jwt`.
+
+---
+
 ## 1 · Activer la carte de Roxwood (5 min + le temps de placer tes points)
 
 1. Supabase → **SQL Editor** → colle **`migrations/carte-points.sql`** → **Run**.

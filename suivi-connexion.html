@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liaison avec le bot — Famille Moni</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="icon" href="favicon.ico" sizes="32x32" />
+  <meta name="theme-color" content="#0b0c10" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="moni-theme-dash.css?v=8" />
+  <!--
+    Page de retour du bot Discord (bot-moni-v3). Le bot y renvoie le
+    navigateur avec `#token=<jwt>` après la connexion Discord
+    (/config site-externe set https://famillemoni.com/suivi-connexion.html).
+
+    Le fragment est lu puis EFFACÉ de la barre d'adresse avant tout autre
+    chargement, et le jeton n'est jamais écrit dans localStorage, un cookie ou
+    l'historique : il part directement vers l'Edge Function `bot-suivi`, qui
+    vérifie qu'il appartient bien au membre connecté sur le site et le garde
+    côté serveur. Sans session ouverte sur l'espace membre, le jeton est
+    simplement abandonné (il faudra relancer la liaison depuis l'espace membre).
+  -->
+  <script>
+    // Tout de suite, avant supabase-js et avant tout rendu : on capture et on nettoie.
+    (function () {
+      var h = window.location.hash || '';
+      var m = /(?:^#|[#&])token=([^&]+)/.exec(h);
+      window.__botToken = m ? decodeURIComponent(m[1]) : null;
+      if (h) history.replaceState(null, '', window.location.pathname + window.location.search);
+    })();
+  </script>
+  <style>
+    body { margin: 0; min-height: 100vh; background: var(--bg, #0b0c10); color: var(--text, #eef0f4); }
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; box-sizing: border-box; }
+    .card.narrow { width: 100%; max-width: 460px; padding: 34px 30px; box-sizing: border-box; }
+    .etat { display: flex; align-items: center; gap: 12px; margin: 18px 0 6px; font-size: 15.5px; line-height: 1.6; }
+    .etat .spin { width: 18px; height: 18px; border: 2px solid var(--border2, #444); border-top-color: var(--paper, #e9dfc9); border-radius: 50% !important; animation: rot .9s linear infinite; flex-shrink: 0; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    .etat.ok b { color: #6fd79a; }
+    .etat.err b { color: #e0a0a0; }
+    .detail { font-size: 14px; color: var(--dim, #8b91a0); line-height: 1.6; margin-top: 8px; }
+    .actions { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+    .ro { font-family: var(--caps, serif); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim, #8b91a0); margin-top: 26px; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="card narrow" role="status" aria-live="polite">
+    <h1 class="auth-title">Suivi de la <span>famille</span></h1>
+    <div class="sub">Liaison de ton compte avec le bot Moni.</div>
+
+    <div class="etat" id="etat"><span class="spin" aria-hidden="true"></span><span id="etat-txt">Vérification en cours…</span></div>
+    <div class="detail" id="detail"></div>
+
+    <div class="actions" id="actions" hidden>
+      <a class="btn" id="btn-retour" href="espace-membre.html">Ouvrir l'espace membre</a>
+      <a class="btn ghost" id="btn-relancer" href="espace-membre.html" hidden>Relancer la liaison</a>
+    </div>
+
+    <div class="ro">Lecture seule — gestion sur Discord</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+(async function () {
+  var etat = document.getElementById('etat');
+  var txt = document.getElementById('etat-txt');
+  var detail = document.getElementById('detail');
+  var actions = document.getElementById('actions');
+  var relancer = document.getElementById('btn-relancer');
+
+  function fin(ok, message, extra) {
+    etat.querySelector('.spin') && etat.querySelector('.spin').remove();
+    etat.classList.add(ok ? 'ok' : 'err');
+    txt.innerHTML = '<b>' + (ok ? 'Compte lié.' : 'Liaison impossible.') + '</b> ' + message;
+    detail.textContent = extra || '';
+    actions.hidden = false;
+    if (!ok) relancer.hidden = false;
+  }
+
+  var token = window.__botToken;
+  window.__botToken = null;
+  if (!token) {
+    fin(false, 'Aucun jeton reçu dans l\'adresse.', 'Cette page est le point de retour du bot après la connexion Discord. Lance la liaison depuis l\'espace membre, rubrique « Suivi de la famille ».');
+    return;
+  }
+
+  var sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+  var session = null;
+  try { session = (await sb.auth.getSession()).data.session; } catch (e) {}
+  if (!session) {
+    token = null;
+    fin(false, 'Tu n\'es pas connecté(e) à l\'espace membre.', 'Le jeton du bot a été abandonné (il n\'est stocké nulle part). Connecte-toi à l\'espace membre, puis relance la liaison depuis « Suivi de la famille ».');
+    return;
+  }
+
+  txt.textContent = 'Vérification auprès du bot…';
+  try {
+    var r = await fetch(window.SUPABASE_URL.replace(/\/$/, '') + '/functions/v1/bot-suivi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token, apikey: window.SUPABASE_KEY },
+      body: JSON.stringify({ action: 'link', token: token }),
+    });
+    token = null;
+    var d = null;
+    try { d = await r.json(); } catch (e) {}
+    if (r.ok && d && d.ok) {
+      var qui = d.me ? d.me.username : 'toi';
+      var droits = d.me && d.me.isAdmin ? ' (administrateur)' : (d.me && d.me.isTaxes ? ' (rôle taxes)' : '');
+      fin(true, 'Connecté au bot en tant que <b>' + String(qui).replace(/[<>&"]/g, '') + '</b>' + droits + '.', 'Retour à l\'espace membre dans un instant…');
+      try { localStorage.setItem('moni-panel', 'suivi'); } catch (e) {}
+      setTimeout(function () { window.location.replace('espace-membre.html'); }, 1600);
+      return;
+    }
+    var msg = (d && d.message) || ('Réponse inattendue (' + r.status + ').');
+    var aide = '';
+    switch (d && d.code) {
+      case 'not_configured': aide = 'La passerelle du site n\'a pas encore l\'adresse du bot (secrets BOT_API_URL / BOT_GUILD_ID de l\'Edge Function bot-suivi).'; break;
+      case 'no_discord_identity': aide = 'Sur l\'espace membre, déconnecte-toi puis reconnecte-toi avec le bouton « Se connecter avec Discord ».'; break;
+      case 'mismatch': aide = 'Le compte Discord utilisé pour le bot doit être le même que celui relié à ton compte du site.'; break;
+      case 'wrong_guild': aide = 'Le jeton a été émis pour un autre serveur Discord.'; break;
+      case 'site_forbidden': aide = 'Ton compte du site doit être approuvé (accès complet) pour utiliser cette rubrique.'; break;
+      case 'unavailable': aide = 'Le bot est peut-être arrêté ou son API n\'est pas joignable depuis le site. Réessaie plus tard.'; break;
+      case 'reconnect': aide = 'Relance simplement la connexion depuis l\'espace membre.'; break;
+    }
+    fin(false, msg.replace(/[<>&"]/g, ''), aide);
+  } catch (e) {
+    token = null;
+    fin(false, 'La passerelle du site ne répond pas.', String(e && e.message || e));
+  }
+})();
+</script>
+</body>
+</html>

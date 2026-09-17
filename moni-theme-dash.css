@@ -782,3 +782,65 @@ body.tv-mode .panel { max-width: none; }
   .bilan-tete .btn { margin-left: 0; width: 100%; }
   .locked { padding: 20px 14px; font-size: 14px; }
 }
+
+/* ── M. Suivi de la famille (données du bot via bot-suivi, lecture seule) ── */
+.sv-tete { padding: 16px 18px 12px; }
+.sv-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 18px; flex-wrap: wrap; }
+.sv-bar-g, .sv-bar-d { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.sv-bar-g .pill { margin-left: 0; }
+.sv-bar-b { flex-basis: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.sv-bar-b .pill { margin-left: 0; }
+.sv-qui { font-family: var(--serif); font-size: 15px; color: var(--ink); }
+.sv-exp, .sv-maj { font-size: 12.5px; color: var(--dim); font-style: italic; }
+.sv-semaine { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--caps); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold2); }
+.sv-semaine select { width: auto; max-width: 320px; min-width: 0; margin: 0; padding: 8px 34px 8px 10px; font-size: 13.5px; }
+.sv-btn { width: auto; padding: 9px 16px; font-size: 9.5px; letter-spacing: .2em; }
+.sv-lien { border: 0; background: none; color: var(--dim); font-family: var(--caps); font-size: 9px; letter-spacing: .18em; text-transform: uppercase; cursor: pointer; padding: 6px 4px; transition: color var(--t) ease; }
+.sv-lien:hover { color: #e0a0a0; }
+.sv-onglets { display: flex; flex-wrap: wrap; border: 1px solid var(--border2); margin-top: 14px; }
+.sv-onglets .tx-filtre { flex: 1 1 auto; text-align: center; }
+.sv-onglets .tx-filtre + .tx-filtre { border-left: 1px solid var(--border2); }
+#suivi-contenu { margin-top: 16px; }
+#suivi-contenu[aria-busy="true"] { opacity: .6; transition: opacity var(--t) ease; }
+#suivi-contenu .bloc + .bloc, #suivi-contenu .grid2 + .bloc, #suivi-contenu .bloc + .grid2, #suivi-contenu .grid2 + .grid2 { margin-top: 16px; }
+.sv-grid .bloc { margin-top: 0; min-width: 0; }   /* sinon un tableau large force la colonne (et la page) à s'élargir sur mobile */
+.sv-kpis { margin-bottom: 14px; }
+.sv-kpis .kpi-num { font-size: 26px; }
+.sv-ind { font-family: var(--body); font-style: italic; font-size: 15px; color: var(--dim); }
+.sv-periode { margin: 0 0 14px; font-style: italic; }
+.sv-note { margin: 12px 0 0; line-height: 1.6; }
+.sv-note b { color: var(--ink2); }
+.sv-cta { margin-top: 16px; display: flex; justify-content: center; }
+.sv-cta .btn { width: auto; padding: 12px 22px; font-style: normal; }
+.sv-paie { font-family: var(--serif); font-size: 34px; font-weight: 900; color: var(--ink); line-height: 1.05; margin: -4px 0 14px; }
+.sv-paie small { font-family: var(--body); font-size: 15px; font-weight: 400; color: var(--dim); }
+.sv-prog { height: 7px; max-width: 220px; }
+.sv-outils { margin-bottom: 12px; }
+.sv-outils .tx-recherche { flex: 1 1 200px; max-width: 320px; }
+.sv-sel { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--caps); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold2); }
+.sv-sel select { width: auto; max-width: 220px; min-width: 0; margin: 0; padding: 8px 34px 8px 10px; font-size: 13.5px; }
+.sv-coffres { display: flex; flex-wrap: wrap; border: 1px solid var(--border2); margin-bottom: 12px; }
+.sv-coffres .tx-filtre + .tx-filtre { border-left: 1px solid var(--border2); }
+.sv-details { margin-top: 12px; }
+.sv-details summary { cursor: pointer; font-family: var(--caps); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink2); padding: 6px 0; }
+.sv-mini { width: auto; padding: 6px 10px; font-size: 8.5px; letter-spacing: .16em; box-shadow: none; }
+.sv-detail-row td { background: rgba(233,223,201,.04); }
+.sv-taxe-detail { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14.5px; }
+.sv-taxe-detail b { font-family: var(--caps); font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold2); margin-right: 6px; }
+.sv-taxe-detail code { font-family: ui-monospace, Menlo, monospace; color: var(--gold-hard); }
+.vd-table td.num, .vd-table th.num { text-align: right; white-space: nowrap; }
+.vd-table td.prog { min-width: 160px; }
+@media (max-width: 860px) { .table-wrap .vd-table.sv-compact { min-width: 0; white-space: normal; } .table-wrap .vd-table.sv-compact td { white-space: normal; } .vd-table td.prog { min-width: 120px; } .sv-prog { max-width: none; } }
+.sv-pied { margin: 18px 4px 0; text-align: center; font-style: italic; }
+@media (max-width: 860px) {
+  .sv-bar-d { width: 100%; }
+  .sv-semaine { flex: 1 1 100%; width: 100%; min-width: 0; box-sizing: border-box; }
+  .sv-semaine select { max-width: none; flex: 1 1 0; width: 0; min-width: 0; box-sizing: border-box; }   /* width:0 + flex-grow : seule façon sûre de faire rétrécir un select sous sa largeur intrinsèque */
+  .sv-btn { flex: 1; }
+  .sv-onglets .tx-filtre { flex: 1 1 33%; padding: 10px 6px; font-size: 8.5px; letter-spacing: .12em; }
+  .sv-outils .tx-recherche { max-width: none; flex-basis: 100%; }
+  .sv-sel { flex: 1 1 45%; }
+  .sv-sel select { flex: 1; max-width: none; }
+  .sv-paie { font-size: 28px; }
+  .sv-kpis .kpi-num { font-size: 22px; }
+}
