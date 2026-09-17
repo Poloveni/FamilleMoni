@@ -309,7 +309,7 @@ async function doAuth() {
 
 // ── Connexion par le bot : un seul écran Discord (Moni V3) pour le site et le bot ──
 // L'adresse de départ vient de la passerelle ; si elle ne répond pas ou n'est
-// pas configurée, on replie sur l'e-mail et l'ancienne connexion Discord.
+// pas configurée, on replie sur la connexion par e-mail.
 let botLoginUrl = null;
 (async function preparerConnexionBot() {
   const btn = document.getElementById('auth-bot'), hint = document.getElementById('auth-bot-hint');
@@ -323,9 +323,8 @@ let botLoginUrl = null;
     throw new Error(d && d.configured === false ? 'non configurée' : 'réponse inattendue');
   } catch (e) {
     btn.classList.add('indispo');
-    if (hint) hint.textContent = 'Connexion par le bot indisponible pour le moment (' + (e && e.message || e) + '). Utilise la connexion par e-mail ou la connexion Discord classique ci-dessous.';
+    if (hint) hint.textContent = 'Connexion par le bot indisponible pour le moment (' + (e && e.message || e) + '). Utilise la connexion par e-mail ci-dessous, ou réessaie plus tard.';
     const sec = document.getElementById('auth-secours'); if (sec) sec.open = true;
-    const alt = document.getElementById('auth-discord-secours'); if (alt) alt.hidden = false;
   }
 })();
 function connexionParLeBot(ev) {
@@ -335,18 +334,6 @@ function connexionParLeBot(ev) {
   const lbl = document.getElementById('auth-bot-lbl'); if (lbl) lbl.textContent = 'Redirection vers Discord…';
   window.location.href = botLoginUrl;
   return false;
-}
-
-async function connexionDiscord() {
-  hideMsg('auth-msg');
-  // redirectTo doit figurer dans Supabase → Authentication → URL Configuration → Redirect URLs.
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'discord',
-    options: { redirectTo: window.location.origin + window.location.pathname },
-  });
-  if (error) {
-    showMsg('auth-msg', 'Connexion Discord indisponible : ' + error.message + ' — vérifie que le fournisseur Discord est activé dans Supabase.', false);
-  }
 }
 
 async function doLogout() {
