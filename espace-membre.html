@@ -225,7 +225,6 @@
       color: var(--red); padding: 0 3px; line-height: 1;
     }
 
-    .carte-btn { width: auto; padding: 11px 20px; }   /* bouton « Voir l'historique » de l'enquête coffre */
 
     /* ── CE QUI RAPPORTE LE PLUS ──────────────────────────────────────────
        Barres divergentes : le bénéfice net par unité, du meilleur au pire.
@@ -695,7 +694,7 @@
     .btn.ghost:hover { background: var(--panel3); border-color: var(--border3); box-shadow: none; }
     .btn.danger { background: transparent; border: 1px solid rgba(224,80,63,0.55); color: var(--red); box-shadow: none; }
     .btn.danger:hover { background: rgba(224,80,63,0.15); box-shadow: none; }
-    .cal-btn, .tx-retour, .file-label, .carte-btn { border-radius: 9px; }
+    .cal-btn, .tx-retour, .file-label { border-radius: 9px; }
     .file-label { text-transform: none; letter-spacing: 0; font-size: 12.5px; }
     input, select, textarea { border-radius: 9px; background: var(--panel2); }
     input:focus, select:focus, textarea:focus {
@@ -965,7 +964,6 @@
     <button type="button" class="sb-group" aria-expanded="true" aria-controls="sb-sect-famille"><span>La famille</span><svg class="sb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <div class="sb-sect-items" id="sb-sect-famille">
     <button type="button" class="sb-item req-approve active" data-panel="apercu" data-title="Vue d'&lt;em&gt;ensemble&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg></span><span class="lbl">Vue d'ensemble</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="business" data-title="Le &lt;em&gt;classement&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="10" width="18" height="8" rx="4"/><path d="M12 10v8"/><path d="M7 6.5V4m10 2.5V4"/></svg></span><span class="lbl">Classement</span></button>
     <button type="button" class="sb-item req-approve" data-panel="palmares" data-sub="Les semaines passées, archivées par le bot." data-title="Le &lt;em&gt;palmarès&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 5.5H5.2a3 3 0 003 3M16 5.5h2.8a3 3 0 01-3 3"/><path d="M12 13v3.5M9 20h6"/></svg></span><span class="lbl">Palmarès</span></button>
     <button type="button" class="sb-item req-approve" id="sb-suivi" data-panel="suivi" data-sub="Les données du bot Moni, en direct et en lecture seule." data-title="Suivi de la &lt;em&gt;famille&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12h4l2.5-6 4 12 2.5-6h4"/></svg></span><span class="lbl">Suivi de la famille</span></button>
     <button type="button" class="sb-item" data-panel="galerie" data-sub="Tes screens partent dans la galerie du site public." data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.8 6.5l1.2-2.3h4l1.2 2.3"/></svg></span><span class="lbl">Galerie</span></button>
@@ -977,9 +975,7 @@
     <button type="button" class="sb-group req-approve" aria-expanded="true" aria-controls="sb-sect-business"><span>Le business</span><svg class="sb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <div class="sb-sect-items" id="sb-sect-business">
     <button type="button" class="sb-item req-approve" data-panel="prix" data-sub="Le cours du bot, tes prix d'achat, et ce qui rapporte le plus." data-title="Prix des &lt;em&gt;drogues&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 3.5H20v8.5l-8.7 8.7a1.5 1.5 0 01-2.1 0l-6.4-6.4a1.5 1.5 0 010-2.1z"/><circle cx="16.3" cy="7.7" r="1.2"/></svg></span><span class="lbl">Prix drogues</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="coffre" data-sub="Ce que la famille possède, en direct du bot." data-title="Le &lt;em&gt;coffre&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="17" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M7 3.5h10"/></svg></span><span class="lbl">Le coffre</span></button>
     <button type="button" class="sb-item req-approve" data-panel="braquages" data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none"/></svg></span><span class="lbl">Braquages</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="armurerie" data-sub="Les armes de la famille et qui les tient." data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></span><span class="lbl">Armurerie</span></button>
     <button type="button" id="sb-taxes" class="sb-item req-approve" data-panel="taxes" data-sub="Les taxes et le racket de la famille, en direct du bot." data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 3.5h13v17l-2.2-1.5-2.2 1.5-2.1-1.5L9.9 20.5 7.7 19l-2.2 1.5z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="lbl">Taxes</span></button>
     </div>
     </div>
@@ -1075,32 +1071,6 @@
     </div>
 
     <!-- CLASSEMENT : le podium d'abord, le tableau complet ensuite -->
-    <div class="panel" id="panel-business">
-      <div id="bd-podium"></div>
-      <div class="bloc"><div id="bd-classement"><div class="locked">Chargement…</div></div></div>
-    </div>
-
-    <!-- COFFRE -->
-    <div class="panel" id="panel-coffre">
-      <div class="bloc"><div id="bd-coffre"><div class="locked">Chargement…</div></div></div>
-
-      <!-- Quand le stock affiché ne colle pas avec le coffre en jeu, c'est ici
-           qu'on vérifie : tous les mouvements que le bot a enregistrés. -->
-      <div class="bloc" style="margin-top:14px;">
-        <div class="bloc-t">Enquête sur un produit</div>
-        <p class="hint" style="margin-bottom:12px;line-height:1.7;">
-          Le stock affiché est le <b>registre du bot</b>, pas le contenu réel du
-          coffre en jeu. S'ils ne collent pas, l'historique ci-dessous montre où
-          le registre a décroché.
-        </p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <select id="enq-item" style="max-width:280px;margin-bottom:0;"></select>
-          <button class="btn carte-btn" type="button" onclick="enqueteProduit()">Voir l'historique</button>
-        </div>
-        <div id="enq-resultat" style="margin-top:14px;"></div>
-      </div>
-    </div>
-
     <!-- PRIX DES DROGUES -->
     <div class="panel" id="panel-prix">
       <!-- RÉSUMÉ — les 4 réponses qu'on vient chercher en premier -->
@@ -1149,10 +1119,6 @@
     </div>
 
     <!-- ARMURERIE -->
-    <div class="panel" id="panel-armurerie">
-      <div class="bloc"><div id="bd-armurerie"><div class="locked">Chargement…</div></div></div>
-    </div>
-
     <!-- TAXES -->
     <div class="panel" id="panel-taxes">
 
@@ -1648,9 +1614,9 @@
       toast('✓ Données actualisées');
     });
   })();
-  const NM_PRINCIPAUX = ['moi', 'apercu', 'prix', 'coffre'];
+  const NM_PRINCIPAUX = ['moi', 'apercu', 'prix', 'suivi'];
   // Étiquettes courtes pour la barre (une seule ligne, icônes alignées)
-  const NM_LBLS = { moi: 'Semaine', apercu: 'Vue', prix: 'Prix', coffre: 'Coffre', taxes: 'Taxes', galerie: 'Galerie', profil: 'Profil', events: 'Planning', business: 'Classement', bilan: 'Bilan', palmares: 'Palmarès', braquages: 'Braquages', armurerie: 'Armurerie', suivi: 'Suivi' };
+  const NM_LBLS = { moi: 'Semaine', apercu: 'Vue', prix: 'Prix', taxes: 'Taxes', galerie: 'Galerie', profil: 'Profil', events: 'Planning', bilan: 'Bilan', palmares: 'Palmarès', braquages: 'Braquages', suivi: 'Suivi' };
   const NM_ICO_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
   function nmVisibles() {
     return [...document.querySelectorAll('.sb-nav .sb-item[data-panel]')].filter(b => b.style.display !== 'none');
@@ -2769,8 +2735,7 @@
   });
 
   async function loadBotDashboards() {
-    const elC = document.getElementById('bd-classement');
-    if (!elC || !currentUser) return;
+    if (!currentUser) return;
     const [meta, stats, mapping, stocks, armes, histoQ, braqQ, cdQ, ventesQ, bilansQ] = await Promise.all([
       sb.from('bot_meta').select('*'),
       sb.from('bot_stats').select('*'),
@@ -2785,14 +2750,15 @@
     ]);
     const err = meta.error || stats.error || mapping.error || stocks.error || armes.error;
     if (err) {
-      elC.innerHTML = '<div class="locked">Dashboard indisponible — exécute migrations/bot-sync-schema.sql dans Supabase. (' + escT(err.message) + ')</div>';
+      const errMsg = '<div class="locked">Dashboard indisponible — exécute migrations/bot-sync-schema.sql dans Supabase. (' + escT(err.message) + ')</div>';
+      ['bd-moi', 'bd-braquages', 'bd-cooldowns', 'bd-palmares'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = errMsg; });
       return;
     }
     const metaMap = {};
     (meta.data || []).forEach(m => { metaMap[m.key] = m.value; });
     if (!metaMap.last_sync) {
       const waitMsg = '<div class="locked">⏳ En attente de la première synchronisation du bot Moni — le module sync-supabase.js doit être installé sur le bot (voir GUIDE-SYNC-SITE.md).</div>';
-      ['bd-classement', 'bd-coffre', 'bd-armurerie', 'chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns', 'bd-moi', 'bd-palmares'].forEach(id => {
+      ['chart-ventes', 'chart-drogue', 'chart-coffre', 'feed-coffre', 'bd-braquages', 'bd-cooldowns', 'bd-moi', 'bd-palmares'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = waitMsg;
       });
@@ -2883,111 +2849,9 @@
     if (!parts.length) chartD.innerHTML = '<div class="locked">Aucune drogue en stock actuellement.</div>';
     else drawDonut(chartD, parts);
 
-    // ── CLASSEMENT : podium des trois premiers, puis le tableau complet ──
     const salaire = Number(metaMap.salaire_par_vente || 30) || 30;
     const nomOu = id => nomDe[id] || 'Membre #' + String(id).slice(-4);
     const rangDe = nom => { const m = (window.MONI_MEMBRES || []).find(x => x.nom === nom); return m ? m.rang : ''; };
-    const podium = ids.slice(0, 3).filter(id => joueurs[id].ventes > 0);
-    const elPod = document.getElementById('bd-podium');
-    if (elPod) {
-      elPod.innerHTML = !podium.length ? '' :
-        '<div class="podium">' + podium.map((id, i) => {
-          const nom = nomOu(id), rang = rangDe(nom), v = Math.round(joueurs[id].ventes);
-          return '<div class="pod pod-' + (i + 1) + '" style="--rc:' + rangCouleur(rang) + '">' +
-            '<div class="pod-place">' + ['I', 'II', 'III'][i] + '</div>' +
-            '<div class="pod-ava">' + escT(initiales(nom)) + '</div>' +
-            '<div class="pod-nom">' + escT(nom) + '</div>' +
-            (rang ? '<div class="pod-rang">' + escT(rang) + '</div>' : '') +
-            '<div class="pod-num">' + v + '<small> ventes</small></div>' +
-            '<div class="pod-bonus">bonus ' + fmtArgent([30000, 20000, 15000][i]) + '</div>' +
-          '</div>';
-        }).join('') + '</div>';
-    }
-    elC.innerHTML = !ids.length
-      ? '<div class="locked">Aucune activité enregistrée cette semaine.</div>'
-      : '<div class="vd-stats3">' +
-          '<div class="vd-stat"><div class="vd-stat-num">' + totalVentes.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">Ventes famille</div></div>' +
-          '<div class="vd-stat"><div class="vd-stat-num">' + nbOk + '<small> / ' + nbMembres + '</small></div><div class="vd-stat-label">Quotas atteints</div></div>' +
-          '<div class="vd-stat"><div class="vd-stat-num">' + ids.length + '</div><div class="vd-stat-label">Membres actifs</div></div>' +
-        '</div>' +
-        '<div class="table-wrap"><table class="vd-table classement"><thead><tr><th class="num rk">#</th><th>Membre</th><th style="width:26%;">Ventes / ' + quotaVente + '</th><th class="num">Récolte</th><th class="num">Activités</th><th class="num">Paie estimée</th></tr></thead><tbody>' +
-        ids.map((id, idx) => {
-          const j = joueurs[id];
-          const v = Math.round(j.ventes);
-          const pct = Math.min(100, Math.round(v / quotaVente * 100));
-          const done = v >= quotaVente;
-          const bonus = (idx < 3 && v > 0) ? [30000, 20000, 15000][idx] : 0;
-          const moi = nomOu(id) === currentNom;
-          return '<tr class="' + (done ? 'ok' : '') + (moi ? ' moi' : '') + '">' +
-            '<td class="num rk">' + (idx + 1) + '</td>' +
-            '<td><b>' + escT(nomOu(id)) + '</b>' + (moi ? ' <span class="cd-me">toi</span>' : '') + (done ? ' <span class="pill ok">quota</span>' : '') + '</td>' +
-            '<td><div class="vd-progress' + (done ? ' done' : '') + '"><span style="width:' + pct + '%"></span></div>' +
-            '<div class="vd-progress-txt">' + v + ' · ' + pct + ' %</div></td>' +
-            '<td class="num">' + Math.round(j.recolte) + '</td>' +
-            '<td class="num" title="' + escT(j.detail.join(', ')) + '">' + Math.round(j.activites) + '</td>' +
-            '<td class="num paie" title="' + v + ' ventes × ' + salaire + ' $' + (bonus ? ' + bonus ' + bonus.toLocaleString('fr-FR') + ' $' : '') + '">' + fmtArgent(v * salaire + bonus) + '</td></tr>';
-        }).join('') + '</tbody></table></div>';
-
-    // ── COFFRE : chaque produit avec sa part du stock vendable ──
-    const autres = (stocks.data || [])
-      .filter(s => s.item !== 'argent' && s.item !== 'argent sale' && (s.quantite || 0) > 0)
-      .sort((a, b) => b.quantite - a.quantite);
-    const maxStock = Math.max(1, ...autres.map(s => Number(s.quantite) || 0));
-    document.getElementById('bd-coffre').innerHTML =
-      '<div class="vd-stats3">' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">' + fmtArgent(st['argent sale']) + '</div><div class="vd-stat-label">Argent sale</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num">' + fmtArgent(st['argent']) + '</div><div class="vd-stat-label">Argent propre</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num">' + drogueTotal.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">Unités de drogue</div></div>' +
-      '</div>' +
-      '<div class="stock-liste">' +
-      autres.map(s => {
-        const q = Number(s.quantite) || 0, drogue = estDrogue(s.item);
-        return '<div class="stock-ligne' + (drogue ? '' : ' materiel') + '">' +
-          '<span class="stock-nom">' + escT(cap(s.item)) + (drogue ? '' : ' <span class="pill">matériel</span>') + '</span>' +
-          '<span class="stock-barre"><span style="width:' + Math.round(q / maxStock * 100) + '%"></span></span>' +
-          '<span class="stock-qte">' + q.toLocaleString('fr-FR') + '</span>' +
-        '</div>';
-      }).join('') + '</div>' +
-      '<div class="hint" style="margin-top:12px;">La barre montre la part de chaque produit par rapport au plus fourni.</div>';
-
-    // L'enquête a besoin de la liste des produits et du stock affiché.
-    window.__stocksMap = st;
-    const enqSel = document.getElementById('enq-item');
-    if (enqSel) {
-      const choix = enqSel.value;
-      enqSel.innerHTML = (stocks.data || []).slice()
-        .sort((a, b) => String(a.item).localeCompare(String(b.item)))
-        .map(x => '<option value="' + escT(x.item) + '">' + escT(cap(x.item)) + ' — ' + Number(x.quantite).toLocaleString('fr-FR') + ' en stock</option>').join('');
-      if (choix) enqSel.value = choix;
-    }
-
-    // ── ARMURERIE ──
-    const arm = armes.data || [];
-    // « Prêtée », « pretee », « PRÊTÉE » : même statut. On enlève les accents avant de comparer.
-    const statutDe = a => String(a.statut || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    const pretees = arm.filter(a => statutDe(a).indexOf('pret') === 0);
-    const perdues = arm.filter(a => statutDe(a).indexOf('perdu') === 0);
-    const enStock = arm.length - pretees.length - perdues.length;
-    // Toutes les armes, les prêtées d'abord, puis les perdues, puis le stock ;
-    // chaque statut a sa pastille — et son mot, pas seulement sa couleur.
-    const etatArme = a => { const s = statutDe(a); return s.indexOf('pret') === 0 ? 'pret' : s.indexOf('perdu') === 0 ? 'perdu' : 'stock'; };
-    const ordreArme = { pret: 0, perdu: 1, stock: 2 };
-    const armesTriees = arm.slice().sort((a, b) => (ordreArme[etatArme(a)] - ordreArme[etatArme(b)]) || String(a.nom).localeCompare(String(b.nom)));
-    document.getElementById('bd-armurerie').innerHTML =
-      '<div class="vd-stats3">' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">' + enStock + '</div><div class="vd-stat-label">En stock</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--amber);">' + pretees.length + '</div><div class="vd-stat-label">Prêtées</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:#e0a0a0;">' + perdues.length + '</div><div class="vd-stat-label">Perdues</div></div>' +
-      '</div>' +
-      (!arm.length ? '<div class="locked">Aucune arme enregistrée par le bot.</div>' :
-        '<div class="table-wrap"><table class="vd-table"><thead><tr><th>Arme</th><th>Référence</th><th>Statut</th><th>Entre les mains de</th></tr></thead><tbody>' +
-        armesTriees.map(a => {
-          const e = etatArme(a);
-          return '<tr class="arme-' + e + '"><td><b>' + escT(a.nom) + '</b></td><td class="ref">' + escT(a.reference || '—') + '</td>' +
-            '<td><span class="pill ' + (e === 'pret' ? 'warn' : e === 'perdu' ? 'bad' : 'ok') + '">' + (e === 'pret' ? 'Prêtée' : e === 'perdu' ? 'Perdue' : 'En stock') + '</span></td>' +
-            '<td>' + (e === 'pret' ? escT(a.pretee_a || '?') : '<span class="hint">—</span>') + '</td></tr>';
-        }).join('') + '</tbody></table></div>');
-
     // ── CHIFFRE D'AFFAIRES (depuis lundi) ──
     // Source principale : montants des ventes confirmées ; si le bot ne les
     // renseigne pas (colonne vide), on somme les DÉPÔTS d'argent sale au coffre.
@@ -3244,7 +3108,7 @@
 
   // ── MODE TV (plein écran auto-défilant) ──
   let tvRot = null, tvRef = null, tvIdx = 0;
-  const TV_PANELS = ['apercu', 'business', 'coffre', 'braquages', 'armurerie'];
+  const TV_PANELS = ['apercu', 'palmares', 'braquages'];
   function startTV() {
     document.body.classList.add('tv-mode');
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
@@ -4854,93 +4718,6 @@
     if (data.session) onLogged(data.session.user);
   })();
 
-  /* ══════════════════════════════════════════════════════════════════════
-     ENQUÊTE SUR UN PRODUIT DU COFFRE
-
-     Le stock affiché sur le site vient du registre du bot (bot_stocks),
-     réécrit toutes les 5 minutes depuis son SQLite. Le bot, lui, compte
-     les dépôts et retraits qu'on lui déclare — il ne voit PAS le coffre
-     du jeu. Quand le site et le jeu ne collent pas, il n'y a que deux
-     explications possibles, et cet outil les départage :
-
-       1. le registre a un TROU : deux mouvements consécutifs dont les
-          stocks ne s'enchaînent pas (le bot a raté un événement, ou la
-          base a été modifiée à la main) — détecté ligne par ligne ;
-       2. le registre est COHÉRENT mais faux : des retraits ont eu lieu
-          en jeu sans jamais être déclarés au bot. Aucun outil ne peut
-          les retrouver — c'est une correction à faire côté bot.
-     ══════════════════════════════════════════════════════════════════════ */
-  async function enqueteProduit() {
-    const sel = document.getElementById('enq-item');
-    const box = document.getElementById('enq-resultat');
-    if (!sel || !box || !sel.value) return;
-    const item = sel.value;
-    box.innerHTML = '<div class="locked">Lecture du registre…</div>';
-
-    const { data, error } = await sb.from('bot_stock_history').select('*')
-      .eq('item', item).order('ts', { ascending: true }).limit(1000);
-    if (error) { box.innerHTML = '<div class="locked">Historique indisponible : ' + escT(error.message) + '</div>'; return; }
-
-    const rows = (data || []).slice().sort((a, b) => (new Date(a.ts) - new Date(b.ts)) || ((a.id || 0) - (b.id || 0)));
-    const stockAffiche = (window.__stocksMap && window.__stocksMap[item]) || 0;
-
-    if (!rows.length) {
-      box.innerHTML = '<div class="hint" style="line-height:1.75;">Aucun mouvement enregistré pour <b>' + escT(cap(item)) + '</b>. ' +
-        'Le stock affiché (' + stockAffiche.toLocaleString('fr-FR') + ') vient donc d\'ailleurs : ' +
-        'import direct dans la base du bot, ou historique purgé.</div>';
-      return;
-    }
-
-    let dep = 0, ret = 0;
-    const trous = [];
-    rows.forEach((r, i) => {
-      if (r.action === 'depose') dep += (r.quantite || 0); else ret += (r.quantite || 0);
-      if (i > 0) {
-        const prev = rows[i - 1];
-        if (prev.stock_apres != null && r.stock_avant != null && Number(prev.stock_apres) !== Number(r.stock_avant)) {
-          trous.push({ de: prev, a: r, ecart: Number(r.stock_avant) - Number(prev.stock_apres) });
-        }
-      }
-    });
-    const dernier = rows[rows.length - 1];
-    const finRegistre = dernier.stock_apres != null ? Number(dernier.stock_apres) : null;
-    const ecartFinal = finRegistre != null ? stockAffiche - finRegistre : null;
-
-    const fDate = t => new Date(t).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-
-    let verdict;
-    if (trous.length) {
-      verdict = '<div class="msg error" style="display:block;position:static;line-height:1.7;">Le registre a <b>' + trous.length +
-        ' trou' + (trous.length > 1 ? 's' : '') + '</b> : le stock saute sans mouvement enregistré. Détail ci-dessous.</div>';
-    } else if (ecartFinal) {
-      verdict = '<div class="msg error" style="display:block;position:static;line-height:1.7;">Le dernier mouvement laisse le stock à <b>' +
-        finRegistre.toLocaleString('fr-FR') + '</b>, mais le bot affiche <b>' + stockAffiche.toLocaleString('fr-FR') +
-        '</b> : la base a bougé sans passer par le registre.</div>';
-    } else {
-      verdict = '<div class="msg ok" style="display:block;position:static;line-height:1.7;">Le registre est <b>cohérent</b> de bout en bout. ' +
-        'Si le coffre en jeu ne correspond pas, c\'est que des mouvements ont eu lieu <b>sans être déclarés au bot</b> — ' +
-        'il faut corriger le stock côté bot (un retrait de la différence), le site suivra à la synchro suivante.</div>';
-    }
-
-    box.innerHTML =
-      '<div class="vd-stats3">' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--green);">+' + dep.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">déposés au total</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num" style="color:var(--red);">−' + ret.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">retirés au total</div></div>' +
-        '<div class="vd-stat"><div class="vd-stat-num">' + stockAffiche.toLocaleString('fr-FR') + '</div><div class="vd-stat-label">stock affiché</div></div>' +
-      '</div>' + verdict +
-      (trous.length ? trous.map(t =>
-        '<div class="hint" style="margin-top:8px;line-height:1.7;">⚠ Entre le ' + fDate(t.de.ts) + ' et le ' + fDate(t.a.ts) +
-        ', le stock passe de <b>' + Number(t.de.stock_apres).toLocaleString('fr-FR') + '</b> à <b>' + Number(t.a.stock_avant).toLocaleString('fr-FR') +
-        '</b> sans mouvement (' + (t.ecart > 0 ? '+' : '') + t.ecart.toLocaleString('fr-FR') + ').</div>').join('') : '') +
-      '<table class="vd-table" style="margin-top:14px;"><thead><tr><th>Quand</th><th>Qui</th><th>Mouvement</th><th class="num">Stock après</th></tr></thead><tbody>' +
-      rows.slice(-30).reverse().map(r =>
-        '<tr><td>' + fDate(r.ts) + '</td><td>' + escT(r.joueur || '?') + '</td>' +
-        '<td style="color:' + (r.action === 'depose' ? 'var(--green)' : 'var(--red)') + ';font-weight:600;">' +
-          (r.action === 'depose' ? '+' : '−') + Number(r.quantite || 0).toLocaleString('fr-FR') + '</td>' +
-        '<td class="num">' + (r.stock_apres != null ? Number(r.stock_apres).toLocaleString('fr-FR') : '—') + '</td></tr>').join('') +
-      '</tbody></table>' +
-      (rows.length > 30 ? '<div class="hint" style="margin-top:8px;">' + rows.length + ' mouvements au total — les 30 derniers sont affichés.</div>' : '');
-  }
 
   /* ══════════════════════════════════════════════════════════════════════
      IMPORT DE TAXES DEPUIS UN FICHIER EXCEL
