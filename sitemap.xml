@@ -26,11 +26,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://famillemoni.com/membre/gustavo-cardoso.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://famillemoni.com/membre/bass-carter.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -51,17 +46,37 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://famillemoni.com/membre/james-davis.html</loc>
+    <loc>https://famillemoni.com/membre/gustavo-madrazo.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://famillemoni.com/membre/michel-duboisie.html</loc>
+    <loc>https://famillemoni.com/membre/haziro-javez.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://famillemoni.com/membre/kaleo-maranzano.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://famillemoni.com/membre/leandro-maranzano.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://famillemoni.com/membre/rocco-hawk.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://famillemoni.com/membre/tiago-rodrigues.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://famillemoni.com/membre/vincenzo-moni.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
