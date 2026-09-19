@@ -702,3 +702,6 @@ body.tv-mode .panel { max-width: none; }
 /* Le lien de l'aperçu est un vrai lien (il ouvrait rien : c'était un simple texte). */
 a.fiche-prev-lien { color: inherit; text-decoration: none; cursor: pointer; transition: color var(--t) ease, border-color var(--t) ease; }
 a.fiche-prev-lien:hover { color: var(--paper); border-bottom-color: var(--paper); }
+
+/* Identifiant en jeu (ventes de munitions) : chasse fixe, lisible, sélectionnable d'un geste. */
+.sv-id { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13.5px; color: var(--gold-hard); user-select: all; }

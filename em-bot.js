@@ -144,8 +144,7 @@
     var lignes = Array.isArray(data) ? data : (data && Array.isArray(data.players) ? data.players : []);
     lignes.forEach(function (l) {
       if (!l || typeof l !== 'object' || !l.name) return;
-      var id = l.userId || l.acheteur_id;
-      if (id) S.noms[id] = fix[id] || titre(l.name);
+      if (l.userId) S.noms[l.userId] = fix[l.userId] || titre(l.name);
     });
   }
   async function chargerNoms() {
@@ -225,9 +224,9 @@
   function blocErr(err) { return locked('<b>' + esc(libelleCourt(err) || 'indisponible') + '</b>' + (err && err.message ? '<br><small>' + esc(err.message) + '</small>' : '')); }
 
   // ── Blocs génériques ──────────────────────────────────────────────────────
-  function tableau(entetes, lignes, classes) {
+  function tableau(entetes, lignes, classes, forcerCompact) {
     classes = classes || [];
-    var compact = entetes.length <= 3 ? ' sv-compact' : '';
+    var compact = (forcerCompact || entetes.length <= 3) ? ' sv-compact' : '';
     return '<div class="table-wrap"><table class="vd-table' + compact + '"><thead><tr>' + entetes.map(function (h, i) { return '<th class="' + (classes[i] || '') + '">' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>'
       + lignes.map(function (l) { return '<tr' + (l.cls ? ' class="' + l.cls + '"' : '') + '>' + (l.cells || l).map(function (c, i) { return '<td class="' + (classes[i] || '') + '">' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
   }
@@ -570,7 +569,9 @@
     html += '<div class="bloc"><div class="bloc-t">Ventes de munitions <small>depuis le dernier reset (dimanche 19h)</small></div>';
     if (hist.status === 'fulfilled') {
       var h = hist.value.data || [];
-      html += h.length ? tableau(['Quand', 'Acheteur', 'Quantité', 'Prix'], h.map(function (v) { return ['<span title="' + esc(fmtDateHeure(v.timestamp)) + '">' + esc(fmtRel(v.timestamp)) + '</span>', esc(nomDe(v.acheteur_id)), fmtN(v.quantite), esc(fmt$(v.prix))]; }), ['', '', 'num', 'num']) : locked('Aucune vente de munitions déclarée cette semaine.');
+      // `acheteur_id` est l'ID unique EN JEU de l'acheteur, saisi par le vendeur sur Discord —
+      // pas un compte Discord : on l'affiche tel quel, sans chercher de nom.
+      html += h.length ? tableau(['Quand', 'ID acheteur', 'Quantité', 'Prix'], h.map(function (v) { return ['<span title="' + esc(fmtDateHeure(v.timestamp)) + '">' + esc(fmtRel(v.timestamp)) + '</span>', '<code class="sv-id">' + esc(v.acheteur_id) + '</code>', fmtN(v.quantite), esc(fmt$(v.prix))]; }), ['', '', 'num', 'num'], true) : locked('Aucune vente de munitions déclarée cette semaine.');
     } else html += blocErr(hist.reason);
     html += '</div>';
     cible.innerHTML = html;
