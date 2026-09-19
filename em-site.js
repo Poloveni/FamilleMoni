@@ -215,7 +215,11 @@ function majApercuProfil() {
   T('pid-spec', s.spec);
   T('pid-citation', s.citation ? '« ' + s.citation + ' »' : '');
   const lien = document.getElementById('pid-lien');
-  if (lien) lien.href = s.nom ? 'membre/' + slugNom(s.nom) + '.html' : 'accueil.html#famiglia';
+  // Les deux liens vers la page publique (carte d'identité et aperçu) pointent au même endroit.
+  const adresse = s.nom ? 'membre/' + slugNom(s.nom) + '.html' : 'accueil.html#famiglia';
+  if (lien) lien.href = adresse;
+  const lienPrev = document.getElementById('prev-lien');
+  if (lienPrev) lienPrev.href = adresse;
   T('prev-nom', s.nom || '—');
   T('prev-rang', rang || '—');
   const pr = document.getElementById('prev-rang'); if (pr) pr.style.color = rang ? rc : '';

@@ -698,3 +698,7 @@ body.tv-mode .panel { max-width: none; }
 .sv-fiche { border-color: rgba(233,223,201,.35); margin-bottom: 16px; }
 .sv-fiche .bloc-t .sv-lien { margin-left: auto; }
 .sv-fiche .sv-grid > div { min-width: 0; }
+
+/* Le lien de l'aperçu est un vrai lien (il ouvrait rien : c'était un simple texte). */
+a.fiche-prev-lien { color: inherit; text-decoration: none; cursor: pointer; transition: color var(--t) ease, border-color var(--t) ease; }
+a.fiche-prev-lien:hover { color: var(--paper); border-bottom-color: var(--paper); }
