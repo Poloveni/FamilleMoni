@@ -345,18 +345,29 @@ Deno.serve(async (req: Request) => {
   // d'affichage des comptes du site, jamais au bot ni aux droits.
   if (action === "profils") {
     if ((user.email ?? "").toLowerCase() !== ADMIN_EMAIL) return refus(403, "forbidden", "Réservé à l'administration du site.");
-    if (!DISCORD_BOT_TOKEN) return json({ ok: true, maj: 0, raison: "DISCORD_BOT_TOKEN absent" });
+    if (!DISCORD_BOT_TOKEN) return json({ ok: true, jeton: false, maj: 0, photos: {}, echecs: 0 });
+    // `ids` : comptes dont la photo enregistrée ne charge plus (avatar changé
+    // depuis sur Discord) — à relire même s'ils ont déjà une adresse de photo.
+    const forces = new Set((Array.isArray(body.ids) ? body.ids : []).filter((x: unknown) => typeof x === "string").slice(0, 60) as string[]);
     const { data: liaisons } = await admin.from("bot_sessions").select("user_id, discord_id, username");
-    let maj = 0;
+    const photos: Record<string, string> = {};
+    let maj = 0, echecs = 0;
     for (const l of (liaisons ?? []).slice(0, 60)) {
       try {
         const { data: cible } = await admin.auth.admin.getUserById(l.user_id);
-        if (!cible?.user || cible.user.user_metadata?.avatar_url) continue;
-        await memoriserProfilDiscord(admin, cible.user, l.discord_id, l.username);
-        maj++;
-      } catch { /* un compte en échec ne bloque pas les autres */ }
+        if (!cible?.user) continue;
+        const meta = { ...(cible.user.user_metadata ?? {}) };
+        if (meta.avatar_url && !forces.has(l.user_id)) continue;
+        const prof = await profilDiscord(l.discord_id);
+        if (!prof) { echecs++; continue; }
+        photos[l.user_id] = prof.avatar_url;
+        if (meta.avatar_url !== prof.avatar_url) {
+          await admin.auth.admin.updateUserById(l.user_id, { user_metadata: { ...meta, avatar_url: prof.avatar_url, user_name: meta.user_name ?? l.username, full_name: meta.full_name ?? prof.nom ?? l.username } });
+          maj++;
+        }
+      } catch { echecs++; /* un compte en échec ne bloque pas les autres */ }
     }
-    return json({ ok: true, maj });
+    return json({ ok: true, jeton: true, maj, photos, echecs });
   }
 
   // 3. Quelle action ?

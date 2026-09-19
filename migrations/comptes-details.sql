@@ -61,7 +61,8 @@ as $$
     p.nom,
     p.rang,
     coalesce(d.discord_id, u.raw_app_meta_data ->> 'discord_id', bs.discord_id),
-    coalesce(d.avatar_url, u.raw_user_meta_data ->> 'avatar_url'),
+    -- Les métadonnées d'abord : elles sont rafraîchies, l'identité OAuth reste figée.
+    coalesce(nullif(u.raw_user_meta_data ->> 'avatar_url', ''), d.avatar_url),
     p.photo_url,
     coalesce(bs.expires_at > now(), false),
     coalesce(bs.is_admin, false),

@@ -262,15 +262,26 @@
     COMPTES = comptes; dessineInscriptions();
     rattraperPhotosDiscord();
   }
-  // Des comptes liés au bot sans photo Discord (liés avant que la photo soit
-  // relevée) : on demande une fois le rattrapage au backend, puis on recharge.
-  var PHOTOS_RATTRAPEES = false;
+  // Photos Discord à rattraper : comptes liés au bot sans photo (liés avant
+  // qu'elle soit relevée), ou dont la photo enregistrée ne charge plus (avatar
+  // changé depuis sur Discord). Le backend relit Discord ; on applique le
+  // résultat tout de suite. Chaque compte n'est demandé qu'une fois par visite.
+  var PHOTOS_DEMANDEES = {}, PHOTOS_CASSEES = [], PHOTOS_MINUTEUR = null;
+  function photoCassee(id) {
+    if (PHOTOS_DEMANDEES[id] || PHOTOS_CASSEES.indexOf(id) !== -1) return;
+    PHOTOS_CASSEES.push(id); clearTimeout(PHOTOS_MINUTEUR); PHOTOS_MINUTEUR = setTimeout(rattraperPhotosDiscord, 600);
+  }
   async function rattraperPhotosDiscord() {
-    if (PHOTOS_RATTRAPEES || !COMPTES.some(function (c) { return c.discord_id && !c.avatar_url; })) return;
-    PHOTOS_RATTRAPEES = true;
+    var sans = COMPTES.filter(function (c) { return c.discord_id && !c.avatar_url && !PHOTOS_DEMANDEES[c.id]; }).map(function (c) { return c.id; });
+    var cassees = PHOTOS_CASSEES.filter(function (id) { return !PHOTOS_DEMANDEES[id]; }); PHOTOS_CASSEES = [];
+    if (!sans.length && !cassees.length) return;
+    sans.concat(cassees).forEach(function (id) { PHOTOS_DEMANDEES[id] = true; });
     try {
-      const r = await SB.functions.invoke('bot-suivi', { body: { action: 'profils' } });
-      if (r.data && r.data.maj > 0) renderInscriptions();
+      const r = await SB.functions.invoke('bot-suivi', { body: { action: 'profils', ids: cassees } });
+      var photos = (r.data && r.data.photos) || {}, change = false;
+      COMPTES.forEach(function (c) { if (photos[c.id] && photos[c.id] !== c.avatar_url) { c.avatar_url = photos[c.id]; change = true; } });
+      if (r.data && r.data.jeton === false) NOTE_INSC = 'Photos Discord : le secret <code>DISCORD_BOT_TOKEN</code> n\'est pas visible de la fonction <code>bot-suivi</code>.';
+      if (change || (r.data && r.data.jeton === false)) dessineInscriptions();
     } catch (e) { /* décoratif : les initiales restent */ }
   }
   // ── Inscriptions : une carte par compte, lisible d'un coup d'œil ──
@@ -303,7 +314,7 @@
     var acces = (c.acces === 'taxes') ? 'taxes' : 'complet', id = escHTML(c.id), bot = estCompteBot(c);
     var titre = titreCompte(c), photo = c.avatar_url || c.photo_url || '';
     var avatar = '<div class="insc-ava' + (c.approuve ? '' : ' attente') + '" aria-hidden="true"><span>' + escHTML(initialesDe(titre)) + '</span>' +
-      (photo ? '<img src="' + escHTML(photo) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />' : '') + '</div>';
+      (photo ? '<img src="' + escHTML(photo) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();' + (c.avatar_url && photo === c.avatar_url ? ' photoCassee(\'' + id + '\')' : '') + '" />' : '') + '</div>';
     var ident = [];
     if (c.discord_pseudo && c.discord_pseudo !== titre) ident.push('<span class="discord">@' + escHTML(c.discord_pseudo) + '</span>');
     if (bot) ident.push('<span class="mail">compte Discord, via le bot</span>');
