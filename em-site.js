@@ -421,6 +421,29 @@ function eventDate(e) {
   return new Date(an, mn - 1, j, hm ? Math.min(23, +hm[1]) : 21, hm && hm[2] ? +hm[2] : 0);
 }
 
+// Un message Discord contient des mentions brutes — <@&123…> (rôle), <@123…>
+// (membre), <#123…> (salon), <:nom:123…> (emoji). Illisibles hors de Discord :
+// on les retire (la fonction de synchro les remplace par de vrais noms quand
+// elle le peut ; ceci couvre ce qui est déjà en base et tout ce qui passerait).
+function sansMentionsDiscord(t) {
+  return String(t || '')
+    .replace(/<a?:(\w+):\d+>/g, ':$1:')
+    .replace(/<@[&!]?\d+>/g, '')
+    .replace(/<#\d+>/g, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .split('\n').map(l => l.trim()).filter((l, i, a) => l || (i > 0 && a[i - 1])).join('\n').trim();
+}
+// Le titre d'une présence : la première ligne qui dit quelque chose. Souvent la
+// toute première n'est qu'un ping de rôle (« @Famille ») : on passe à la suivante.
+function titrePresence(titre, texte) {
+  const candidates = [titre].concat(String(texte || '').split('\n'));
+  for (const c of candidates) {
+    const l = sansMentionsDiscord(c).replace(/[*_`#]/g, '').replace(/^(@\S+\s*)+$/, '').trim();
+    if (l.replace(/[^\p{L}\p{N}]/gu, '').length >= 3) return l.slice(0, 90);
+  }
+  return 'Présence';
+}
+
 async function loadEvents() {
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
@@ -442,7 +465,7 @@ async function loadEvents() {
   });
   ((pres && pres.data) || []).forEach(p => {
     if (!p.date_evt) return;
-    calItems.push({ kind: 'pr', d: new Date(p.date_evt), titre: p.titre || 'Présence', texte: p.texte || '', auteur: p.auteur || '', reactions: p.reactions || null });
+    calItems.push({ kind: 'pr', d: new Date(p.date_evt), titre: titrePresence(p.titre, p.texte), texte: sansMentionsDiscord(p.texte), auteur: p.auteur || '', reactions: p.reactions || null });
   });
   renderCal();
   renderAgenda();

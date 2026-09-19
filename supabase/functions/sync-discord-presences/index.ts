@@ -72,13 +72,38 @@ Deno.serve(async (req: Request) => {
   if (!res.ok) return new Response(`Erreur Discord ${res.status}: ${await res.text()}`, { status: 500 });
   const msgs = await res.json();
 
+  // Les noms des rôles du serveur, pour traduire les mentions <@&id>. Au mieux :
+  // sans DISCORD_GUILD_ID ou si Discord refuse, les mentions sont simplement retirées.
+  const roles: Record<string, string> = {};
+  const GUILD = Deno.env.get("DISCORD_GUILD_ID") ?? "";
+  if (GUILD) {
+    try {
+      const rr = await fetch(`https://discord.com/api/v10/guilds/${GUILD}/roles`, { headers: { Authorization: `Bot ${TOKEN}` } });
+      if (rr.ok) for (const r of (await rr.json()) as any[]) roles[String(r.id)] = String(r.name);
+    } catch { /* pas bloquant */ }
+  }
+  /** Remplace les mentions brutes de Discord par des noms lisibles (rôle, membre), retire le reste. */
+  const lisible = (txt: string, m: any): string => {
+    const membres: Record<string, string> = {};
+    for (const u of (m.mentions ?? []) as any[]) membres[String(u.id)] = u.global_name || u.username || "";
+    return String(txt || "")
+      .replace(/<@&(\d+)>/g, (_x: string, id: string) => roles[id] ? "@" + roles[id] : "")
+      .replace(/<@!?(\d+)>/g, (_x: string, id: string) => membres[id] ? "@" + membres[id] : "")
+      .replace(/<#\d+>/g, "")
+      .replace(/<a?:(\w+):\d+>/g, ":$1:")
+      .replace(/[ \t]{2,}/g, " ");
+  };
+
   const rows: any[] = [];
   for (const m of msgs as any[]) {
-    const text = [m.content || "", embedsText(m.embeds)].join("\n").trim();
-    if (!text) continue;
-    const d = parseDate(text);
+    const brut = [m.content || "", embedsText(m.embeds)].join("\n").trim();
+    if (!brut) continue;
+    const d = parseDate(brut);
     if (!d) continue;
-    const premiere = (m.content || "").split("\n").map((l: string) => l.trim()).filter(Boolean)[0] || "Présence";
+    const text = lisible(brut, m).trim();
+    // Le titre : la première ligne qui dit quelque chose — pas un simple ping de rôle.
+    const lignes = text.split("\n").map((l: string) => l.trim()).filter(Boolean);
+    const premiere = lignes.find((l: string) => l.replace(/@\S+/g, "").replace(/[^\p{L}\p{N}]/gu, "").length >= 3) || lignes[0] || "Présence";
     rows.push(<any>{
       id: String(m.id),
       auteur: m.author?.global_name || m.author?.username || "",
