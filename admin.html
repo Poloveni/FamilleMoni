@@ -260,6 +260,18 @@
       if (comptes.length) NOTE_INSC = 'Pour voir aussi la <b>photo et le pseudo Discord</b>, le <b>personnage</b> et l\'état de la <b>liaison au bot</b>, exécute <code>migrations/comptes-details.sql</code> dans Supabase.';
     }
     COMPTES = comptes; dessineInscriptions();
+    rattraperPhotosDiscord();
+  }
+  // Des comptes liés au bot sans photo Discord (liés avant que la photo soit
+  // relevée) : on demande une fois le rattrapage au backend, puis on recharge.
+  var PHOTOS_RATTRAPEES = false;
+  async function rattraperPhotosDiscord() {
+    if (PHOTOS_RATTRAPEES || !COMPTES.some(function (c) { return c.discord_id && !c.avatar_url; })) return;
+    PHOTOS_RATTRAPEES = true;
+    try {
+      const r = await SB.functions.invoke('bot-suivi', { body: { action: 'profils' } });
+      if (r.data && r.data.maj > 0) renderInscriptions();
+    } catch (e) { /* décoratif : les initiales restent */ }
   }
   // ── Inscriptions : une carte par compte, lisible d'un coup d'œil ──
   // Photo : l'avatar Discord s'il est connu, sinon la photo de profil du site,

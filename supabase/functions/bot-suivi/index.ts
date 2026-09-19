@@ -58,6 +58,8 @@ const BOT_GUILD_ID = Deno.env.get("BOT_GUILD_ID") || Deno.env.get("DISCORD_GUILD
 // Sert UNIQUEMENT à lire la photo et le nom affiché d'un compte Discord, pour
 // que le panel admin montre un visage plutôt qu'une adresse technique.
 const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN") ?? "";
+/** L'administratrice du site — la même adresse que dans les règles SQL (comptes_details, RLS). */
+const ADMIN_EMAIL = "syne@live.fr";
 
 /** Délai maximal d'attente du bot — au-delà, on répond « indisponible » plutôt que de laisser le navigateur pendu. */
 const BOT_TIMEOUT_MS = 10_000;
@@ -335,6 +337,27 @@ Deno.serve(async (req: Request) => {
   // Accès « taxes uniquement » (comptes.acces = 'taxes') : même règle que le
   // menu du site, appliquée ici pour de vrai — seules les routes taxes passent.
   const taxesSeulement = compte.acces === "taxes";
+
+  // ── profils (administratrice du site uniquement) ──
+  // La photo Discord n'est relevée qu'à la connexion ou à la liaison : les
+  // membres liés avant cette fonction n'en ont pas. Le panel admin demande ici
+  // un rattrapage. Purement décoratif : on ne touche qu'aux métadonnées
+  // d'affichage des comptes du site, jamais au bot ni aux droits.
+  if (action === "profils") {
+    if ((user.email ?? "").toLowerCase() !== ADMIN_EMAIL) return refus(403, "forbidden", "Réservé à l'administration du site.");
+    if (!DISCORD_BOT_TOKEN) return json({ ok: true, maj: 0, raison: "DISCORD_BOT_TOKEN absent" });
+    const { data: liaisons } = await admin.from("bot_sessions").select("user_id, discord_id, username");
+    let maj = 0;
+    for (const l of (liaisons ?? []).slice(0, 60)) {
+      try {
+        const { data: cible } = await admin.auth.admin.getUserById(l.user_id);
+        if (!cible?.user || cible.user.user_metadata?.avatar_url) continue;
+        await memoriserProfilDiscord(admin, cible.user, l.discord_id, l.username);
+        maj++;
+      } catch { /* un compte en échec ne bloque pas les autres */ }
+    }
+    return json({ ok: true, maj });
+  }
 
   // 3. Quelle action ?
   // Identité Discord côté site : celle enregistrée par Supabase Auth lors de la
