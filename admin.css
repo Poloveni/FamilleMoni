@@ -177,3 +177,29 @@ label{display:block;font-family:var(--caps);font-size:10px;letter-spacing:.26em;
   .insc-outils input{width:100%}
   .table .acts{flex-direction:column}
 }
+
+/* ── Inscriptions : cartes avec photo, filtres par état ── */
+.insc-puces{display:flex;flex-wrap:wrap;gap:6px}
+.insc-puce{font-family:var(--caps);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;padding:8px 12px;border-radius:4px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;transition:.2s}
+.insc-puce b{font-family:var(--display);font-size:13px;letter-spacing:0;margin-left:4px;color:var(--ink)}
+.insc-puce:hover{color:var(--ink);border-color:var(--ink2)}
+.insc-puce.on{background:#f2f2f4;color:#101012;border-color:#f2f2f4}
+.insc-puce.on b{color:#101012}
+.insc-row{align-items:center;justify-content:flex-start}
+.insc-row .insc-qui{flex:1 1 auto}
+.insc-row.attente{box-shadow:0 0 0 1px rgba(224,176,98,.55),0 10px 24px rgba(0,0,0,.55) inset}
+.insc-ava{position:relative;flex:0 0 56px;width:56px;height:56px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a2a30,#17171a);border:1px solid var(--line2);font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink2)}
+.insc-ava img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.insc-ava.attente{border-color:rgba(224,176,98,.7)}
+.insc-nom{font-size:20px}
+.insc-meta.dates{margin-top:8px;align-items:center;font-size:13px}
+.insc-meta.dates .insc-state{margin-top:0}
+.insc-meta .mail{font-size:13.5px}
+.tag.ok{color:#6fd79a;border-color:rgba(69,217,127,.45)}
+.tag.off{color:var(--mute)}
+@media (max-width:760px){
+  .insc-ava{flex-basis:48px;width:48px;height:48px;font-size:16px;align-self:flex-start}
+  .insc-row{flex-direction:row;flex-wrap:wrap;align-items:flex-start}
+  .insc-row .insc-qui{flex:1 1 0;min-width:0}
+  .insc-actions{flex:1 1 100%}
+}

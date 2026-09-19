@@ -257,35 +257,60 @@
       const q = await SB.from('comptes').select('*').order('created_at', { ascending: false });
       if (q.error) { list.innerHTML = '<p class="hint">Erreur : ' + escHTML(q.error.message) + '</p>'; return; }
       comptes = q.data || [];
-      if (comptes.length) NOTE_INSC = 'Pour voir aussi le <b>pseudo Discord</b> et le <b>nom du personnage</b>, exécute <code>migrations/comptes-details.sql</code> dans Supabase.';
+      if (comptes.length) NOTE_INSC = 'Pour voir aussi la <b>photo et le pseudo Discord</b>, le <b>personnage</b> et l\'état de la <b>liaison au bot</b>, exécute <code>migrations/comptes-details.sql</code> dans Supabase.';
     }
     COMPTES = comptes; dessineInscriptions();
   }
+  // ── Inscriptions : une carte par compte, lisible d'un coup d'œil ──
+  // Photo : l'avatar Discord s'il est connu, sinon la photo de profil du site,
+  // sinon les initiales. Titre : le personnage, à défaut le pseudo Discord, à
+  // défaut l'e-mail. Les comptes créés par la connexion Discord (adresse
+  // technique @bot.famillemoni.com) n'affichent pas cette adresse : elle ne
+  // dit rien à personne.
+  var FILTRE_ETAT = 'tous';
+  function estCompteBot(c) { return /@bot\.famillemoni\.com$/i.test(c.email || ''); }
+  function initialesDe(txt) { var m = String(txt || '?').replace(/[^A-Za-zÀ-ÿ0-9 ]/g, ' ').trim().split(/\s+/); return ((m[0] || '?')[0] + (m[1] ? m[1][0] : '')).toUpperCase(); }
+  function titreCompte(c) { return c.nom || c.discord_pseudo || (estCompteBot(c) ? String(c.email).split('.')[0] : c.email) || '(sans nom)'; }
   function dessineInscriptions() {
     const list = document.getElementById('insc-list');
     if (!COMPTES.length) { list.innerHTML = '<p class="hint">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres s\'inscriront sur l\'espace membre.</p>'; return; }
-    const enAttente = COMPTES.filter(c => !c.approuve).length, q = FILTRE.trim().toLowerCase();
-    const vus = q ? COMPTES.filter(c => [c.email, c.discord_pseudo, c.nom, c.rang].some(v => String(v || '').toLowerCase().indexOf(q) !== -1)) : COMPTES;
+    const q = FILTRE.trim().toLowerCase();
+    const nb = { tous: COMPTES.length, attente: COMPTES.filter(c => !c.approuve).length, approuves: COMPTES.filter(c => c.approuve).length, taxes: COMPTES.filter(c => c.acces === 'taxes').length };
+    let vus = COMPTES.filter(c => FILTRE_ETAT === 'attente' ? !c.approuve : FILTRE_ETAT === 'approuves' ? c.approuve : FILTRE_ETAT === 'taxes' ? c.acces === 'taxes' : true);
+    if (q) vus = vus.filter(c => [c.email, c.discord_pseudo, c.nom, c.rang].some(v => String(v || '').toLowerCase().indexOf(q) !== -1));
+    // Ceux qui attendent une décision d'abord, puis les plus récemment vus.
+    vus = vus.slice().sort((a, b) => (a.approuve - b.approuve) || (new Date(b.derniere_connexion || b.created_at || 0) - new Date(a.derniere_connexion || a.created_at || 0)));
+    const puce = (k, lbl) => '<button type="button" class="insc-puce' + (FILTRE_ETAT === k ? ' on' : '') + '" onclick="FILTRE_ETAT = \'' + k + '\'; dessineInscriptions()">' + lbl + ' <b>' + nb[k] + '</b></button>';
     list.innerHTML = (NOTE_INSC ? '<p class="hint" style="margin-bottom:16px">' + NOTE_INSC + '</p>' : '') +
-      '<div class="insc-bar"><div class="insc-count">' + COMPTES.length + ' compte(s) · ' + enAttente + ' en attente' + (q ? ' · ' + vus.length + ' résultat(s)' : '') + '</div>' +
-      '<div class="insc-outils"><input type="search" id="insc-q" placeholder="Chercher un email, un pseudo, un personnage…" value="' + escHTML(FILTRE) + '" oninput="FILTRE = this.value; dessineInscriptions();" /><button class="btn btn-line" type="button" onclick="renderInscriptions()">Rafraîchir</button></div></div>' +
-      (vus.length ? vus.map(ligneInscription).join('') : '<div class="insc-rien">Aucun compte ne correspond à « ' + escHTML(FILTRE) + ' ».</div>');
+      '<div class="insc-bar"><div class="insc-puces" role="group" aria-label="Filtrer les comptes">' + puce('tous', 'Tous') + puce('attente', 'En attente') + puce('approuves', 'Approuvés') + puce('taxes', 'Taxes seules') + '</div>' +
+      '<div class="insc-outils"><input type="search" id="insc-q" placeholder="Chercher un personnage, un pseudo, un email…" value="' + escHTML(FILTRE) + '" oninput="FILTRE = this.value; dessineInscriptions()" aria-label="Chercher un compte" /><button class="btn btn-line" type="button" onclick="renderInscriptions()">Rafraîchir</button></div></div>' +
+      (vus.length ? '<div class="insc-grille">' + vus.map(ligneInscription).join('') + '</div>' : '<div class="insc-rien">Aucun compte ne correspond' + (q ? ' à « ' + escHTML(FILTRE) + ' »' : '') + '.</div>');
     if (q) { const inp = document.getElementById('insc-q'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }
   }
   function ligneInscription(c) {
-    var acces = (c.acces === 'taxes') ? 'taxes' : 'complet', id = escHTML(c.id), email = c.email || '(sans email)';
-    var titre = c.nom ? escHTML(c.nom) : escHTML(email), meta = [];
-    if (c.nom) meta.push('<span class="mail">' + escHTML(email) + '</span>');
-    if (c.discord_pseudo) meta.push('<span class="discord">Discord : ' + escHTML(c.discord_pseudo) + '</span>');
-    if (c.created_at) meta.push('<span>Inscrit le ' + escHTML(dateCourte(c.created_at)) + '</span>');
-    var vu = depuis(c.derniere_connexion); if (vu) meta.push('<span>Vu ' + escHTML(vu) + '</span>');
-    return '<div class="tray insc-row' + (acces === 'taxes' ? ' limite' : '') + '"><div class="insc-qui"><div class="insc-nom">' + titre +
-      (c.rang ? '<span class="tag">' + escHTML(c.rang) + '</span>' : '') + (acces === 'taxes' ? '<span class="tag inv">Taxes</span>' : '') + '</div>' +
-      (meta.length ? '<div class="insc-meta">' + meta.join('') + '</div>' : '') +
-      '<div class="insc-state ' + (c.approuve ? 'ok' : '') + '"><i></i>' + (c.approuve ? 'Approuvé' : 'En attente') + '</div></div>' +
+    var acces = (c.acces === 'taxes') ? 'taxes' : 'complet', id = escHTML(c.id), bot = estCompteBot(c);
+    var titre = titreCompte(c), photo = c.avatar_url || c.photo_url || '';
+    var avatar = '<div class="insc-ava' + (c.approuve ? '' : ' attente') + '" aria-hidden="true"><span>' + escHTML(initialesDe(titre)) + '</span>' +
+      (photo ? '<img src="' + escHTML(photo) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />' : '') + '</div>';
+    var ident = [];
+    if (c.discord_pseudo && c.discord_pseudo !== titre) ident.push('<span class="discord">@' + escHTML(c.discord_pseudo) + '</span>');
+    if (bot) ident.push('<span class="mail">compte Discord, via le bot</span>');
+    else if (c.email !== titre) ident.push('<span class="mail">' + escHTML(c.email || '(sans email)') + '</span>');   // pas deux fois la même adresse
+    else ident.push('<span class="mail">compte e-mail, personnage pas encore choisi</span>');
+    var dates = [];
+    if (c.created_at) dates.push('Inscrit le ' + escHTML(dateCourte(c.created_at)));
+    var vu = depuis(c.derniere_connexion); dates.push(vu ? 'Vu ' + escHTML(vu) : 'Jamais revenu');
+    var tags = (c.rang ? '<span class="tag">' + escHTML(c.rang) + '</span>' : '') +
+      (acces === 'taxes' ? '<span class="tag inv">Taxes seules</span>' : '') +
+      (c.bot_lie === true ? '<span class="tag ok" title="Jeton du bot valide : les panneaux du bot fonctionnent pour ce compte">Bot lié</span>' : (c.bot_lie === false ? '<span class="tag off" title="Pas de jeton du bot valide : ce compte devra se reconnecter par Discord">Bot non lié</span>' : '')) +
+      (c.bot_admin ? '<span class="tag">Admin Discord</span>' : (c.bot_taxes ? '<span class="tag">Rôle taxes</span>' : ''));
+    return '<div class="tray insc-row' + (acces === 'taxes' ? ' limite' : '') + (c.approuve ? '' : ' attente') + '">' + avatar +
+      '<div class="insc-qui"><div class="insc-nom">' + escHTML(titre) + tags + '</div>' +
+      '<div class="insc-meta">' + ident.join('') + '</div>' +
+      '<div class="insc-meta dates"><span class="insc-state ' + (c.approuve ? 'ok' : '') + '"><i></i>' + (c.approuve ? 'Approuvé' : 'En attente') + '</span><span>' + dates.join('</span><span>') + '</span></div></div>' +
       '<div class="insc-actions"><select aria-label="Niveau d\'accès" onchange="setAcces(\'' + id + '\', this.value)"><option value="complet"' + (acces === 'complet' ? ' selected' : '') + '>Tout l\'espace membre</option><option value="taxes"' + (acces === 'taxes' ? ' selected' : '') + '>Taxes uniquement</option></select>' +
       '<button class="btn ' + (c.approuve ? 'btn-line' : 'btn-metal') + '" type="button" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' + (c.approuve ? 'Révoquer' : 'Approuver') + '</button>' +
-      (c.approuve ? '' : '<button class="btn btn-danger" type="button" onclick="supprimerCompte(\'' + id + '\', \'' + escJS(c.nom || email) + '\')">Supprimer</button>') + '</div></div>';
+      (c.approuve ? '' : '<button class="btn btn-danger" type="button" onclick="supprimerCompte(\'' + id + '\', \'' + escJS(titre) + '\')">Supprimer</button>') + '</div></div>';
   }
   async function supprimerCompte(id, qui) {
     if (!await moniConfirm('Supprimer le compte de ' + qui + ' ?', 'Sa connexion, sa fiche de profil et sa photo seront effacées. Ses photos de la galerie sont conservées.\nCette action est irréversible.', 'Supprimer')) return;

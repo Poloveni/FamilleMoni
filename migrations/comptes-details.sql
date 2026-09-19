@@ -20,7 +20,11 @@
 -- ============================================================================
 
 
-create or replace function public.comptes_details()
+-- Le type de retour change (photo, identifiant Discord, liaison au bot) :
+-- PostgreSQL exige de supprimer la fonction avant de la recréer.
+drop function if exists public.comptes_details();
+
+create function public.comptes_details()
 returns table (
   id                 uuid,
   email              text,
@@ -30,7 +34,13 @@ returns table (
   discord_pseudo     text,
   derniere_connexion timestamptz,
   nom                text,
-  rang               text
+  rang               text,
+  discord_id         text,
+  avatar_url         text,        -- photo de profil Discord, si connue
+  photo_url          text,        -- photo du profil du site (repli)
+  bot_lie            boolean,     -- un jeton du bot valide existe pour ce compte
+  bot_admin          boolean,     -- administrateur Discord, vu par le bot
+  bot_taxes          boolean      -- rôle taxes, vu par le bot
 )
 language sql
 stable
@@ -43,24 +53,32 @@ as $$
     c.approuve,
     c.acces,
     c.created_at,
-    -- compte créé par la connexion par le bot (pas d'identité OAuth) : le
-    -- pseudo est posé dans les métadonnées à la création
-    coalesce(d.pseudo, u.raw_user_meta_data ->> 'user_name'),
+    -- Pseudo : l'identité OAuth Discord si elle existe ; sinon ce que la
+    -- connexion par le bot a posé dans les métadonnées ; sinon le pseudo
+    -- relevé lors de la dernière liaison au bot.
+    coalesce(d.pseudo, u.raw_user_meta_data ->> 'full_name', u.raw_user_meta_data ->> 'user_name', bs.username),
     u.last_sign_in_at,
     p.nom,
-    p.rang
+    p.rang,
+    coalesce(d.discord_id, u.raw_app_meta_data ->> 'discord_id', bs.discord_id),
+    coalesce(d.avatar_url, u.raw_user_meta_data ->> 'avatar_url'),
+    p.photo_url,
+    coalesce(bs.expires_at > now(), false),
+    coalesce(bs.is_admin, false),
+    coalesce(bs.is_taxes, false)
   from public.comptes c
-  left join auth.users     u on u.id = c.id
-  left join public.profils p on p.id = c.id
-  -- Le pseudo Discord : Discord range le nom affiché à plusieurs endroits
-  -- selon l'ancienneté du compte, on prend le premier disponible.
+  left join auth.users        u  on u.id = c.id
+  left join public.profils    p  on p.id = c.id
+  left join public.bot_sessions bs on bs.user_id = c.id
   left join lateral (
     select coalesce(
              i.identity_data -> 'custom_claims' ->> 'global_name',
              i.identity_data ->> 'full_name',
              i.identity_data ->> 'name',
              i.identity_data ->> 'user_name'
-           ) as pseudo
+           ) as pseudo,
+           coalesce(i.identity_data ->> 'provider_id', i.identity_data ->> 'sub') as discord_id,
+           i.identity_data ->> 'avatar_url' as avatar_url
       from auth.identities i
      where i.user_id = c.id
        and i.provider = 'discord'
@@ -77,7 +95,7 @@ revoke all on function public.comptes_details() from public, anon;
 grant execute on function public.comptes_details() to authenticated;
 
 comment on function public.comptes_details() is
-  'Liste enrichie des comptes (pseudo Discord, personnage, dates) — ne renvoie des lignes qu''à syne@live.fr.';
+  'Liste enrichie des comptes (photo et pseudo Discord, personnage, dates, liaison au bot) — ne renvoie des lignes qu''à syne@live.fr.';
 
 
 -- ============================================================================

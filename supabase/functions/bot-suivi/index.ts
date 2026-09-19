@@ -25,6 +25,8 @@
 //                     (= API_BASE_URL côté bot, ex. https://bot.exemple.fr)
 //    BOT_GUILD_ID     Identifiant du serveur Discord Famille Moni (à défaut,
 //                     DISCORD_GUILD_ID déjà présent est utilisé)
+//    DISCORD_BOT_TOKEN (optionnel, déjà posé pour les fonctions sync-discord-*) :
+//                     lit la photo et le nom affiché Discord pour le panel admin
 //    SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (fournis
 //    automatiquement par Supabase)
 //
@@ -52,6 +54,10 @@ const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const BOT_API_URL = (Deno.env.get("BOT_API_URL") ?? "").replace(/\/+$/, "");
 // BOT_GUILD_ID en priorité ; à défaut DISCORD_GUILD_ID, déjà posé pour le bot de présences (même serveur).
 const BOT_GUILD_ID = Deno.env.get("BOT_GUILD_ID") || Deno.env.get("DISCORD_GUILD_ID") || "";
+// Optionnel : le jeton du bot de présences du site (déjà utilisé par sync-discord-*).
+// Sert UNIQUEMENT à lire la photo et le nom affiché d'un compte Discord, pour
+// que le panel admin montre un visage plutôt qu'une adresse technique.
+const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN") ?? "";
 
 /** Délai maximal d'attente du bot — au-delà, on répond « indisponible » plutôt que de laisser le navigateur pendu. */
 const BOT_TIMEOUT_MS = 10_000;
@@ -185,6 +191,40 @@ async function trouverCompteParDiscord(admin: Admin, discordId: string): Promise
   return null;
 }
 
+/**
+ * Photo et nom affiché d'un compte Discord, lus auprès de Discord avec le
+ * jeton du bot de présences. Au mieux : sans jeton, ou si Discord ne répond
+ * pas, on renvoie `null` et rien ne bloque. Sans photo personnalisée, Discord
+ * attribue un des six avatars par défaut selon l'identifiant.
+ */
+async function profilDiscord(discordId: string): Promise<{ avatar_url: string; nom: string | null } | null> {
+  if (!DISCORD_BOT_TOKEN || !/^[0-9]{5,25}$/.test(discordId)) return null;
+  try {
+    const r = await fetch(`https://discord.com/api/v10/users/${discordId}`, {
+      headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) return null;
+    const u = await r.json() as { avatar?: string | null; global_name?: string | null; username?: string };
+    const avatar_url = u.avatar
+      ? `https://cdn.discordapp.com/avatars/${discordId}/${u.avatar}.png?size=128`
+      : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(discordId) >> 22n) % 6n)}.png`;
+    return { avatar_url, nom: u.global_name || u.username || null };
+  } catch {
+    return null;
+  }
+}
+
+/** Range photo et nom Discord dans les métadonnées du compte (purement décoratif : lu par le panel admin, jamais par une règle d'accès). */
+async function memoriserProfilDiscord(admin: Admin, user: Utilisateur, discordId: string, pseudo: string): Promise<void> {
+  const prof = await profilDiscord(discordId);
+  const meta = { ...(user.user_metadata ?? {}) };
+  const voulu = { user_name: pseudo, full_name: prof?.nom ?? meta.full_name ?? pseudo, ...(prof ? { avatar_url: prof.avatar_url } : {}) };
+  const change = Object.entries(voulu).some(([k, v]) => meta[k] !== v);
+  if (!change) return;
+  await admin.auth.admin.updateUserById(user.id, { user_metadata: { ...meta, ...voulu } });
+}
+
 /** Pose `app_metadata.discord_id` sur un compte qui ne l'a pas encore — pour qu'un compte créé par e-mail puis lié au bot soit ensuite retrouvé par `login`. */
 async function memoriserDiscordId(admin: Admin, user: Utilisateur, discordId: string): Promise<void> {
   if (user.app_metadata?.discord_id === discordId) return;
@@ -242,6 +282,7 @@ async function connexionParLeBot(admin: Admin, body: Record<string, unknown>, co
   } else {
     try { await memoriserDiscordId(admin, user, me.id); } catch { /* non bloquant */ }
   }
+  try { await memoriserProfilDiscord(admin, user, me.id, me.username); } catch { /* décoratif, non bloquant */ }
   if (!user.email) return refus(500, "site_error", "Ce compte n'a pas d'adresse : impossible d'ouvrir une session.", base);
 
   const expiresAt = expirationDuJeton(token) ?? new Date(Date.now() + 7 * 24 * 3600 * 1000);
@@ -357,6 +398,7 @@ Deno.serve(async (req: Request) => {
     if (expiresAt.getTime() <= Date.now()) return refus(401, "reconnect", "Ce jeton est déjà expiré.", base);
 
     await memoriserDiscordId(admin, user, me.id);
+    try { await memoriserProfilDiscord(admin, user, me.id, me.username); } catch { /* décoratif, non bloquant */ }
     const { error: upErr } = await admin.from("bot_sessions").upsert({
       user_id: user.id,
       discord_id: me.id,
