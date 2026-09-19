@@ -479,10 +479,25 @@
     else html += blocErr(stocks.reason);
     html += '</div>';
 
-    html += '<div class="bloc"><div class="bloc-t">Coffres <small>' + (S.me && S.me.isAdmin ? 'coffres normaux et administrateurs' : 'les coffres administrateurs sont réservés aux administrateurs') + '</small></div>';
+    // Coffres : une grille de tuiles régulières (deux colonnes sur téléphone), les
+    // coffres de la famille d'abord, ceux des administrateurs à part. Un second
+    // appui sur la tuile ouverte la referme.
+    html += '<div class="bloc"><div class="bloc-t">Coffres <small>' + (canaux.status === 'fulfilled' ? canauxL.length + ' coffre(s) suivis' : '') + '</small></div>';
     if (canaux.status === 'fulfilled') {
-      html += canauxL.length ? '<div class="sv-coffres">' + canauxL.map(function (c) { return '<button type="button" class="tx-filtre' + (F.coffre === c.channelId ? ' active' : '') + '" onclick="emBot.filtre(\'coffre\', \'' + esc(c.channelId) + '\')">' + (c.role === 'logs_coffres_admin' ? '🛡️ ' : '') + esc(c.label || ('Coffre ' + String(c.channelId).slice(-4))) + '</button>'; }).join('') + '</div><div id="stk-coffre">' + (F.coffre ? locked('Chargement…') : '<p class="hint">Choisis un coffre pour voir son contenu.</p>') + '</div>'
-        : locked('Aucun coffre suivi n\'est configuré côté bot.');
+      if (!canauxL.length) html += locked('Aucun coffre suivi n\'est configuré côté bot.');
+      else {
+        var normaux = canauxL.filter(function (c) { return c.role !== 'logs_coffres_admin'; }), admins = canauxL.filter(function (c) { return c.role === 'logs_coffres_admin'; });
+        var tuile = function (c) {
+          var lbl = c.label || ('Coffre ' + String(c.channelId).slice(-4)), adm = c.role === 'logs_coffres_admin';
+          return '<button type="button" class="cf-tuile' + (adm ? ' admin' : '') + (F.coffre === c.channelId ? ' active' : '') + '" data-coffre="' + esc(c.channelId) + '" aria-pressed="' + (F.coffre === c.channelId) + '" onclick="emBot.filtre(\'coffre\', \'' + esc(c.channelId) + '\')">'
+            + '<span class="cf-ico" aria-hidden="true">' + (adm ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 2.8v5.4c0 4.6-3 8-7.5 9.8-4.5-1.8-7.5-5.2-7.5-9.8V5.8z"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M7 3.5h10"/></svg>') + '</span>'
+            + '<span class="cf-nom">' + esc(lbl) + '</span></button>';
+        };
+        html += '<div class="cf-grille">' + normaux.map(tuile).join('') + '</div>';
+        if (admins.length) html += '<div class="cf-sep">Coffres administrateurs <small>visibles des administrateurs uniquement</small></div><div class="cf-grille">' + admins.map(tuile).join('') + '</div>';
+        else if (!(S.me && S.me.isAdmin)) html += '<p class="hint sv-note">Les coffres administrateurs ne sont visibles que des administrateurs ; leur contenu compte quand même dans le stock général.</p>';
+        html += '<div id="stk-coffre">' + (F.coffre ? locked('Chargement…') : '') + '</div>';
+      }
     } else html += blocErr(canaux.reason);
     html += '</div>';
 
@@ -524,13 +539,22 @@
     }), ['', '', 'num']) + '<p class="hint sv-note">' + rows.length + ' item(s).</p>';
   }
   async function chargerCoffre(canauxL) {
-    var el = $('stk-coffre'); if (!el || !F.coffre) return;
+    var el = $('stk-coffre'); if (!el) return;
+    if (!F.coffre) { el.innerHTML = ''; return; }
     var c = canauxL.find(function (x) { return x.channelId === F.coffre; });
+    var nom = esc(c && c.label || 'Coffre'), adm = c && c.role === 'logs_coffres_admin';
+    var tete = function (sous) { return '<div class="cf-tete"><div class="cf-titre">' + nom + (adm ? ' ' + pill('coffre admin', 'warn') : '') + '<small>' + sous + '</small></div><button type="button" class="sv-lien" onclick="emBot.filtre(\'coffre\', \'\')">Fermer</button></div>'; };
+    el.innerHTML = '<div class="cf-contenu">' + tete('lecture…') + '</div>';
     try {
-      var r = await api('/api/stocks/' + F.coffre), rows = r.data || [];
-      el.innerHTML = '<p class="hint">' + esc(c && c.label || 'Coffre') + (c && c.role === 'logs_coffres_admin' ? ' ' + pill('coffre admin', 'warn') : '') + '</p>'
-        + (rows.length ? tableau(['Item', 'Quantité'], rows.map(function (s) { return ['<b>' + esc(nomItem(s)) + '</b>', fmtN(s.quantite)]; }), ['', 'num']) : locked('Aucun mouvement enregistré pour ce coffre.'));
-    } catch (e) { el.innerHTML = blocErr(e); }
+      var r = await api('/api/stocks/' + F.coffre);
+      if (!F.coffre || (c && c.channelId !== F.coffre)) return;
+      var rows = (r.data || []).filter(function (x) { return x.quantite > 0; }).sort(function (a, b) { return b.quantite - a.quantite; });
+      var vides = (r.data || []).length - rows.length;
+      el.innerHTML = '<div class="cf-contenu">' + tete(rows.length + ' item(s) en stock' + (vides ? ' · ' + vides + ' à zéro' : ''))
+        + (rows.length ? tableau(['Item', 'Groupe', 'Quantité'], rows.map(function (x) { return ['<b>' + esc(nomItem(x)) + '</b>' + (x.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(x.group || (x.vente ? 'Vente PNJ' : (x.laboLie ? 'Labo' : '—'))) + '</span>', fmtN(x.quantite)]; }), ['', '', 'num'])
+          : locked(vides ? 'Ce coffre est vide pour le moment.' : 'Aucun mouvement enregistré pour ce coffre.')) + '</div>';
+      if (window.innerWidth <= 860) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { el.innerHTML = '<div class="cf-contenu">' + tete('indisponible') + blocErr(e) + '</div>'; }
   }
   async function chargerHistorique(canauxL) {
     var el = $('stk-hist'); if (!el) return;
@@ -829,9 +853,15 @@
       chargerFicheMembre(F.membre);
     },
     filtre: function (cle, valeur) {
+      var dejaOuvert = cle === 'coffre' ? F.coffre : null;
       F[cle] = valeur;
       if (cle === 'stockQ') { var t = $('stk-table'), c = S.cache['/api/stocks?']; if (t && c && c.data) t.innerHTML = tableStocks(c.data, valeur); return; }
-      if (cle === 'coffre') { var lc = S.cache['/api/stocks/channels?']; chargerCoffre(lc && lc.data ? lc.data : []); document.querySelectorAll('.sv-coffres .tx-filtre').forEach(function (b) { b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + valeur + "'") >= 0); }); return; }
+      if (cle === 'coffre') {
+        if (valeur && dejaOuvert === valeur) F.coffre = '';   // second appui sur la même tuile : on referme
+        var lc = S.cache['/api/stocks/channels?']; chargerCoffre(lc && lc.data ? lc.data : []);
+        document.querySelectorAll('.cf-tuile').forEach(function (b) { var on = b.dataset.coffre === F.coffre; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+        return;
+      }
       if (cle === 'histItem' || cle === 'histCoffre' || cle === 'histLimit') { var lh = S.cache['/api/stocks/channels?']; chargerHistorique(lh && lh.data ? lh.data : []); return; }
       if (cle === 'armeQ') { clearTimeout(debounce.arme); debounce.arme = setTimeout(chargerArmes, 300); return; }
       if (cle === 'armeStatut') { document.querySelectorAll('#p-armurerie .tx-filtres .tx-filtre').forEach(function (b) { b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + valeur + "'") >= 0); }); chargerArmes(); return; }
