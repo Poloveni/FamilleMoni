@@ -9,21 +9,19 @@
 <link rel="icon" type="image/png" href="../assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../theme.css">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="espace.css">
 <script src="espace.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js" integrity="sha512-TelkP3PCMJv+viMWynjKcvLsQzx6dJHvIGhfqzFtZKgAjKM1YPqcwzzDEoTc/BHjf43PcPzTQOjuTr4YdE8lNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body class="espace-body">
-<div class="grain" aria-hidden="true"></div>
-<script src="espace-bg.js" defer></script>
 
 <header class="nav is-scrolled">
   <a class="nav__brand" href="../"><img src="../assets/logo.png" alt="" width="40" height="40"><span>{{nom}}</span></a>
   <nav class="nav__links espace-nav">
     <a href="profil.html">Mon profil</a>
-    <a href="membres.html">La Famille</a>
+    <a href="membres.html">Membres</a>
     <a href="classement.html">Classement</a>
     <a href="chat.html" id="chatLink">Le Salon<span class="nav__badge" id="chatBadge" hidden></span></a>
     <a href="galerie.html">Galerie</a>
@@ -54,7 +52,7 @@
   <section class="admin-block" id="ranksBlock" hidden>
     <div class="hier-head">
       <h3 class="admin-block__title">Grades</h3>
-      <button class="btn btn--gold btn--sm" type="button" id="newRank">+ Nouveau grade</button>
+      <button class="btn btn--accent btn--sm" type="button" id="newRank">+ Nouveau grade</button>
     </div>
     <p class="admin-block__hint">Du plus haut au plus bas. Glisse <span class="grade__handle-demo">⠿</span> pour changer l'ordre, clique sur un grade pour le modifier.</p>
     <ol class="grades" id="ranks"></ol>
@@ -89,7 +87,7 @@
   ];
   const rightsOf = r => r.canManage ? 'complet' : r.canAdmin ? 'gestion' : 'membre';
   const tags = r => [
-    r.canManage ? '<span class="tag tag--gold">Pouvoirs complets</span>' : r.canAdmin ? '<span class="tag tag--gold">Gestion</span>' : '',
+    r.canManage ? '<span class="tag tag--accent">Pouvoirs complets</span>' : r.canAdmin ? '<span class="tag tag--accent">Gestion</span>' : '',
     r.isDefault ? '<span class="tag">Nouveaux comptes</span>' : '',
     r.featured ? '<span class="tag">Mis en avant</span>' : '',
     r.discordRoleId ? '<span class="tag">Rôle Discord</span>' : '',
@@ -111,7 +109,7 @@
 
   async function editRank(r) {
     const f = await espaceForm([
-      { name: 'label', label: 'Nom du grade', required: true, value: r?.label, placeholder: 'Ex : Capitán', half: true },
+      { name: 'label', label: 'Nom du grade', required: true, value: r?.label, placeholder: 'Ex : Capitaine', half: true },
       { name: 'color', label: 'Couleur', type: 'color', value: r?.color, half: true },
       { name: 'rights', label: 'Droits', type: 'radio', options: RIGHTS, value: r ? rightsOf(r) : 'membre' },
       { name: 'isDefault', type: 'checkbox', value: r?.isDefault, text: 'Grade donné automatiquement aux nouveaux comptes' },

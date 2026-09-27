@@ -1,42 +1,60 @@
 # Modèle de site de famille RP — Roxwood Network
 
-Base réutilisable pour les sites de groupes RP : une **vitrine** publique (HTML / CSS / JS natif) et un **espace membre** complet (Express + PostgreSQL + connexion Discord), servis par le même serveur Node.
+Base réutilisable pour les sites de groupes RP : une **vitrine** publique et un **espace membre** complet (connexion Discord, gestion du groupe, liaison au bot Roxwood), servis par le même serveur Node (Express + PostgreSQL), déployés avec Docker derrière nginx.
 
-Ce que le modèle apporte, prêt à l'emploi :
-- **Espace membre** : connexion Discord réservée aux membres du serveur, validation des comptes, profils, liste des membres, grades paramétrables, organigramme public, galerie photo, salon de discussion en temps réel, et les pages reliées au bot Discord Roxwood (tableau de bord, classement, statistiques, taxes, armurerie).
-- **Vitrine** : hero avec blason 3D, histoire, valeurs, hiérarchie et galerie alimentées depuis l'espace membre, appel à rejoindre le Discord. Responsive, du téléphone à l'écran large.
-- **Signature** « Développé par Roxwood Network » en bas de page.
-- **Déploiement** : Docker (site, base, sauvegardes quotidiennes), nginx + HTTPS, plafonds de mémoire, plusieurs sites sur un même VPS. Guide pas à pas : [server/README.md](server/README.md).
+## Ce qui est propre à chaque site, ce qui est commun
+Le modèle sépare deux parties :
+
+| | **Personnalisable, site par site** | **Mutualisé, identique sur tous les sites** |
+|---|---|---|
+| Quoi | La **vitrine** (page d'accueil) et toute la **direction artistique** | La **partie gestion** : espace membre, serveur, base, déploiement |
+| Fichiers | `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js`, `hero3d.js` | `espace/`, `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/` |
+| Liberté | Totale : textes, sections, mise en page, couleurs, polices, visuels, effets | Aucune modification dans un site : les améliorations se font **dans le modèle**, puis chaque site les récupère |
+
+**La direction artistique s'applique aussi à la partie gestion**, sans la modifier techniquement. L'espace membre ne contient aucune couleur ni police en dur : il prend celles de `theme.css`, l'accent de `site.json`, le nom et les textes de `site.json`, le logo de `assets/`. Chaque site a donc un espace membre à ses couleurs, mais son code est le même partout.
+
+Ce que la partie gestion apporte, prête à l'emploi : connexion Discord réservée aux membres du serveur, validation des comptes, profils, liste des membres, grades et droits paramétrables, organigramme public, galerie photo, salon de discussion en temps réel, pages reliées au bot Discord Roxwood (tableau de bord, classement, statistiques, taxes, armurerie), sauvegardes quotidiennes, plusieurs sites sur un même VPS.
+
+En bas de chaque vitrine : la signature **« Développé par Roxwood Network »** (à garder).
 
 ## Créer un nouveau site
 1. **Nouveau dépôt** : sur GitHub, bouton **Use this template** → nom du dépôt du site. Le cloner sur le poste.
-2. **Identité** : remplir [`site.json`](site.json). Ces valeurs sont insérées dans toutes les pages au moment où le serveur les envoie ; aucune page de l'espace membre n'est à retoucher.
+2. **Identité** : remplir [`site.json`](site.json). Ces valeurs sont insérées dans toutes les pages (et `theme.css`) au moment où le serveur les envoie ; aucune page de l'espace membre n'est à retoucher.
 
    | Clé | Rôle | Exemple |
    |---|---|---|
-   | `nom` | nom du groupe (titres, barre de navigation, blason) | `Los Carteles` |
+   | `nom` | nom du groupe (titres, barre de navigation) | `Los Carteles` |
    | `espace` | nom de l'espace membre (menu, titres) | `Espace membre`, `Le QG` |
    | `groupe` | le groupe dans une phrase, en minuscule avec son article | `la famille`, `le cartel` |
    | `devise` | devise affichée sous le titre et en pied de page | `Loyauté · Respect · Honneur` |
    | `serveur` | serveur RP (sur-titre du hero) | `Flashback FA` |
-   | `discord` | lien d'invitation Discord | `https://discord.gg/…` |
+   | `couleur` | couleur d'accent (boutons, liens, liserés, blason 3D), format `#rrggbb` ; ses nuances sont calculées | `#e5484d` |
+   | `discord` | lien d'invitation Discord du groupe | `https://discord.gg/…` |
    | `description` | présentation courte (hero, moteurs de recherche, aperçus de lien) | |
 
-   Dans une page, `{{nom}}` insère la valeur, `{{Groupe}}` la même avec une majuscule (« Le cartel »). `{{url}}` vient de `BASE_URL`.
-3. **Visuels** (dans `assets/`, mêmes noms de fichiers) : `logo.png` (carré, fond transparent), `medallion.png` (face du blason 3D, carrée), `favicon.png`, `og-image.jpg` (1200 × 630, aperçu de partage). Ne pas toucher à `roxwood.png`.
-4. **Vitrine** : remplacer les textes marqués « Texte à remplacer » dans [`index.html`](index.html) (histoire, valeurs, recrutement). Des styles prêts à l'emploi existent aussi dans `styles.css` pour un nuancier de couleurs (`.couleurs`), des cartes d'événements (`.evenements`) et un lexique (`.vocab`).
-5. **Couleurs et polices** : variables en tête de [`styles.css`](styles.css) (`:root`).
-6. **Déployer** : [server/README.md](server/README.md).
-
-Garder la signature Roxwood Network en bas de `index.html`.
+   Dans une page, `{{nom}}` insère la valeur, `{{Groupe}}` la même avec une majuscule (« Le cartel »), `{{url}}` l'adresse du site (`BASE_URL`). Le serveur refuse de démarrer si une valeur manque.
+3. **Direction artistique** : [`theme.css`](theme.css) regroupe les fonds, les textes, les polices (et leur import) et la largeur du contenu ; il s'applique à tout le site, espace membre compris. Pour aller plus loin sur la vitrine : [`styles.css`](styles.css) (en gardant les noms de classes de la navigation, des boutons et du pied de page, partagés avec l'espace membre) et [`hero3d.js`](hero3d.js) (blason 3D, à retirer si inutile).
+4. **Visuels** (dans `assets/`, mêmes noms de fichiers) : `logo.png` (carré, fond transparent), `medallion.png` (face du blason 3D, carrée), `favicon.png`, `og-image.jpg` (1200 × 630, aperçu de partage). Ne pas toucher à `roxwood.png`.
+5. **Vitrine** : [`index.html`](index.html) est un point de départ — remplacer les textes marqués « Texte à remplacer », ajouter, retirer ou réordonner les sections librement. Des styles prêts à l'emploi existent dans `styles.css` pour un nuancier de couleurs (`.couleurs`), des cartes d'événements (`.evenements`) et un lexique (`.vocab`). Deux sections se remplissent seules depuis l'espace membre et restent masquées si vides : la hiérarchie (`org.js`) et la galerie (`galerie.js`).
+6. **Photos d'exemple** : les six images de `assets/exemples/` s'affichent dans la galerie de l'accueil tant qu'aucune vraie photo n'est publiée (fichiers du projet, jamais envoyés au stockage). Pour ne jamais les montrer : vider la liste `EXEMPLES` de `galerie.js` et supprimer le dossier.
+7. **Déployer** : [server/README.md](server/README.md).
 
 ### Récupérer plus tard les améliorations du modèle
-Le code commun (serveur, espace membre, scripts) ne dépend que de `site.json` : les correctifs du modèle se reprennent donc sans conflit dans un site existant.
+La partie gestion étant identique partout, un correctif fait dans le modèle se reprend dans chaque site :
 ```bash
 git remote add modele https://github.com/poulpizar01/roxwood-network-site-famille-template.git   # une seule fois
 git fetch modele && git merge modele/main --allow-unrelated-histories                            # --allow-… : la première fois seulement
 ```
-Les conflits éventuels ne portent que sur ce que le site a personnalisé (`index.html`, `styles.css`, `site.json`, `assets/`) : garder la version du site.
+Les conflits éventuels ne portent que sur les fichiers personnalisables (`site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`…) : y garder la version du site. Un site qui a modifié un fichier mutualisé perd cette garantie : corriger plutôt dans le modèle.
+
+## Documentation
+| Sujet | Où |
+|---|---|
+| Déployer sur un VPS, mettre à jour, sauvegarder, revenir en arrière, application Discord | [server/README.md](server/README.md) |
+| nginx : HTTPS, rôle de chaque réglage, plusieurs sites, dépannage | [docs/nginx.md](docs/nginx.md) |
+| Stockage des photos (disque ou CDN), contrat attendu du service | [docs/stockage.md](docs/stockage.md) |
+| API du site (routes, droits, limites) et API du bot Discord relayée | [docs/api.md](docs/api.md) |
+| Consignes pour Claude Code sur ce dépôt | [CLAUDE.md](CLAUDE.md) |
 
 ## Développement
 Prérequis : Docker Desktop.
@@ -44,16 +62,17 @@ Prérequis : Docker Desktop.
 docker compose up          # http://localhost:3000  ·  espace membre : http://localhost:3000/espace/
 ```
 - Connexion sans Discord (bouton de connexion → compte « Dev local » avec tous les droits).
-- Pages, CSS, JS et `site.json` : rafraîchir le navigateur suffit. Serveur (`server/src`) : `docker compose restart app`.
+- Pages, CSS, JS et `site.json` : rafraîchir le navigateur suffit (en dev, rien n'est mis en cache). Serveur (`server/src`) : `docker compose restart app`.
 - Photos de la galerie écrites dans `uploads/` (ignoré par git). Base dans un volume Docker (`docker compose down -v` la remet à zéro).
 - Base : après une modification de `server/prisma/schema.prisma`, `docker compose exec app npx prisma migrate dev --name <description>`, et **committer le dossier de migration créé** : c'est lui que la prod applique au démarrage.
-- Tester avec le bot Discord : créer un `.env` à la racine (ignoré par git) contenant **uniquement** `BOT_API_URL`, `DISCORD_GUILD_ID` et `DEV_DISCORD_ID` (ton ID Discord, pour que le compte de dev puisse se connecter au bot), puis `docker compose up -d` — et déclarer `http://localhost:3000/espace/bot-callback.html` comme site externe du bot sur ce serveur Discord. Ne pas copier `.env.example` en dev : sa ligne `COMPOSE_FILE` désactive les réglages de dev. Attention, le bot ne garde qu'un site externe par serveur Discord : tester sur un serveur Discord de test, pas celui de la prod (voir [server/README.md](server/README.md#bot-discord)).
+- Tester avec le bot Discord : créer un `.env` à la racine (ignoré par git) contenant **uniquement** `BOT_API_URL`, `DISCORD_GUILD_ID` et `DEV_DISCORD_ID` (ton ID Discord, pour que le compte de dev puisse se connecter au bot), puis `docker compose up -d` — et déclarer `http://localhost:3000/espace/bot-callback.html` comme site externe du bot, **sur un serveur Discord de test** (le bot ne garde qu'un site externe par serveur : voir [docs/api.md](docs/api.md)). Ne pas copier `.env.example` en dev : sa ligne `COMPOSE_FILE` désactive les réglages de dev.
 - Deux sites en dev en même temps : ils utilisent tous deux le port 3000 ; arrêter l'un (`docker compose stop`) avant de lancer l'autre.
 
 ## Organisation
-- `site.json` — identité du site (voir plus haut)
-- `index.html` — vitrine (blason 3D `hero3d.js`, organigramme `org.js`, galerie `galerie.js`, `main.js`) ; `404.html`
-- `styles.css` — direction artistique (couleurs et polices en variables) ; `assets/` — logo, médaillon, favicon, image de partage, logo Roxwood
+- `site.json` — identité du site ; `theme.css` — couleurs et polices du site
+- `index.html`, `styles.css` — vitrine (blason 3D `hero3d.js`, organigramme `org.js`, galerie `galerie.js`, `main.js`) ; `404.html`
+- `assets/` — logo, médaillon, favicon, image de partage, logo Roxwood, photos d'exemple
 - `espace/` — pages de l'espace membre (`espace.js` et `espace.css` partagés)
-- `server/` — serveur (`src/`, dont `site.ts` qui insère `site.json` dans les pages), schéma et migrations de la base (`prisma/`), déploiement (`deploy/`)
+- `server/` — serveur (`src/`, dont `site.ts` qui insère `site.json` dans les pages), schéma et migrations de la base (`prisma/`), configuration nginx (`deploy/`)
+- `docs/` — nginx, stockage des photos, API
 - `compose.yaml` — site, base et sauvegardes (dev et prod) ; `compose.override.yaml` — réglages de dev uniquement

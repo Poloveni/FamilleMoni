@@ -42,7 +42,8 @@ app.use(auth, members, hierarchy, gallery, chat, bot);
 // Les pages (.html, .txt, .xml) passent par site.ts, qui y insère l'identité du site (site.json).
 const statics: Parameters<typeof express.static>[1] = { index: false, dotfiles: 'ignore' };
 app.use('/espace', pages(join(config.root, 'espace')), express.static(join(config.root, 'espace'), statics));
-app.use('/assets', express.static(join(config.root, 'assets'), { dotfiles: 'ignore', maxAge: '7d' }));
+// images gardées 7 jours par les navigateurs en production ; en dev, toujours revalidées (un visuel changé s'affiche aussitôt)
+app.use('/assets', express.static(join(config.root, 'assets'), { dotfiles: 'ignore', maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));
 const rootPages = pages(config.root), rootFiles = express.static(config.root, statics);
 app.use((req, res, next) => {
   if (!/^\/([\w-]+(\.(html|css|js|txt|xml))?)?$/.test(req.path)) return next();

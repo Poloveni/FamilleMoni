@@ -70,8 +70,14 @@
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.4 }).observe(grid);
   addEventListener('resize', arrows);
 
-  fetch('api/gallery?limit=48').then(r => r.ok ? r.json() : []).then(list => {
-    photos = list; if (!photos.length) return;
+  // photos d'exemple (fichiers du projet, assets/exemples/) : affichées tant qu'aucune vraie photo n'est publiée.
+  // Pour ne jamais les montrer, vider cette liste (et supprimer le dossier).
+  const EXEMPLES = [[1, 1600, 900], [2, 1600, 900], [3, 1200, 1200], [4, 1600, 900], [5, 1000, 1400], [6, 1600, 900]]
+    .map(([n, width, height]) => ({ url: `assets/exemples/exemple-${n}.jpg`, thumb: `assets/exemples/exemple-${n}.jpg`, width, height,
+      caption: 'Photo d’exemple', author: { displayName: 'Exemple', rankLabel: '' } }));
+
+  fetch('api/gallery?limit=48').then(r => r.ok ? r.json() : []).catch(() => []).then(list => {
+    photos = list.length ? list : EXEMPLES; if (!photos.length) return;
     // largeur d'après les proportions de la photo (bornées : ni bandeau trop fin, ni panorama géant)
     const ratio = p => Math.min(1.9, Math.max(0.6, p.width / p.height || 1)).toFixed(3);
     grid.innerHTML = photos.map((p, i) => `

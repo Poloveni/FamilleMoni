@@ -2,6 +2,8 @@
 
 Express + PostgreSQL + Discord OAuth. Sert aussi le site vitrine (racine du dépôt). Pour créer un site à partir du modèle et pour le développement, voir le [README de la racine](../README.md).
 
+Documentation détaillée : [nginx](../docs/nginx.md) · [stockage des photos (CDN)](../docs/stockage.md) · [API du site et du bot](../docs/api.md).
+
 ## Production
 Tout tourne dans Docker, avec le même [`compose.yaml`](../compose.yaml) qu'en dev (site + base + sauvegardes). Le site n'écoute que sur `127.0.0.1:<HOST_PORT>` ; **nginx**, sur la machine, l'expose en HTTPS.
 
@@ -44,7 +46,7 @@ sudo ln -s /etc/nginx/sites-available/<SITE_ID> /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d <domaine>                      # certificat + redirection http → https, renouvelé automatiquement
 ```
-**Ne pas tester la connexion avant certbot** : avec `BASE_URL` en `https://`, le cookie de session n'est envoyé qu'en HTTPS, la connexion Discord échoue donc en `http://`.
+**Ne pas tester la connexion avant certbot** : avec `BASE_URL` en `https://`, le cookie de session n'est envoyé qu'en HTTPS, la connexion Discord échoue donc en `http://`. Rôle de chaque réglage nginx, plusieurs sites, dépannage : [docs/nginx.md](../docs/nginx.md).
 
 ### 5. Première connexion
 La base de prod démarre **vide** (rien n'est repris du dev). Le **propriétaire du serveur Discord** se connecte le premier : il est validé d'office avec tous les droits et crée les grades dans l'espace membre → Gestion → Hiérarchie. Les autres membres qui se connectent attendent ensuite sa validation.
@@ -57,7 +59,7 @@ Le domaine n'est écrit nulle part dans les fichiers : `robots.txt`, `sitemap.xm
 - Mise à jour après un push sur `main` : `git pull && docker compose up -d --build` (les nouvelles migrations sont appliquées au démarrage), puis `docker image prune -f` pour effacer les anciennes images.
 - Changer la configuration : modifier `.env`, puis `docker compose up -d`
 - Logs : `docker logs -f <SITE_ID>-app` (limités à 3 × 10 Mo par service, voir `compose.yaml`)
-- Mémoire et processeur : chaque conteneur a un plafond (site 768 Mo et 1 processeur, base 512 Mo et 1 processeur). `docker stats` montre la consommation réelle ; pour les ajuster, décommenter `APP_MEMORY`, `DB_MEMORY`… dans `.env`, puis `docker compose up -d`.
+- Mémoire et processeur : chaque conteneur a un plafond (site 512 Mo et 1 processeur, base 256 Mo et 1 processeur, sauvegardes 128 Mo). `docker stats` montre la consommation réelle ; pour les ajuster, décommenter `APP_MEMORY`, `DB_MEMORY`… dans `.env`, puis `docker compose up -d`.
 - État : `docker compose ps`
 
 Le `.env` contient `COMPOSE_FILE=compose.yaml` : les commandes ci-dessus ignorent ainsi les réglages de dev (`compose.override.yaml`).
@@ -82,7 +84,7 @@ Le service `backup` (dans `compose.yaml`) sauvegarde la base au démarrage puis 
 - Ces copies restent sur la même machine : elles protègent des erreurs de manipulation, pas de la perte du serveur (pour ça : les sauvegardes de l'hébergeur).
 
 ### Bot Discord
-Géré à part ([roxwood-network-famille](https://github.com/poulpizar01/roxwood-network-famille)). L'espace membre lit ses données via son **API REST, en lecture seule** : rien n'est écrit dans le bot ni stocké côté site.
+Géré à part ([roxwood-network-famille](https://github.com/poulpizar01/roxwood-network-famille)). Détail de la liaison, des rubriques lues, du cache et des limites : [docs/api.md](../docs/api.md#api-du-bot-discord-relayée). L'espace membre lit ses données via son **API REST, en lecture seule** : rien n'est écrit dans le bot ni stocké côté site.
 - `.env` : `BOT_API_URL` = URL publique de l'API du bot (vide = pages liées au bot désactivées).
 - Discord : un admin du serveur déclare le site comme site externe du bot : `/config site-externe set url:https://<domaine>/espace/bot-callback.html`.
 - **Une seule URL par serveur Discord** : le bot renvoie chaque connexion vers le dernier site externe déclaré. Déclarer `http://localhost:3000/…` pour tester en dev coupe la connexion au bot en prod (et inversement). Tester le bot en dev sur un **serveur Discord de test**, ou redéclarer l'URL de prod juste après.
@@ -99,6 +101,6 @@ Une par site.
 
 ## Images (galerie)
 - **Dev** : les photos sont écrites dans `uploads/` à la racine du dépôt, sur le poste.
-- **Prod** : avec `STORAGE_URL` et `STORAGE_TOKEN`, elles partent sur le service de stockage (CDN) sous le préfixe `STORAGE_PREFIX` (un par site) et la base garde leur URL publique. Sans eux, elles restent sur le serveur (volume Docker `uploads` du site).
+- **Prod** : avec `STORAGE_URL` et `STORAGE_TOKEN`, elles partent sur le service de stockage (CDN) sous le préfixe `STORAGE_PREFIX` (un par site) et la base garde leur URL publique. Sans eux, elles restent sur le serveur (volume Docker `uploads` du site). Fonctionnement complet et contrat attendu du service : [docs/stockage.md](../docs/stockage.md).
 
 Toutes les variables : [`.env.example`](../.env.example).

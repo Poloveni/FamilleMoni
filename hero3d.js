@@ -21,10 +21,14 @@
   faceTex.encoding = THREE.sRGBEncoding;
   faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
-  // ---- medallion
+  // couleur d'accent du site (site.json → --accent dans styles.css) : liseré, lumières, particules
+  const ACCENT = new THREE.Color((getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#e5484d').trim());
+  const rgba = a => `rgba(${Math.round(ACCENT.r * 255)},${Math.round(ACCENT.g * 255)},${Math.round(ACCENT.b * 255)},${a})`;
+
+  // ---- medallion : métal acier, liseré à la couleur d'accent
   const R = 1.75, T = 0.16, SEG = 128;
-  const bronze = new THREE.MeshStandardMaterial({ color: 0x9a7440, metalness: 0.95, roughness: 0.32 });
-  const faceMat = new THREE.MeshStandardMaterial({ map: faceTex, metalness: 0.55, roughness: 0.45, emissive: 0x2a1d0c, emissiveMap: faceTex, emissiveIntensity: 0.55 });
+  const bronze = new THREE.MeshStandardMaterial({ color: 0x5b616b, metalness: 0.95, roughness: 0.32 });
+  const faceMat = new THREE.MeshStandardMaterial({ map: faceTex, metalness: 0.55, roughness: 0.45, emissive: 0x111318, emissiveMap: faceTex, emissiveIntensity: 0.55 });
 
   const coin = new THREE.Group();
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(R, R, T, SEG, 1, true), bronze);
@@ -32,9 +36,9 @@
   coin.add(disc);
   const front = new THREE.Mesh(new THREE.CircleGeometry(R, SEG), faceMat); front.position.z = T / 2; coin.add(front);
   const back = new THREE.Mesh(new THREE.CircleGeometry(R, SEG), faceMat); back.position.z = -T / 2; back.rotation.y = Math.PI; coin.add(back);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.075, 24, SEG), new THREE.MeshStandardMaterial({ color: 0xc9a45c, metalness: 1, roughness: 0.22 }));
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.075, 24, SEG), new THREE.MeshStandardMaterial({ color: ACCENT, metalness: 1, roughness: 0.22 }));
   coin.add(rim);
-  const reeds = new THREE.InstancedMesh(new THREE.BoxGeometry(0.035, T * 1.05, 0.06), new THREE.MeshStandardMaterial({ color: 0x6b4f24, metalness: 1, roughness: 0.4 }), 160);
+  const reeds = new THREE.InstancedMesh(new THREE.BoxGeometry(0.035, T * 1.05, 0.06), new THREE.MeshStandardMaterial({ color: 0x3a3f47, metalness: 1, roughness: 0.4 }), 160);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3(1, 1, 1);
   for (let i = 0; i < 160; i++) {
     const a = i / 160 * Math.PI * 2;
@@ -46,23 +50,23 @@
   scene.add(coin);
 
   // ---- lights
-  scene.add(new THREE.AmbientLight(0x3a2c1a, 0.9));
-  const key = new THREE.SpotLight(0xffe2b0, 2.2, 30, 0.6, 0.6, 1); key.position.set(4, 5, 6); scene.add(key);
-  const rimL = new THREE.DirectionalLight(0xc9a45c, 1.4); rimL.position.set(-5, 2, -4); scene.add(rimL);
-  const fill = new THREE.PointLight(0x6d5030, 0.8, 20); fill.position.set(-3, -2, 4); scene.add(fill);
-  const glow = new THREE.PointLight(0xffc873, 0.0, 12); glow.position.set(0, 0, 2.5); scene.add(glow);
+  scene.add(new THREE.AmbientLight(0x2a2e36, 0.9));
+  const key = new THREE.SpotLight(0xffffff, 2.2, 30, 0.6, 0.6, 1); key.position.set(4, 5, 6); scene.add(key);
+  const rimL = new THREE.DirectionalLight(ACCENT, 1.4); rimL.position.set(-5, 2, -4); scene.add(rimL);
+  const fill = new THREE.PointLight(0x3b4250, 0.8, 20); fill.position.set(-3, -2, 4); scene.add(fill);
+  const glow = new THREE.PointLight(ACCENT, 0.0, 12); glow.position.set(0, 0, 2.5); scene.add(glow);
 
-  // ---- gold dust
+  // ---- particules
   const N = 700;
   const pos = new Float32Array(N * 3), spd = new Float32Array(N);
   for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - .5) * 16; pos[i * 3 + 1] = (Math.random() - .5) * 9; pos[i * 3 + 2] = (Math.random() - .5) * 8 - 1; spd[i] = 0.2 + Math.random() * 0.8; }
   const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const sprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,225,160,1)'); gr.addColorStop(.35, 'rgba(255,200,110,.6)'); gr.addColorStop(1, 'rgba(255,200,110,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
-  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ size: 0.07, map: sprite, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffd48a, opacity: 0.85 }));
+  const sprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.35, 'rgba(255,255,255,.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ size: 0.07, map: sprite, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: ACCENT, opacity: 0.6 }));
   scene.add(dust);
 
   // ---- halo : lueur douce derrière la pièce + deux traînées de lumière qui tournent autour
-  const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, 'rgba(255,215,140,.55)'); gr.addColorStop(.35, 'rgba(230,170,80,.22)'); gr.addColorStop(.7, 'rgba(160,110,40,.06)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c); })();
+  const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, rgba(.4)); gr.addColorStop(.35, rgba(.16)); gr.addColorStop(.7, rgba(.04)); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c); })();
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9 }));
   halo.scale.setScalar(R * 3.4);
   scene.add(halo);
@@ -84,7 +88,7 @@
       const a = i / RING_N * Math.PI * 2; let v = 0;
       for (const h of heads) { let d = (h - a) % (Math.PI * 2); if (d < 0) d += Math.PI * 2; v = Math.max(v, Math.exp(-d * 2.2)); }
       const g = 0.06 + v * 1.2;
-      col[i * 3] = g; col[i * 3 + 1] = g * 0.82; col[i * 3 + 2] = g * 0.45;
+      col[i * 3] = g * ACCENT.r; col[i * 3 + 1] = g * ACCENT.g; col[i * 3 + 2] = g * ACCENT.b;
     }
     ringGeo.attributes.color.needsUpdate = true;
   }

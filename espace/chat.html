@@ -9,20 +9,18 @@
 <link rel="icon" type="image/png" href="../assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../theme.css">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="espace.css">
 <script src="espace.js"></script>
 </head>
 <body class="espace-body espace-body--chat" data-fx="soft">
-<div class="grain" aria-hidden="true"></div>
-<script src="espace-bg.js" defer></script>
 
 <header class="nav is-scrolled">
   <a class="nav__brand" href="../"><img src="../assets/logo.png" alt="" width="40" height="40"><span>{{nom}}</span></a>
   <nav class="nav__links espace-nav">
     <a href="profil.html">Mon profil</a>
-    <a href="membres.html">La Famille</a>
+    <a href="membres.html">Membres</a>
     <a href="classement.html">Classement</a>
     <a href="chat.html" class="is-active" id="chatLink">Le Salon<span class="nav__badge" id="chatBadge" hidden></span></a>
     <a href="galerie.html">Galerie</a>
@@ -46,7 +44,7 @@
   <aside class="chat__side">
     <h2 class="chat__title">Le Salon</h2>
     <p class="chat__sub">La discussion de {{groupe}}</p>
-    <h3 class="chat__side-title">En ligne <span class="badge badge--gold" id="onlineCount">0</span></h3>
+    <h3 class="chat__side-title">En ligne <span class="badge badge--accent" id="onlineCount">0</span></h3>
     <ul class="chat__online" id="online"></ul>
     <p class="chat__rules">Ce qui se dit ici reste entre membres.</p>
   </aside>
@@ -58,7 +56,7 @@
     </div>
     <form class="chat__form" id="form" autocomplete="off">
       <textarea id="input" rows="1" maxlength="1000" placeholder="Écris un message… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)" required></textarea>
-      <button class="btn btn--gold" type="submit">Envoyer</button>
+      <button class="btn btn--accent" type="submit">Envoyer</button>
     </form>
   </section>
 </main>

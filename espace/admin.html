@@ -9,20 +9,18 @@
 <link rel="icon" type="image/png" href="../assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../theme.css">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="espace.css">
 <script src="espace.js"></script>
 </head>
 <body class="espace-body">
-<div class="grain" aria-hidden="true"></div>
-<script src="espace-bg.js" defer></script>
 
 <header class="nav is-scrolled">
   <a class="nav__brand" href="../"><img src="../assets/logo.png" alt="" width="40" height="40"><span>{{nom}}</span></a>
   <nav class="nav__links espace-nav">
     <a href="profil.html">Mon profil</a>
-    <a href="membres.html">La Famille</a>
+    <a href="membres.html">Membres</a>
     <a href="classement.html">Classement</a>
     <a href="chat.html" id="chatLink">Le Salon<span class="nav__badge" id="chatBadge" hidden></span></a>
     <a href="galerie.html">Galerie</a>
@@ -58,7 +56,7 @@
   </section>
 
   <section class="admin-block" id="membersBlock" hidden>
-    <h3 class="admin-block__title">Membres <span class="badge badge--gold" id="memberCount">0</span></h3>
+    <h3 class="admin-block__title">Membres <span class="badge badge--accent" id="memberCount">0</span></h3>
     <p class="admin-block__hint">Modifie le nom RP ou le grade puis <b>Enregistrer</b>. Le pseudo Discord ne se change pas ici, il vient de Discord.</p>
     <div class="table-wrap">
       <table class="admin-table members-table">
@@ -102,7 +100,7 @@
           <label>Grade${rankSelect(m, m.id)}</label>
         </div>
         <div class="pending-card__actions">
-          <button class="btn btn--gold" data-approve="${m.id}">Approuver</button>
+          <button class="btn btn--accent" data-approve="${m.id}">Approuver</button>
           <button class="btn btn--ghost btn--danger" data-reject="${m.id}">Refuser</button>
         </div>
       </article>`).join('') : '<p class="admin-empty">Personne en attente.</p>';
@@ -116,7 +114,7 @@
         <td><span class="status status--${m.status}">${STATUS[m.status]}</span></td>
         <td class="muted">${fmt(m.approvedAt || m.joinedAt)}</td>
         <td class="admin-actions">
-          <button class="btn btn--gold btn--sm" data-save="${m.id}">Enregistrer</button>
+          <button class="btn btn--accent btn--sm" data-save="${m.id}">Enregistrer</button>
           ${m.id !== me.id ? (m.status === 'rejected'
             ? `<button class="btn btn--ghost btn--sm" data-approve="${m.id}">Approuver</button>`
             : `<button class="btn btn--ghost btn--sm btn--danger" data-reject="${m.id}" title="Retirer l'accès">Exclure</button>`) : ''}

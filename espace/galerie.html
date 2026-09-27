@@ -9,20 +9,18 @@
 <link rel="icon" type="image/png" href="../assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../theme.css">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="espace.css">
 <script src="espace.js"></script>
 </head>
 <body class="espace-body">
-<div class="grain" aria-hidden="true"></div>
-<script src="espace-bg.js" defer></script>
 
 <header class="nav is-scrolled">
   <a class="nav__brand" href="../"><img src="../assets/logo.png" alt="" width="40" height="40"><span>{{nom}}</span></a>
   <nav class="nav__links espace-nav">
     <a href="profil.html">Mon profil</a>
-    <a href="membres.html">La Famille</a>
+    <a href="membres.html">Membres</a>
     <a href="classement.html">Classement</a>
     <a href="chat.html" id="chatLink">Le Salon<span class="nav__badge" id="chatBadge" hidden></span></a>
     <a href="galerie.html" class="is-active">Galerie</a>
@@ -61,14 +59,14 @@
       </label>
       <div class="upload__side">
         <label>Légende <small>(optionnel)</small><input class="admin-input" id="caption" maxlength="200" placeholder="Ex : Réunion au QG"></label>
-        <button class="btn btn--gold" type="submit" id="send" disabled>Publier sur le site</button>
+        <button class="btn btn--accent" type="submit" id="send" disabled>Publier sur le site</button>
         <p class="admin-block__hint">La photo apparaît immédiatement dans la galerie publique, signée de ton nom RP. Tu peux la retirer à tout moment ; les responsables de la Gestion aussi.</p>
       </div>
     </form>
   </section>
 
   <section class="admin-block">
-    <h3 class="admin-block__title">Photos <span class="badge badge--gold" id="count">0</span></h3>
+    <h3 class="admin-block__title">Photos <span class="badge badge--accent" id="count">0</span></h3>
     <div class="gal-grid" id="grid"></div>
     <p class="admin-empty" id="empty" hidden>Aucune photo pour l'instant — sois le premier à en poster une.</p>
   </section>

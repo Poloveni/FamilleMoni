@@ -14,7 +14,7 @@ window.espaceConfirm = function (message, { title = 'Confirmer', ok = 'Confirmer
         <p class="modal__text"></p>
         <div class="modal__actions">
           <button class="btn btn--ghost" data-cancel></button>
-          <button class="btn ${danger ? 'btn--ghost btn--danger' : 'btn--gold'}" data-ok></button>
+          <button class="btn ${danger ? 'btn--ghost btn--danger' : 'btn--accent'}" data-ok></button>
         </div>
       </div>`;
     wrap.querySelector('.modal__title').textContent = title;
@@ -100,7 +100,7 @@ window.espaceForm = function (fields, { title = 'Saisie', text = '', ok = 'Valid
         <div class="modal__actions">
           ${del ? '<button class="btn btn--ghost btn--danger modal__del" type="button" data-del></button>' : ''}
           <button class="btn btn--ghost" type="button" data-cancel></button>
-          <button class="btn ${danger ? 'btn--ghost btn--danger' : 'btn--gold'}" type="submit" data-ok></button>
+          <button class="btn ${danger ? 'btn--ghost btn--danger' : 'btn--accent'}" type="submit" data-ok></button>
         </div>
       </form>`;
     wrap.querySelector('.modal__title').textContent = title;
@@ -114,7 +114,7 @@ window.espaceForm = function (fields, { title = 'Saisie', text = '', ok = 'Valid
       if (f.type === 'textarea') ctrl = `<textarea class="admin-input" name="${esc(f.name)}" rows="${f.rows || 3}" ${f.required ? 'required' : ''} placeholder="${esc(f.placeholder || '')}">${esc(f.value || '')}</textarea>`;
       else if (f.type === 'checkbox') ctrl = `<label class="check"><input type="checkbox" name="${esc(f.name)}" ${f.value ? 'checked' : ''}><span>${esc(f.text)}</span></label>`;
       else if (f.type === 'radio') ctrl = `<div class="choices">${f.options.map(o => `<label class="choice"><input type="radio" name="${esc(f.name)}" value="${esc(o.value)}" ${o.value === f.value ? 'checked' : ''}><span><b>${esc(o.label)}</b>${o.hint ? `<small>${esc(o.hint)}</small>` : ''}</span></label>`).join('')}</div>`;
-      else if (f.type === 'color') ctrl = `<input class="modal__color" type="color" name="${esc(f.name)}" value="${esc(f.value || '#c9a45c')}">`;
+      else if (f.type === 'color') ctrl = `<input class="modal__color" type="color" name="${esc(f.name)}" value="${esc(f.value || 'var(--accent)')}">`;
       else ctrl = `<input class="admin-input" type="text" name="${esc(f.name)}" value="${esc(f.value ?? '')}" ${f.required ? 'required' : ''} placeholder="${esc(f.placeholder || '')}" autocomplete="off">`;
       // zones de clic : seul le contrôle (et le titre des champs de saisie, relié par for/id) réagit ;
       // l'aide et l'espace autour ne font rien. Cases et choix portent leur propre <label>.
@@ -160,7 +160,7 @@ window.espaceInfo = function (title, rows) {
       <h3 class="modal__title" id="infoTitle">${esc(title)}</h3>
       <dl class="info">${rows.map((r, i) => `<div class="info__row"><dt>${esc(r.label)}</dt>
         <dd>${r.value ? `<span class="mono">${esc(r.value)}</span><button class="btn btn--ghost btn--sm" type="button" data-copy="${i}">Copier</button>` : '<span class="muted">—</span>'}</dd></div>`).join('')}</dl>
-      <div class="modal__actions"><button class="btn btn--gold" type="button" data-close>Fermer</button></div>
+      <div class="modal__actions"><button class="btn btn--accent" type="button" data-close>Fermer</button></div>
     </div>`;
   const close = () => { wrap.classList.remove('is-open'); setTimeout(() => wrap.remove(), 200); document.removeEventListener('keydown', onKey); };
   const onKey = e => { if (e.key === 'Escape') close(); };
@@ -199,7 +199,7 @@ window.espaceBot = {
     el.hidden = st.linked;
     if (!st.configured) el.innerHTML = '<p class="admin-empty">Le bot Discord n\'est pas relié au site.</p>';
     else if (!st.linked) el.innerHTML = `<div class="admin-empty bot-gate"><p>Pour voir les données du bot Discord, connecte ton compte au bot (une fois par semaine environ).</p>
-      <a class="btn btn--gold btn--sm" href="../auth/bot?next=${encodeURIComponent(location.pathname)}">Connecter mon compte au bot</a></div>`;
+      <a class="btn btn--accent btn--sm" href="../auth/bot?next=${encodeURIComponent(location.pathname)}">Connecter mon compte au bot</a></div>`;
     return st;
   },
   // message d'erreur lisible pour une lecture refusée
