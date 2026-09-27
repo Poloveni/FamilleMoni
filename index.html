@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Les {{…}} viennent de site.json (voir README) : ne pas les remplacer ici, remplir site.json. -->
+<title>{{nom}} — {{devise}}</title>
+<meta name="description" content="{{description}}">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<meta name="theme-color" content="#c9a45c">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{nom}}">
+<meta property="og:title" content="{{nom}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{url}}/">
+<meta property="og:image" content="{{url}}/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{nom}}">
+<meta name="twitter:description" content="{{description}}">
+<meta name="twitter:image" content="{{url}}/assets/og-image.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <a class="nav__brand" href="#top">
+    <img src="assets/logo.png" alt="" width="40" height="40">
+    <span>{{nom}}</span>
+  </a>
+  <button class="nav__burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  <nav class="nav__links" id="navLinks">
+    <a href="#histoire">Histoire</a>
+    <a href="#valeurs">Valeurs</a>
+    <a href="#hierarchie" id="navHierarchie" hidden>Hiérarchie</a>
+    <a href="#galerie" id="navGalerie" hidden>Galerie</a>
+    <a href="espace/">{{espace}}</a>
+    <a class="nav__cta" href="{{discord}}" target="_blank" rel="noopener">Discord</a>
+  </nav>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <canvas id="hero3d" aria-hidden="true"></canvas>
+  <div class="hero__skyline" aria-hidden="true"></div>
+  <div class="hero__content">
+    <p class="eyebrow">{{serveur}}</p>
+    <h1 class="hero__title"><span>{{nom}}</span></h1>
+    <p class="hero__motto">{{devise}}</p>
+    <p class="hero__lead">{{description}}</p>
+    <div class="hero__actions">
+      <a class="btn btn--gold" href="#histoire">Notre histoire</a>
+      <a class="btn btn--ghost" href="{{discord}}" target="_blank" rel="noopener">Rejoindre le Discord</a>
+    </div>
+  </div>
+  <div class="hero__hint" aria-hidden="true">Glisser le blason pour le tourner</div>
+  <a class="hero__scroll" href="#histoire" aria-label="Défiler"><span></span></a>
+</section>
+
+<!-- ============ BANDEAU (répété deux fois pour boucler sans à-coup) ============ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee__track">
+    <span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b><span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b>
+    <span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b><span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b>
+  </div>
+</div>
+
+<!-- ============ HISTOIRE — À REMPLACER ============ -->
+<section class="section" id="histoire">
+  <div class="wrap">
+    <div class="section__head reveal">
+      <span class="numeral">I</span>
+      <h2>Histoire</h2>
+      <p class="sub">D'où vient {{groupe}}</p>
+    </div>
+    <div class="histoire">
+      <div class="histoire__col reveal">
+        <h3>Les origines</h3>
+        <p>Texte à remplacer : où et comment le groupe est né, qui l'a fondé, ce qui a réuni ses premiers membres.</p>
+      </div>
+      <div class="histoire__col reveal">
+        <h3>L'ascension</h3>
+        <p>Texte à remplacer : les premières années, les épreuves traversées, la façon dont le groupe s'est fait un nom en ville.</p>
+      </div>
+      <div class="histoire__col reveal">
+        <h3>Aujourd'hui</h3>
+        <p>Texte à remplacer : ce que le groupe est devenu, ce qu'il cherche à bâtir, ce qui le distingue des autres.</p>
+      </div>
+    </div>
+    <blockquote class="quote reveal">
+      <p>« Une citation qui résume l'esprit du groupe — à remplacer. »</p>
+    </blockquote>
+  </div>
+</section>
+
+<!-- ============ VALEURS — À REMPLACER ============ -->
+<section class="section section--alt" id="valeurs">
+  <div class="wrap">
+    <div class="section__head reveal">
+      <span class="numeral">II</span>
+      <h2>Valeurs</h2>
+      <p class="sub">Ce qui fait tenir {{groupe}}</p>
+    </div>
+    <div class="valeurs">
+      <article class="card reveal">
+        <div class="card__num">01</div>
+        <h3>Loyauté</h3>
+        <p>Texte à remplacer : ce que cette valeur veut dire pour le groupe.</p>
+      </article>
+      <article class="card reveal">
+        <div class="card__num">02</div>
+        <h3>Respect</h3>
+        <p>Texte à remplacer : comment elle se vit au quotidien.</p>
+      </article>
+      <article class="card reveal">
+        <div class="card__num">03</div>
+        <h3>Parole</h3>
+        <p>Texte à remplacer : ce qu'on attend de chaque membre.</p>
+      </article>
+      <article class="card card--warn reveal">
+        <div class="card__num">☠</div>
+        <h3>Trahison</h3>
+        <p>Texte à remplacer : ce qui n'est jamais pardonné.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HIÉRARCHIE : remplie depuis l'espace membre (Gestion → Hiérarchie), masquée si vide ============ -->
+<section class="section" id="hierarchie" hidden>
+  <div class="wrap">
+    <div class="section__head reveal">
+      <span class="numeral">III</span>
+      <h2>Hiérarchie</h2>
+      <p class="sub">Chacun connaît sa place</p>
+    </div>
+    <div class="org" id="org"></div>
+  </div>
+</section>
+
+<!-- ============ GALERIE : photos postées depuis l'espace membre, masquée si vide ============ -->
+<section class="section section--alt" id="galerie" hidden>
+  <div class="wrap">
+    <div class="section__head reveal">
+      <span class="numeral">IV</span>
+      <h2>Galerie</h2>
+      <p class="sub">{{Groupe}} en images</p>
+    </div>
+    <div class="galerie">
+      <button class="galerie__nav galerie__nav--prev" id="galeriePrev" type="button" aria-label="Photos précédentes">‹</button>
+      <div class="galerie__track" id="galerieGrid" tabindex="0" aria-label="Photos du groupe"></div>
+      <button class="galerie__nav galerie__nav--next" id="galerieNext" type="button" aria-label="Photos suivantes">›</button>
+      <div class="galerie__progress" aria-hidden="true"><i class="galerie__bar"><b id="galerieBar"></b></i></div>
+    </div>
+  </div>
+</section>
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
+  <button class="lightbox__nav lightbox__nav--prev" id="lbPrev" aria-label="Précédente">‹</button>
+  <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+  <button class="lightbox__nav lightbox__nav--next" id="lbNext" aria-label="Suivante">›</button>
+</div>
+
+<!-- ============ REJOINDRE ============ -->
+<section class="section section--contact" id="rejoindre">
+  <div class="wrap">
+    <div class="contact reveal">
+      <img src="assets/logo.png" alt="Blason {{nom}}" class="contact__logo" width="220" height="220">
+      <h2>Rejoindre {{groupe}}</h2>
+      <p>Texte à remplacer : à qui s'adresse le recrutement, ce qu'on attend d'une recrue, comment se passe l'entrée.</p>
+      <a class="btn btn--gold btn--lg" href="{{discord}}" target="_blank" rel="noopener">Rejoindre le Discord</a>
+      <p class="contact__small">{{serveur}}</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <span>{{devise}}</span>
+  </div>
+</footer>
+<!-- signature commune aux sites Roxwood Network : à garder telle quelle -->
+<div class="signature">
+  <div class="sig-pastille">
+    <img src="assets/roxwood.png" alt="" width="20" height="20" loading="lazy" onerror="this.remove()">
+    <span class="sig-txt">Développé par <b>Roxwood Network</b></span>
+    <span class="sig-trait" aria-hidden="true"></span>
+    <span class="sig-actions">
+      <a href="https://roxwood-network.fbfa.fr/" target="_blank" rel="noopener">Site</a>
+      <a href="https://discord.gg/dZDfarP8zT" target="_blank" rel="noopener">Discord</a>
+    </span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="hero3d.js"></script>
+<script src="org.js"></script>
+<script src="galerie.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
