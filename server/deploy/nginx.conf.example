@@ -17,7 +17,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Le Salon (chat) : flux temps réel (SSE), ni mise en tampon ni coupure au bout de 60 s
+    # Le chat : flux temps réel (SSE), ni mise en tampon ni coupure au bout de 60 s
     location = /api/chat/stream {
         proxy_pass http://127.0.0.1:__PORT__;
         proxy_http_version 1.1;

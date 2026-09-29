@@ -24,7 +24,7 @@ Prérequis de certbot : le domaine pointe déjà sur le VPS (`dig +short <domain
 | `proxy_pass http://127.0.0.1:__PORT__` | Transmet la requête au conteneur du site. |
 | `Host`, `X-Real-IP`, `X-Forwarded-For` | Donnent au site le vrai domaine et la vraie adresse IP du visiteur (le site fait confiance à un seul proxy : `trust proxy 1`). Sans eux, les limites de requêtes compteraient tous les visiteurs comme un seul. |
 | `X-Forwarded-Proto` | Indique au site que le visiteur est en HTTPS. Indispensable : le cookie de session est marqué `Secure` et ne serait jamais envoyé sans cette information. |
-| `location = /api/chat/stream` | Le Salon reçoit les messages en direct par un flux (Server-Sent Events). `proxy_buffering off` les transmet immédiatement, `proxy_read_timeout 1h` évite une coupure toutes les 60 s, `Connection ''` garde la connexion ouverte. |
+| `location = /api/chat/stream` | Le chat reçoit les messages en direct par un flux (Server-Sent Events). `proxy_buffering off` les transmet immédiatement, `proxy_read_timeout 1h` évite une coupure toutes les 60 s, `Connection ''` garde la connexion ouverte. |
 
 Ne pas ajouter de cache nginx sur les pages : elles sont personnalisées par site et par session. Les images de `assets/` portent déjà leur propre durée de cache (7 jours).
 
@@ -37,7 +37,7 @@ Chaque site a son `SITE_ID`, son `HOST_PORT`, son domaine et son fichier dans `s
 | `502 Bad Gateway` | Le conteneur est arrêté ou redémarre : `docker compose ps`, `docker logs <SITE_ID>-app`. Ou `__PORT__` ≠ `HOST_PORT`. |
 | `413 Request Entity Too Large` à l'envoi d'une photo | `client_max_body_size` absent ou trop bas. |
 | Connexion Discord qui « ne tient pas » (retour à la page de connexion) | Site testé en `http://`, ou `X-Forwarded-Proto` absent. |
-| Le Salon ne reçoit plus les messages en direct | Bloc `location = /api/chat/stream` absent. |
+| Le chat ne reçoit plus les messages en direct | Bloc `location = /api/chat/stream` absent. |
 | Mauvais site affiché | `server_name` erroné, ou lien manquant dans `sites-enabled`. |
 
 Journaux nginx : `/var/log/nginx/access.log` et `/var/log/nginx/error.log`.

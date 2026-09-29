@@ -1,7 +1,7 @@
 # API
 
 Deux API distinctes :
-- **l'API du site** (ce dépôt) : ce que les pages appellent pour la connexion, les profils, les grades, la galerie, le Salon ;
+- **l'API du site** (ce dépôt) : ce que les pages appellent pour la connexion, les profils, les grades, la galerie, le chat ;
 - **l'API du bot Discord Roxwood** ([roxwood-network-famille](https://github.com/poulpizar01/roxwood-network-famille)), géré à part : stocks, quotas, paies, taxes, armurerie, ventes. Le site la **relaie en lecture seule** ; le navigateur ne lui parle jamais directement.
 
 ## API du site
@@ -34,7 +34,7 @@ Les droits se règlent par grade dans l'espace membre → Gestion → Hiérarchi
 | `GET /api/gallery?limit=` | public | Photos (60 par défaut, 200 maximum), des plus récentes aux plus anciennes |
 | `POST /api/gallery` (formulaire, champ `photo` + `caption`) | membre | Publier une photo (voir [stockage.md](stockage.md)) |
 | `DELETE /api/gallery/:id` | membre (auteur) ou gestion | Retirer une photo |
-| `GET`/`POST /api/chat/messages` · `DELETE /api/chat/messages/:id` | membre | Messages du Salon (supprimer : auteur ou gestion) |
+| `GET`/`POST /api/chat/messages` · `DELETE /api/chat/messages/:id` | membre | Messages du chat (supprimer : auteur ou gestion) |
 | `GET /api/chat/stream` | membre | Flux temps réel des messages (Server-Sent Events, voir [nginx.md](nginx.md)) |
 | `GET /api/chat/unread` · `POST /api/chat/read` · `GET /api/chat/mentions` | membre | Non lus, marquer comme lu, mentions `@` |
 | `GET /auth/bot` · `POST /api/bot/link` · `POST /api/bot/unlink` · `GET /api/bot/status` · `GET /api/bot/data/…` | membre | Liaison et lecture du bot (ci-dessous) |
@@ -45,7 +45,7 @@ Les droits se règlent par grade dans l'espace membre → Gestion → Hiérarchi
 | Toute l'API `/api` | 240 requêtes par minute et par membre (ou par adresse IP hors connexion) |
 | Connexion `/auth` | 30 tentatives par quart d'heure et par adresse IP |
 | Envoi de photos | 10 par membre toutes les 10 minutes |
-| Messages du Salon | 20 par minute et par membre |
+| Messages du chat | 20 par minute et par membre |
 | Lectures du bot | 150 par membre et par quart d'heure (les réponses servies depuis le cache ne comptent pas) |
 
 Au-delà : `429` avec un message lisible. Les en-têtes `RateLimit` et `RateLimit-Policy` indiquent le quota restant.

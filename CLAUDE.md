@@ -33,7 +33,7 @@ Notes de conventions et de pièges pour un agent Claude Code travaillant sur ce 
 
 ## Espace membre (mutualisé)
 
-- Pages dans `espace/` : `index` (connexion), `attente`, `profil`, `membres`, `galerie`, `chat` (Salon, flux SSE), `classement`, puis sous « Gestion » : `admin`, `tableau`, `stats`, `taxes`, `armurerie`, `organigramme` ; `bot-callback` pour la liaison au bot.
+- Pages dans `espace/` : `index` (connexion), `attente`, `profil`, `membres`, `galerie`, `chat` (flux SSE), `classement`, puis sous « Gestion » : `admin`, `tableau`, `stats`, `taxes`, `armurerie`, `organigramme` ; `bot-callback` pour la liaison au bot.
 - Droits par grade (espace membre → Gestion → Hiérarchie) : Membre / Gestion (`canAdmin`) / Pouvoirs complets (`canManage`). Le **propriétaire du serveur Discord** a toujours tout (`isOwner`, revérifié à chaque connexion). Gardes serveur : `member`, `admin`, `manager` dans `server/src/http.ts` ; toute route ajoutée en utilise une.
 - Détail des routes, droits et limites de requêtes : `docs/api.md`.
 
@@ -66,7 +66,7 @@ Notes de conventions et de pièges pour un agent Claude Code travaillant sur ce 
 
 ## Vérifier un changement visuel
 
-Le site doit rester propre de 360 px à l'écran large : aucun débordement horizontal, menu burger sous 1 180 px, hero empilé sous 1 000 px. Après un changement de mise en page, contrôler au minimum 375, 768, 1 024 et 1 280 px (vitrine, profil, admin, Salon), menu burger ouvert compris.
+Le site doit rester propre de 360 px à l'écran large : aucun débordement horizontal, menu burger sous 1 180 px, hero empilé sous 1 000 px. Après un changement de mise en page, contrôler au minimum 375, 768, 1 024 et 1 280 px (vitrine, profil, admin, chat), menu burger ouvert compris.
 
 ## Git
 

@@ -78,7 +78,7 @@ model OrgEntry {
   @@map("org_entries")
 }
 
-// Message du Salon
+// Message du chat
 model Message {
   id        Int       @id @default(autoincrement())
   memberId  Int       @map("member_id")
@@ -93,7 +93,7 @@ model Message {
   @@map("messages")
 }
 
-// Dernier message lu dans le Salon (badge « non lus »)
+// Dernier message lu dans le chat (badge « non lus »)
 model ChatRead {
   memberId   Int      @id @map("member_id")
   lastReadId Int      @default(0) @map("last_read_id")

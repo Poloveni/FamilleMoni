@@ -43,7 +43,7 @@ export const limits = {
   auth: limiter(15, 30, 'Trop de tentatives de connexion, réessaie dans quelques minutes.'),
   // envoi de photos (15 Mo max chacune, traitées en mémoire)
   upload: limiter(10, 10, 'Trop de photos envoyées d’un coup, réessaie dans quelques minutes.', byMember),
-  // messages du Salon
+  // messages du chat
   chat: limiter(1, 20, 'Tu envoies trop de messages, ralentis un peu.', byMember),
   // (lectures relayées au bot : limite définie dans routes/bot.ts, qui ne compte que les vrais appels au bot)
 };

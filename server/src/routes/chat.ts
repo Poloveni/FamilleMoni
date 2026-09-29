@@ -1,4 +1,4 @@
-// Le Salon : messages, flux temps réel (SSE), présence, non lus et mentions.
+// Chat : messages, flux temps réel (SSE), présence, non lus et mentions.
 import { Router, type Response } from 'express';
 import { prisma } from '../db.js';
 import type { Member, Message } from '../generated/prisma/client.js';
