@@ -7,7 +7,7 @@
 <title>{{nom}} — {{devise}}</title>
 <meta name="description" content="{{description}}">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<meta name="theme-color" content="var(--accent)">
+<meta name="theme-color" content="#0a0a0a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{{nom}}">
 <meta property="og:title" content="{{nom}}">
@@ -25,10 +25,11 @@
 <link rel="stylesheet" href="theme.css">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<!-- DA « Pellicule » : on suit le groupe comme un photographe en filature ; le défilement fait avancer le film,
+     de la prise de vue (nuit) au tirage (papier clair). Chaque chapitre = une étape de la photo. Voir styles.css. -->
+<body class="vitrine">
 
-
-<!-- ============ NAV ============ -->
+<!-- ============ NAV : menu plein écran typographique sur la vitrine ============ -->
 <header class="nav" id="nav">
   <a class="nav__brand" href="#top">
     <img src="assets/logo.png" alt="" width="40" height="40">
@@ -45,120 +46,127 @@
   </nav>
 </header>
 
-<!-- ============ HERO ============ -->
-<section class="hero" id="top">
-  <canvas id="hero3d" aria-hidden="true"></canvas>
-  <div class="hero__skyline" aria-hidden="true"></div>
-  <div class="hero__content">
-    <p class="eyebrow">{{serveur}}</p>
-    <h1 class="hero__title"><span>{{nom}}</span></h1>
-    <p class="hero__motto">{{devise}}</p>
-    <p class="hero__lead">{{description}}</p>
-    <div class="hero__actions">
-      <a class="btn btn--accent" href="#histoire">Notre histoire</a>
-      <a class="btn btn--ghost" href="{{discord}}" target="_blank" rel="noopener">Rejoindre le Discord</a>
-    </div>
+<!-- ============ BOBINE : index des chapitres, progression, heure de la filature (pellicule.js) ============ -->
+<aside class="bobine" aria-label="Chapitres">
+  <ol>
+    <li><a href="#top" data-ch="top"><b>00</b><span>Prise de vue</span></a></li>
+    <li><a href="#histoire" data-ch="histoire"><b>01</b><span>Filature</span></a></li>
+    <li><a href="#valeurs" data-ch="valeurs"><b>02</b><span>Planche contact</span></a></li>
+    <li hidden><a href="#hierarchie" data-ch="hierarchie"><b>03</b><span>Chambre noire</span></a></li>
+    <li hidden><a href="#galerie" data-ch="galerie"><b>04</b><span>Révélateur</span></a></li>
+    <li><a href="#rejoindre" data-ch="rejoindre"><b>05</b><span>Tirage</span></a></li>
+  </ol>
+  <p class="bobine__heure" aria-hidden="true"><span id="heure">22:00</span><span>P.<b id="pose">01</b></span></p>
+</aside>
+
+<main>
+<!-- ============ 00 · PRISE DE VUE : le sujet dans le viseur ============ -->
+<section class="ch ch--prise" id="top">
+  <!-- ce que voit le viseur : remplacer par une photo du groupe (paysage, de nuit de préférence) -->
+  <figure class="prise__photo" aria-hidden="true"><img src="assets/exemples/exemple-2.jpg" alt="" width="1600" height="900"></figure>
+  <div class="viseur" aria-hidden="true">
+    <i class="viseur__coin"></i><i class="viseur__coin"></i><i class="viseur__coin"></i><i class="viseur__coin"></i>
+    <i class="viseur__point"></i>
+    <p class="viseur__rec"><i class="pastille"></i>Rec <span id="timecode">00:00:00</span></p>
+    <p class="viseur__expo">f/1.4 · 1/60 s · ISO 3200</p>
   </div>
-  <div class="hero__hint" aria-hidden="true">Glisser le blason pour le tourner</div>
-  <a class="hero__scroll" href="#histoire" aria-label="Défiler"><span></span></a>
+  <p class="prise__sujet">Sujet — dossier 01-A<br><span>{{serveur}}</span></p>
+  <div class="prise__notes">
+    <p>{{description}}</p>
+    <p class="prise__devise">{{devise}}</p>
+    <a class="lien-fleche" href="#histoire">Suivre le sujet<i></i></a>
+    <a class="lien-fleche" href="{{discord}}" target="_blank" rel="noopener">Rejoindre le Discord<i></i></a>
+  </div>
+  <h1 class="prise__nom">{{nom}}</h1>
 </section>
 
-<!-- ============ BANDEAU (répété deux fois pour boucler sans à-coup) ============ -->
-<div class="marquee" aria-hidden="true">
-  <div class="marquee__track">
-    <span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b><span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b>
-    <span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b><span>{{devise}}</span><b>✦</b><span>{{nom}}</span><b>✦</b>
-  </div>
-</div>
-
-<!-- ============ HISTOIRE — À REMPLACER ============ -->
-<section class="section" id="histoire">
-  <div class="wrap">
-    <div class="section__head reveal">
-      <span class="numeral">I</span>
-      <h2>Histoire</h2>
-      <p class="sub">D'où vient {{groupe}}</p>
-    </div>
-    <div class="histoire">
-      <div class="histoire__col reveal">
-        <h3>Les origines</h3>
-        <p>Texte à remplacer : où et comment le groupe est né, qui l'a fondé, ce qui a réuni ses premiers membres.</p>
-      </div>
-      <div class="histoire__col reveal">
-        <h3>L'ascension</h3>
-        <p>Texte à remplacer : les premières années, les épreuves traversées, la façon dont le groupe s'est fait un nom en ville.</p>
-      </div>
-      <div class="histoire__col reveal">
-        <h3>Aujourd'hui</h3>
-        <p>Texte à remplacer : ce que le groupe est devenu, ce qu'il cherche à bâtir, ce qui le distingue des autres.</p>
-      </div>
-    </div>
-    <blockquote class="quote reveal">
-      <p>« Une citation qui résume l'esprit du groupe — à remplacer. »</p>
-    </blockquote>
+<!-- ============ 01 · FILATURE — À REMPLACER : scène épinglée, trois plans sur un panorama de nuit ============ -->
+<section class="ch ch--filature" id="histoire">
+  <div class="filature__scene">
+    <!-- image de la filature : remplacer par une photo du groupe (large, de nuit de préférence) -->
+    <figure class="panorama" aria-hidden="true"><img src="assets/exemples/exemple-4.jpg" alt="" width="1600" height="900"></figure>
+    <h2 class="filature__titre">Histoire</h2>
+    <p class="filature__sub">D'où vient {{groupe}}</p>
+    <article class="plan plan--1">
+      <p class="plan__tc">Plan 01 · 22:14</p>
+      <h3>Les origines</h3>
+      <!-- passage caviardé, découvert pendant le plan (ou au survol) : <span class="redact">…</span> -->
+      <p>Texte à remplacer : où et comment le groupe est né, <span class="redact">qui l'a fondé</span>, ce qui a réuni ses premiers membres.</p>
+    </article>
+    <article class="plan plan--2">
+      <p class="plan__tc">Plan 02 · 01:37</p>
+      <h3>L'ascension</h3>
+      <p>Texte à remplacer : les premières années, <span class="redact">les épreuves traversées</span>, la façon dont le groupe s'est fait un nom en ville.</p>
+    </article>
+    <article class="plan plan--3">
+      <p class="plan__tc">Plan 03 · 04:02</p>
+      <h3>Aujourd'hui</h3>
+      <p>Texte à remplacer : ce que le groupe est devenu, <span class="redact">ce qu'il cherche à bâtir</span>, ce qui le distingue des autres.</p>
+    </article>
   </div>
 </section>
 
-<!-- ============ VALEURS — À REMPLACER ============ -->
-<section class="section section--alt" id="valeurs">
-  <div class="wrap">
-    <div class="section__head reveal">
-      <span class="numeral">II</span>
-      <h2>Valeurs</h2>
-      <p class="sub">Ce qui fait tenir {{groupe}}</p>
-    </div>
-    <div class="valeurs">
-      <article class="card reveal">
-        <div class="card__num">01</div>
+<!-- citation : les mots s'impriment un à un (pellicule.js) -->
+<blockquote class="citation"><p id="citation">« Une citation qui résume l'esprit du groupe — à remplacer. »</p></blockquote>
+
+<!-- ============ 02 · PLANCHE CONTACT — À REMPLACER : une bande de film, négatif → positif au centre ============ -->
+<section class="ch ch--planche" id="valeurs">
+  <div class="planche__scene">
+    <div class="pellicule">
+      <article class="pose pose--titre">
+        <p class="pose__bord">Planche contact · 4 poses</p>
+        <h2>Valeurs</h2>
+        <p>Ce qui fait tenir {{groupe}}</p>
+      </article>
+      <article class="pose">
+        <p class="pose__bord">▸ 01A</p>
         <h3>Loyauté</h3>
         <p>Texte à remplacer : ce que cette valeur veut dire pour le groupe.</p>
       </article>
-      <article class="card reveal">
-        <div class="card__num">02</div>
+      <article class="pose">
+        <p class="pose__bord">▸ 02A</p>
         <h3>Respect</h3>
         <p>Texte à remplacer : comment elle se vit au quotidien.</p>
       </article>
-      <article class="card reveal">
-        <div class="card__num">03</div>
+      <article class="pose">
+        <p class="pose__bord">▸ 03A</p>
         <h3>Parole</h3>
         <p>Texte à remplacer : ce qu'on attend de chaque membre.</p>
       </article>
-      <article class="card card--warn reveal">
-        <div class="card__num">☠</div>
+      <article class="pose pose--proscrit">
+        <p class="pose__bord">▸ 04A — proscrit</p>
         <h3>Trahison</h3>
         <p>Texte à remplacer : ce qui n'est jamais pardonné.</p>
       </article>
     </div>
+    <!-- 02 → 03 : la lumière rouge s'allume sur la fin de la planche (styles.css) -->
+    <p class="planche__bascule" aria-hidden="true">Chambre noire · lumière inactinique</p>
   </div>
 </section>
 
-<!-- ============ HIÉRARCHIE : remplie depuis l'espace membre (Gestion → Hiérarchie), masquée si vide ============ -->
-<section class="section" id="hierarchie" hidden>
-  <div class="wrap">
-    <div class="section__head reveal">
-      <span class="numeral">III</span>
-      <h2>Hiérarchie</h2>
-      <p class="sub">Chacun connaît sa place</p>
+<!-- ============ 03 · CHAMBRE NOIRE : remplie depuis l'espace membre (Gestion → Hiérarchie), masquée si vide.
+     Les fiches viennent de org.js (mutualisé) ; pellicule.js trace les liens. ============ -->
+<section class="ch ch--chambre" id="hierarchie" hidden>
+  <h2 class="chambre__titre">Hiérarchie</h2>
+  <div class="chambre__contenu">
+    <p class="chambre__sub">Chacun connaît sa place — tirages en cours de révélation</p>
+    <div class="reseau">
+      <svg class="reseau__liens" id="orgLiens" aria-hidden="true"></svg>
+      <div class="org" id="org"></div>
     </div>
-    <div class="org" id="org"></div>
   </div>
 </section>
 
-<!-- ============ GALERIE : photos postées depuis l'espace membre, masquée si vide ============ -->
-<section class="section section--alt" id="galerie" hidden>
-  <div class="wrap">
-    <div class="section__head reveal">
-      <span class="numeral">IV</span>
-      <h2>Galerie</h2>
-      <p class="sub">{{Groupe}} en images</p>
-    </div>
-    <div class="galerie">
-      <button class="galerie__nav galerie__nav--prev" id="galeriePrev" type="button" aria-label="Photos précédentes">‹</button>
-      <div class="galerie__track" id="galerieGrid" tabindex="0" aria-label="Photos du groupe"></div>
-      <button class="galerie__nav galerie__nav--next" id="galerieNext" type="button" aria-label="Photos suivantes">›</button>
-      <div class="galerie__progress" aria-hidden="true"><i class="galerie__bar"><b id="galerieBar"></b></i></div>
-    </div>
-  </div>
+<!-- ============ 04 · TABLE LUMINEUSE : photos postées depuis l'espace membre (galerie.js), masquée si vide.
+     Les photos sont posées en négatifs ; sous la loupe (curseur), elles apparaissent en positif. Clic : le tirage en grand. ============ -->
+<section class="ch ch--table" id="galerie" hidden>
+  <header class="table__tete">
+    <h2 class="table__titre">Galerie</h2>
+    <p class="table__sub">04 — Table lumineuse · {{Groupe}} en images</p>
+    <p class="table__aide"><span class="table__aide-souris">Passer la loupe sur les négatifs · cliquer pour le tirage</span><span class="table__aide-doigt">Toucher un négatif pour le tirage</span></p>
+  </header>
+  <div class="table__planche" id="galerieGrid"></div>
+  <i class="loupe" id="loupe" aria-hidden="true"></i>
 </section>
 <div class="lightbox" id="lightbox" hidden>
   <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
@@ -167,41 +175,36 @@
   <button class="lightbox__nav lightbox__nav--next" id="lbNext" aria-label="Suivante">›</button>
 </div>
 
-<!-- ============ REJOINDRE ============ -->
-<section class="section section--contact" id="rejoindre">
-  <div class="wrap">
-    <div class="contact reveal">
-      <img src="assets/logo.png" alt="Blason {{nom}}" class="contact__logo" width="220" height="220">
-      <h2>Rejoindre {{groupe}}</h2>
-      <p>Texte à remplacer : à qui s'adresse le recrutement, ce qu'on attend d'une recrue, comment se passe l'entrée.</p>
-      <a class="btn btn--accent btn--lg" href="{{discord}}" target="_blank" rel="noopener">Rejoindre le Discord</a>
-      <p class="contact__small">{{serveur}}</p>
+<!-- ============ 05 · TIRAGE : le papier clair ============ -->
+<section class="ch ch--tirage" id="rejoindre">
+  <h2 class="tirage__titre">Rejoindre</h2>
+  <div class="tirage__bas">
+    <p class="tirage__groupe">{{groupe}}</p>
+    <p class="tirage__texte">Texte à remplacer : à qui s'adresse le recrutement, ce qu'on attend d'une recrue, comment se passe l'entrée.</p>
+    <a class="tirage__lien" href="{{discord}}" target="_blank" rel="noopener"><span>Rejoindre le Discord</span><i></i></a>
+    <p class="tirage__petit">Candidatures traitées sur le Discord · {{serveur}}</p>
+  </div>
+  <footer class="footer">
+    <span>Fin de la pellicule</span><span>{{devise}}</span>
+  </footer>
+  <!-- signature commune aux sites Roxwood Network : à garder telle quelle -->
+  <div class="signature">
+    <div class="sig-pastille">
+      <img src="assets/roxwood.png" alt="" width="20" height="20" loading="lazy" onerror="this.remove()">
+      <span class="sig-txt">Développé par <b>Roxwood Network</b></span>
+      <span class="sig-trait" aria-hidden="true"></span>
+      <span class="sig-actions">
+        <a href="https://roxwood-network.fbfa.fr/" target="_blank" rel="noopener">Site</a>
+        <a href="https://discord.gg/dZDfarP8zT" target="_blank" rel="noopener">Discord</a>
+      </span>
     </div>
   </div>
 </section>
+</main>
 
-<footer class="footer">
-  <div class="wrap">
-    <span>{{devise}}</span>
-  </div>
-</footer>
-<!-- signature commune aux sites Roxwood Network : à garder telle quelle -->
-<div class="signature">
-  <div class="sig-pastille">
-    <img src="assets/roxwood.png" alt="" width="20" height="20" loading="lazy" onerror="this.remove()">
-    <span class="sig-txt">Développé par <b>Roxwood Network</b></span>
-    <span class="sig-trait" aria-hidden="true"></span>
-    <span class="sig-actions">
-      <a href="https://roxwood-network.fbfa.fr/" target="_blank" rel="noopener">Site</a>
-      <a href="https://discord.gg/dZDfarP8zT" target="_blank" rel="noopener">Discord</a>
-    </span>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="hero3d.js"></script>
 <script src="org.js"></script>
 <script src="galerie.js"></script>
 <script src="main.js"></script>
+<script src="pellicule.js"></script>
 </body>
 </html>

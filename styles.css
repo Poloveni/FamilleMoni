@@ -1,13 +1,35 @@
 /* ==========================================================
    Styles de la VITRINE (index.html), libres pour chaque site.
    Couleurs et polices : theme.css. Attention : la barre de navigation, le menu burger,
-   les boutons (.btn), le pied de page et la signature sont aussi utilisés par l'espace membre ;
-   les modifier change aussi son apparence (garder les noms de classes).
+   les boutons (.btn), .eyebrow, .numeral, le pied de page et la signature sont aussi utilisés
+   par l'espace membre ; les modifier change aussi son apparence (garder les noms de classes).
+
+   DA « Pellicule » : on suit le groupe comme un photographe en filature, et le défilement fait avancer le film.
+   00 prise de vue (viseur) → 01 filature (scène épinglée) → 02 planche contact (film horizontal, négatif → positif)
+   → 03 chambre noire (lumière rouge, tirages qui se révèlent) → 04 révélateur (photos) → 05 tirage (papier clair).
+   Les animations liées au défilement sont en CSS natif (animation-timeline), regroupées en bas du fichier :
+   sans prise en charge, ou si le visiteur demande moins de mouvement, la page reste une lecture statique complète.
    ========================================================== */
+@property --r{syntax:'<number>';inherits:true;initial-value:1}
+/* fondus de lumière entre chapitres (03 → 04) : longueurs animables */
+@property --monte{syntax:'<length>';inherits:false;initial-value:0vh}
+@property --ombre{syntax:'<length>';inherits:false;initial-value:-55vh}
+:root{
+  /* silhouette des fiches de la hiérarchie (pas de photo dans l'organigramme ; data: autorisé par la CSP) */
+  --silhouette:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Ccircle cx='50' cy='44' r='21' fill='%23403c36'/%3E%3Cpath d='M10 120c0-30 18-48 40-48s40 18 40 48z' fill='%23403c36'/%3E%3C/svg%3E");
+  --ease:cubic-bezier(.2,.7,.1,1);
+  --ambre:#e0a24a;   /* impressions de bord de film */
+  /* lumière inactinique de la chambre noire : aussi celle qui s'allume à la fin de la planche contact (raccord sans couture) */
+  /* rouge uni : fin de la planche et début de la chambre sont identiques, le raccord ne se voit pas.
+     Le halo de la lampe vit à part, dans la chambre seulement (.ch--chambre::before) */
+  --rouge-chambre:color-mix(in srgb,var(--accent) 16%,#050101);
+  /* lumière blanche qui s'allume à la fin de la chambre = ton du haut de la table lumineuse (raccord sans couture) */
+  --lumiere-table:#eeebe4;   /* = papier du tirage (05) */
+}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden}
-/* barres de défilement aux couleurs de la DA (tout le site) : fines, curseur doré sur le noir du site ; standard + WebKit (Safari) */
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+/* barres de défilement aux couleurs de la DA (tout le site) : fines, curseur à l'accent ; standard + WebKit (Safari) */
 html{color-scheme:dark;background:var(--bg);scrollbar-color:var(--accent-dark) var(--bg)}
 html:hover{scrollbar-color:var(--accent) var(--bg)}
 html,body *{scrollbar-width:thin}
@@ -18,178 +40,316 @@ body *:hover{scrollbar-color:var(--accent) transparent}
 html::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent-light),var(--accent-dark));border:2px solid transparent;border-radius:8px;background-clip:padding-box}
 ::-webkit-scrollbar-thumb:hover{background:var(--accent);background-clip:padding-box}
+/* vitrine : pas de barre de défilement du navigateur, la bobine donne la progression et les chapitres
+   (l'espace membre garde la sienne) ; le défilement reste possible à la molette, au clavier et au doigt */
+html:has(body.vitrine){scrollbar-width:none}
+html:has(body.vitrine)::-webkit-scrollbar{display:none}
+::selection{background:var(--accent);color:#fff}
 img{max-width:100%;display:block}
 a{color:var(--accent);text-decoration:none}
 h1,h2,h3,h4{margin:0;font-weight:400}
 p{margin:0 0 1em}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 28px}
 
-/* ---------- NAV ---------- */
-.nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;
-  background:linear-gradient(to bottom,rgba(15,17,21,.92),rgba(15,17,21,0));transition:background .3s,backdrop-filter .3s}
-.nav.is-scrolled{background:rgba(15,17,21,.9);border-bottom:1px solid var(--line)}
+/* ---------- NAV (base commune : vitrine et espace membre) ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;
+  background:linear-gradient(to bottom,color-mix(in srgb,var(--bg) 85%,transparent),transparent);transition:background .3s,backdrop-filter .3s}
+.nav.is-scrolled{background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
 /* flou sur un calque à part : un backdrop-filter sur .nav elle-même piégerait le panneau du menu mobile (position:fixed) dans la barre */
 .nav::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
-.nav.is-scrolled::before{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.nav__brand{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:14px;color:var(--ink)}
-.nav__brand img{width:40px;height:40px;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 35%,transparent))}
+.nav.is-scrolled::before{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.nav__brand{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:var(--ink)}
+.nav__brand img{width:36px;height:36px}
 .nav__brand em{font-style:normal;color:var(--accent)}
-.nav__links{display:flex;gap:26px;align-items:center;font-family:var(--serif);font-size:12px;letter-spacing:.22em;text-transform:uppercase}
-.nav__links a{color:var(--ink2);position:relative;padding:4px 0}
-.nav__links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);transform:scaleX(0);transition:transform .3s;transform-origin:left}
-.nav__links a:hover{color:var(--accent-light)}
-.nav__links a:hover::after{transform:scaleX(1)}
-.nav__cta{border:1px solid var(--accent);padding:8px 16px!important;color:var(--accent)!important}
+.nav__links{display:flex;gap:28px;align-items:center;font-family:var(--serif);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.nav__links a{color:var(--ink2);position:relative;padding:4px 0;transition:color .25s}
+.nav__links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);transform:scaleX(0);transition:transform .35s var(--ease);transform-origin:right}
+.nav__links a:hover{color:var(--ink)}
+.nav__links a:hover::after{transform:scaleX(1);transform-origin:left}
+.nav__cta{border:1px solid var(--accent);padding:8px 16px!important;color:var(--ink)!important;transition:background .25s}
 .nav__cta::after{display:none}
-.nav__cta:hover{background:var(--accent);color:var(--bg)!important}
+.nav__cta:hover{background:var(--accent)}
 .nav__burger{display:none;background:none;border:0;width:36px;height:30px;cursor:pointer;flex-direction:column;justify-content:space-between;padding:4px;flex:none}
-.nav__burger span{display:block;height:2px;background:var(--accent);transition:.3s}
+.nav__burger span{display:block;height:2px;background:var(--ink);transition:.3s}
 
-/* ---------- BUTTONS ---------- */
-.btn{display:inline-block;background:none;color:var(--accent);font-family:var(--serif);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:15px 30px;border:1px solid var(--accent);transition:.3s;position:relative}
-.btn--accent{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-.btn--accent:hover{background:var(--accent-light);border-color:var(--accent-light)}
-.btn--ghost{color:var(--ink);border-color:rgba(255,255,255,.22)}
-.btn--ghost:hover{border-color:var(--ink)}
-.btn--lg{padding:18px 40px;font-size:13px}
+/* ---------- BUTTONS (base commune) ---------- */
+.btn{display:inline-block;background:none;color:var(--ink);font-family:var(--serif);font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:16px 28px;border:1px solid var(--accent);transition:background .3s,color .3s,border-color .3s;position:relative;cursor:pointer}
+.btn--accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--accent:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn--ghost{color:var(--ink);border-color:rgba(241,239,233,.25)}
+.btn--ghost:hover{border-color:var(--ink);background:rgba(241,239,233,.06)}
+.btn--lg{padding:19px 38px;font-size:13px}
+.eyebrow{font-family:var(--serif);font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+.numeral{display:inline-flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:500;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+.numeral::before{content:"";width:7px;height:7px;background:var(--accent)}
+.pastille{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pastille 1.4s steps(2) infinite}
+@keyframes pastille{50%{opacity:.15}}
 
-/* ---------- HERO ---------- */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;
-  background:radial-gradient(ellipse at 70% 40%,var(--bg3) 0%,var(--bg) 60%)}
-#hero3d{position:absolute;inset:0;width:100%;height:100%}
-.hero__skyline{position:absolute;left:0;right:0;bottom:0;height:34vh;pointer-events:none;opacity:.55;
-  background:linear-gradient(to top,var(--bg) 0%,rgba(15,17,21,.7) 40%,transparent 100%)}
-.hero__content{position:relative;z-index:2;text-align:left;padding:130px 28px 110px;max-width:var(--wrap);width:100%;margin:0 auto;pointer-events:none}
-.hero__content>*{max-width:640px}
-.hero__content .btn,.hero__content a{pointer-events:auto}
-.eyebrow{font-family:var(--serif);font-size:12px;letter-spacing:.38em;text-transform:uppercase;color:var(--accent);opacity:.85;margin-bottom:22px}
-.hero__title{font-family:var(--display);font-weight:700;font-size:clamp(52px,9vw,120px);line-height:.95;letter-spacing:.01em;text-transform:uppercase;color:var(--ink)}
-.hero__title span{color:var(--ink)}
-.hero__title::after{content:"";display:block;width:72px;height:4px;background:var(--accent);margin-top:24px}
-.hero__motto{font-family:var(--serif);font-size:clamp(13px,1.6vw,17px);letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin:26px 0 22px}
-.hero__motto i{font-style:normal;opacity:.5;margin:0 8px}
-.hero__lead{max-width:540px;margin:0 0 34px;color:var(--ink2);font-size:17px;font-style:normal}
-.hero__actions{display:flex;gap:16px;justify-content:flex-start;flex-wrap:wrap}
-.hero__hint{position:absolute;right:28px;bottom:28px;font-family:var(--serif);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent-dark)}
-.hero__scroll{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:22px;height:36px;border:1px solid var(--accent-dark);border-radius:12px}
-.hero__scroll span{position:absolute;left:50%;top:7px;width:3px;height:7px;margin-left:-1.5px;background:var(--accent);border-radius:2px;animation:scrollDot 1.8s infinite}
-@keyframes scrollDot{0%{transform:translateY(0);opacity:1}70%{transform:translateY(14px);opacity:0}100%{opacity:0}}
+/* ---------- TRANSITIONS ENTRE PAGES (View Transitions, natif ; sans prise en charge : navigation instantanée) ----------
+   L'animation se joue dans la page d'arrivée. Arrivée sur la vitrine (depuis l'espace membre) : type « vers-site ».
+   L'espace membre redéclare la règle avec son propre type (espace.css, chargé après). */
+@view-transition{navigation:auto;types:vers-site}
+@keyframes vtRecule{to{opacity:0;transform:translateY(-2.5%) scale(.985)}}
+@keyframes vtVoletBas{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+html:active-view-transition-type(vers-site)::view-transition-old(root){animation:vtRecule .45s cubic-bezier(.7,0,.8,.3) both}
+html:active-view-transition-type(vers-site)::view-transition-new(root){animation:vtVoletBas .7s cubic-bezier(.2,.7,.1,1) .15s both}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
 
-/* ---------- MARQUEE ---------- */
-.marquee{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2);padding:14px 0}
-.marquee__track{display:flex;gap:40px;width:max-content;animation:marquee 40s linear infinite;font-family:var(--serif);font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent)}
-.marquee__track b{color:var(--accent-dark);font-weight:400}
-@keyframes marquee{to{transform:translateX(-50%)}}
+/* =================================================================
+   VITRINE
+   ================================================================= */
+body.vitrine{--gauche:104px;--droite:5vw}
 
-/* ---------- SECTIONS ---------- */
-.section{padding:120px 0;position:relative}
-.section--alt{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.section__head{text-align:center;margin-bottom:64px;position:relative}
-.numeral{display:inline-block;font-family:var(--serif);font-size:13px;letter-spacing:.4em;color:var(--accent-dark);border:1px solid var(--accent-dark);padding:6px 14px 6px 18px;margin-bottom:18px}
-.section__head h2{font-family:var(--display);font-weight:600;font-size:clamp(38px,5.5vw,64px);letter-spacing:.02em;line-height:1.05;text-transform:uppercase;color:var(--ink)}
-.section__head .sub{font-family:var(--serif);font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink2);margin-top:14px}
-.section__head::after{content:"";display:block;width:48px;height:3px;margin:22px auto 0;background:var(--accent)}
+/* ---------- menu : discret (texte « Menu »), s'ouvre en rideau sur une liste typographique géante ---------- */
+body.vitrine .nav{background:none;border:0;padding:20px var(--droite) 20px var(--gauche);mix-blend-mode:difference}
+body.vitrine .nav::before{display:none}
+body.vitrine .nav.is-open{mix-blend-mode:normal}
+body.vitrine .nav__brand{color:#f1efe9;font-weight:500;font-size:12px;letter-spacing:.16em}
+body.vitrine .nav__brand img{display:none}
+body.vitrine .nav__burger{display:flex;flex-direction:row;align-items:center;gap:12px;width:auto;height:auto;padding:6px 0;color:#f1efe9;font-family:var(--serif);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+body.vitrine .nav__burger::before{content:"Menu"}
+body.vitrine .nav__burger::after{content:"";width:26px;height:7px;border-block:1px solid currentColor;transition:height .4s var(--ease)}
+body.vitrine .nav__burger span{display:none}
+body.vitrine .nav.is-open .nav__burger{color:var(--ink)}
+body.vitrine .nav.is-open .nav__burger::before{content:"Fermer"}
+body.vitrine .nav.is-open .nav__burger::after{height:0}
+body.vitrine .nav__links{position:fixed;inset:0;z-index:-1;display:flex;flex-direction:column;align-items:flex-start;justify-content:safe center;gap:0;padding:110px var(--droite) 70px calc(var(--gauche) + 6vw);overflow-y:auto;
+  background:var(--bg);transform:none;clip-path:inset(0 0 100% 0);visibility:hidden;transition:clip-path .8s var(--ease),visibility 0s .8s;counter-reset:menu}
+body.vitrine .nav.is-open .nav__links{clip-path:inset(0);visibility:visible;transition:clip-path .8s var(--ease)}
+body.vitrine .nav__links a,body.vitrine .nav__links .nav__cta{display:flex;align-items:flex-start;gap:18px;padding:0!important;border:0;background:none;color:var(--ink)!important;
+  font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:clamp(46px,8.4vw,132px);line-height:.92;letter-spacing:0;counter-increment:menu;
+  opacity:0;transform:translateY(50px);transition:opacity .5s,transform .8s var(--ease),color .3s}
+body.vitrine .nav__links a::before{content:counter(menu,decimal-leading-zero);font-family:var(--serif);font-weight:500;font-size:12px;letter-spacing:.1em;color:var(--accent);padding-top:.9em}
+body.vitrine .nav__links a::after{display:none}
+body.vitrine .nav__links .nav__cta{color:var(--accent)!important}
+body.vitrine .nav.is-open .nav__links a{opacity:1;transform:none}
+body.vitrine .nav.is-open .nav__links a:nth-child(2){transition-delay:.05s}
+body.vitrine .nav.is-open .nav__links a:nth-child(3){transition-delay:.1s}
+body.vitrine .nav.is-open .nav__links a:nth-child(4){transition-delay:.15s}
+body.vitrine .nav.is-open .nav__links a:nth-child(5){transition-delay:.2s}
+body.vitrine .nav.is-open .nav__links a:nth-child(6){transition-delay:.25s}
+body.vitrine .nav__links:hover a{opacity:.28}
+body.vitrine .nav__links a:hover{opacity:1}
 
-/* ornament frame helper */
-.frame{position:relative;border:1px solid var(--line);padding:34px}
-.frame::before,.frame::after{content:"";position:absolute;width:28px;height:28px;border:1px solid var(--accent)}
-.frame::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.frame::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+/* ---------- bobine : index des chapitres (perforations, numéros de pose, progression, heure) ---------- */
+.bobine{position:fixed;left:0;top:0;bottom:0;z-index:35;width:64px;color:#f1efe9;mix-blend-mode:difference;border-right:1px solid rgba(241,239,233,.14)}
+.bobine::before{content:"";position:absolute;left:12px;top:0;bottom:0;width:7px;opacity:.4;background:repeating-linear-gradient(transparent 0 9px,currentColor 9px 19px)}
+.bobine::after{content:"";position:absolute;right:-1px;top:0;width:1px;height:100%;background:currentColor;transform-origin:top;transform:scaleY(0)}
+.bobine ol{position:absolute;top:50%;left:0;transform:translateY(-50%);margin:0;padding:0 0 0 28px;list-style:none;display:flex;flex-direction:column;gap:14px}
+.bobine a{display:flex;align-items:center;gap:14px;color:currentColor;font-family:var(--serif);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.bobine b{font-weight:500;padding:2px 4px;opacity:.45;transition:opacity .3s,background .3s,color .3s}
+.bobine span{white-space:nowrap;opacity:0;transform:translateX(-8px);transition:opacity .35s,transform .45s var(--ease)}
+.bobine a:hover b,.bobine a.is-active b{opacity:1}
+.bobine a.is-active b{background:#f1efe9;color:#0a0a0a}
+/* nom du chapitre au survol seulement : affiché en permanence, il chevaucherait les grands titres */
+.bobine a:hover span{opacity:1;transform:none}
+.bobine__heure{position:absolute;left:22px;right:0;bottom:24px;display:flex;flex-direction:column;gap:4px;margin:0;font-family:var(--serif);font-size:9px;letter-spacing:.08em;opacity:.65}
+.bobine__heure b{font-weight:500}
 
-/* ---------- HISTOIRE ---------- */
-.histoire{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
-.histoire__col h3{font-family:var(--serif);font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line);position:relative}
-.histoire__col h3::after{content:"";position:absolute;left:0;bottom:-1px;width:44px;height:1px;background:var(--accent-light)}
-.histoire__col p{color:var(--ink2);font-size:17px}
-.histoire__col p::first-letter{color:var(--accent);font-family:var(--display);font-size:1.4em}
-.quote{margin:70px auto 0;max-width:860px;text-align:center;position:relative;padding:40px 30px;border:1px solid var(--line)}
-.quote::before{content:"❝";position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:44px;color:var(--accent);background:var(--bg);padding:0 14px;line-height:1}
-.quote p{font-size:clamp(19px,2.3vw,25px);font-style:normal;color:var(--ink);margin:0;line-height:1.5}
+.ch{position:relative}
 
-/* ---------- VALEURS ---------- */
-.valeurs{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
-.card{position:relative;padding:38px 28px 30px;border:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 5%,transparent),rgba(0,0,0,0));transition:.35s}
-.card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.5)}
-.card__num{font-family:var(--display);font-size:44px;color:var(--accent-dark);line-height:1;margin-bottom:12px}
-.card h3{font-family:var(--display);font-size:32px;letter-spacing:.05em;color:var(--accent-light);margin-bottom:12px}
-.card p{color:var(--ink2);font-size:16px;margin:0}
-.card--warn{border-color:rgba(122,31,31,.6);background:linear-gradient(180deg,rgba(122,31,31,.12),rgba(0,0,0,0))}
-.card--warn .card__num,.card--warn h3{color:#c9605a}
-.card--warn:hover{border-color:#c9605a}
+/* ---------- 00 · PRISE DE VUE ---------- */
+.ch--prise{height:100vh;height:100svh;min-height:600px;overflow:clip;background:radial-gradient(ellipse at 70% 45%,#171717,var(--bg) 62%)}
+/* ce que voit le viseur : la photo bouge à peine avec le curseur, assombrie sur la gauche pour le texte */
+.prise__photo{position:absolute;inset:0;margin:0;overflow:hidden}
+.prise__photo img{width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.85);transform:scale(1.08);will-change:translate}
+.prise__photo::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 60% 45%,transparent 30%,rgba(10,10,10,.75) 100%),linear-gradient(to top,rgba(10,10,10,.85),transparent 55%)}
+.viseur{position:absolute;inset:88px var(--droite) 60px var(--gauche);pointer-events:none}
+.viseur__coin{position:absolute;width:26px;height:26px;border:0 solid rgba(241,239,233,.5)}
+.viseur__coin:nth-child(1){top:0;left:0;border-width:1px 0 0 1px}
+.viseur__coin:nth-child(2){top:0;right:0;border-width:1px 1px 0 0}
+.viseur__coin:nth-child(3){bottom:0;left:0;border-width:0 0 1px 1px}
+.viseur__coin:nth-child(4){bottom:0;right:0;border-width:0 1px 1px 0}
+/* collimateur : suit le curseur avec retard (pellicule.js) */
+.viseur__point{position:absolute;left:62%;top:46%;will-change:translate;width:24px;height:24px;margin:-12px 0 0 -12px;border:1px solid var(--accent)}
+.viseur__point::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px;background:var(--accent)}
+.viseur__rec,.viseur__expo{position:absolute;margin:0;font-family:var(--serif);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.viseur__rec{top:14px;right:40px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.viseur__expo{top:34px;right:40px}   /* sous le REC : en bas, le nom la recouvrirait */
+.prise__sujet{position:absolute;top:112px;left:calc(var(--gauche) + 40px);margin:0;font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);line-height:1.8}
+.prise__sujet span{color:var(--ink)}
+.prise__notes{position:absolute;top:max(150px,22vh);right:calc(var(--droite) + 40px);width:min(330px,28vw);padding-left:18px;border-left:1px solid var(--line);font-size:15px;line-height:1.6;color:var(--ink2)}
+.prise__notes .lien-fleche{display:flex;width:max-content;margin-top:12px}
+.prise__devise{font-family:var(--serif);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+/* le nom : forme graphique qui déborde du cadre, mise au point à l'ouverture, parallaxe au curseur */
+.prise__nom{position:absolute;left:calc(var(--gauche) - .05em);right:var(--droite);bottom:5vh;margin:0;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;
+  font-size:clamp(72px,min(17.5vw,29vh),340px);line-height:.78;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere;
+  will-change:translate}
+.lien-fleche{display:inline-flex;align-items:center;gap:14px;font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.lien-fleche i{position:relative;width:38px;height:1px;background:currentColor;transition:width .5s var(--ease)}
+.lien-fleche i::after{content:"";position:absolute;right:0;top:-3px;width:7px;height:7px;border:solid currentColor;border-width:1px 1px 0 0;transform:rotate(45deg)}
+.lien-fleche:hover i{width:70px}
+.lien-fleche:hover{color:var(--accent)}
 
-/* ---------- ORG ---------- */
-.org{display:flex;flex-direction:column;align-items:center}
+/* ---------- 01 · FILATURE (statique par défaut ; épinglée plus bas si le navigateur le permet) ---------- */
+.ch--filature{padding:16vh 0}
+.filature__scene{position:relative;padding:0 var(--droite) 0 var(--gauche)}
+.panorama{margin:0 0 60px;height:56vh;overflow:hidden}
+.panorama img{width:100%;height:100%;object-fit:cover;filter:grayscale(.35) contrast(1.1) brightness(.55)}
+.filature__titre{font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:clamp(90px,14vw,200px);line-height:.8;text-transform:uppercase;color:transparent;-webkit-text-stroke:1px rgba(241,239,233,.65)}
+.filature__sub{font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin:18px 0 60px}
+.plan{max-width:580px;margin-bottom:70px}
+.plan__tc{font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0}
+.plan h3{font-family:var(--display);font-weight:700;font-stretch:75%;font-variation-settings:"wdth" 75;font-size:clamp(44px,5.4vw,84px);line-height:.94;text-transform:uppercase;margin:12px 0 20px}
+.plan p:last-child{font-size:clamp(18px,1.5vw,21px);line-height:1.55;margin:0}
+/* passage caviardé : la barre (--r = 1) se retire vers la droite ; le texte est découpé dans le second fond pour être vraiment masqué */
+.redact{color:transparent;cursor:help;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:--r .6s var(--ease);
+  background:linear-gradient(var(--ink),var(--ink)) right/calc(var(--r) * 100%) 100% no-repeat,linear-gradient(var(--accent-light),var(--accent-light));
+  -webkit-background-clip:border-box,text;background-clip:border-box,text}
+.redact:hover{--r:0}
+
+/* ---------- citation : décalée, les mots s'impriment un à un ---------- */
+.citation{margin:0;padding:24vh var(--droite) 24vh calc(var(--gauche) + 16vw)}
+.citation p{max-width:13em;margin:0;font-family:var(--display);font-weight:700;font-stretch:75%;font-variation-settings:"wdth" 75;font-size:clamp(40px,6.2vw,108px);line-height:.96;text-transform:uppercase}
+.citation .mot{opacity:.1;transition:opacity .7s var(--ease) calc(var(--i) * 55ms)}
+.citation.is-in .mot{opacity:1}
+
+/* ---------- 02 · PLANCHE CONTACT : une bande de film ---------- */
+.ch--planche{padding:14vh 0}
+.pellicule{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:46px 0;background:#0c0a08}
+.pellicule::-webkit-scrollbar{display:none}
+/* perforations éclairées par la table lumineuse */
+.pellicule::before,.pellicule::after{content:"";position:absolute;left:0;right:0;height:13px;background:repeating-linear-gradient(90deg,transparent 0 13px,rgba(245,238,222,.85) 13px 27px);pointer-events:none}
+.pellicule::before{top:16px}
+.pellicule::after{bottom:16px}
+.pose{position:relative;flex:none;width:80vw;min-height:min(60vh,500px);display:flex;flex-direction:column;justify-content:flex-end;padding:34px 40px;background:var(--bg2);border-right:6px solid #0c0a08;scroll-snap-align:center}
+.pose__bord{position:absolute;top:-17px;left:40px;margin:0;font-family:var(--serif);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ambre)}
+.pose h2,.pose h3{font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:clamp(72px,min(13vw,22vh),230px);line-height:.82;text-transform:uppercase;color:var(--ink);margin:0 0 22px}
+.pose p:last-child{max-width:380px;margin:0;font-size:17px;line-height:1.5;color:var(--ink2)}
+.pose--titre h2{color:transparent;-webkit-text-stroke:1px var(--ink)}
+.pose--proscrit h3{color:var(--accent)}
+.planche__bascule{display:none}   /* mention du passage en chambre noire : seulement quand la planche est épinglée (plus bas) */
+
+/* ---------- 03 · CHAMBRE NOIRE : lumière inactinique, tirages qui se révèlent ---------- */
+.ch--chambre{display:grid;grid-template-columns:auto 1fr;gap:5vw;padding:22vh var(--droite) 24vh var(--gauche);overflow:clip;background:var(--rouge-chambre);view-timeline:--chambre}
+/* halo de la lampe inactinique : calque collé à l'écran pendant toute la chambre (hauteur nulle dans la grille) */
+.ch--chambre::before{content:"";position:sticky;top:0;grid-column:1/-1;grid-row:1;height:100vh;margin:-22vh calc(var(--droite) * -1) -100vh calc(var(--gauche) * -1);pointer-events:none;
+  background:radial-gradient(ellipse 42vw 48vh at 84% 42%,color-mix(in srgb,var(--accent) 34%,transparent),transparent 72%)}   /* halo entièrement dans le calque : aucun bord visible */
+.chambre__titre{position:sticky;top:12vh;align-self:start;writing-mode:vertical-rl;rotate:180deg;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;
+  font-size:clamp(90px,11vw,200px);line-height:.8;text-transform:uppercase;color:color-mix(in srgb,var(--accent) 45%,#fff)}
+.chambre__sub{font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(241,239,233,.6);margin:0 0 60px}
+.reseau{position:relative}
+.reseau__liens{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.reseau__liens path{fill:none;stroke:rgba(241,239,233,.55);stroke-width:1;stroke-dasharray:var(--l);stroke-dashoffset:var(--l);transition:stroke-dashoffset 1.6s var(--ease)}
+.reseau.is-in .reseau__liens path{stroke-dashoffset:0}
+.org{display:flex;flex-direction:column;align-items:center;counter-reset:tirage}
 .org__tier{display:flex;justify-content:center}
-.org__tier--row{gap:18px;flex-wrap:wrap}
-.org__line{width:1px;height:38px;background:linear-gradient(to bottom,var(--accent),var(--accent-dark))}
-.org__desc{max-width:640px;text-align:center;color:var(--ink2);font-size:15px;font-style:normal;margin:14px 0 0}
-.rank{position:relative;text-align:center;border:1px solid var(--line);padding:22px 26px;min-width:190px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 6%,transparent),rgba(0,0,0,.2));transition:.3s}
-.rank:hover{border-color:var(--accent)}
-.rank::before,.rank::after{content:"";position:absolute;width:12px;height:12px;border:1px solid var(--accent)}
-.rank::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.rank::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
-.rank__title{display:block;font-family:var(--serif);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent)}
-.rank__name{display:block;font-family:var(--display);font-size:30px;letter-spacing:.04em;color:var(--ink);margin-top:6px}
-.rank__age{display:block;font-size:14px;color:var(--ink2);font-style:normal;margin-top:2px}
-.rank p{max-width:420px;margin:12px auto 0;color:var(--ink2);font-size:15px}
-.rank--lvl1{padding:34px 44px;border-color:var(--accent);box-shadow:0 0 50px color-mix(in srgb,var(--accent) 15%,transparent)}
-.rank--lvl1 .rank__name{font-size:44px;color:var(--ink);}
-.rank--lvl2{padding:28px 40px;border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
-.rank--lvl2 .rank__name{font-size:38px}
-.rank--lvl3 .rank__name{font-size:34px}
-.rank:not(.rank--feat){min-width:160px}
-.rank--open{border-style:dashed;opacity:.65}
-.rank--open .rank__name{color:var(--accent-dark);font-size:22px;letter-spacing:.1em}
+.org__tier--row{gap:30px 22px;flex-wrap:wrap}
+.org__line{height:70px}   /* place laissée aux liens tracés par pellicule.js */
+.org__desc{max-width:480px;margin:18px auto 0;text-align:center;font-family:var(--serif);font-size:12px;line-height:1.7;color:rgba(241,239,233,.7)}
+/* chaque fiche est un tirage papier ; son numéro est noté au-dessus, comme dans la cuve */
+.rank{--ph:150px;position:relative;display:flex;flex-direction:column;width:210px;padding:10px 10px 16px;text-align:left;background:#ece6da;color:#161412;counter-increment:tirage;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+.rank::before{content:"";height:var(--ph);margin-bottom:14px;background:var(--silhouette) center bottom/68% auto no-repeat,linear-gradient(#c3bcae,#9e9688)}
+.rank::after{content:"Tirage " counter(tirage,decimal-leading-zero);position:absolute;left:0;top:-20px;font-family:var(--serif);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(241,239,233,.6)}
+.rank__title{font-family:var(--serif);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-dark)}
+.rank__name{font-family:var(--display);font-weight:700;font-stretch:75%;font-variation-settings:"wdth" 75;font-size:22px;line-height:1.02;text-transform:uppercase;margin-top:4px;overflow-wrap:anywhere}
+.rank__age{font-family:var(--serif);font-size:10px;color:#5d5850;margin-top:4px}
+.rank p{margin:12px 0 0;font-size:13px;line-height:1.5;color:#3a3631}
+.rank--lvl1{--ph:230px;width:300px}
+.rank--lvl1 .rank__name{font-size:32px}
+.rank--lvl2{--ph:185px;width:250px}
+.rank--lvl2 .rank__name{font-size:27px}
+.rank--open{opacity:.55}
+.rank--open::before{background:linear-gradient(#c3bcae,#9e9688)}
 
-/* ---------- COULEURS (nuancier) ---------- */
+.lightbox{position:fixed;inset:0;z-index:100;background:rgba(6,6,6,.96);display:flex;align-items:center;justify-content:center;padding:60px 70px}
+.lightbox figure{margin:0;max-width:100%;max-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+.lightbox img{max-width:100%;max-height:calc(100vh - 150px);object-fit:contain}
+.lightbox figcaption{color:var(--ink2);font-family:var(--serif);font-size:12px;letter-spacing:.06em;text-align:center}
+.lightbox figcaption i{font-style:normal;color:var(--ink)}
+.lightbox figcaption b{color:var(--ink);font-weight:500}
+.lightbox figcaption span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-left:8px}
+.lightbox__close,.lightbox__nav{position:absolute;background:none;border:1px solid var(--line);color:var(--ink);cursor:pointer;font-size:22px;width:46px;height:46px;transition:.2s}
+.lightbox__close:hover,.lightbox__nav:hover{border-color:var(--accent);background:var(--accent)}
+.lightbox__close{top:18px;right:18px}
+.lightbox__nav{top:50%;transform:translateY(-50%);font-size:30px}
+.lightbox__nav--prev{left:14px}.lightbox__nav--next{right:14px}
+
+/* ---------- 04 · TABLE LUMINEUSE : négatifs posés en mosaïque ; sous la loupe (galerie.js), le positif agrandi ---------- */
+.ch--table{--ink:#0d0d0d;--ink2:#5b5850;--line:rgba(13,13,13,.14);--r-loupe:120px;position:relative;padding:18vh var(--droite) 20vh var(--gauche);overflow:clip;color:var(--ink);
+  /* haut et bas au ton exact de la lumière de la chambre et du papier du tirage : raccords invisibles */
+  background:linear-gradient(var(--lumiere-table),transparent 35vh),linear-gradient(to top,var(--lumiere-table),transparent 35vh),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.03) 0 1px,transparent 1px 48px),repeating-linear-gradient(rgba(0,0,0,.03) 0 1px,transparent 1px 48px),
+    radial-gradient(ellipse 75% 60% at 50% 50%,#fcfaf5,var(--lumiere-table) 75%)}
+.table__tete{display:grid;grid-template-columns:auto 1fr;align-items:end;gap:8px 4vw;margin-bottom:8vh}
+.table__titre{grid-row:span 2;margin:0;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:clamp(80px,12vw,210px);line-height:.8;text-transform:uppercase}
+.table__sub,.table__aide{margin:0;font-family:var(--serif);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.table__aide{color:var(--ink)}
+.table__aide-doigt{display:none}
+@media (hover:none){.table__aide-souris{display:none}.table__aide-doigt{display:inline}}
+/* mosaïque dense : la case dépend du format de la photo (large, haute, carrée), la première large est mise en avant */
+.table__planche{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-rows:clamp(80px,8.4vw,160px);grid-auto-flow:dense;gap:clamp(14px,2vw,30px)}
+.negatif{display:flex;flex-direction:column;min-width:0;margin:0}
+.negatif--large{grid-column:span 5;grid-row:span 2}
+.negatif--haute{grid-column:span 3;grid-row:span 3}
+.negatif--carree{grid-column:span 3;grid-row:span 2}
+.negatif--large:first-child{grid-column:span 7;grid-row:span 3}
+/* le cadre de film noir autour de l'image */
+.negatif__cadre{position:relative;flex:1;min-height:0;display:block;width:100%;padding:0;border:10px solid #111;background:#111;cursor:zoom-in;overflow:hidden;box-shadow:0 18px 30px -18px rgba(0,0,0,.55)}
+.negatif__cadre img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* négatif couleur : inversé, avec le voile orangé du film */
+.negatif__neg{filter:invert(1) sepia(.5) saturate(1.7) hue-rotate(-12deg) contrast(.92)}
+/* positif agrandi, découvert en cercle sous la loupe ; le rayon est divisé par le grossissement (le cercle est agrandi avec l'image) */
+.negatif__pos{clip-path:circle(0 at var(--lx,50%) var(--ly,50%));transform-origin:var(--lx,50%) var(--ly,50%);transform:scale(1.8)}
+.negatif.is-loupe .negatif__pos{clip-path:circle(calc(var(--r-loupe) / 1.8) at var(--lx) var(--ly))}
+.ch--table.a-loupe .table__planche,.ch--table.a-loupe .negatif__cadre{cursor:none}
+.negatif figcaption{display:flex;gap:10px;align-items:baseline;min-width:0;padding-top:8px;font-family:var(--serif);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.negatif figcaption b{font-weight:500;color:var(--accent-dark)}
+.negatif figcaption i{font-style:normal;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.negatif figcaption span{margin-left:auto}
+/* la loupe : un anneau qui suit le curseur au-dessus de la table */
+.loupe{position:absolute;left:0;top:0;z-index:3;width:calc(var(--r-loupe) * 2);height:calc(var(--r-loupe) * 2);margin:calc(var(--r-loupe) * -1) 0 0 calc(var(--r-loupe) * -1);border-radius:50%;pointer-events:none;
+  border:2px solid #111;box-shadow:0 0 0 7px rgba(255,255,255,.45),0 0 0 8px rgba(0,0,0,.25),0 24px 40px rgba(0,0,0,.35),inset 0 0 24px rgba(0,0,0,.35);
+  opacity:0;scale:.6;transition:opacity .25s,scale .4s var(--ease);will-change:transform}
+.ch--table.a-loupe .loupe{opacity:1;scale:1}
+
+/* ---------- 05 · TIRAGE : le papier clair (les variables de couleur s'inversent localement) ---------- */
+.ch--tirage{--ink:#0d0d0d;--ink2:#5b5850;--line:rgba(13,13,13,.14);padding:20vh var(--droite) 0 var(--gauche);overflow:clip;background:#eeebe4;color:var(--ink)}
+.tirage__titre{width:max-content;margin:0;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:17vw;line-height:.76;text-transform:uppercase;white-space:nowrap}
+.tirage__bas{display:grid;grid-template-columns:1fr 1.3fr 1fr;align-items:end;gap:30px 4vw;margin-top:6vh;padding:7vh 0 14vh;border-top:1px solid var(--line)}
+.tirage__groupe{margin:0;font-family:var(--display);font-weight:700;font-stretch:75%;font-variation-settings:"wdth" 75;font-size:clamp(28px,3vw,46px);line-height:1;text-transform:uppercase}
+.tirage__texte{margin:0;font-size:19px;line-height:1.55;color:var(--ink2)}
+.tirage__lien{justify-self:end;display:flex;flex-direction:column;gap:14px;color:var(--ink);font-family:var(--display);font-weight:700;font-stretch:75%;font-variation-settings:"wdth" 75;font-size:clamp(26px,2.6vw,42px);line-height:1;text-transform:uppercase;transition:color .3s}
+.tirage__lien i{position:relative;height:2px;background:currentColor;transform-origin:left;transition:transform .6s var(--ease)}
+.tirage__lien i::after{content:"";position:absolute;right:0;top:-5px;width:11px;height:11px;border:solid currentColor;border-width:2px 2px 0 0;transform:rotate(45deg)}
+.tirage__lien:hover{color:var(--accent)}
+.tirage__lien:hover i{transform:scaleX(1.12)}
+.tirage__petit{grid-column:1/-1;margin:0;font-family:var(--serif);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.ch--tirage .footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px 28px}
+.ch--tirage .signature a:hover{background:rgba(0,0,0,.05)}
+
+/* ---------- blocs prêts à l'emploi (README) : nuancier, événements, lexique ---------- */
 .couleurs{max-width:760px;margin:0 auto}
 .couleurs__grille{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.couleurs__grille p{grid-column:1/-1;color:var(--ink2);font-size:16px;margin-top:10px;font-style:normal}
-.swatch{text-align:center;font-family:var(--serif)}
-.swatch span{display:block;aspect-ratio:1;border:1px solid var(--line);margin-bottom:10px;box-shadow:inset 0 0 30px rgba(0,0,0,.4)}
-.swatch b{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink)}
-.swatch i{display:block;font-family:var(--body);font-style:normal;font-size:13px;color:var(--ink2)}
-
-/* ---------- ÉVÉNEMENTS ---------- */
-.evenements{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.evenement{position:relative;border:1px solid var(--line);padding:34px 28px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 5%,transparent),rgba(0,0,0,.25));display:flex;flex-direction:column;transition:.35s}
-.evenement:hover{border-color:var(--accent);transform:translateY(-4px)}
-.evenement::before{content:"";position:absolute;top:10px;left:10px;right:10px;bottom:10px;border:1px solid color-mix(in srgb,var(--accent) 12%,transparent);pointer-events:none}
-.evenement__tag{font-family:var(--serif);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent-dark)}
-.evenement h3{font-family:var(--display);font-size:36px;letter-spacing:.04em;color:var(--accent-light);margin:8px 0 16px}
+.couleurs__grille p{grid-column:1/-1;color:var(--ink2);font-size:16px;margin-top:10px}
+.swatch{font-family:var(--serif)}
+.swatch span{display:block;aspect-ratio:1;border:1px solid var(--line);margin-bottom:10px}
+.swatch b{display:block;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.swatch i{display:block;font-style:normal;font-size:11px;color:var(--ink2)}
+.evenements{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.evenement{position:relative;padding:34px 28px;background:var(--bg);display:flex;flex-direction:column;transition:background .3s}
+.evenement:hover{background:var(--bg2)}
+.evenement__tag{font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.evenement h3{font-family:var(--display);font-weight:700;font-stretch:75%;font-size:36px;line-height:1;text-transform:uppercase;color:var(--ink);margin:12px 0 16px}
 .evenement p{color:var(--ink2);font-size:16px}
 .evenement ul{margin:auto 0 0;padding:16px 0 0;list-style:none;border-top:1px solid var(--line)}
-.evenement li{position:relative;padding-left:20px;font-size:15px;color:var(--ink2);margin-bottom:8px}
-.evenement li::before{content:"✦";position:absolute;left:0;color:var(--accent);font-size:11px;top:4px}
-.ambition{margin-top:60px;text-align:center;max-width:820px;margin-left:auto;margin-right:auto;padding:40px 34px;border:1px solid var(--line);position:relative}
-.ambition::before,.ambition::after{content:"";position:absolute;width:28px;height:28px;border:1px solid var(--accent)}
-.ambition::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.ambition::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
-.ambition h3{font-family:var(--display);font-size:38px;color:var(--accent-light);margin-bottom:12px}
+.evenement li{position:relative;padding-left:18px;font-size:15px;color:var(--ink2);margin-bottom:8px}
+.evenement li::before{content:"";position:absolute;left:0;top:.6em;width:6px;height:6px;background:var(--accent)}
+.ambition{margin:60px auto 0;max-width:820px;padding:40px 0;border-top:1px solid var(--line)}
+.ambition h3{font-family:var(--display);font-weight:700;font-stretch:75%;font-size:40px;text-transform:uppercase;color:var(--ink);margin-bottom:12px}
 .ambition p{color:var(--ink2);margin:0;font-size:17px}
-
-/* ---------- LEXIQUE ---------- */
-.vocab{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
-.vocab__group h4{font-family:var(--display);font-size:30px;color:var(--accent-light);margin-bottom:14px;letter-spacing:.04em}
+.vocab{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.vocab__group h4{font-family:var(--display);font-weight:700;font-stretch:75%;font-size:30px;text-transform:uppercase;color:var(--ink);margin-bottom:14px}
 .vocab dl{margin:0}
-.vocab dl div{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dotted var(--line)}
-.vocab dt{font-weight:500;color:var(--ink)}
-.vocab dd{margin:0;color:var(--ink2);font-style:normal;text-align:right}
+.vocab dl div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.vocab dt{font-family:var(--serif);font-size:13px;color:var(--ink)}
+.vocab dd{margin:0;color:var(--ink2);text-align:right}
 
-/* ---------- CONTACT ---------- */
-.section--contact{background:radial-gradient(ellipse at 50% 30%,var(--bg3) 0%,var(--bg2) 60%,var(--bg) 100%);padding:140px 0}
-.contact{text-align:center;max-width:760px;margin:0 auto}
-.contact__logo{width:220px;height:220px;margin:0 auto 30px;filter:drop-shadow(0 0 40px color-mix(in srgb,var(--accent) 35%,transparent));animation:float 6s ease-in-out infinite}
-@keyframes float{50%{transform:translateY(-10px)}}
-.contact h2{font-family:var(--display);font-size:clamp(40px,6vw,70px);color:var(--ink);margin-bottom:18px;letter-spacing:.04em}
-.contact p{color:var(--ink2);margin-bottom:34px}
-.contact__small{font-family:var(--serif);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--accent-dark);margin-top:30px!important}
-
-/* ---------- FOOTER ---------- */
-.footer{border-top:1px solid var(--line);padding:26px 0;font-family:var(--serif);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink2)}
-.footer .wrap{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+/* ---------- FOOTER / SIGNATURE (base commune) ---------- */
+.footer{border-top:1px solid var(--line);padding:26px 0;font-family:var(--serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.footer .wrap{display:flex;justify-content:space-between;gap:10px 28px;flex-wrap:wrap}
 /* signature du développeur : discrète sous le pied de page, la pastille ne s'encadre qu'au survol */
-.signature{display:flex;justify-content:center;padding:6px 16px 36px}
+.signature{display:flex;justify-content:center;padding:6px 16px 44px}
 .sig-pastille{display:inline-flex;align-items:center;gap:10px;padding:7px 8px 7px 14px;border-radius:999px;border:1px solid transparent;transition:border-color .25s,background .25s}
 .sig-pastille:hover{border-color:var(--line);background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .sig-txt{color:var(--ink2);font-size:12px;letter-spacing:.06em;opacity:.55;white-space:nowrap;transition:opacity .25s}
@@ -204,28 +364,131 @@ p{margin:0 0 1em}
 .sig-pastille:hover b{color:var(--accent)}
 @media (max-width:520px){.sig-pastille{flex-wrap:wrap;justify-content:center;padding:9px 12px;row-gap:2px}.sig-trait{display:none}}
 
-/* ---------- REVEAL ---------- */
+/* ---------- REVEAL (main.js, org.js) ---------- */
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease}
 .reveal.is-in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.marquee__track{animation:none}}
+
+/* =================================================================
+   MISE EN SCÈNE LIÉE AU DÉFILEMENT (CSS natif ; ignorée sans prise en charge ou si moins de mouvement)
+   ================================================================= */
+@media (prefers-reduced-motion:no-preference){
+  /* ouverture : le nom se découvre, la photo se cale */
+  .prise__nom{animation:volet 1.3s var(--ease) .25s both}
+  @keyframes volet{from{clip-path:inset(100% 0 -5% 0)}to{clip-path:inset(-5% 0 -5% 0)}}   /* le nom se découvre de bas en haut (sans flou : trop coûteux sur un titre géant) */
+  /* l'objectif se cale : la photo arrive un peu zoomée puis se pose (transform et opacité seulement) */
+  .prise__photo{animation:objectif 2.2s var(--ease) both}
+  @keyframes objectif{from{opacity:0;scale:1.14}to{opacity:1;scale:1}}
+}
+@supports (animation-timeline:view()){
+@media (prefers-reduced-motion:no-preference){
+  /* bobine : progression de toute la pellicule */
+  .bobine::after{animation:progression linear both;animation-timeline:scroll(root)}
+  @keyframes progression{to{transform:scaleY(1)}}
+
+  /* 00 → 01 : en sortant, le viseur se dilate et le nom perd le point */
+  .ch--prise .viseur,.prise__notes,.prise__sujet{animation:sortieViseur linear both;animation-timeline:view();animation-range:exit 0% exit 70%}
+  @keyframes sortieViseur{to{opacity:0;transform:scale(1.12)}}
+  .ch--prise{view-timeline:--prise}
+  .prise__nom{animation:volet 1.3s var(--ease) .25s both,sortieNom linear both;animation-timeline:auto,--prise;animation-range:normal,exit 0% exit 100%}
+  @keyframes sortieNom{to{transform:scale(1.35) translateY(-12vh)}}
+
+  /* 01 · filature : scène épinglée sur plusieurs écrans ; la bande cinémascope s'ouvre et balaie le panorama */
+  .ch--filature{height:400vh;padding:0;view-timeline:--filature}
+  .filature__scene{position:sticky;top:0;height:100vh;overflow:hidden;padding:0}
+  .filature__scene::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(10,10,10,.9) 0,rgba(10,10,10,.55) 45%,transparent 80%)}
+  .panorama{position:absolute;inset:0;height:auto;margin:0;clip-path:inset(41% 0 41% 0);animation:bande linear both;animation-timeline:--filature;animation-range:contain 0% contain 30%}
+  @keyframes bande{to{clip-path:inset(8% 0 8% 0)}}
+  .panorama img{width:125%;max-width:none;animation:travelling linear both;animation-timeline:--filature;animation-range:contain 0% contain 100%}
+  @keyframes travelling{from{transform:translateX(0) scale(1.06)}to{transform:translateX(-20%) scale(1)}}
+  .filature__titre{position:absolute;right:calc(var(--droite) - .1em);top:50%;z-index:2;translate:0 -50%;writing-mode:vertical-rl;rotate:180deg;font-size:min(24vh,190px)}
+  .filature__sub{position:absolute;left:var(--gauche);top:104px;z-index:2;margin:0}
+  .plan{position:absolute;left:var(--gauche);bottom:12vh;z-index:2;width:min(580px,52vw);margin:0;opacity:0}
+  .plan{animation:plan linear both;animation-timeline:--filature}
+  .plan--1{animation-range:contain 6% contain 38%}
+  .plan--2{animation-range:contain 36% contain 68%}
+  .plan--3{animation-name:planFin;animation-range:contain 66% contain 96%}
+  @keyframes plan{0%{opacity:0;transform:translateY(70px);clip-path:inset(0 0 100% 0)}18%,80%{opacity:1;transform:none;clip-path:inset(0)}100%{opacity:0;transform:translateY(-50px);clip-path:inset(0)}}
+  @keyframes planFin{0%{opacity:0;transform:translateY(70px);clip-path:inset(0 0 100% 0)}25%,100%{opacity:1;transform:none;clip-path:inset(0)}}
+  /* les caviardages se retirent pendant leur plan */
+  .plan .redact{animation:decaviarde linear both;animation-timeline:--filature}
+  .plan--1 .redact{animation-range:contain 16% contain 26%}
+  .plan--2 .redact{animation-range:contain 46% contain 56%}
+  .plan--3 .redact{animation-range:contain 76% contain 86%}
+  @keyframes decaviarde{from{--r:1}to{--r:0}}
+
+  /* 02 · planche contact : le film avance à l'horizontale ; chaque pose est un négatif, positive au centre (écrans larges) */
+  @media (min-width:721px){
+    /* le film défile sur les 82 premiers % ; les 18 derniers : 02 → 03, la lumière rouge s'allume dans la même scène */
+    .ch--planche{height:520vh;padding:0;view-timeline:--planche}
+    .planche__scene{position:sticky;top:0;height:100vh;display:flex;align-items:center;overflow:hidden}
+    .pellicule{overflow:visible;scroll-snap-type:none;width:max-content;padding:46px 20vw;
+      animation:defile linear both,plonge linear both;animation-timeline:--planche,--planche;animation-range:contain 0% contain 82%,contain 84% contain 100%}
+    @keyframes defile{to{transform:translateX(calc(-100% + 100vw))}}
+    /* le film plonge dans le bain : il descend, rétrécit et s'efface sous la lumière rouge */
+    @keyframes plonge{to{translate:0 22vh;scale:.9;opacity:.25}}
+    .pose{width:60vw;min-height:0;height:min(62vh,540px);animation:linear both;animation-timeline:--planche;animation-range:contain 0% contain 82%}
+    .planche__scene::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:var(--rouge-chambre);opacity:0;
+      animation:inactinique linear both;animation-timeline:--planche;animation-range:contain 84% contain 100%}
+    @keyframes inactinique{to{opacity:1}}
+    .planche__bascule{display:block;position:absolute;left:0;right:0;top:50%;z-index:3;margin:0;text-align:center;font-family:var(--serif);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:color-mix(in srgb,var(--accent) 45%,#fff);
+      opacity:0;animation:bascule linear both;animation-timeline:--planche;animation-range:contain 88% contain 100%}
+    @keyframes bascule{0%{opacity:0;letter-spacing:.6em}60%,100%{opacity:1;letter-spacing:.3em}}
+    /* sans hiérarchie (section vide, masquée), la planche enchaîne sur la table : pas de rouge */
+    body:has(#hierarchie[hidden]) .planche__scene::after,body:has(#hierarchie[hidden]) .planche__bascule{display:none}
+    .pose:nth-child(1){animation-name:neg0}
+    .pose:nth-child(2){animation-name:neg1}
+    .pose:nth-child(3){animation-name:neg2}
+    .pose:nth-child(4){animation-name:neg3}
+    .pose:nth-child(5){animation-name:neg4}
+    /* pose n centrée à n/4 du parcours (padding 20vw, poses de 60vw) */
+    @keyframes neg0{0%,5%{filter:none}13%,100%{filter:invert(1)}}
+    @keyframes neg1{0%,12%{filter:invert(1)}20%,30%{filter:none}38%,100%{filter:invert(1)}}
+    @keyframes neg2{0%,37%{filter:invert(1)}45%,55%{filter:none}63%,100%{filter:invert(1)}}
+    @keyframes neg3{0%,62%{filter:invert(1)}70%,80%{filter:none}88%,100%{filter:invert(1)}}
+    @keyframes neg4{0%,87%{filter:invert(1)}95%,100%{filter:none}}
+  }
+
+  /* 03 · chambre noire : chaque tirage se révèle. Sur écran large, le rouge est déjà allumé par la planche ;
+     sur téléphone (planche non épinglée), il envahit la page en arrivant. */
+  @media (max-width:720px){
+    .ch--chambre{animation:lumiereRouge linear both;animation-timeline:view();animation-range:entry 0% entry 90%}
+    @keyframes lumiereRouge{from{background-color:var(--bg)}}
+  }
+  /* la lampe ne s'allume qu'une fois la chambre bien entrée : rien au moment du raccord avec la planche */
+  .ch--chambre::before{animation:lampe linear both;animation-timeline:--chambre;animation-range:entry 55% entry 100%}
+  @keyframes lampe{from{opacity:0}to{opacity:1}}
+  .rank{animation:revelation linear both;animation-timeline:view();animation-range:entry 5% cover 42%}
+  @keyframes revelation{from{filter:brightness(2.6) contrast(.2) sepia(.5);opacity:.3}to{filter:none;opacity:1}}
+  /* 03 → 04 : la lumière de la table monte depuis le bas et envahit la chambre, en fondu continu.
+     Le bord bas de la chambre est toujours exactement du ton de la table : aucune démarcation, à aucun moment. */
+  .ch--chambre::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(to top,var(--lumiere-table) 0,var(--lumiere-table) var(--monte),transparent calc(var(--monte) + 55vh));
+    animation:lumiereMonte linear both;animation-timeline:view();animation-range:exit 0% exit 100%}
+  @keyframes lumiereMonte{from{--monte:0vh}to{--monte:70vh}}
+
+  /* 04 · table lumineuse : les négatifs se posent un à un. Sans hiérarchie (on arrive de la planche, sombre),
+     l'ombre se retire vers le haut, même principe : le bord haut reste du ton de la planche jusqu'au bout. */
+  body:has(#hierarchie[hidden]) .ch--table::before{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
+    background:linear-gradient(#0a0a0a 0,#0a0a0a var(--ombre),transparent calc(var(--ombre) + 55vh));
+    animation:ombreSeRetire linear both;animation-timeline:view();animation-range:entry 0% entry 100%}
+  @keyframes ombreSeRetire{from{--ombre:70vh}to{--ombre:-55vh}}
+  .negatif{animation:pose linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
+  @keyframes pose{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:none}}
+
+  /* 05 · tirage : le titre se découvre de bas en haut. Le papier ne « blanchit » que s'il arrive après une section sombre
+     (galerie et hiérarchie vides : on vient de la planche) ; après la table ou la chambre éclairée, il est déjà clair. */
+  body:has(#galerie[hidden]):has(#hierarchie[hidden]) .ch--tirage{animation:blanchit linear both;animation-timeline:view();animation-range:entry 0% entry 75%}
+  @keyframes blanchit{from{background-color:#0a0a0a}}
+  .tirage__titre{animation:voletTitre linear both;animation-timeline:view();animation-range:entry 10% cover 40%}
+  @keyframes voletTitre{from{clip-path:inset(100% 0 -5% 0);transform:translateY(18%)}to{clip-path:inset(-5% 0 -5% 0);transform:none}}
+}}
 
 /* ---------- RESPONSIVE ---------- */
-@media (max-width:1000px){
-  .histoire,.evenements,.vocab{grid-template-columns:1fr}
-  .valeurs{grid-template-columns:1fr 1fr}
-  /* hero empilé : blason en haut (hero3d.js), texte centré dessous */
-  .hero__hint{display:none}
-  .hero__content{text-align:center;padding:60vh 20px 80px}
-  .hero__content>*{margin-left:auto;margin-right:auto}
-  .hero__actions{justify-content:center}
-  .hero__title::after{margin-left:auto;margin-right:auto}
-}
-/* menu en panneau plein écran (burger) dès que les liens ne tiennent plus sur une ligne — vitrine et espace membre */
 @media (max-width:1180px){
   .nav__burger{display:flex}
   .nav__links{position:fixed;inset:0;flex-direction:column;flex-wrap:nowrap;justify-content:safe center;gap:26px;padding:96px 24px 48px;overflow-y:auto;
-    background:var(--bg);font-size:14px;letter-spacing:.22em;transform:translateY(-100%);visibility:hidden;transition:transform .4s,visibility 0s .4s;z-index:-1}
-  .nav.is-open .nav__links{transform:none;visibility:visible;transition:transform .4s}
+    background:var(--bg);font-size:14px;letter-spacing:.14em;transform:translateY(-100%);visibility:hidden;transition:transform .5s var(--ease),visibility 0s .5s;z-index:-1}
+  .nav.is-open .nav__links{transform:none;visibility:visible;transition:transform .5s var(--ease)}
   .nav.is-open .nav__burger span:nth-child(1){transform:translateY(9px) rotate(45deg)}
   .nav.is-open .nav__burger span:nth-child(2){opacity:0}
   .nav.is-open .nav__burger span:nth-child(3){transform:translateY(-9px) rotate(-45deg)}
@@ -233,64 +496,61 @@ p{margin:0 0 1em}
   .nav__cta{margin-top:8px}
   body.nav-lock{overflow:hidden}
 }
+@media (max-width:1000px){
+  .prise__notes{width:min(300px,38vw)}
+  .ch--chambre{grid-template-columns:1fr}
+  .chambre__titre{position:static;writing-mode:horizontal-tb;rotate:none;font-size:clamp(70px,17vw,160px)}
+  .tirage__bas{grid-template-columns:1fr 1fr}
+  .tirage__lien{grid-column:1/-1;justify-self:start}
+  .evenements,.vocab{grid-template-columns:1fr}
+  /* table lumineuse : 6 colonnes */
+  .table__planche{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:clamp(80px,13vw,150px)}
+  .negatif--large{grid-column:span 4}
+  .negatif--haute,.negatif--carree{grid-column:span 2}
+  .negatif--large:first-child{grid-column:span 6;grid-row:span 3}
+}
+/* téléphone : compositions réinterprétées, la bobine passe en bas de l'écran */
 @media (max-width:720px){
   body{font-size:17px}
-  .nav{padding:12px 18px}
-  .wrap{padding:0 20px}
-  .section{padding:80px 0}
-  .valeurs{grid-template-columns:1fr}
-  .eyebrow{letter-spacing:.24em;font-size:11px}
-  .hero__motto{letter-spacing:.2em}
-  /* organigramme : deux cases par ligne au lieu d'une longue colonne */
-  .org__tier{width:100%}
-  .org__tier--row{gap:12px}
-  .rank,.rank:not(.rank--feat){min-width:0;flex:0 1 calc(50% - 6px);padding:18px 14px}   /* ligne impaire : la dernière case reste à sa taille, centrée */
-  .rank--lvl1,.rank--lvl2{flex-basis:100%;padding:26px 20px}
-  .rank--lvl1 .rank__name{font-size:36px}
-  .rank--lvl2 .rank__name{font-size:30px}
-  .rank--lvl3 .rank__name{font-size:26px}
-}
-
-/* ---------- GALERIE ---------- */
-/* bandeau horizontal : défile tout seul, et à la main (glisser, molette, flèches) */
-.galerie{position:relative;--gh:340px}   /* --gh : hauteur des photos */
-.galerie__track{position:relative;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;scrollbar-width:none;cursor:grab;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.galerie__track::-webkit-scrollbar{display:none}
-.galerie__track.is-dragging{cursor:grabbing;scroll-snap-type:none;scroll-behavior:auto;user-select:none}
-.galerie__track.is-dragging img{pointer-events:none}
-.galerie__track:focus-visible{outline:1px solid var(--accent);outline-offset:4px}
-/* position dans le bandeau : fine ligne dorée, à la place d'une barre de défilement */
-.galerie__progress{margin-top:22px}
-.galerie__bar{display:block;position:relative;height:1px;background:var(--line)}
-.galerie__bar b{position:absolute;left:0;top:-1px;height:3px;min-width:40px;background:linear-gradient(90deg,var(--accent-dark),var(--accent));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 50%,transparent);transition:left .5s cubic-bezier(.2,.7,.2,1),width .5s}.galerie__item{flex:none;height:var(--gh);max-width:82vw;margin:0;position:relative;overflow:hidden;border:1px solid var(--line);background:#000;scroll-snap-align:start}
-.galerie__nav{position:absolute;top:calc(var(--gh) / 2);transform:translateY(-50%);z-index:2;width:46px;height:46px;background:rgba(10,11,14,.75);border:1px solid var(--line);color:var(--accent);font-size:30px;line-height:1;cursor:pointer;transition:.2s}
-.galerie__nav:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
-.galerie__nav:disabled{opacity:0;pointer-events:none}
-.galerie__nav--prev{left:-10px}.galerie__nav--next{right:-10px}
-.galerie__item button{display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:pointer}
-.galerie__item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease,filter .6s ease;filter:saturate(.85) sepia(.15)}
-.galerie__item:hover img{transform:scale(1.05);filter:none}
-.galerie__item figcaption{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 12px;background:linear-gradient(to top,rgba(10,11,14,.9),transparent);font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:2px;opacity:0;transition:opacity .3s;pointer-events:none}
-.galerie__item figcaption b{font-family:var(--serif);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);font-weight:400}
-.galerie__item:hover figcaption{opacity:1}
-.lightbox{position:fixed;inset:0;z-index:100;background:rgba(10,11,14,.94);display:flex;align-items:center;justify-content:center;padding:60px 70px}
-.lightbox figure{margin:0;max-width:100%;max-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
-.lightbox img{max-width:100%;max-height:calc(100vh - 150px);object-fit:contain;border:1px solid var(--accent-dark);box-shadow:0 30px 80px rgba(0,0,0,.8)}
-.lightbox figcaption{color:var(--ink2);font-size:15px;text-align:center}
-.lightbox figcaption b{color:var(--ink);font-weight:500}
-.lightbox figcaption span{font-family:var(--serif);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-left:8px}
-.lightbox__close,.lightbox__nav{position:absolute;background:none;border:1px solid var(--line);color:var(--accent);cursor:pointer;font-size:22px;width:46px;height:46px;transition:.2s}
-.lightbox__close:hover,.lightbox__nav:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
-.lightbox__close{top:18px;right:18px}
-.lightbox__nav{top:50%;transform:translateY(-50%);font-size:32px}
-.lightbox__nav--prev{left:14px}.lightbox__nav--next{right:14px}
-@media (max-width:1000px){.galerie{--gh:280px}}
-/* téléphone : une photo par écran, pleine largeur, sans fondu ni bout de la suivante */
-@media (max-width:640px){
-  .galerie__track{gap:0;-webkit-mask-image:none;mask-image:none}
-  .galerie__item{flex:0 0 100%;max-width:none;height:auto;aspect-ratio:4/3!important;scroll-snap-align:center}
-  .galerie__item figcaption{opacity:1}
-  .galerie__nav{display:none}.lightbox{padding:60px 10px}.lightbox__nav{display:none}
+  body.vitrine{--gauche:20px;--droite:20px;padding-bottom:40px}
+  .nav{padding:12px 16px}
+  body.vitrine .nav{padding:16px 20px}
+  .wrap{padding:0 16px}
+  body.vitrine .nav__links{padding:100px 24px 60px}
+  body.vitrine .nav__links a,body.vitrine .nav__links .nav__cta{font-size:clamp(44px,14vw,80px)}
+  .bobine{top:auto;right:0;width:auto;height:40px;border-right:0;border-top:1px solid rgba(241,239,233,.14)}
+  .bobine::before{left:0;right:0;top:5px;bottom:auto;width:auto;height:5px;background:repeating-linear-gradient(90deg,transparent 0 9px,currentColor 9px 17px)}
+  .bobine::after{top:auto;bottom:-1px;left:0;right:auto;width:100%;height:2px;transform:scaleX(0);transform-origin:left}
+  @keyframes progression{to{transform:scaleX(1)}}
+  .bobine ol{position:static;transform:none;flex-direction:row;justify-content:space-around;gap:0;padding:15px 8px 0}
+  .bobine span,.bobine__heure{display:none}
+  /* prise de vue : le nom en bas, les notes en haut, la pièce floue derrière */
+  .viseur{inset:70px 12px 56px}
+  .viseur__expo{display:none}
+  .prise__sujet{top:92px;left:34px}
+  .prise__notes{top:160px;left:34px;right:34px;width:auto;font-size:14px}
+  .prise__nom{font-size:21vw;bottom:7vh}
+  .citation{padding:16vh 20px 16vh 12vw}
+  .pose{width:84vw;padding:26px 22px}
+  .pose__bord{left:22px}
+  .pose h2,.pose h3{font-size:21vw}
+  .ch--chambre{padding:16vh 16px 18vh}
+  .org__tier--row{gap:28px 12px}
+  .rank,.rank--lvl1,.rank--lvl2{--ph:118px;width:calc(50% - 6px)}
+  .rank--lvl1,.rank--lvl2{--ph:170px;width:min(260px,80%)}
+  .rank__name{font-size:18px}
+  .rank--lvl1 .rank__name{font-size:28px}
+  .rank--lvl2 .rank__name{font-size:24px}
+  .tirage__bas{grid-template-columns:1fr}
+  /* table lumineuse : deux colonnes, les photos larges sur toute la largeur */
+  .table__tete{grid-template-columns:1fr}
+  .table__titre{grid-row:auto;font-size:clamp(64px,22vw,120px)}
+  .table__planche{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:40vw;gap:22px 12px}
+  .negatif--large,.negatif--large:first-child{grid-column:span 2;grid-row:span 1}
+  .negatif--haute{grid-column:span 1;grid-row:span 2}
+  .negatif--carree{grid-column:span 1;grid-row:span 1}
+  .negatif__cadre{border-width:6px}
+  .negatif figcaption i{display:none}
+  .lightbox{padding:60px 10px}.lightbox__nav{display:none}
 }
 [hidden]{display:none!important}

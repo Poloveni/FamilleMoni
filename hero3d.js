@@ -1,4 +1,4 @@
-/* Blason 3D du hero (three.js r128) : la pièce porte assets/medallion.png */
+/* Pièce 3D du hero (three.js r128), posée sous la lampe à côté du dossier : elle porte assets/medallion.png */
 (function () {
   if (typeof THREE === 'undefined') return;
   const canvas = document.getElementById('hero3d');
@@ -21,7 +21,7 @@
   faceTex.encoding = THREE.sRGBEncoding;
   faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
-  // couleur d'accent du site (site.json → --accent dans styles.css) : liseré, lumières, particules
+  // couleur d'accent du site (site.json → --accent dans theme.css) : liseré et contre-jour
   const ACCENT = new THREE.Color((getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#e5484d').trim());
   const rgba = a => `rgba(${Math.round(ACCENT.r * 255)},${Math.round(ACCENT.g * 255)},${Math.round(ACCENT.b * 255)},${a})`;
 
@@ -51,47 +51,25 @@
 
   // ---- lights
   scene.add(new THREE.AmbientLight(0x2a2e36, 0.9));
-  const key = new THREE.SpotLight(0xffffff, 2.2, 30, 0.6, 0.6, 1); key.position.set(4, 5, 6); scene.add(key);
+  const key = new THREE.SpotLight(0xffd9a8, 2.4, 30, 0.6, 0.6, 1); key.position.set(-3, 6, 6); scene.add(key);   // la lampe de bureau, chaude, en haut à gauche
   const rimL = new THREE.DirectionalLight(ACCENT, 1.4); rimL.position.set(-5, 2, -4); scene.add(rimL);
   const fill = new THREE.PointLight(0x3b4250, 0.8, 20); fill.position.set(-3, -2, 4); scene.add(fill);
   const glow = new THREE.PointLight(ACCENT, 0.0, 12); glow.position.set(0, 0, 2.5); scene.add(glow);
 
-  // ---- particules
-  const N = 700;
+  // ---- poussière qui flotte dans la lumière de la lampe
+  const N = 380;
   const pos = new Float32Array(N * 3), spd = new Float32Array(N);
-  for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - .5) * 16; pos[i * 3 + 1] = (Math.random() - .5) * 9; pos[i * 3 + 2] = (Math.random() - .5) * 8 - 1; spd[i] = 0.2 + Math.random() * 0.8; }
+  for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - .5) * 16; pos[i * 3 + 1] = (Math.random() - .5) * 9; pos[i * 3 + 2] = (Math.random() - .5) * 8 - 1; spd[i] = 0.1 + Math.random() * 0.4; }
   const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   const sprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.35, 'rgba(255,255,255,.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
-  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ size: 0.07, map: sprite, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: ACCENT, opacity: 0.6 }));
+  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ size: 0.07, map: sprite, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe2b8, opacity: 0.35 }));
   scene.add(dust);
 
-  // ---- halo : lueur douce derrière la pièce + deux traînées de lumière qui tournent autour
+  // ---- halo : lueur douce derrière la pièce
   const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, rgba(.4)); gr.addColorStop(.35, rgba(.16)); gr.addColorStop(.7, rgba(.04)); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c); })();
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9 }));
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.5 }));
   halo.scale.setScalar(R * 3.4);
   scene.add(halo);
-
-  const RING_N = 160, ringR = R + 0.32;
-  const ringPos = new Float32Array(RING_N * 3), ringCol = new Float32Array(RING_N * 3);
-  for (let i = 0; i < RING_N; i++) { const a = i / RING_N * Math.PI * 2; ringPos[i * 3] = Math.cos(a) * ringR; ringPos[i * 3 + 1] = Math.sin(a) * ringR; ringPos[i * 3 + 2] = 0; }
-  const ringGeo = new THREE.BufferGeometry();
-  ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPos, 3));
-  ringGeo.setAttribute('color', new THREE.BufferAttribute(ringCol, 3));
-  const ring = new THREE.Points(ringGeo, new THREE.PointsMaterial({ size: 0.16, map: sprite, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }));
-  const ring2 = ring.clone(); ring2.material = ring.material;
-  scene.add(ring); scene.add(ring2);
-  // deux "comètes" qui courent le long de l'anneau : l'intensité décroît derrière la tête
-  function updateRing(t) {
-    const col = ringGeo.attributes.color.array;
-    const heads = [t * 0.45, t * 0.45 + Math.PI];
-    for (let i = 0; i < RING_N; i++) {
-      const a = i / RING_N * Math.PI * 2; let v = 0;
-      for (const h of heads) { let d = (h - a) % (Math.PI * 2); if (d < 0) d += Math.PI * 2; v = Math.max(v, Math.exp(-d * 2.2)); }
-      const g = 0.06 + v * 1.2;
-      col[i * 3] = g * ACCENT.r; col[i * 3 + 1] = g * ACCENT.g; col[i * 3 + 2] = g * ACCENT.b;
-    }
-    ringGeo.attributes.color.needsUpdate = true;
-  }
 
   // ---- interaction (drag on the hero, wheel left to the page)
   let dragging = false, lx = 0, ly = 0, velX = 0, velY = 0, rotX = 0, rotY = 0, autoSpin = true;
@@ -137,13 +115,7 @@
     // halo qui respire et dérive légèrement autour de la pièce
     halo.position.set(coinX + Math.sin(t * 0.5) * 0.12, coin.position.y + Math.cos(t * 0.4) * 0.1, -0.4);
     halo.scale.setScalar((R * 3.2 + Math.sin(t * 1.3) * 0.25) * coinScale);
-    halo.material.opacity = 0.75 + Math.sin(t * 0.9) * 0.15;
-    // anneaux de lumière : inclinés, en rotation lente, autour de la pièce
-    ring.position.copy(coin.position); ring2.position.copy(coin.position);
-    ring.scale.setScalar(coinScale); ring2.scale.setScalar(coinScale);
-    ring.rotation.set(0.35 + Math.sin(t * 0.3) * 0.1, t * 0.25, 0);
-    ring2.rotation.set(-0.5 + Math.cos(t * 0.27) * 0.1, -t * 0.2 + 1.3, 0.3);
-    updateRing(t);
+    halo.material.opacity = 0.45 + Math.sin(t * 0.9) * 0.1;
     camera.position.x += ((mouse.x * 0.35) - camera.position.x) * 0.04;
     camera.position.y += ((-mouse.y * 0.25 + 0.2) - camera.position.y) * 0.04;
     camera.lookAt(0, 0, 0);
@@ -152,7 +124,7 @@
     glow.intensity = 0.4 + facing * 1.4 + Math.sin(t * 2) * 0.15;
     faceMat.emissiveIntensity = 0.35 + facing * 0.35;
     const a = dustGeo.attributes.position.array;
-    for (let i = 0; i < N; i++) { a[i * 3 + 1] += spd[i] * 0.0025; if (a[i * 3 + 1] > 4.5) a[i * 3 + 1] = -4.5; }
+    for (let i = 0; i < N; i++) { a[i * 3 + 1] += spd[i] * 0.0025; a[i * 3] += Math.sin(t * 0.3 + i) * 0.0008; if (a[i * 3 + 1] > 4.5) a[i * 3 + 1] = -4.5; }
     dustGeo.attributes.position.needsUpdate = true;
     dust.rotation.y = t * 0.02;
     renderer.render(scene, camera);

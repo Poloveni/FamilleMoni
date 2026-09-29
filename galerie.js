@@ -1,8 +1,11 @@
-/* Galerie publique (photos postées par les membres depuis l’espace membre) */
+/* Galerie publique (photos postées par les membres depuis l’espace membre) : chapitre « Table lumineuse ».
+   Les photos sont posées en négatifs sur une table éclairée ; sous la loupe (curseur), la photo apparaît en positif,
+   agrandie. Clic ou toucher : le tirage en grand dans la visionneuse. */
 (function () {
-  const sec = document.getElementById('galerie'), grid = document.getElementById('galerieGrid');
+  const sec = document.getElementById('galerie'), grid = document.getElementById('galerieGrid'), loupe = document.getElementById('loupe');
   if (!sec) return;
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const deux = n => String(n).padStart(2, '0');
   let photos = [], cur = 0;
   const lb = document.getElementById('lightbox'), img = document.getElementById('lbImg'), cap = document.getElementById('lbCap');
   function show(i) {
@@ -18,75 +21,47 @@
   lb.addEventListener('click', e => { if (e.target === lb) close(); });
   addEventListener('keydown', e => { if (lb.hidden) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
 
-  // ---- bandeau : défilement automatique d'une photo toutes les 4 s, en pause dès qu'on s'en sert
-  const prev = document.getElementById('galeriePrev'), next = document.getElementById('galerieNext');
-  const STEP_MS = 4000, IDLE_MS = 8000;   // cadence ; reprise 8 s après la dernière action du visiteur
-  const still = matchMedia('(prefers-reduced-motion: reduce)');
-  let hovered = false, visible = false, lastUser = 0;
-  const touched = () => { lastUser = Date.now(); };
-  const atEnd = () => grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 4;
-  // flèches et ligne de progression (portion visible du bandeau)
-  const bar = document.getElementById('galerieBar');
-  function arrows() {
-    prev.disabled = grid.scrollLeft <= 4; next.disabled = atEnd();
-    const w = grid.scrollWidth || 1;
-    bar.style.width = `${grid.clientWidth / w * 100}%`; bar.style.left = `${grid.scrollLeft / w * 100}%`;
-  }
-  // photo suivante (ou précédente) par rapport à la position actuelle ; au bout, retour au début
-  function step(dir) {
-    const x = grid.scrollLeft, items = [...grid.children];
-    if (dir > 0 && atEnd()) { grid.scrollTo({ left: 0 }); return; }
-    const target = dir > 0 ? items.find(el => el.offsetLeft > x + 4) : items.reverse().find(el => el.offsetLeft < x - 4);
-    grid.scrollTo({ left: target ? target.offsetLeft : 0 });
-  }
-  setInterval(() => {
-    if (still.matches || hovered || !visible || document.hidden || !lb.hidden || Date.now() - lastUser < IDLE_MS) return;
-    if (grid.scrollWidth > grid.clientWidth) step(1);
-  }, STEP_MS);
-  prev.onclick = () => { touched(); step(-1); };
-  next.onclick = () => { touched(); step(1); };
-  grid.addEventListener('scroll', arrows, { passive: true });
-  ['wheel', 'pointerdown', 'touchstart', 'keydown'].forEach(ev => grid.addEventListener(ev, touched, { passive: true }));
-  sec.querySelector('.galerie').addEventListener('mouseenter', () => { hovered = true; });
-  sec.querySelector('.galerie').addEventListener('mouseleave', () => { hovered = false; });
-  // glisser à la souris (au doigt, le navigateur le fait déjà) ; un vrai glissé n'ouvre pas la photo
-  let drag = null, draggedAt = 0;
-  grid.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) drag = { x: e.clientX, left: grid.scrollLeft, moved: false }; });
-  addEventListener('pointermove', e => {
-    if (!drag) return;
-    const dx = e.clientX - drag.x;
-    if (!drag.moved && Math.abs(dx) > 5) { drag.moved = true; grid.classList.add('is-dragging'); }
-    if (drag.moved) { grid.scrollLeft = drag.left - dx; touched(); }
-  });
-  addEventListener('pointerup', () => {
-    if (!drag) return;
-    if (drag.moved) {
-      draggedAt = Date.now();   // le clic qui suit le lâcher n'ouvre pas la photo
-      const left = grid.scrollLeft; grid.classList.remove('is-dragging'); grid.scrollLeft = left;   // l'aimantation reprend sur la photo la plus proche
-    }
-    drag = null;
-  });
-  grid.addEventListener('dragstart', e => e.preventDefault());
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.4 }).observe(grid);
-  addEventListener('resize', arrows);
-
   // photos d'exemple (fichiers du projet, assets/exemples/) : affichées tant qu'aucune vraie photo n'est publiée.
   // Pour ne jamais les montrer, vider cette liste (et supprimer le dossier).
   const EXEMPLES = [[1, 1600, 900], [2, 1600, 900], [3, 1200, 1200], [4, 1600, 900], [5, 1000, 1400], [6, 1600, 900]]
     .map(([n, width, height]) => ({ url: `assets/exemples/exemple-${n}.jpg`, thumb: `assets/exemples/exemple-${n}.jpg`, width, height,
       caption: 'Photo d’exemple', author: { displayName: 'Exemple', rankLabel: '' } }));
 
-  fetch('api/gallery?limit=48').then(r => r.ok ? r.json() : []).catch(() => []).then(list => {
+  // format de la case d'après la photo : large, haute ou carrée (la mosaïque se compose en CSS, grid-auto-flow: dense)
+  const format = p => { const r = p.width / p.height || 1; return r > 1.35 ? 'large' : r < .8 ? 'haute' : 'carree'; };
+
+  // ---- loupe : suit le curseur ; sur un négatif, découvre le positif agrandi à cet endroit (--lx / --ly en %)
+  let survol = null;
+  function vise(e) {
+    if (e.pointerType !== 'mouse') return;
+    const f = e.target.closest('.negatif');
+    if (survol && survol !== f) survol.classList.remove('is-loupe');
+    survol = f;
+    const r = sec.getBoundingClientRect();
+    loupe.style.transform = `translate(${e.clientX - r.left}px,${e.clientY - r.top}px)`;
+    // la loupe reste visible sur toute la mosaïque : entre deux négatifs, elle ne clignote pas
+    sec.classList.toggle('a-loupe', !!e.target.closest('.table__planche'));
+    if (!f) return;
+    const b = f.querySelector('.negatif__neg').getBoundingClientRect();
+    f.style.setProperty('--lx', `${((e.clientX - b.left) / b.width * 100).toFixed(2)}%`);
+    f.style.setProperty('--ly', `${((e.clientY - b.top) / b.height * 100).toFixed(2)}%`);
+    f.classList.add('is-loupe');
+  }
+  sec.addEventListener('pointermove', vise);
+  sec.addEventListener('pointerleave', () => { sec.classList.remove('a-loupe'); survol?.classList.remove('is-loupe'); survol = null; });
+
+  fetch('api/gallery?limit=24').then(r => r.ok ? r.json() : []).catch(() => []).then(list => {
     photos = list.length ? list : EXEMPLES; if (!photos.length) return;
-    // largeur d'après les proportions de la photo (bornées : ni bandeau trop fin, ni panorama géant)
-    const ratio = p => Math.min(1.9, Math.max(0.6, p.width / p.height || 1)).toFixed(3);
+    // la grande image (url) sert au positif sous la loupe, agrandi ; la miniature au négatif
     grid.innerHTML = photos.map((p, i) => `
-      <figure class="galerie__item" style="aspect-ratio:${ratio(p)}">
-        <button type="button" data-i="${i}"><img src="${esc(p.thumb)}" alt="${esc(p.caption)}" loading="lazy" width="${p.width}" height="${p.height}"></button>
-        <figcaption>${p.caption ? `<i>${esc(p.caption)}</i>` : ''}<b>${esc(p.author.displayName)}</b></figcaption>
+      <figure class="negatif negatif--${format(p)}">
+        <button type="button" class="negatif__cadre" data-i="${i}" aria-label="Voir le tirage ${i + 1}${p.caption ? ` : ${esc(p.caption)}` : ''}">
+          <img class="negatif__neg" src="${esc(p.thumb)}" alt="" loading="lazy">
+          <img class="negatif__pos" src="${esc(p.url)}" alt="${esc(p.caption)}" loading="lazy">
+        </button>
+        <figcaption><b>▸ ${deux(i + 1)}A</b>${p.caption ? `<i>${esc(p.caption)}</i>` : ''}<span>${esc(p.author.displayName)}</span></figcaption>
       </figure>`).join('');
-    grid.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b && Date.now() - draggedAt > 100) show(Number(b.dataset.i)); });
+    grid.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) show(Number(b.dataset.i)); });
     sec.hidden = false; const nav = document.getElementById('navGalerie'); if (nav) nav.hidden = false;
-    arrows();
   }).catch(() => {});
 })();
