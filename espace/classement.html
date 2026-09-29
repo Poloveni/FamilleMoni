@@ -16,29 +16,7 @@
 </head>
 <body class="espace-body">
 
-<header class="nav is-scrolled">
-  <a class="nav__brand" href="../"><img src="../assets/logo.png" alt="" width="40" height="40"><span>{{nom}}</span></a>
-  <nav class="nav__links espace-nav">
-    <a href="profil.html">Mon profil</a>
-    <a href="membres.html">Membres</a>
-    <a href="classement.html" class="is-active">Classement</a>
-    <a href="chat.html" id="chatLink">Le Salon<span class="nav__badge" id="chatBadge" hidden></span></a>
-    <a href="galerie.html">Galerie</a>
-    <div class="nav__group" id="gestion" hidden>
-      <button class="nav__group-btn" type="button" aria-expanded="false">Gestion <i>▾</i></button>
-      <div class="nav__menu">
-        <a href="admin.html">Administration</a>
-        <a href="tableau.html">Tableau de bord</a>
-        <a href="stats.html">Statistiques</a>
-        <a href="taxes.html">Taxes</a>
-        <a href="armurerie.html">Armurerie</a>
-        <a href="organigramme.html" id="orgLink" hidden>Hiérarchie</a>
-      </div>
-    </div>
-    <a href="../">Le site</a>
-    <button class="nav__cta espace-logout" id="logout">Déconnexion</button>
-  </nav>
-</header>
+<script>espaceShell()</script>
 
 <main class="espace-page espace-page--wide">
   <div class="section__head">
@@ -57,13 +35,9 @@
     </div>
 
     <section class="admin-block">
-      <div class="table-wrap">
-        <table class="admin-table dash-table rank-table">
-          <thead id="head"></thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-      <p class="admin-block__hint">Classement par points du bot (voir /config classement sur Discord) ; paie estimée selon ses taux, hors primes.</p>
+      <div class="podium" id="podium"></div>
+      <div class="palmares" id="palmares" role="table" aria-label="Classement de la semaine"></div>
+      <p class="admin-block__hint">Classement par points du bot (voir /config classement sur Discord), puis par paie ; paie estimée selon ses taux, hors primes.</p>
     </section>
   </div>
 </main>
@@ -73,18 +47,22 @@
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const money = n => Math.round(n).toLocaleString('fr-FR') + ' $';
   const dlong = ms => new Date(ms).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const MEDAL = ['🥇', '🥈', '🥉'];
   const api = url => fetch(url, { credentials: 'same-origin' }).then(async r => { if (r.status === 401) { location.replace('./'); throw 0; } if (r.status === 403) { location.replace('attente.html'); throw 0; } return r.json(); });
   let me;
 
-  function bar(v, t) {
-    if (!t) return `<b>${v}</b>`;
-    const pct = Math.min(100, Math.round(v / t * 100));
-    return `<div class="rbar ${v >= t ? 'is-done' : ''}"><i><b style="width:${pct}%"></b></i><small>${v} <span>(${pct} %)</span></small></div>`;
+  // jauge d'une catégorie : verte si l'objectif est rempli, ambre en cours, un simple tiret si rien n'est déclaré
+  function jauge(v, t, label) {
+    const etat = !v ? 'is-vide' : t && v >= t ? 'is-done' : 'is-cours';
+    const pct = t ? Math.min(100, Math.round(v / t * 100)) : (v ? 100 : 0);
+    return `<div class="jauge ${etat}" role="cell" data-label="${esc(label)}">
+      <span class="jauge__val">${v ? `<b>${v}</b>${t ? `<small> / ${t}</small>` : ''}` : '<small>—</small>'}</span>
+      <i class="jauge__barre"><b style="width:${pct}%"></b></i></div>`;
   }
   async function load() {
-    const [cfg, pay, ranking, ventes, users] = await Promise.all([espaceBot.get('quotas/config'), espaceBot.get('quotas/pay'), espaceBot.get('quotas/ranking'), espaceBot.get('ventes'), espaceBot.get('users')]);
+    const [cfg, pay, ranking, ventes, users, annuaire] = await Promise.all([espaceBot.get('quotas/config'), espaceBot.get('quotas/pay'), espaceBot.get('quotas/ranking'), espaceBot.get('ventes'), espaceBot.get('users'),
+      fetch('../api/membres', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : []).catch(() => [])]);
     const name = await espaceBot.names(users);
+    const avatars = Object.fromEntries(annuaire.map(m => [m.discordId, m.avatarUrl]));
     const points = Object.fromEntries(ranking.map(r => [r.userId, r.points]));
     const cats = [...new Set([...Object.keys(cfg.targets), ...Object.keys(cfg.salaryRates), ...pay.flatMap(p => Object.keys(p.byQuotaType))])];
     const targets = cfg.targets, withTargets = cats.filter(k => targets[k]);
@@ -95,12 +73,33 @@
     $('tVente').textContent = ventes.groupTotal; $('tVenteNote').textContent = targets.vente ? `objectif ${targets.vente} par membre` : '';
     $('tQuota').textContent = `${rows.filter(r => withTargets.length && withTargets.every(k => (r.byQuotaType[k] || 0) >= targets[k])).length} / ${rows.length}`;
     $('tActifs').textContent = rows.length;
-    $('head').innerHTML = `<tr><th>#</th><th>Membre</th>${cats.map(k => `<th>${esc(espaceBot.label(k))}${targets[k] ? ` <small>/ ${targets[k]}</small>` : ''}</th>`).join('')}<th>Points</th><th>Paie estimée</th></tr>`;
-    $('rows').innerHTML = rows.length ? rows.map((r, i) => `<tr class="${r.userId === me.discordId ? 'is-me' : ''}">
-      <td class="muted">${i + 1}</td><td><b>${esc(name(r.userId))}</b>${r.userId === me.discordId ? ' <span class="tag">toi</span>' : ''}</td>
-      ${cats.map(k => `<td>${bar(r.byQuotaType[k] || 0, targets[k])}</td>`).join('')}
-      <td><b>${r.points}</b> ${i < 3 && r.points > 0 ? MEDAL[i] : ''}</td><td><b class="pay">${money(r.salaire)}</b></td></tr>`).join('')
-      : `<tr><td colspan="${cats.length + 4}" class="muted">Personne n'a encore déclaré d'activité cette semaine.</td></tr>`;
+    const avecPoints = rows.some(r => r.points > 0);   // colonne des points seulement si le bot en attribue
+    const faits = r => withTargets.filter(k => (r.byQuotaType[k] || 0) >= targets[k]).length;
+    const toi = r => r.userId === me.discordId ? ' <span class="tag tag--accent">toi</span>' : '';
+    const rang = i => String(i + 1).padStart(2, '0');
+    // podium : les trois premiers, en fiches
+    $('podium').innerHTML = rows.slice(0, 3).map((r, i) => `
+      <article class="podium__carte${r.userId === me.discordId ? ' is-me' : ''}">
+        <span class="podium__rang" aria-label="Rang ${i + 1}">${rang(i)}</span>
+        <div class="podium__qui">${espaceAvatar(avatars[r.userId], i === 0 ? 58 : 48)}<div><b>${esc(name(r.userId))}${toi(r)}</b>
+          <small>${withTargets.length ? `${faits(r)} / ${withTargets.length} objectif${withTargets.length > 1 ? 's' : ''} rempli${faits(r) > 1 ? 's' : ''}` : ''}${avecPoints ? ` · ${r.points} pts` : ''}</small></div></div>
+        <p class="podium__paie"><span>Paie estimée</span><b>${money(r.salaire)}</b></p>
+        <div class="podium__jauges">${withTargets.map(k => jauge(r.byQuotaType[k] || 0, targets[k], espaceBot.label(k))).join('')}</div>
+      </article>`).join('');
+    // palmarès complet : une ligne par membre, mêmes colonnes pour tous (--n catégories)
+    const pal = $('palmares');
+    pal.style.setProperty('--n', cats.length);
+    pal.classList.toggle('has-points', avecPoints);
+    pal.innerHTML = !rows.length ? `<p class="admin-empty">Personne n'a encore déclaré d'activité cette semaine.</p>` : `
+      <div class="palmares__tete" role="row"><span role="columnheader">#</span><span role="columnheader">Membre</span>
+        ${cats.map(k => `<span role="columnheader">${esc(espaceBot.label(k))}${targets[k] ? ` <small>/ ${targets[k]}</small>` : ''}</span>`).join('')}
+        ${avecPoints ? '<span role="columnheader">Points</span>' : ''}<span role="columnheader">Paie</span></div>
+      ${rows.map((r, i) => `<div class="palmares__ligne${r.userId === me.discordId ? ' is-me' : ''}${i < 3 ? ' is-podium' : ''}" role="row">
+        <span class="palmares__rang" role="cell">${rang(i)}</span>
+        <span class="palmares__qui" role="cell">${espaceAvatar(avatars[r.userId])}<b>${esc(name(r.userId))}</b>${toi(r)}</span>
+        ${cats.map(k => jauge(r.byQuotaType[k] || 0, targets[k], espaceBot.label(k))).join('')}
+        ${avecPoints ? `<span class="palmares__points" role="cell">${r.points}</span>` : ''}
+        <span class="palmares__paie" role="cell">${money(r.salaire)}</span></div>`).join('')}`;
     $('page').hidden = false;
   }
   async function start() {

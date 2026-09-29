@@ -5,7 +5,7 @@ import express, { type ErrorRequestHandler } from 'express';
 import session from 'express-session';
 import connectPg from 'connect-pg-simple';
 import { config } from './config.js';
-import { pool } from './db.js';
+import { pool, prisma } from './db.js';
 import { loadRanks } from './ranks.js';
 import { storage } from './storage.js';
 import { limits, securityHeaders } from './security.js';
@@ -41,6 +41,14 @@ app.use(auth, members, hierarchy, gallery, chat, bot);
 // jamais le reste du dépôt (code du serveur, compose.yaml, README…), quelle que soit l'écriture de l'adresse.
 // Les pages (.html, .txt, .xml) passent par site.ts, qui y insère l'identité du site (site.json).
 const statics: Parameters<typeof express.static>[1] = { index: false, dotfiles: 'ignore' };
+// session déjà ouverte : /espace/ mène droit au profil (ou à l'attente), sans afficher la page de connexion
+// qui redirigeait elle-même en JavaScript — un second chargement, visible, juste après l'arrivée
+app.get(['/espace', '/espace/', '/espace/index.html'], async (req, res, next) => {
+  if (!req.session.memberId) return next();
+  const m = await prisma.member.findUnique({ where: { id: req.session.memberId }, select: { status: true } });
+  if (!m) return next();
+  res.redirect(m.status === 'approved' ? '/espace/profil.html' : '/espace/attente.html');
+});
 app.use('/espace', pages(join(config.root, 'espace')), express.static(join(config.root, 'espace'), statics));
 // images gardées 7 jours par les navigateurs en production ; en dev, toujours revalidées (un visuel changé s'affiche aussitôt)
 app.use('/assets', express.static(join(config.root, 'assets'), { dotfiles: 'ignore', maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));

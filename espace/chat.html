@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Le Salon — {{espace}} · {{nom}}</title>
+<title>Chat — {{espace}} · {{nom}}</title>
 <meta name="application-name" content="{{nom}}">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="../assets/favicon.png">
@@ -16,33 +16,11 @@
 </head>
 <body class="espace-body espace-body--chat" data-fx="soft">
 
-<header class="nav is-scrolled">
-  <a class="nav__brand" href="../"><img src="../assets/logo.png" alt="" width="40" height="40"><span>{{nom}}</span></a>
-  <nav class="nav__links espace-nav">
-    <a href="profil.html">Mon profil</a>
-    <a href="membres.html">Membres</a>
-    <a href="classement.html">Classement</a>
-    <a href="chat.html" class="is-active" id="chatLink">Le Salon<span class="nav__badge" id="chatBadge" hidden></span></a>
-    <a href="galerie.html">Galerie</a>
-    <div class="nav__group" id="gestion" hidden>
-      <button class="nav__group-btn" type="button" aria-expanded="false">Gestion <i>▾</i></button>
-      <div class="nav__menu">
-        <a href="admin.html">Administration</a>
-        <a href="tableau.html">Tableau de bord</a>
-        <a href="stats.html">Statistiques</a>
-        <a href="taxes.html">Taxes</a>
-        <a href="armurerie.html">Armurerie</a>
-        <a href="organigramme.html" id="orgLink" hidden>Hiérarchie</a>
-      </div>
-    </div>
-    <a href="../">Le site</a>
-    <button class="nav__cta espace-logout" id="logout">Déconnexion</button>
-  </nav>
-</header>
+<script>espaceShell()</script>
 
 <main class="chat">
   <aside class="chat__side">
-    <h2 class="chat__title">Le Salon</h2>
+    <h2 class="chat__title">Chat</h2>
     <p class="chat__sub">La discussion de {{groupe}}</p>
     <h3 class="chat__side-title">En ligne <span class="badge badge--accent" id="onlineCount">0</span></h3>
     <ul class="chat__online" id="online"></ul>
@@ -55,8 +33,9 @@
       <button class="chat__more" id="more" hidden>Messages plus anciens</button>
     </div>
     <form class="chat__form" id="form" autocomplete="off">
-      <textarea id="input" rows="1" maxlength="1000" placeholder="Écris un message… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)" required></textarea>
-      <button class="btn btn--accent" type="submit">Envoyer</button>
+      <textarea id="input" rows="1" maxlength="1000" placeholder="Écrire un message…" aria-describedby="chatAide" required></textarea>
+      <button class="chat__envoi" type="submit" aria-label="Envoyer"><span>Envoyer</span><i aria-hidden="true">↵</i></button>
+      <p class="chat__aide" id="chatAide"><kbd>Entrée</kbd> envoyer <kbd>Maj</kbd>+<kbd>Entrée</kbd> nouvelle ligne <kbd>@</kbd> mentionner</p>
     </form>
   </section>
 </main>
@@ -194,7 +173,7 @@
   $('more').addEventListener('click', async () => { const list = await api('../api/chat/messages?before=' + oldest); prepend(list); });
   log.addEventListener('click', async e => {
     const b = e.target.closest('[data-del]'); if (!b) return;
-    if (await espaceConfirm('Ce message sera retiré du Salon pour tout le monde.', { title: 'Supprimer ce message ?', ok: 'Supprimer', danger: true }))
+    if (await espaceConfirm('Ce message sera retiré du chat pour tout le monde.', { title: 'Supprimer ce message ?', ok: 'Supprimer', danger: true }))
       await api('../api/chat/messages/' + b.dataset.del, { method: 'DELETE' }).catch(() => {});
   });
   $('logout').addEventListener('click', async () => { es && es.close(); await fetch('../auth/logout', { method: 'POST', credentials: 'same-origin' }); location.href = './'; });

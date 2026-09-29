@@ -32,49 +32,178 @@ window.espaceConfirm = function (message, { title = 'Confirmer', ok = 'Confirmer
   });
 };
 
-// Menu « Gestion » (hiérarchie) : affichage selon le grade + ouverture/fermeture
-window.espaceNav = function (me) {
-  const g = document.getElementById('gestion'); if (!g) return;
-  if (me && me.isAdmin) g.hidden = false;
-  const org = document.getElementById('orgLink');
-  if (org && me && me.canManage) org.hidden = false;
+// Transition entre pages (espace.css) : par défaut « vers-espace » (volet, arrivée depuis la vitrine) ;
+// venant d'une autre page de l'espace, « interne » : seul le contenu change, le rail reste en place.
+// L'arrivée ne sait pas d'où elle vient (document.referrer et navigation.activation.from vides : Referrer-Policy
+// no-referrer, security.ts) : c'est la page quittée, qui connaît sa destination, qui laisse la consigne.
+// Écouteurs posés dès l'en-tête : pagereveal précède le premier rendu.
+addEventListener('pageswap', e => {
+  try {
+    const vers = e.viewTransition && new URL(e.activation.entry.url);
+    if (vers && vers.origin === location.origin && vers.pathname.startsWith('/espace/')) sessionStorage.setItem('vt-interne', '1');
+  } catch {}
+});
+addEventListener('pagereveal', e => {
+  let interne = false;
+  try { interne = sessionStorage.getItem('vt-interne') === '1'; sessionStorage.removeItem('vt-interne'); } catch {}
+  if (interne && e.viewTransition) { e.viewTransition.types.clear(); e.viewTransition.types.add('interne'); }
+});
+
+// ================= Coque de l'espace membre : rail de navigation, onglets mobiles, palette de recherche =================
+// La navigation est décrite une seule fois ici. Chaque page appelle espaceShell() à l'endroit où la coque doit apparaître
+// (script en ligne, avant ses propres scripts : #logout, #chatBadge, #gestion existent donc quand ils s'exécutent).
+// Le numéro de chaque rubrique (01, 02…) sert de « numéro de pose », repris dans l'en-tête de la page.
+const ESPACE_NAV = [
+  { groupe: 'Moi', liens: [{ href: 'profil.html', label: 'Mon profil', court: 'Profil' }] },
+  { groupe: 'Le groupe', liens: [
+    { href: 'membres.html', label: 'Membres', court: 'Membres' },
+    { href: 'classement.html', label: 'Classement' },
+    { href: 'chat.html', label: 'Chat', court: 'Chat', badge: 'chat' },
+    { href: 'galerie.html', label: 'Galerie', court: 'Galerie' },
+  ] },
+  { groupe: 'Gestion', id: 'gestion', liens: [
+    { href: 'admin.html', label: 'Administration' },
+    { href: 'tableau.html', label: 'Tableau de bord' },
+    { href: 'stats.html', label: 'Statistiques' },
+    { href: 'taxes.html', label: 'Taxes' },
+    { href: 'armurerie.html', label: 'Armurerie' },
+    { href: 'organigramme.html', label: 'Hiérarchie', id: 'orgLink' },
+  ] },
+];
+// avatar d'une personne : sa photo si elle est connue, sinon rien (ni logo du site répété, ni pastille de remplacement)
+window.espaceAvatar = (src, taille = 32) => src ? `<img class="avatar" src="${espaceEsc(src)}" alt="" width="${taille}" height="${taille}" loading="lazy">` : '';
+const espaceEsc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+window.espaceShell = function () {
+  const ici = location.pathname.split('/').pop() || 'index.html';
+  let n = 0, poseIci = null;
+  const lien = (l, groupe) => {
+    const num = String(++n).padStart(2, '0'), actif = l.href === ici;
+    if (actif) poseIci = { num, groupe, label: l.label };
+    return `<a class="rail__lien${actif ? ' is-active' : ''}" href="${l.href}"${actif ? ' aria-current="page"' : ''}${l.id ? ` id="${l.id}" hidden` : ''}>`
+      + `<b>${num}</b><span>${l.label}</span>${l.badge ? `<i class="nav__badge" data-badge="${l.badge}"${l.badge === 'chat' ? ' id="chatBadge"' : ''} hidden></i>` : ''}</a>`;
+  };
+  const groupes = ESPACE_NAV.map(g => `<div class="rail__groupe"${g.id ? ` id="${g.id}" hidden` : ''}><p>${g.groupe}</p>${g.liens.map(l => lien(l, g.groupe)).join('')}</div>`).join('');
+  // onglets du bas (téléphone) : les rubriques de tous les jours, le reste dans « Plus »
+  const onglets = ESPACE_NAV.flatMap(g => g.liens).filter(l => l.court).map(l =>
+    `<a href="${l.href}"${l.href === ici ? ' class="is-active" aria-current="page"' : ''}><span>${l.court}</span>${l.badge ? `<i class="nav__badge" data-badge="${l.badge}" hidden></i>` : ''}</a>`).join('');
+  document.currentScript.insertAdjacentHTML('beforebegin', `
+    <header class="barre" aria-label="${SITE_NAME_HTML}">
+      <a class="barre__marque" href="../"><img src="../assets/logo.png" alt="" width="28" height="28"><span>${SITE_NAME_HTML}</span></a>
+      <button class="barre__cherche" type="button" data-palette aria-label="Rechercher">⌕</button>
+    </header>
+    <aside class="rail" id="rail" aria-label="Espace membre">
+      <a class="rail__marque" href="../"><img src="../assets/logo.png" alt="" width="32" height="32"><span>${SITE_NAME_HTML}</span></a>
+      <button class="rail__cherche" type="button" data-palette><span>Rechercher</span><kbd>Ctrl K</kbd></button>
+      <nav class="rail__nav">${groupes}</nav>
+      <div class="rail__moi">
+        <img id="railAvatar" src="../assets/favicon.png" alt="" width="36" height="36">
+        <div><b id="railNom">—</b><small id="railGrade"></small></div>
+      </div>
+      <div class="rail__bas"><a href="../">Le site</a><button class="espace-logout" id="logout" type="button">Déconnexion</button></div>
+    </aside>
+    <nav class="onglets" aria-label="Navigation rapide">${onglets}<button type="button" id="ongletPlus" aria-expanded="false" aria-controls="rail"><span>Plus</span></button></nav>`);
+  // « Plus » (téléphone) : le rail s'ouvre en panneau
+  const rail = document.getElementById('rail'), plus = document.getElementById('ongletPlus');
+  const ouvre = v => { rail.classList.toggle('is-open', v); document.body.classList.toggle('nav-lock', v); plus.setAttribute('aria-expanded', v); };
+  plus.addEventListener('click', () => ouvre(!rail.classList.contains('is-open')));
+  // fermé par un lien, ou par un toucher hors du panneau (le voile assombri est dessiné sur le body)
+  document.addEventListener('click', e => {
+    if (!rail.classList.contains('is-open')) return;
+    if (e.target.closest('.rail__lien, .rail__bas a') || (!rail.contains(e.target) && !plus.contains(e.target))) ouvre(false);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') ouvre(false); });
+  document.querySelectorAll('[data-palette]').forEach(b => b.addEventListener('click', () => espacePalette()));
+  // en-tête de la page : numéro de pose et rubrique à la place de l'ornement
+  document.addEventListener('DOMContentLoaded', () => {
+    const num = document.querySelector('.espace-page > .section__head .numeral');
+    if (num && poseIci) num.textContent = `${poseIci.num} — ${poseIci.groupe}`;
+  });
 };
-// Menu mobile (burger, affiché par styles.css quand les liens ne tiennent plus) : ajouté ici pour toutes les pages de l'espace membre
-document.addEventListener('DOMContentLoaded', () => {
-  const nav = document.querySelector('.nav'), links = nav && nav.querySelector('.nav__links');
-  if (!links || nav.querySelector('.nav__burger')) return;
-  const burger = document.createElement('button');
-  burger.className = 'nav__burger'; burger.type = 'button'; burger.setAttribute('aria-label', 'Menu'); burger.setAttribute('aria-expanded', 'false');
-  burger.innerHTML = '<span></span><span></span><span></span>';
-  links.before(burger);
-  const toggle = open => { nav.classList.toggle('is-open', open); document.body.classList.toggle('nav-lock', open); burger.setAttribute('aria-expanded', open); };
-  burger.addEventListener('click', () => toggle(!nav.classList.contains('is-open')));
-  links.addEventListener('click', e => { if (e.target.closest('a')) toggle(false); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') toggle(false); });
-  matchMedia('(min-width:1181px)').addEventListener('change', e => { if (e.matches) toggle(false); });
+
+// Rubriques selon le grade + carte du membre connecté (appelé par chaque page avec /api/me)
+window.espaceNav = function (me) {
+  if (!me) return;
+  const g = document.getElementById('gestion'); if (g && me.isAdmin) g.hidden = false;
+  const org = document.getElementById('orgLink'); if (org && me.canManage) org.hidden = false;
+  const av = document.getElementById('railAvatar'); if (av && me.avatarUrl) av.src = me.avatarUrl;
+  const nom = document.getElementById('railNom'); if (nom) nom.textContent = me.displayName || '—';
+  const gr = document.getElementById('railGrade'); if (gr) gr.textContent = me.rankLabel || 'Sans grade';
+};
+
+// ---- Palette de recherche (Ctrl+K, ⌘K ou /) : pages, membres, actions ; navigation au clavier
+window.espacePalette = function () {
+  if (document.querySelector('.palette')) return;
+  const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const visible = el => !el.closest('[hidden]');
+  const pages = [...document.querySelectorAll('.rail__lien')].filter(visible)
+    .map(a => ({ type: 'Pages', label: a.querySelector('span').textContent, hint: a.closest('.rail__groupe').querySelector('p').textContent, num: a.querySelector('b').textContent, href: a.getAttribute('href') }));
+  const actions = [
+    { type: 'Actions', label: 'Retour au site', hint: 'La vitrine publique', href: '../' },
+    { type: 'Actions', label: 'Se déconnecter', hint: 'Fermer la session', run: () => document.getElementById('logout')?.click() },
+  ];
+  let membres = [], choix = 0, liste = [];
+  const wrap = document.createElement('div');
+  wrap.className = 'palette';
+  wrap.innerHTML = `<div class="palette__box" role="dialog" aria-modal="true" aria-label="Recherche">
+      <label class="palette__champ"><span aria-hidden="true">⌕</span><input type="search" placeholder="Aller à une page, chercher un membre…" autocomplete="off" aria-controls="paletteListe"></label>
+      <ul class="palette__liste" id="paletteListe" role="listbox"></ul>
+      <p class="palette__aide"><kbd>↑</kbd><kbd>↓</kbd> choisir <kbd>Entrée</kbd> ouvrir <kbd>Échap</kbd> fermer</p>
+    </div>`;
+  const input = wrap.querySelector('input'), ul = wrap.querySelector('ul');
+  function rendu() {
+    const q = norm(input.value.trim());
+    const tout = [...pages, ...membres, ...actions];
+    liste = !q ? [...pages, ...actions] : tout.filter(x => norm(`${x.label} ${x.hint || ''}`).includes(q))
+      .sort((a, b) => norm(b.label).startsWith(q) - norm(a.label).startsWith(q)).slice(0, 12);
+    choix = Math.min(choix, Math.max(0, liste.length - 1));
+    let type = '';
+    ul.innerHTML = liste.map((x, i) => `${x.type !== type ? `<li class="palette__type" role="presentation">${type = x.type}</li>` : ''}
+      <li role="option" data-i="${i}" ${i === choix ? 'aria-selected="true"' : ''}>${x.avatar ? `<img src="${espaceEsc(x.avatar)}" alt="">` : `<b>${x.num || '→'}</b>`}<span>${espaceEsc(x.label)}</span><small>${espaceEsc(x.hint || '')}</small></li>`).join('')
+      || '<li class="palette__vide">Aucun résultat</li>';
+    ul.querySelector('[aria-selected]')?.scrollIntoView({ block: 'nearest' });
+  }
+  const ferme = () => { wrap.remove(); document.removeEventListener('keydown', touche, true); };
+  const va = x => { if (!x) return; ferme(); x.run ? x.run() : (location.href = x.href); };
+  function touche(e) {
+    if (e.key === 'Escape') { e.preventDefault(); ferme(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); choix = (choix + (e.key === 'ArrowDown' ? 1 : -1) + liste.length) % Math.max(1, liste.length); rendu(); }
+    else if (e.key === 'Enter') { e.preventDefault(); va(liste[choix]); }
+  }
+  input.addEventListener('input', () => { choix = 0; rendu(); });
+  ul.addEventListener('click', e => { const li = e.target.closest('[data-i]'); if (li) va(liste[li.dataset.i]); });
+  ul.addEventListener('mousemove', e => { const li = e.target.closest('[data-i]'); if (li && +li.dataset.i !== choix) { choix = +li.dataset.i; rendu(); } });
+  wrap.addEventListener('click', e => { if (e.target === wrap) ferme(); });
+  document.addEventListener('keydown', touche, true);
+  document.body.appendChild(wrap);
+  rendu(); input.focus();
+  // membres : chargés à l'ouverture (annuaire de l'espace membre)
+  fetch('../api/membres', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : []).then(l => {
+    membres = l.map(m => ({ type: 'Membres', label: m.displayName, hint: `${m.rankLabel || 'Sans grade'} · @${m.username}`, avatar: m.avatarUrl || '../assets/favicon.png', href: `membres.html?q=${encodeURIComponent(m.displayName)}` }));
+    if (document.body.contains(wrap)) rendu();
+  }).catch(() => {});
+};
+document.addEventListener('keydown', e => {
+  const saisie = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !saisie)) {
+    if (!document.getElementById('rail')) return;
+    e.preventDefault(); espacePalette();
+  }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const g = document.getElementById('gestion'); if (!g) return;
-  const btn = g.querySelector('.nav__group-btn');
-  const close = () => { g.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false'); };
-  btn.addEventListener('click', e => { e.stopPropagation(); const open = g.classList.toggle('is-open'); btn.setAttribute('aria-expanded', open); });
-  document.addEventListener('click', e => { if (!g.contains(e.target)) close(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-});
-
-// Badge « non lus » sur Le Salon (mis à jour toutes les 30 s ; la page du Salon le remet à zéro elle-même)
+// Badge « non lus » sur le chat, dans le rail et les onglets (mis à jour toutes les 30 s ; la page du chat le remet à zéro elle-même)
 window.espaceUnread = async function () {
-  const b = document.getElementById('chatBadge'); if (!b) return;
+  const badges = document.querySelectorAll('[data-badge="chat"]'); if (!badges.length) return;
   try {
     const r = await fetch('../api/chat/unread', { credentials: 'same-origin' }); if (!r.ok) return;
     const d = await r.json();
-    if (d.unread > 0) { b.textContent = d.unread > 99 ? '99+' : d.unread; b.classList.toggle('is-mention', d.mentions > 0); b.title = d.mentions ? `${d.mentions} mention${d.mentions > 1 ? 's' : ''} de toi` : `${d.unread} nouveau${d.unread > 1 ? 'x' : ''} message${d.unread > 1 ? 's' : ''}`; b.hidden = false; }
-    else b.hidden = true;
+    badges.forEach(b => {
+      if (d.unread > 0) { b.textContent = d.unread > 99 ? '99+' : d.unread; b.classList.toggle('is-mention', d.mentions > 0); b.title = d.mentions ? `${d.mentions} mention${d.mentions > 1 ? 's' : ''} de toi` : `${d.unread} nouveau${d.unread > 1 ? 'x' : ''} message${d.unread > 1 ? 's' : ''}`; b.hidden = false; }
+      else b.hidden = true;
+    });
   } catch {}
 };
 document.addEventListener('DOMContentLoaded', () => {
-  if (document.body.classList.contains('espace-body--chat')) return;   // le Salon gère lui-même
+  if (document.body.classList.contains('espace-body--chat')) return;   // le chat gère lui-même
   espaceUnread(); setInterval(espaceUnread, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) espaceUnread(); });
 });
