@@ -8,7 +8,7 @@ Le modèle sépare deux parties :
 | | **Personnalisable, site par site** | **Mutualisé, identique sur tous les sites** |
 |---|---|---|
 | Quoi | La **vitrine** (page d'accueil) et toute la **direction artistique** | La **partie gestion** : espace membre, serveur, base, déploiement |
-| Fichiers | `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js`, `hero3d.js` | `espace/`, `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/` |
+| Fichiers | `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js`, `pellicule.js` | `espace/`, `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/` |
 | Liberté | Totale : textes, sections, mise en page, couleurs, polices, visuels, effets | Aucune modification dans un site : les améliorations se font **dans le modèle**, puis chaque site les récupère |
 
 **La direction artistique s'applique aussi à la partie gestion**, sans la modifier techniquement. L'espace membre ne contient aucune couleur ni police en dur : il prend celles de `theme.css`, l'accent de `site.json`, le nom et les textes de `site.json`, le logo de `assets/`. Chaque site a donc un espace membre à ses couleurs, mais son code est le même partout.
@@ -33,8 +33,8 @@ En bas de chaque vitrine : la signature **« Développé par Roxwood Network »*
    | `description` | présentation courte (hero, moteurs de recherche, aperçus de lien) | |
 
    Dans une page, `{{nom}}` insère la valeur, `{{Groupe}}` la même avec une majuscule (« Le cartel »), `{{url}}` l'adresse du site (`BASE_URL`). Le serveur refuse de démarrer si une valeur manque.
-3. **Direction artistique** : [`theme.css`](theme.css) regroupe les fonds, les textes, les polices (et leur import) et la largeur du contenu ; il s'applique à tout le site, espace membre compris. Pour aller plus loin sur la vitrine : [`styles.css`](styles.css) (en gardant les noms de classes de la navigation, des boutons et du pied de page, partagés avec l'espace membre) et [`hero3d.js`](hero3d.js) (blason 3D, à retirer si inutile).
-4. **Visuels** (dans `assets/`, mêmes noms de fichiers) : `logo.png` (carré, fond transparent), `medallion.png` (face du blason 3D, carrée), `favicon.png`, `og-image.jpg` (1200 × 630, aperçu de partage). Ne pas toucher à `roxwood.png`.
+3. **Direction artistique** : [`theme.css`](theme.css) regroupe les fonds, les textes, les polices (et leur import) et la largeur du contenu ; il s'applique à tout le site, espace membre compris. Pour aller plus loin sur la vitrine : [`styles.css`](styles.css) (en gardant les noms de classes de la navigation, des boutons et du pied de page, partagés avec l'espace membre) et [`pellicule.js`](pellicule.js) (animations propres à la vitrine : index des chapitres, curseur, citation).
+4. **Visuels** (dans `assets/`, mêmes noms de fichiers) : `logo.png` (carré, fond transparent), `favicon.png`, `og-image.jpg` (1200 × 630, aperçu de partage). Ne pas toucher à `roxwood.png`.
 5. **Vitrine** : [`index.html`](index.html) est un point de départ — remplacer les textes marqués « Texte à remplacer », ajouter, retirer ou réordonner les sections librement. Des styles prêts à l'emploi existent dans `styles.css` pour un nuancier de couleurs (`.couleurs`), des cartes d'événements (`.evenements`) et un lexique (`.vocab`). Deux sections se remplissent seules depuis l'espace membre et restent masquées si vides : la hiérarchie (`org.js`) et la galerie (`galerie.js`).
 6. **Photos d'exemple** : les six images de `assets/exemples/` s'affichent dans la galerie de l'accueil tant qu'aucune vraie photo n'est publiée (fichiers du projet, jamais envoyés au stockage). Pour ne jamais les montrer : vider la liste `EXEMPLES` de `galerie.js` et supprimer le dossier.
 7. **Déployer** : [server/README.md](server/README.md).
@@ -70,8 +70,8 @@ docker compose up          # http://localhost:3000  ·  espace membre : http://l
 
 ## Organisation
 - `site.json` — identité du site ; `theme.css` — couleurs et polices du site
-- `index.html`, `styles.css` — vitrine (blason 3D `hero3d.js`, organigramme `org.js`, galerie `galerie.js`, `main.js`) ; `404.html`
-- `assets/` — logo, médaillon, favicon, image de partage, logo Roxwood, photos d'exemple
+- `index.html`, `styles.css` — vitrine (animations `pellicule.js`, organigramme `org.js`, galerie `galerie.js`, `main.js`) ; `404.html`
+- `assets/` — logo, favicon, image de partage, logo Roxwood, photos d'exemple
 - `espace/` — pages de l'espace membre (`espace.js` et `espace.css` partagés)
 - `server/` — serveur (`src/`, dont `site.ts` qui insère `site.json` dans les pages), schéma et migrations de la base (`prisma/`), configuration nginx (`deploy/`)
 - `docs/` — nginx, stockage des photos, API

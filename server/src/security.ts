@@ -6,7 +6,7 @@ import { config } from './config.js';
 
 const https = config.baseUrl.startsWith('https');
 
-// Politique de contenu : uniquement ce que les pages chargent réellement (Google Fonts, cdnjs pour three.js et
+// Politique de contenu : uniquement ce que les pages chargent réellement (Google Fonts, cdnjs pour
 // SortableJS, avatars Discord, stockage d'images en prod). Scripts et styles en ligne autorisés : les pages en ont.
 export const securityHeaders = helmet({
   contentSecurityPolicy: {

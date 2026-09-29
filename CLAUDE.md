@@ -9,7 +9,7 @@ Notes de conventions et de pièges pour un agent Claude Code travaillant sur ce 
 
 | Personnalisable par site | Mutualisé (identique partout) |
 |---|---|
-| `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js` (liste `EXEMPLES`), `hero3d.js` | `espace/` (pages, `espace.js`, `espace.css`), `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/` |
+| `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js` (liste `EXEMPLES`), `pellicule.js` | `espace/` (pages, `espace.js`, `espace.css`), `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/` |
 
 - La **vitrine** et la **direction artistique** sont libres dans chaque site.
 - La **partie gestion** (espace membre + serveur) ne se modifie **pas** dans un site : on corrige dans le modèle, puis chaque site fait `git fetch modele && git merge modele/main` (voir README). Un site qui modifie un fichier mutualisé se crée des conflits à chaque mise à jour.
