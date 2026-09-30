@@ -60,6 +60,7 @@ const ESPACE_NAV = [
     { href: 'classement.html', label: 'Classement' },
     { href: 'chat.html', label: 'Chat', court: 'Chat', badge: 'chat' },
     { href: 'galerie.html', label: 'Galerie', court: 'Galerie' },
+    { href: 'garages.html', label: 'Garages' },
   ] },
   { groupe: 'Gestion', id: 'gestion', liens: [
     { href: 'admin.html', label: 'Administration' },
@@ -302,6 +303,12 @@ window.espaceInfo = function (title, rows) {
   document.addEventListener('keydown', onKey);
   document.body.appendChild(wrap);
   requestAnimationFrame(() => { wrap.classList.add('is-open'); wrap.querySelector('[data-close]').focus(); });
+};
+
+// Durée lisible d'un coup d'œil : « 2 j 4 h », « 3 h 20 », « 12 min » (arrondie à la minute supérieure, jamais négative)
+window.espaceDuree = function (ms) {
+  const min = Math.max(1, Math.ceil(ms / 6e4)), h = Math.floor(min / 60), j = Math.floor(h / 24);
+  return j >= 1 ? `${j} j${h % 24 ? ` ${h % 24} h` : ''}` : h >= 1 ? `${h} h${min % 60 ? ` ${String(min % 60).padStart(2, '0')}` : ''}` : `${min} min`;
 };
 
 // Petit message furtif en bas de page (succès ou erreur)
