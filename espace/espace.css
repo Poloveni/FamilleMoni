@@ -427,7 +427,7 @@ label.modal__label{cursor:pointer}
 .tile span{display:block;font-family:var(--serif);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
 .tile b{display:block;margin:10px 0 4px;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:46px;line-height:.95;color:var(--ink);font-variant-numeric:tabular-nums}
 .tile small{font-size:13px;color:var(--ink2)}
-/* braquages limités (tableau de bord) : une carte par braquage, jauge rouge quand c'est complet */
+/* braquages limités (tableau de bord) : une carte par braquage, jauge rouge quand tous les slots sont pris */
 .braq{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .braq__carte{display:flex;flex-direction:column;gap:8px;padding:16px 18px;background:var(--bg2);border:1px solid var(--line)}
 .braq__carte>span{font-family:var(--serif);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
@@ -475,7 +475,7 @@ label.modal__label{cursor:pointer}
 .vitem__barre--parts{gap:2px;background:none}
 .vitem__barre--parts>b{min-width:3px}
 .vitem__detail{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--serif);font-size:10px;color:var(--ink2)}
-.vitem__detail span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.vitem__detail span{display:inline-flex;align-items:center;gap:5px;min-width:0;overflow-wrap:anywhere}
 .vitem__detail i{width:6px;height:6px;border-radius:50%}
 .vitem__detail b{font-weight:500;color:var(--ink)}
 .vitem__qte{text-align:right;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
@@ -547,10 +547,11 @@ label.modal__label{cursor:pointer}
 .jauge.is-done .jauge__barre b{background:var(--ok)}
 .jauge.is-done .jauge__val b{color:var(--ok)}
 .jauge.is-vide .jauge__barre{opacity:.5}
-/* palmarès : même grille pour l'en-tête et chaque ligne */
-.palmares{--n:1;background:var(--bg2);border:1px solid var(--line)}
-.palmares__tete,.palmares__ligne{display:grid;grid-template-columns:52px minmax(190px,1.5fr) repeat(var(--n),minmax(96px,1fr)) 130px;align-items:center;gap:0 22px;padding:0 20px}
-.palmares.has-points .palmares__tete,.palmares.has-points .palmares__ligne{grid-template-columns:52px minmax(190px,1.5fr) repeat(var(--n),minmax(96px,1fr)) 64px 130px}
+/* palmarès : même grille pour l'en-tête et chaque ligne. Colonnes compressibles ; sous 760 px de large (la place réelle du
+   palmarès, rail et marges déduits : requête de conteneur), une fiche par membre (voir plus bas) */
+.palmares{--n:1;container-type:inline-size;overflow-x:auto;background:var(--bg2);border:1px solid var(--line)}
+.palmares__tete,.palmares__ligne{display:grid;grid-template-columns:44px minmax(110px,1.5fr) repeat(var(--n),minmax(68px,1fr)) minmax(92px,max-content);align-items:center;gap:0 18px;padding:0 18px}
+.palmares.has-points .palmares__tete,.palmares.has-points .palmares__ligne{grid-template-columns:44px minmax(110px,1.5fr) repeat(var(--n),minmax(68px,1fr)) 52px minmax(92px,max-content)}
 .palmares__tete{padding-top:12px;padding-bottom:12px;border-bottom:1px solid var(--line);font-family:var(--serif);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
 .palmares__tete small{font-size:9px;opacity:.7}
 .palmares__tete span:last-child,.palmares__paie,.palmares__points{text-align:right}
@@ -571,11 +572,14 @@ label.modal__label{cursor:pointer}
   .podium{grid-template-columns:1fr 1fr}
   .podium__carte:first-child{grid-column:1/-1}
 }
-/* palmarès sur téléphone : une fiche par membre, jauges sur deux colonnes avec leur libellé */
 @media (max-width:760px){
   .podium{grid-template-columns:1fr}
   .podium__rang{font-size:104px}
   .podium__carte:first-child .podium__rang{font-size:128px}
+}
+/* palmarès trop étroit pour sa grille (téléphone, ou fenêtre moyenne avec le rail) : une fiche par membre,
+   jauges sur deux colonnes avec leur libellé */
+@container (max-width:760px){
   .palmares__tete{display:none}
   .palmares__ligne,.palmares.has-points .palmares__ligne{position:relative;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;padding:16px 16px 18px 58px}
   .palmares__rang{position:absolute;left:16px;top:14px}
