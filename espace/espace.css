@@ -811,6 +811,10 @@ label.modal__label{cursor:pointer}
 .arm-porteur li b{display:block;font-size:14px;font-weight:600}
 .arm-porteur li small{display:block;font-family:var(--serif);font-size:10px;color:var(--ink2)}
 .arm-porteur code{font-family:var(--serif);font-size:12px;color:var(--ink2);white-space:nowrap}
+/* garage : chaque véhicule identifié d'abord par sa plaque, présentée comme une plaque d'immatriculation */
+.arm-porteur li.vehicule{display:grid;grid-template-columns:auto minmax(0,1fr);justify-content:start;gap:14px;padding:12px 16px}
+.arm-porteur li.vehicule b{font-size:15px}
+.arm-porteur .plaque{min-width:96px;padding:6px 10px;text-align:center;font-family:var(--serif);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:var(--bg3);border:1px solid color-mix(in srgb,var(--ink) 30%,transparent);border-radius:3px;box-shadow:inset 0 0 0 2px var(--bg2)}
 /* autres vues : une ligne par arme, regroupées par type */
 .arm-liste{display:flex;flex-direction:column;gap:18px}
 .arm-liste+.admin-block__hint{margin-top:18px}
