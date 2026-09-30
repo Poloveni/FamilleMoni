@@ -697,7 +697,7 @@
   async function rendreBilan(cible) {
     var mois = moisDispo(); if (!B.mois) B.mois = mois[0];
     cible.innerHTML = '<div class="bilan-tete"><label for="bil-mois" class="bilan-lbl">Mois</label><select class="field" id="bil-mois" onchange="emBot.mois(this.value)">' + mois.map(function (mo) { return '<option value="' + mo + '"' + (mo === B.mois ? ' selected' : '') + '>' + esc(lblMois(mo)) + '</option>'; }).join('') + '</select>'
-      + '<button class="btn" id="bil-dl" type="button" style="display:none;">Télécharger l\'image</button></div>'
+      + '<button class="btn btn--accent btn--sm" id="bil-dl" type="button" style="display:none;">Télécharger l\'image</button></div>'
       + '<div class="bilan-grid"><div class="bloc bilan-carte"><div class="bloc-t">Ma carte du mois <small>à poster sur Discord</small></div><canvas id="bilan-canvas" width="1200" height="675" style="display:none;"></canvas><div id="bilan-etat">' + locked('Lecture des semaines du mois…') + '</div></div>'
       + '<div class="bloc"><div class="bloc-t">Le mois, semaine par semaine <small>d\'après le bot</small></div><div id="bilan-semaines">' + locked('Chargement…') + '</div></div></div>';
 
@@ -733,35 +733,42 @@
     var ctx = cv.getContext('2d'), nom = monNom() || '?';
     var membre = (window.MONI_MEMBRES || []).find(function (m) { return m.nom === nom; });
     var medaille = rang === 1 ? '🥇' : rang === 2 ? '🥈' : rang === 3 ? '🥉' : '';
-    var CAPS = '"Cinzel", Georgia, serif', SERIF = '"Playfair Display", Georgia, serif', BODY = '"Crimson Pro", Georgia, serif';
-    var IVOIRE = '#e9dfc9', ENCRE = '#efe6d3', ENCRE2 = '#a89c88', ARGENT = '#d6d6db';
+    // même direction artistique que l'espace membre (theme.css) : titres Archivo condensés, libellés en mono, l'accent en repère
+    var CAPS = '"JetBrains Mono", ui-monospace, Consolas, monospace', TITRE = 'Archivo, "Arial Narrow", sans-serif', BODY = 'Archivo, system-ui, sans-serif';
+    var css = getComputedStyle(document.documentElement);
+    var ACCENT = (css.getPropertyValue('--accent') || '#e0503f').trim(), ENCRE = (css.getPropertyValue('--ink') || '#efe9dc').trim(), ENCRE2 = (css.getPropertyValue('--ink2') || '#8f8a80').trim();
+    var FOND = (css.getPropertyValue('--bg') || '#0a0a0b').trim(), FOND2 = (css.getPropertyValue('--bg2') || '#101012').trim();
     var espace = function (txt, x, y, pas) { var cx = x; for (var i = 0; i < txt.length; i++) { ctx.fillText(txt[i], cx, y); cx += ctx.measureText(txt[i]).width + pas; } };
+    var condense = function (font) { ctx.font = font; try { ctx.fontStretch = 'condensed'; } catch (e) {} };
+    var normal = function (font) { ctx.font = font; try { ctx.fontStretch = 'normal'; } catch (e) {} };
     var dessiner = function (logo) {
-      ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, 1200, 675);
-      var grad = ctx.createRadialGradient(1050, 120, 40, 1050, 120, 700);
-      grad.addColorStop(0, 'rgba(233,223,201,0.08)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, 1200, 675);
-      ctx.strokeStyle = IVOIRE; ctx.lineWidth = 2; ctx.strokeRect(24, 24, 1152, 627);
-      ctx.strokeStyle = 'rgba(233,223,201,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(36, 36, 1128, 603);
-      if (logo) { ctx.globalAlpha = 0.9; ctx.drawImage(logo, 950, 60, 180, 180); ctx.globalAlpha = 1; }
+      ctx.fillStyle = FOND; ctx.fillRect(0, 0, 1200, 675);
+      // grille technique du « Dossier », très discrète
+      ctx.strokeStyle = 'rgba(239,233,220,0.05)'; ctx.lineWidth = 1;
+      for (var gx = 0; gx <= 1200; gx += 48) { ctx.beginPath(); ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, 675); ctx.stroke(); }
+      for (var gy = 0; gy <= 675; gy += 48) { ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(1200, gy + 0.5); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(239,233,220,0.18)'; ctx.strokeRect(24.5, 24.5, 1151, 626);
+      ctx.fillStyle = ACCENT; ctx.fillRect(24, 24, 96, 3);   // le trait d'accent, comme sur les cartes du site
+      if (logo) { ctx.globalAlpha = 0.9; ctx.drawImage(logo, 960, 56, 160, 160); ctx.globalAlpha = 1; }
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = IVOIRE; ctx.font = '600 18px ' + CAPS; espace('FAMILLE MONI', 70, 96, 7);
-      ctx.fillStyle = ENCRE2; ctx.font = 'italic 400 26px ' + BODY; ctx.fillText('Bilan de ' + lblMois(mo), 70, 134);
-      ctx.fillStyle = ENCRE; ctx.font = '900 60px ' + SERIF; ctx.fillText(nom, 70, 212);
-      if (membre) { ctx.fillStyle = ARGENT; ctx.font = '600 16px ' + CAPS; espace(String(membre.rang).toUpperCase(), 72, 250, 5); }
+      ctx.fillStyle = ACCENT; normal('500 15px ' + CAPS); espace('FAMILLE MONI — BILAN DE ' + lblMois(mo).toUpperCase(), 70, 92, 4);
+      ctx.fillStyle = ENCRE; condense('800 88px ' + TITRE); ctx.fillText(nom.toUpperCase(), 66, 200);
+      if (membre) { ctx.fillStyle = ENCRE2; normal('500 14px ' + CAPS); espace(String(membre.rang).toUpperCase(), 70, 240, 4); }
       var stats = [['VENTES', fmtN(Math.round(moi.ventes))], ['RÉCOLTE', fmtN(Math.round(moi.recolte))], ['ACTIVITÉS', fmtN(Math.round(moi.activites))], ['PAIE', fmt$(moi.paie)]];
+      ctx.strokeStyle = 'rgba(239,233,220,0.18)';
       stats.forEach(function (st, i) {
-        var x = 70 + i * 270;
-        ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(x, 320, 240, 140);
-        ctx.strokeStyle = 'rgba(233,223,201,0.22)'; ctx.lineWidth = 1; ctx.strokeRect(x, 320, 240, 140);
-        ctx.fillStyle = ENCRE2; ctx.font = '600 13px ' + CAPS; espace(st[0], x + 22, 356, 3);
-        ctx.fillStyle = i === 3 ? IVOIRE : ENCRE; ctx.font = '900 44px ' + SERIF; ctx.fillText(st[1], x + 22, 422);
+        var x = 70 + i * 266;
+        ctx.fillStyle = FOND2; ctx.fillRect(x, 320, 254, 140); ctx.strokeRect(x + 0.5, 320.5, 254, 140);
+        ctx.fillStyle = ENCRE2; normal('500 12px ' + CAPS); espace(st[0], x + 22, 354, 3);
+        ctx.fillStyle = i === 3 ? ACCENT : ENCRE; condense('800 52px ' + TITRE); ctx.fillText(st[1], x + 20, 426);
       });
-      ctx.fillStyle = ENCRE; ctx.font = '700 30px ' + SERIF;
-      ctx.fillText((medaille ? medaille + '  ' : '') + '#' + rang + ' sur ' + n + ' au classement des ventes du mois', 70, 540);
-      ctx.fillStyle = '#6f6f76'; ctx.font = '600 12px ' + CAPS; espace('FAMILLEMONI.COM — ROXWOOD, FLASHBACK FA · CALCULÉ PAR LE BOT MONI', 70, 610, 3);
+      ctx.fillStyle = ENCRE; condense('700 34px ' + TITRE);
+      ctx.fillText((medaille ? medaille + '  ' : '') + '#' + rang + ' SUR ' + n + ' AU CLASSEMENT DES VENTES DU MOIS', 70, 540);
+      ctx.fillStyle = ENCRE2; normal('500 11px ' + CAPS); espace('FAMILLEMONI.COM — ROXWOOD, FLASHBACK FA · CALCULÉ PAR LE BOT MONI', 70, 610, 3);
     };
-    var img = new Image(); img.onload = function () { dessiner(img); }; img.onerror = function () { dessiner(null); }; img.src = 'icon-192.png?v=2';
+    // les polices du site doivent être chargées avant de dessiner, sinon le navigateur retombe sur une police de secours
+    var pret = document.fonts ? Promise.all([document.fonts.load('800 88px Archivo'), document.fonts.load('500 15px "JetBrains Mono"')]).catch(function () {}) : Promise.resolve();
+    var img = new Image(); img.onload = function () { pret.then(function () { dessiner(img); }); }; img.onerror = function () { pret.then(function () { dessiner(null); }); }; img.src = 'icon-192.png?v=2';
     if (btn) btn.onclick = function () {
       cv.toBlob(function (b) { var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'bilan-' + mo + '-' + nom.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000); });
     };
@@ -780,7 +787,7 @@
       S.statut = d; S.me = d.linked && d.me ? d.me : null;
       if (d.linked && !d.code) S.derniereOk = S.derniereOk || new Date();
     } catch (e) { S.statut = { configured: true, linked: false, code: e.code, message: e.message, erreur: e }; S.me = null; }
-    var sbTaxes = $('sb-taxes'); if (sbTaxes && !modeGerantTaxes) sbTaxes.style.display = (S.me && S.me.isTaxes) ? '' : 'none';
+    var navTaxes = $('nav-taxes'); if (navTaxes && !modeGerantTaxes) navTaxes.hidden = !(S.me && S.me.isTaxes);
     majChip();
     return S.statut;
   }
@@ -879,7 +886,7 @@
       } catch (e) { row.firstElementChild.innerHTML = blocErr(e); }
     },
     delier: async function () {
-      if (!confirm('Effacer la connexion au bot conservée côté serveur ? Tu pourras la refaire à tout moment.')) return;
+      if (!await espaceConfirm('La connexion au bot conservée côté serveur sera effacée. Tu pourras la refaire à tout moment.', { title: 'Délier le bot ?', ok: 'Effacer', danger: true })) return;
       try { await appel({ action: 'unlink' }); S.cache = {}; S.me = null; toast('Connexion au bot effacée.'); } catch (e) { toast(e.message || 'Impossible', 'err'); }
       await chargerStatut(true); if (S.panneau) rendre(S.panneau);
     },

@@ -1,149 +1,165 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Administration — Famille Moni</title>
-  <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="favicon.ico" sizes="32x32" />
-  <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=1" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration · Famille Moni</title>
+<meta name="application-name" content="Famille Moni">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="theme.css?v=1">
+<link rel="stylesheet" href="espace-base.css?v=1">
+<link rel="stylesheet" href="espace.css?v=1">
+<link rel="stylesheet" href="espace-moni.css?v=1">
+<link rel="stylesheet" href="admin.css?v=2">
+<script src="espace.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<!-- Le panel admin partage la coque de l'espace membre (modèle Roxwood Network, rubrique « Gestion ») :
+     rail, onglets du téléphone, palette, modales. Ses données sont lues et écrites dans Supabase en direct. -->
 </head>
-<body>
-<div class="grain" aria-hidden="true"></div>
+<body class="espace-body">
 
 <!-- ===== CONNEXION ===== -->
-<div id="login-screen">
-  <div class="tray stitch login">
-    <img class="mlogo" src="logo-m-petit.png" alt="" width="96" height="130">
-    <h1>Famille <span class="silver">Moni</span></h1>
-    <div class="sub caps">Administration</div>
-    <form onsubmit="doLogin(); return false;">
-      <div><label for="login-email">Email</label><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="username" /></div>
-      <div><label for="pwd-input">Mot de passe</label><input type="password" id="pwd-input" placeholder="••••••••" autocomplete="current-password" /></div>
-      <button class="btn btn-metal btn-full" type="submit">Connexion</button>
-    </form>
-    <div class="login-error" id="login-error">Identifiants incorrects.</div>
-  </div>
-</div>
+<main id="login-screen" class="espace-login">
+  <a class="espace-login__back" href="accueil.html">← Retour au site</a>
+  <img class="espace-login__logo" src="logo-m-rond.webp" alt="Famille Moni" width="200" height="200">
+  <p class="eyebrow">Famille Moni</p>
+  <h1>Administration</h1>
+  <p class="espace-login__lead">Réservé à l'administratrice du site. Les membres, eux, passent par l'<b>espace membre</b>.</p>
+  <form class="espace-login__form" style="width:min(380px,100%)" onsubmit="doLogin(); return false;">
+    <label class="modal__label" for="login-email">E-mail</label>
+    <input class="admin-input" type="email" id="login-email" placeholder="ton@email.com" autocomplete="username">
+    <label class="modal__label" for="pwd-input">Mot de passe</label>
+    <input class="admin-input" type="password" id="pwd-input" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn btn--accent" type="submit">Connexion</button>
+    <p class="msg" id="login-error"></p>
+  </form>
+  <p class="espace-login__small">Roxwood · Flashback FA · Roleplay uniquement</p>
+</main>
 
 <!-- ===== ADMINISTRATION ===== -->
-<button class="sb-toggle" id="sb-toggle" aria-label="Menu">☰</button>
 <div id="admin-screen">
-  <aside class="sb" id="sb">
-    <div class="sb-brand"><img class="mlogo" src="logo-m-petit.png" alt=""><div><b>Famille Moni</b><span>Administration</span></div></div>
+<script>
+  espaceShell([
+    { groupe: 'Gestion', liens: [
+      { panel: 'dashboard', label: 'Tableau de bord', court: 'Tableau', sub: "Vue d'ensemble du site et de la famille" },
+      { panel: 'inscriptions', label: 'Inscriptions', court: 'Comptes', badge: 'badge-attente', sub: "Approuver ou refuser les comptes de l'espace membre" },
+      { panel: 'hierarchie', label: 'Hiérarchie', court: 'Rangs', sub: 'Les membres et leurs rangs, tels qu’ils apparaissent sur le site' },
+      { panel: 'fiches', label: 'Fiches membres', sub: "Les profils remplis dans l'espace membre" },
+      { panel: 'galerie', label: 'Galerie', court: 'Galerie', sub: 'Les clichés envoyés par les membres' },
+    ] },
+    { groupe: 'Raccourcis', liens: [
+      { href: 'espace-membre.html', label: 'Espace membre' },
+      { href: 'accueil.html', label: 'Le site', blank: true },
+    ] },
+  ], { sortie: false });
+</script>
 
-    <div class="sb-group">Pilotage</div>
-    <button type="button" class="sb-item active" data-panel="dashboard" data-title="Tableau de bord" data-sub="Vue d'ensemble du site et de la famille"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg></span>Tableau de bord</button>
+<main class="espace-page espace-page--wide">
+  <div class="section__head">
+    <span class="numeral" id="dash-num">✦</span>
+    <h2 id="dash-titre">Tableau de bord</h2>
+    <p class="sub" id="dash-soustitre">Vue d'ensemble du site et de la famille</p>
+    <div class="espace-outils"><span class="status" id="dash-date"></span></div>
+  </div>
 
-    <div class="sb-group">La famille</div>
-    <button type="button" class="sb-item" id="side-inscriptions" data-panel="inscriptions" data-title="Inscriptions" data-sub="Approuver ou refuser les comptes de l'espace membre"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.6 2.6 5-5.2"/></svg></span>Inscriptions<span class="sb-badge" id="badge-attente"></span></button>
-    <button type="button" class="sb-item" data-panel="hierarchie" data-title="Hiérarchie" data-sub="Les membres et leurs rangs, tels qu'ils apparaissent sur le site"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="4.5"/><rect x="3" y="16.5" width="6" height="4.5"/><rect x="15" y="16.5" width="6" height="4.5"/><path d="M12 7.5v4M6 16.5v-3h12v3"/></svg></span>Hiérarchie</button>
-    <button type="button" class="sb-item" data-panel="fiches" data-title="Fiches membres" data-sub="Les profils remplis dans l'espace membre"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="8.5" r="3.3"/><path d="M3.4 19.5a6.1 6.1 0 0112.2 0"/><path d="M16.2 6.1a3.3 3.3 0 010 5.4M17.4 14.6a6 6 0 013.2 4.9"/></svg></span>Fiches membres</button>
-
-    <div class="sb-group">Le site</div>
-    <button type="button" class="sb-item" data-panel="galerie" data-title="Galerie" data-sub="Les clichés envoyés par les membres"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9.5" r="1.5"/></svg></span>Galerie</button>
-
-    <div class="sb-group">Raccourcis</div>
-    <a class="sb-item" href="accueil.html" target="_blank"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5a13 13 0 010 17 13 13 0 010-17z"/></svg></span>Voir le site</a>
-    <a class="sb-item" href="espace-membre.html" target="_blank"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M5.5 15.5l4-4.5 3.2 3 5.8-6.5"/><path d="M14 7.5h4.5V12"/></svg></span>Espace membre</a>
-
-    <div class="sb-foot">Connectée : <b id="who-email"></b><button class="btn btn-line" type="button" onclick="doLogout()">Déconnexion</button></div>
-  </aside>
-
-  <main class="dash">
-    <div class="dash-head">
-      <div><h1 class="dash-title silver" id="dash-titre">Tableau de bord</h1><div class="dash-sub" id="dash-soustitre">Vue d'ensemble du site et de la famille</div></div>
-      <span class="plaque" id="dash-date"></span>
+  <!-- TABLEAU DE BORD -->
+  <div class="panel active" id="panel-dashboard">
+    <button type="button" class="admin-alerte" id="dash-alerte" hidden onclick="goPanel('inscriptions')"><b id="dash-alerte-txt"></b><span>Valider →</span></button>
+    <div class="tiles">
+      <div class="tile"><span>Membres</span><b id="dash-membres">—</b><small>dans la hiérarchie</small></div>
+      <div class="tile"><span>Comptes inscrits</span><b id="dash-comptes">—</b><small>espace membre</small></div>
+      <div class="tile" id="kpi-attente"><span>En attente</span><b id="dash-attente">—</b><small>de validation</small></div>
+      <div class="tile"><span>Fiches remplies</span><b id="dash-fiches">—</b><small>photo, bio, citation…</small></div>
+      <div class="tile"><span>Photos galerie</span><b id="dash-galerie">—</b><small>sur le site public</small></div>
+      <div class="tile"><span>Présences à venir</span><b id="dash-presences">—</b><small>depuis Discord</small></div>
+      <div class="tile"><span>Sync bot Moni</span><b class="tile__petit" id="dash-sync">—</b><small>événements, présences, annonces</small></div>
     </div>
+    <section class="admin-block">
+      <h3 class="admin-block__title">Accès rapides</h3>
+      <div class="liens">
+        <a class="btn btn--ghost btn--sm" href="accueil.html" target="_blank">Voir le site</a>
+        <a class="btn btn--ghost btn--sm" href="espace-membre.html">Espace membre</a>
+        <a class="btn btn--ghost btn--sm" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">Stats de visite</a>
+        <a class="btn btn--ghost btn--sm" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">Base de données</a>
+      </div>
+    </section>
+    <section class="admin-block">
+      <h3 class="admin-block__title">Comment ça marche</h3>
+      <p class="admin-block__hint">Tout ce qui se change ici est <b>en direct</b> : les inscriptions, la hiérarchie et la galerie sont lues par le site à chaque visite, sans rien publier. Les <b>événements, présences et annonces</b> viennent du bot Discord (synchronisation automatique). Seuls les textes du site (histoire, code d'honneur, serment) restent dans les fichiers : ils se modifient dans <code>accueil.html</code> puis <code>publier.bat</code>.</p>
+    </section>
+  </div>
 
-    <!-- TABLEAU DE BORD -->
-    <div class="panel active" id="panel-dashboard">
-      <div class="alerte" id="dash-alerte" onclick="goPanel('inscriptions')"><b id="dash-alerte-txt"></b><span class="fleche">Valider →</span></div>
-      <div class="kpis">
-        <div class="tray kpi"><div class="kpi-label">Membres</div><div class="kpi-num" id="dash-membres">—</div></div>
-        <div class="tray kpi"><div class="kpi-label">Comptes inscrits</div><div class="kpi-num" id="dash-comptes">—</div></div>
-        <div class="tray kpi" id="kpi-attente"><div class="kpi-label">En attente</div><div class="kpi-num" id="dash-attente">—</div></div>
-        <div class="tray kpi"><div class="kpi-label">Fiches remplies</div><div class="kpi-num" id="dash-fiches">—</div></div>
-        <div class="tray kpi"><div class="kpi-label">Photos galerie</div><div class="kpi-num" id="dash-galerie">—</div></div>
-        <div class="tray kpi"><div class="kpi-label">Présences à venir</div><div class="kpi-num" id="dash-presences">—</div></div>
-        <div class="tray kpi"><div class="kpi-label">Sync bot Moni</div><div class="kpi-num small" id="dash-sync">—</div></div>
-      </div>
-      <div class="tray stitch bloc">
-        <div class="bloc-t">Accès rapides</div>
-        <div class="liens">
-          <a class="lien" href="accueil.html" target="_blank">Voir le site</a>
-          <a class="lien" href="espace-membre.html" target="_blank">Espace membre</a>
-          <a class="lien" href="https://famillemoni.goatcounter.com" target="_blank" rel="noopener">Stats de visite</a>
-          <a class="lien" href="https://supabase.com/dashboard/project/prwdtdmdkhzwfyivaepw" target="_blank" rel="noopener">Base de données</a>
-        </div>
-      </div>
-      <div class="tray stitch bloc">
-        <div class="bloc-t">Comment ça marche</div>
-        <p class="hint">Tout ce qui se change ici est <b>en direct</b> : les inscriptions, la hiérarchie et la galerie sont lues par le site à chaque visite, sans rien publier. Les <b>événements, présences et annonces</b> viennent du bot Discord (synchronisation automatique). Seuls les textes du site (histoire, code d'honneur, serment) restent dans les fichiers : ils se modifient dans <code>accueil.html</code> puis <code>publier.bat</code>.</p>
-      </div>
-    </div>
+  <!-- INSCRIPTIONS -->
+  <div class="panel" id="panel-inscriptions">
+    <section class="admin-block">
+      <p class="admin-block__hint"><b>Approuver</b> ouvre l'accès au compte. Le menu déroulant choisit ensuite <b>ce qu'il voit</b> : tout l'espace membre, ou uniquement le panneau Taxes. Le changement est immédiat — la personne le verra à sa prochaine connexion.</p>
+      <div id="insc-list"><div class="espace-loading">Chargement…</div></div>
+    </section>
+  </div>
 
-    <!-- INSCRIPTIONS -->
-    <div class="panel" id="panel-inscriptions">
-      <div class="tray stitch bloc">
-        <p class="hint" style="margin-bottom:18px"><b>Approuver</b> ouvre l'accès au compte. Le menu déroulant choisit ensuite <b>ce qu'il voit</b> : tout l'espace membre, ou uniquement le panneau Taxes. Le changement est immédiat — la personne le verra à sa prochaine connexion.</p>
-        <div id="insc-list"><div class="hint">Chargement…</div></div>
+  <!-- HIÉRARCHIE -->
+  <div class="panel" id="panel-hierarchie">
+    <section class="admin-block">
+      <div class="hier-head">
+        <h3 class="admin-block__title">Les membres <span class="badge badge--accent" id="hier-count"></span></h3>
+        <button class="btn btn--ghost btn--sm" type="button" onclick="chargerHierarchie().then(hierRender)">Rafraîchir</button>
       </div>
-    </div>
+      <p class="admin-block__hint">Change un rang, corrige un nom ou retire quelqu'un : l'organigramme du site se met à jour immédiatement. Renommer un membre renomme aussi sa fiche.</p>
+      <div class="hier-add">
+        <input type="text" class="admin-input" id="hier-new-nom" placeholder="Prénom Nom du nouveau membre" autocomplete="off">
+        <select id="hier-new-rang" class="admin-select"></select>
+        <button class="btn btn--accent btn--sm" type="button" onclick="hierAjouter()">Ajouter</button>
+      </div>
+      <div class="table-wrap"><table class="admin-table hier-table"><thead><tr><th>Membre</th><th style="width:230px">Rang</th><th></th></tr></thead><tbody id="hier-rows"><tr><td colspan="3" class="muted">Chargement…</td></tr></tbody></table></div>
+      <p class="msg" id="hier-msg"></p>
+    </section>
+    <section class="admin-block">
+      <h3 class="admin-block__title">Les rangs <span class="tag">du plus haut au plus bas</span></h3>
+      <p class="admin-block__hint">Le nom d'un rang ne se change pas ici (il relie les membres) ; sa description sert de repère dans l'espace membre.</p>
+      <div class="table-wrap"><table class="admin-table hier-table"><thead><tr><th style="width:40px">#</th><th>Rang</th><th>Description</th><th></th></tr></thead><tbody id="rang-rows"></tbody></table></div>
+    </section>
+    <section class="admin-block">
+      <div class="hier-head">
+        <h3 class="admin-block__title">Liste de secours <span class="tag">supabase-config.js</span></h3>
+        <button class="btn btn--ghost btn--sm" type="button" onclick="exportSecours()">Copier le bloc</button>
+      </div>
+      <p class="admin-block__hint">Si la base ne répond pas, le site affiche la liste écrite dans <code>supabase-config.js</code>. Copie ce bloc à la place de <code>window.MONI_MEMBRES</code> de temps en temps pour la garder à jour, puis publie.</p>
+      <pre class="export-pre" id="export-preview"></pre>
+    </section>
+  </div>
 
-    <!-- HIÉRARCHIE -->
-    <div class="panel" id="panel-hierarchie">
-      <div class="tray stitch bloc">
-        <div class="bloc-head"><div class="bloc-t">Les membres <small id="hier-count"></small></div><button class="btn btn-line" type="button" onclick="chargerHierarchie().then(hierRender)">Rafraîchir</button></div>
-        <p class="hint" style="margin-bottom:16px">Change un rang, corrige un nom ou retire quelqu'un : l'organigramme du site se met à jour immédiatement. Renommer un membre renomme aussi sa fiche.</p>
-        <div class="hier-add">
-          <input type="text" id="hier-new-nom" placeholder="Prénom Nom du nouveau membre" autocomplete="off" />
-          <select id="hier-new-rang"></select>
-          <button class="btn btn-metal" type="button" onclick="hierAjouter()">Ajouter</button>
-        </div>
-        <div style="overflow-x:auto"><table class="table"><thead><tr><th>Membre</th><th style="width:230px">Rang</th><th></th></tr></thead><tbody id="hier-rows"><tr><td colspan="3" class="hint">Chargement…</td></tr></tbody></table></div>
-        <div class="msg" id="hier-msg"></div>
+  <!-- FICHES -->
+  <div class="panel" id="panel-fiches">
+    <section class="admin-block">
+      <div class="hier-head">
+        <h3 class="admin-block__title">Fiches membres <span class="badge badge--accent" id="fiches-count"></span></h3>
+        <button class="btn btn--ghost btn--sm" type="button" onclick="renderFiches()">Rafraîchir</button>
       </div>
-      <div class="tray stitch bloc">
-        <div class="bloc-t">Les rangs <small>du plus haut au plus bas</small></div>
-        <p class="hint" style="margin-bottom:14px">Le nom d'un rang ne se change pas ici (il relie les membres) ; sa description sert de repère dans l'espace membre.</p>
-        <div style="overflow-x:auto"><table class="table"><thead><tr><th style="width:40px">#</th><th>Rang</th><th>Description</th><th></th></tr></thead><tbody id="rang-rows"></tbody></table></div>
-      </div>
-      <div class="tray stitch bloc">
-        <div class="bloc-head"><div class="bloc-t">Liste de secours <small>supabase-config.js</small></div><button class="btn btn-line" type="button" onclick="exportSecours()">Copier le bloc</button></div>
-        <p class="hint">Si la base ne répond pas, le site affiche la liste écrite dans <code>supabase-config.js</code>. Copie ce bloc à la place de <code>window.MONI_MEMBRES</code> de temps en temps pour la garder à jour, puis publie.</p>
-        <pre class="export-pre" id="export-preview"></pre>
-      </div>
-    </div>
+      <p class="admin-block__hint">Chaque membre remplit sa fiche (photo, spécialité, citation, bio) depuis l'espace membre. Ici, tu vois d'un coup d'œil qui l'a fait.</p>
+      <div class="membres-grid" id="fiches-list"></div>
+    </section>
+  </div>
 
-    <!-- FICHES -->
-    <div class="panel" id="panel-fiches">
-      <div class="tray stitch bloc">
-        <div class="bloc-head"><div class="bloc-t">Fiches membres <small id="fiches-count"></small></div><button class="btn btn-line" type="button" onclick="renderFiches()">Rafraîchir</button></div>
-        <p class="hint" style="margin-bottom:18px">Chaque membre remplit sa fiche (photo, spécialité, citation, bio) depuis l'espace membre. Ici, tu vois d'un coup d'œil qui l'a fait.</p>
-        <div class="fiches" id="fiches-list"><div class="hint">Chargement…</div></div>
+  <!-- GALERIE -->
+  <div class="panel" id="panel-galerie">
+    <section class="admin-block">
+      <div class="hier-head">
+        <h3 class="admin-block__title">Clichés de la famille <span class="badge badge--accent" id="gal-count"></span></h3>
+        <button class="btn btn--ghost btn--sm" type="button" onclick="renderGalerie()">Rafraîchir</button>
       </div>
-    </div>
-
-    <!-- GALERIE -->
-    <div class="panel" id="panel-galerie">
-      <div class="tray stitch bloc">
-        <div class="bloc-head"><div class="bloc-t">Clichés de la famille <small id="gal-count"></small></div><button class="btn btn-line" type="button" onclick="renderGalerie()">Rafraîchir</button></div>
-        <p class="hint" style="margin-bottom:18px">Les photos envoyées par les membres apparaissent sur le site dès leur envoi. Retire ici celles qui n'ont rien à y faire.</p>
-        <div class="gal" id="gal-list"><div class="hint">Chargement…</div></div>
-      </div>
-    </div>
-  </main>
+      <p class="admin-block__hint">Les photos envoyées par les membres apparaissent sur le site dès leur envoi. Retire ici celles qui n'ont rien à y faire.</p>
+      <div class="gal-grid" id="gal-list"></div>
+      <p class="admin-empty" id="gal-vide" hidden>Aucune photo envoyée par les membres pour le moment.</p>
+    </section>
+  </div>
+</main>
 </div>
-
-<div class="modal" id="modal"><div class="tray stitch box"><h3 id="modal-t"></h3><p id="modal-p"></p><div class="acts"><button class="btn btn-line" type="button" id="modal-no">Annuler</button><button class="btn btn-metal" type="button" id="modal-ok">Confirmer</button></div></div></div>
-<div class="toast" id="toast"></div>
 
 <script>
   const ADMIN_EMAIL = 'syne@live.fr';
@@ -151,29 +167,21 @@
 
   function escHTML(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function escJS(s) { return escHTML(String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")); }
-  function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3200); }
-  // Confirmation maison (pas de confirm() navigateur).
-  function moniConfirm(titre, texte, okLabel) {
-    return new Promise(res => {
-      const m = document.getElementById('modal');
-      document.getElementById('modal-t').textContent = titre; document.getElementById('modal-p').textContent = texte || '';
-      const ok = document.getElementById('modal-ok'), no = document.getElementById('modal-no');
-      ok.textContent = okLabel || 'Confirmer';
-      function done(v) { m.classList.remove('open'); ok.onclick = no.onclick = null; document.removeEventListener('keydown', esc); res(v); }
-      function esc(e) { if (e.key === 'Escape') done(false); }
-      ok.onclick = () => done(true); no.onclick = () => done(false); m.onclick = e => { if (e.target === m) done(false); };
-      document.addEventListener('keydown', esc); m.classList.add('open'); ok.focus();
-    });
-  }
+  function showToast(msg, ok = true) { espaceToast(msg, ok); }
+  // Confirmation dans le style du site (espace.js) ; l'ancienne modale maison n'a plus lieu d'être.
+  function moniConfirm(titre, texte, okLabel) { return espaceConfirm(texte || '', { title: titre, ok: okLabel || 'Confirmer', danger: true }); }
 
   // ── CONNEXION ──
-  function loginFail(msg) { const err = document.getElementById('login-error'); err.textContent = msg || 'Identifiants incorrects.'; err.style.display = 'block'; document.getElementById('pwd-input').value = ''; setTimeout(() => err.style.display = 'none', 4000); }
+  function loginFail(msg) { const err = document.getElementById('login-error'); err.textContent = msg || 'Identifiants incorrects.'; err.className = 'msg error'; document.getElementById('pwd-input').value = ''; setTimeout(() => err.className = 'msg', 4000); }
   function enterAdmin(email) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').classList.add('on');
-    if (email) document.getElementById('who-email').textContent = email;
+    document.body.classList.add('is-in');
+    espaceNav({ nom: email || 'Administration', grade: 'Administration', avatar: 'logo-m-rond.webp' });
     document.getElementById('dash-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     initAdmin();
+    const h = location.hash.slice(1);
+    goPanel(h && document.getElementById('panel-' + h) ? h : 'dashboard');
   }
   async function doLogin() {
     if (!SB) { loginFail('Connexion Supabase indisponible.'); return; }
@@ -187,26 +195,34 @@
   async function doLogout() {
     if (SB) await SB.auth.signOut();
     document.getElementById('admin-screen').classList.remove('on');
+    document.body.classList.remove('is-in');
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('pwd-input').value = '';
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
   }
+  document.getElementById('logout').addEventListener('click', doLogout);
   window.addEventListener('DOMContentLoaded', async () => {
     if (!SB) return;
     const { data: d } = await SB.auth.getSession();
     if (d.session && d.session.user.email === ADMIN_EMAIL) enterAdmin(d.session.user.email);
   });
 
-  // ── NAVIGATION ──
-  const sb = document.getElementById('sb');
-  document.getElementById('sb-toggle').addEventListener('click', () => sb.classList.toggle('open'));
-  document.querySelectorAll('.sb-item[data-panel]').forEach(b => b.addEventListener('click', () => showPanel(b.dataset.panel, b)));
-  function goPanel(id) { const b = document.querySelector('.sb-item[data-panel="' + id + '"]'); showPanel(id, b); }
-  function showPanel(id, el) {
+  // ── NAVIGATION : les rubriques du rail et les onglets ouvrent un panneau ──
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-panel]');
+    if (!a || !a.closest('.rail, .onglets')) return;
+    e.preventDefault(); goPanel(a.dataset.panel);
+  });
+  window.ouvrirPanneau = goPanel;   // la palette (Ctrl+K) ouvre une rubrique par cette fonction
+  function goPanel(id) { showPanel(id); }
+  function showPanel(id) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.sb-item[data-panel]').forEach(s => s.classList.remove('active'));
     document.getElementById('panel-' + id).classList.add('active');
-    if (el) { el.classList.add('active'); document.getElementById('dash-titre').textContent = el.dataset.title; document.getElementById('dash-soustitre').textContent = el.dataset.sub; }
-    sb.classList.remove('open');
+    const nav = espaceActive(id);
+    if (nav) { document.getElementById('dash-titre').textContent = nav.dataset.title; document.getElementById('dash-soustitre').textContent = nav.dataset.sub; }
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    if (typeof espaceRailFerme === 'function') espaceRailFerme();
+    window.scrollTo(0, 0);
     if (id === 'inscriptions') renderInscriptions();
     if (id === 'hierarchie') chargerHierarchie().then(hierRender);
     if (id === 'fiches') renderFiches();
@@ -229,8 +245,9 @@
         set('dash-attente', att);
         document.getElementById('kpi-attente').classList.toggle('warn', att > 0);
         const alerte = document.getElementById('dash-alerte'), badge = document.getElementById('badge-attente');
-        if (att > 0) { set('dash-alerte-txt', att + ' compte' + (att > 1 ? 's' : '') + ' en attente de validation'); alerte.style.display = 'flex'; badge.textContent = att; badge.style.display = 'flex'; }
-        else { alerte.style.display = 'none'; badge.style.display = 'none'; }
+        alerte.hidden = !att;
+        if (att > 0) set('dash-alerte-txt', att + ' compte' + (att > 1 ? 's' : '') + ' en attente de validation');
+        if (badge) { badge.textContent = att; badge.hidden = !att; }
       }
     } catch (e) {}
     try { const { data } = await SB.from('profils').select('nom,photo_url,bio,citation,specialite'); if (data) set('dash-fiches', data.filter(p => p.photo_url || p.bio || p.citation || p.specialite).length + ' / ' + (window.MONI_MEMBRES || []).length); } catch (e) {}
@@ -249,13 +266,13 @@
   function dateCourte(v) { return v ? new Date(v).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : null; }
   async function renderInscriptions() {
     const list = document.getElementById('insc-list');
-    if (!SB) { list.innerHTML = '<p class="hint">Supabase non chargé.</p>'; return; }
+    if (!SB) { list.innerHTML = '<p class="admin-empty">Supabase non chargé.</p>'; return; }
     NOTE_INSC = ''; var comptes = null;
     const rpc = await SB.rpc('comptes_details');
     if (!rpc.error && rpc.data && rpc.data.length) comptes = rpc.data;
     else {
       const q = await SB.from('comptes').select('*').order('created_at', { ascending: false });
-      if (q.error) { list.innerHTML = '<p class="hint">Erreur : ' + escHTML(q.error.message) + '</p>'; return; }
+      if (q.error) { list.innerHTML = '<p class="admin-empty">Erreur : ' + escHTML(q.error.message) + '</p>'; return; }
       comptes = q.data || [];
       if (comptes.length) NOTE_INSC = 'Pour voir aussi la <b>photo et le pseudo Discord</b>, le <b>personnage</b> et l\'état de la <b>liaison au bot</b>, exécute <code>migrations/comptes-details.sql</code> dans Supabase.';
     }
@@ -296,25 +313,26 @@
   function titreCompte(c) { return c.nom || c.discord_pseudo || (estCompteBot(c) ? String(c.email).split('.')[0] : c.email) || '(sans nom)'; }
   function dessineInscriptions() {
     const list = document.getElementById('insc-list');
-    if (!COMPTES.length) { list.innerHTML = '<p class="hint">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres s\'inscriront sur l\'espace membre.</p>'; return; }
+    if (!COMPTES.length) { list.innerHTML = '<p class="admin-empty">Aucune inscription pour le moment. Les comptes apparaîtront ici dès que des membres s\'inscriront sur l\'espace membre.</p>'; return; }
     const q = FILTRE.trim().toLowerCase();
     const nb = { tous: COMPTES.length, attente: COMPTES.filter(c => !c.approuve).length, approuves: COMPTES.filter(c => c.approuve).length, taxes: COMPTES.filter(c => c.acces === 'taxes').length };
     let vus = COMPTES.filter(c => FILTRE_ETAT === 'attente' ? !c.approuve : FILTRE_ETAT === 'approuves' ? c.approuve : FILTRE_ETAT === 'taxes' ? c.acces === 'taxes' : true);
     if (q) vus = vus.filter(c => [c.email, c.discord_pseudo, c.nom, c.rang].some(v => String(v || '').toLowerCase().indexOf(q) !== -1));
     // Ceux qui attendent une décision d'abord, puis les plus récemment vus.
     vus = vus.slice().sort((a, b) => (a.approuve - b.approuve) || (new Date(b.derniere_connexion || b.created_at || 0) - new Date(a.derniere_connexion || a.created_at || 0)));
-    const puce = (k, lbl) => '<button type="button" class="insc-puce' + (FILTRE_ETAT === k ? ' on' : '') + '" onclick="FILTRE_ETAT = \'' + k + '\'; dessineInscriptions()">' + lbl + ' <b>' + nb[k] + '</b></button>';
-    list.innerHTML = (NOTE_INSC ? '<p class="hint" style="margin-bottom:16px">' + NOTE_INSC + '</p>' : '') +
-      '<div class="insc-bar"><div class="insc-puces" role="group" aria-label="Filtrer les comptes">' + puce('tous', 'Tous') + puce('attente', 'En attente') + puce('approuves', 'Approuvés') + puce('taxes', 'Taxes seules') + '</div>' +
-      '<div class="insc-outils"><input type="search" id="insc-q" placeholder="Chercher un personnage, un pseudo, un email…" value="' + escHTML(FILTRE) + '" oninput="FILTRE = this.value; dessineInscriptions()" aria-label="Chercher un compte" /><button class="btn btn-line" type="button" onclick="renderInscriptions()">Rafraîchir</button></div></div>' +
-      (vus.length ? '<div class="insc-grille">' + vus.map(ligneInscription).join('') + '</div>' : '<div class="insc-rien">Aucun compte ne correspond' + (q ? ' à « ' + escHTML(FILTRE) + ' »' : '') + '.</div>');
+    const puce = (k, lbl) => '<button type="button" class="tax-type' + (FILTRE_ETAT === k ? ' is-on' : '') + '" onclick="FILTRE_ETAT = \'' + k + '\'; dessineInscriptions()">' + lbl + ' <i>' + nb[k] + '</i></button>';
+    list.innerHTML = (NOTE_INSC ? '<p class="admin-block__hint">' + NOTE_INSC + '</p>' : '') +
+      '<div class="tax-barre"><div class="tax-types" role="group" aria-label="Filtrer les comptes">' + puce('tous', 'Tous') + puce('attente', 'En attente') + puce('approuves', 'Approuvés') + puce('taxes', 'Taxes seules') + '</div>' +
+      '<div class="insc-outils"><input class="admin-input tax-search" type="search" id="insc-q" placeholder="Personnage, pseudo, e-mail…" value="' + escHTML(FILTRE) + '" oninput="FILTRE = this.value; dessineInscriptions()" aria-label="Chercher un compte"><button class="btn btn--ghost btn--sm" type="button" onclick="renderInscriptions()">Rafraîchir</button></div></div>' +
+      '<p class="tax-compte">' + vus.length + ' compte' + (vus.length > 1 ? 's' : '') + '</p>' +
+      (vus.length ? '<div class="insc-liste">' + vus.map(ligneInscription).join('') + '</div>' : '<p class="admin-empty">Aucun compte ne correspond' + (q ? ' à « ' + escHTML(FILTRE) + ' »' : '') + '.</p>');
     if (q) { const inp = document.getElementById('insc-q'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }
   }
   function ligneInscription(c) {
     var acces = (c.acces === 'taxes') ? 'taxes' : 'complet', id = escHTML(c.id), bot = estCompteBot(c);
     var titre = titreCompte(c), photo = c.avatar_url || c.photo_url || '';
-    var avatar = '<div class="insc-ava' + (c.approuve ? '' : ' attente') + '" aria-hidden="true"><span>' + escHTML(initialesDe(titre)) + '</span>' +
-      (photo ? '<img src="' + escHTML(photo) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();' + (c.avatar_url && photo === c.avatar_url ? ' photoCassee(\'' + id + '\')' : '') + '" />' : '') + '</div>';
+    var avatar = '<div class="insc-ava" aria-hidden="true"><span>' + escHTML(initialesDe(titre)) + '</span>' +
+      (photo ? '<img src="' + escHTML(photo) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();' + (c.avatar_url && photo === c.avatar_url ? ' photoCassee(\'' + id + '\')' : '') + '">' : '') + '</div>';
     var ident = [];
     if (c.discord_pseudo && c.discord_pseudo !== titre) ident.push('<span class="discord">@' + escHTML(c.discord_pseudo) + '</span>');
     if (bot) ident.push('<span class="mail">compte Discord, via le bot</span>');
@@ -323,33 +341,33 @@
     var dates = [];
     if (c.created_at) dates.push('Inscrit le ' + escHTML(dateCourte(c.created_at)));
     var vu = depuis(c.derniere_connexion); dates.push(vu ? 'Vu ' + escHTML(vu) : 'Jamais revenu');
-    var tags = (c.rang ? '<span class="tag">' + escHTML(c.rang) + '</span>' : '') +
-      (acces === 'taxes' ? '<span class="tag inv">Taxes seules</span>' : '') +
-      (c.bot_lie === true ? '<span class="tag ok" title="Jeton du bot valide : les panneaux du bot fonctionnent pour ce compte">Bot lié</span>' : (c.bot_lie === false ? '<span class="tag off" title="Pas de jeton du bot valide : ce compte devra se reconnecter par Discord">Bot non lié</span>' : '')) +
+    var tags = (c.rang ? '<span class="tag tag--accent">' + escHTML(c.rang) + '</span>' : '') +
+      (acces === 'taxes' ? '<span class="tag">Taxes seules</span>' : '') +
+      (c.bot_lie === true ? '<span class="tag tag--ok" title="Jeton du bot valide : les panneaux du bot fonctionnent pour ce compte">Bot lié</span>' : (c.bot_lie === false ? '<span class="tag" title="Pas de jeton du bot valide : ce compte devra se reconnecter par Discord">Bot non lié</span>' : '')) +
       (c.bot_admin ? '<span class="tag">Admin Discord</span>' : (c.bot_taxes ? '<span class="tag">Rôle taxes</span>' : ''));
-    return '<div class="tray insc-row' + (acces === 'taxes' ? ' limite' : '') + (c.approuve ? '' : ' attente') + '">' + avatar +
+    return '<article class="insc-row' + (acces === 'taxes' ? ' limite' : '') + (c.approuve ? '' : ' attente') + '">' + avatar +
       '<div class="insc-qui"><div class="insc-nom">' + escHTML(titre) + tags + '</div>' +
       '<div class="insc-meta">' + ident.join('') + '</div>' +
-      '<div class="insc-meta dates"><span class="insc-state ' + (c.approuve ? 'ok' : '') + '"><i></i>' + (c.approuve ? 'Approuvé' : 'En attente') + '</span><span>' + dates.join('</span><span>') + '</span></div></div>' +
-      '<div class="insc-actions"><select aria-label="Niveau d\'accès" onchange="setAcces(\'' + id + '\', this.value)"><option value="complet"' + (acces === 'complet' ? ' selected' : '') + '>Tout l\'espace membre</option><option value="taxes"' + (acces === 'taxes' ? ' selected' : '') + '>Taxes uniquement</option></select>' +
-      '<button class="btn ' + (c.approuve ? 'btn-line' : 'btn-metal') + '" type="button" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' + (c.approuve ? 'Révoquer' : 'Approuver') + '</button>' +
-      (c.approuve ? '' : '<button class="btn btn-danger" type="button" onclick="supprimerCompte(\'' + id + '\', \'' + escJS(titre) + '\')">Supprimer</button>') + '</div></div>';
+      '<div class="insc-meta dates"><span class="status ' + (c.approuve ? 'status--approved' : 'status--pending') + '">' + (c.approuve ? 'Approuvé' : 'En attente') + '</span><span>' + dates.join('</span><span>') + '</span></div></div>' +
+      '<div class="insc-actions"><select class="admin-select" aria-label="Niveau d\'accès" onchange="setAcces(\'' + id + '\', this.value)"><option value="complet"' + (acces === 'complet' ? ' selected' : '') + '>Tout l\'espace membre</option><option value="taxes"' + (acces === 'taxes' ? ' selected' : '') + '>Taxes uniquement</option></select>' +
+      '<button class="btn btn--sm ' + (c.approuve ? 'btn--ghost' : 'btn--accent') + '" type="button" onclick="setApprouve(\'' + id + '\', ' + (!c.approuve) + ')">' + (c.approuve ? 'Révoquer' : 'Approuver') + '</button>' +
+      (c.approuve ? '' : '<button class="btn btn--ghost btn--sm btn--danger" type="button" onclick="supprimerCompte(\'' + id + '\', \'' + escJS(titre) + '\')">Supprimer</button>') + '</div></article>';
   }
   async function supprimerCompte(id, qui) {
-    if (!await moniConfirm('Supprimer le compte de ' + qui + ' ?', 'Sa connexion, sa fiche de profil et sa photo seront effacées. Ses photos de la galerie sont conservées.\nCette action est irréversible.', 'Supprimer')) return;
+    if (!await moniConfirm('Supprimer le compte de ' + qui + ' ?', 'Sa connexion, sa fiche de profil et sa photo seront effacées. Ses photos de la galerie sont conservées. Cette action est irréversible.', 'Supprimer')) return;
     try { const { data: fichiers } = await SB.storage.from('photos').list(id); if (fichiers && fichiers.length) await SB.storage.from('photos').remove(fichiers.map(f => id + '/' + f.name)); } catch (e) { console.warn('[suppression] photo non retirée :', e); }
     const { data, error } = await SB.rpc('supprimer_compte', { p_id: id });
-    if (error) { showToast(/supprimer_compte/i.test(error.message) ? 'Fonction absente : exécute migrations/supprimer-compte.sql dans Supabase.' : 'Suppression refusée : ' + error.message); return; }
+    if (error) { showToast(/supprimer_compte/i.test(error.message) ? 'Fonction absente : exécute migrations/supprimer-compte.sql dans Supabase.' : 'Suppression refusée : ' + error.message, false); return; }
     showToast('Compte supprimé' + (data ? ' : ' + data : '') + '.'); renderInscriptions(); updateDashLive();
   }
   async function setApprouve(id, val) {
     const { error } = await SB.from('comptes').update({ approuve: val }).eq('id', id);
-    if (error) { showToast('Erreur : ' + error.message); return; }
+    if (error) { showToast('Erreur : ' + error.message, false); return; }
     showToast(val ? 'Compte approuvé' : 'Accès révoqué'); renderInscriptions(); updateDashLive();
   }
   async function setAcces(id, val) {
     const { error } = await SB.from('comptes').update({ acces: val }).eq('id', id);
-    if (error) { showToast(/acces/i.test(error.message) ? "La colonne « acces » n'existe pas encore : exécute migrations/acces-comptes.sql dans Supabase." : 'Erreur : ' + error.message); renderInscriptions(); return; }
+    if (error) { showToast(/acces/i.test(error.message) ? "La colonne « acces » n'existe pas encore : exécute migrations/acces-comptes.sql dans Supabase." : 'Erreur : ' + error.message, false); renderInscriptions(); return; }
     showToast(val === 'taxes' ? 'Ce compte ne verra plus que le panneau Taxes.' : "Ce compte a de nouveau accès à tout l'espace membre."); renderInscriptions();
   }
 
@@ -374,15 +392,15 @@
   function hierRender() {
     const rows = document.getElementById('hier-rows'), rrows = document.getElementById('rang-rows');
     const rangs = window.MONI_RANGS || [], membres = window.MONI_MEMBRES || [];
-    document.getElementById('hier-count').textContent = membres.length + ' membre' + (membres.length > 1 ? 's' : '');
+    document.getElementById('hier-count').textContent = membres.length;
     document.getElementById('hier-new-rang').innerHTML = hierOptions(rangs.length ? rangs[rangs.length - 1].nom : '');
     rows.innerHTML = membres.length ? membres.map(m => '<tr data-id="' + escHTML(m.id || '') + '" data-nom="' + escHTML(m.nom) + '">' +
-      '<td><input type="text" value="' + escHTML(m.nom) + '" data-f="nom" /></td><td><select data-f="rang">' + hierOptions(m.rang) + '</select></td>' +
-      '<td class="acts"><button class="btn btn-line" type="button" onclick="hierEnregistrer(this)">Enregistrer</button><button class="btn btn-danger" type="button" onclick="hierRetirer(this)">Retirer</button></td></tr>').join('')
-      : '<tr><td colspan="3" class="hint">Aucun membre — ajoute le premier ci-dessus.</td></tr>';
+      '<td><input type="text" class="admin-input" value="' + escHTML(m.nom) + '" data-f="nom"></td><td><select class="admin-select" data-f="rang">' + hierOptions(m.rang) + '</select></td>' +
+      '<td class="admin-actions"><button class="btn btn--ghost btn--sm" type="button" onclick="hierEnregistrer(this)">Enregistrer</button><button class="btn btn--ghost btn--sm btn--danger" type="button" onclick="hierRetirer(this)">Retirer</button></td></tr>').join('')
+      : '<tr><td colspan="3" class="muted">Aucun membre — ajoute le premier ci-dessus.</td></tr>';
     rows.querySelectorAll('input,select').forEach(el => el.addEventListener('input', () => el.closest('tr').classList.add('is-dirty')));
-    rrows.innerHTML = rangs.map((r, i) => '<tr data-nom="' + escHTML(r.nom) + '"><td class="hint">' + (i + 1) + '</td><td><b>' + escHTML(r.nom) + '</b></td>' +
-      '<td><input type="text" value="' + escHTML(r.desc || '') + '" data-f="desc" placeholder="Description" /></td><td class="acts"><button class="btn btn-line" type="button" onclick="rangEnregistrer(this)">Enregistrer</button></td></tr>').join('');
+    rrows.innerHTML = rangs.map((r, i) => '<tr data-nom="' + escHTML(r.nom) + '"><td class="muted">' + (i + 1) + '</td><td><span class="hier-rang-pill" style="background:' + escHTML(r.color || '') + '"></span><b>' + escHTML(r.nom) + '</b></td>' +
+      '<td><input type="text" class="admin-input" value="' + escHTML(r.desc || '') + '" data-f="desc" placeholder="Description"></td><td class="admin-actions"><button class="btn btn--ghost btn--sm" type="button" onclick="rangEnregistrer(this)">Enregistrer</button></td></tr>').join('');
     updateDashLive();
   }
   async function hierAjouter() {
@@ -426,15 +444,15 @@
     const txt = '// Liste de secours (copiée depuis l\'administration le ' + new Date().toLocaleDateString('fr-FR') + ').' + NL + 'window.MONI_MEMBRES = [' + NL +
       (window.MONI_MEMBRES || []).map(m => "  { nom: '" + String(m.nom).replace(/'/g, "\\'") + "', rang: '" + m.rang + "' }").join(',' + NL) + NL + '];';
     const pre = document.getElementById('export-preview'); pre.textContent = txt; pre.style.display = 'block';
-    navigator.clipboard.writeText(txt).then(() => showToast('Bloc copié — colle-le dans supabase-config.js')).catch(() => showToast('Copie refusée par le navigateur : sélectionne le texte et fais Ctrl+C.'));
+    navigator.clipboard.writeText(txt).then(() => showToast('Bloc copié — colle-le dans supabase-config.js')).catch(() => showToast('Copie refusée par le navigateur : sélectionne le texte et fais Ctrl+C.', false));
   }
 
-  // ── FICHES MEMBRES ──
+  // ── FICHES MEMBRES : la planche contact du modèle, une case par membre ──
   async function renderFiches() {
     const list = document.getElementById('fiches-list');
     if (!SB) return;
     const { data, error } = await SB.from('profils').select('*');
-    if (error) { list.innerHTML = '<p class="hint">Erreur : ' + escHTML(error.message) + '</p>'; return; }
+    if (error) { list.innerHTML = '<p class="admin-empty">Erreur : ' + escHTML(error.message) + '</p>'; return; }
     const profils = {}; (data || []).forEach(p => { if (p.nom) profils[p.nom] = p; });
     const membres = window.MONI_MEMBRES || [];
     let remplies = 0;
@@ -442,28 +460,29 @@
       const p = profils[m.nom] || {}; const ok = !!(p.photo_url || p.bio || p.citation || p.specialite); if (ok) remplies++;
       const ini = m.nom.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
       const details = [p.specialite, p.citation ? '« ' + p.citation + ' »' : '', p.bio].filter(Boolean).join(' · ');
-      return '<div class="tray fiche"><div class="ava">' + (p.photo_url ? '<img src="' + escHTML(p.photo_url) + '" alt="" loading="lazy">' : escHTML(ini)) + '</div><div style="min-width:0">' +
-        '<div class="nom">' + escHTML(m.nom) + '</div><div class="rang">' + escHTML(m.rang) + '</div>' +
-        '<div class="etat' + (ok ? ' ok' : '') + '">' + (ok ? escHTML(details.length > 110 ? details.slice(0, 110) + '…' : details) : 'Fiche pas encore remplie') + '</div></div></div>';
-    }).join('') || '<p class="hint">Aucun membre dans la hiérarchie.</p>';
-    document.getElementById('fiches-count').textContent = remplies + ' / ' + membres.length + ' remplies';
+      return '<article class="miembro" data-featured="' + ok + '">' + (p.photo_url ? '<img src="' + escHTML(p.photo_url) + '" alt="" width="76" height="76" loading="lazy">' : '<div class="avatar-ini">' + escHTML(ini) + '</div>') +
+        '<span class="rank__title">' + escHTML(m.rang) + '</span><span class="miembro__name">' + escHTML(m.nom) + '</span>' +
+        '<span class="miembro__etat' + (ok ? ' ok' : '') + '">' + (ok ? escHTML(details.length > 110 ? details.slice(0, 110) + '…' : details) : 'Fiche pas encore remplie') + '</span></article>';
+    }).join('') || '<p class="admin-empty">Aucun membre dans la hiérarchie.</p>';
+    document.getElementById('fiches-count').textContent = remplies + ' / ' + membres.length;
   }
 
   // ── GALERIE ──
   async function renderGalerie() {
-    const list = document.getElementById('gal-list');
+    const list = document.getElementById('gal-list'), vide = document.getElementById('gal-vide');
     if (!SB) return;
     const { data, error } = await SB.from('galerie_photos').select('*').order('created_at', { ascending: false });
-    if (error) { list.innerHTML = '<p class="hint">Erreur : ' + escHTML(error.message) + '</p>'; return; }
-    document.getElementById('gal-count').textContent = (data || []).length + ' photo(s)';
-    if (!data || !data.length) { list.innerHTML = '<p class="hint">Aucune photo envoyée par les membres pour le moment.</p>'; return; }
-    list.innerHTML = data.map(p => '<figure data-id="' + escHTML(p.id) + '"><img src="' + escHTML(p.url) + '" alt="" loading="lazy"><figcaption>' + (p.caption ? '<b>' + escHTML(p.caption) + '</b>' : '') + escHTML(dateCourte(p.created_at) || '') + '</figcaption>' +
-      '<button class="del" type="button" title="Retirer cette photo" onclick="galSupprimer(\'' + escHTML(p.id) + '\')">&times;</button></figure>').join('');
+    if (error) { list.innerHTML = '<p class="admin-empty">Erreur : ' + escHTML(error.message) + '</p>'; return; }
+    document.getElementById('gal-count').textContent = (data || []).length;
+    vide.hidden = !!(data && data.length);
+    list.innerHTML = (data || []).map(p => '<figure class="gal-item" data-id="' + escHTML(p.id) + '"><a href="' + escHTML(p.url) + '" target="_blank" rel="noopener"><img src="' + escHTML(p.url) + '" alt="" loading="lazy"></a>' +
+      '<figcaption>' + (p.caption ? '<b>' + escHTML(p.caption) + '</b>' : '') + '<span class="muted">' + escHTML(dateCourte(p.created_at) || '') + '</span>' +
+      '<button class="btn btn--ghost btn--sm btn--danger" type="button" onclick="galSupprimer(\'' + escHTML(p.id) + '\')">Retirer</button></figcaption></figure>').join('');
   }
   async function galSupprimer(id) {
     if (!await moniConfirm('Retirer cette photo de la galerie ?', 'Elle disparaît du site immédiatement.', 'Retirer')) return;
     const { error } = await SB.from('galerie_photos').delete().eq('id', id);
-    if (error) { showToast('Suppression refusée : ' + error.message); return; }
+    if (error) { showToast('Suppression refusée : ' + error.message, false); return; }
     document.querySelector('#gal-list figure[data-id="' + id + '"]')?.remove(); showToast('Photo retirée'); updateDashLive();
   }
 </script>

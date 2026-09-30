@@ -1,353 +1,283 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Espace Membre — Famille Moni</title>
-  <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="favicon.ico" sizes="32x32" />
-  <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0b0c10" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="Moni" />
-  <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="dashboard.css" />
-  <link rel="stylesheet" href="espace-membre.css?v=1" />
-  <link rel="stylesheet" href="moni-theme-dash.css?v=16" />
-  <!--
-    L'espace membre est bâti autour de l'API REST du bot Discord (bot-moni-v3),
-    en lecture seule : Ma semaine, La famille, Stocks, Armurerie, Braquages,
-    Taxes et la carte du mois viennent du bot, en direct, via l'Edge Function
-    bot-suivi (le jeton du bot ne vit jamais dans le navigateur). Profil,
-    Planning, Galerie et Hiérarchie sont les données propres du site (Supabase).
-    Code : em-core.js (socle), em-bot.js (bot), em-site.js (site), em-charts.js.
-  -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espace membre · Famille Moni</title>
+<meta name="application-name" content="Famille Moni">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Moni">
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="theme.css?v=1">
+<link rel="stylesheet" href="espace-base.css?v=1">
+<link rel="stylesheet" href="espace.css?v=1">
+<link rel="stylesheet" href="espace-moni.css?v=1">
+<script src="espace.js?v=1"></script>
+<!--
+  L'espace membre reprend la coque du modèle de site de famille Roxwood Network (espace.css / espace.js) :
+  rail numéroté, onglets sur téléphone, palette Ctrl+K. Une seule page, des panneaux : les données du bot
+  Discord (Ma semaine, La famille, Stocks, Armurerie, Braquages, Taxes, Mon bilan) arrivent via l'Edge
+  Function bot-suivi, en lecture seule ; Profil, Planning, Galerie et Hiérarchie sont les données du site
+  (Supabase). Code : em-core.js (socle), em-bot.js (bot), em-site.js (site), em-charts.js (graphiques).
+-->
 </head>
-<body>
-<canvas id="member-canvas"></canvas>
+<body class="espace-body">
 
-<!-- CONNEXION -->
-<div id="auth-screen" class="auth-wrap">
-  <div class="card narrow">
-    <h1 class="auth-title">Espace <span>Membre</span></h1>
-    <div class="sub" id="auth-sub">Connecte-toi avec ton compte Discord : c'est lui qui te relie au bot Moni et à ton rôle sur le serveur.</div>
+<!-- CONNEXION : le viseur -->
+<main id="auth-screen" class="espace-login">
+  <a class="espace-login__back" href="accueil.html">← Retour au site</a>
+  <img class="espace-login__logo" src="logo-m-rond.webp" alt="Famille Moni" width="200" height="200">
+  <p class="eyebrow">Famille Moni</p>
+  <h1>Espace membre</h1>
+  <p class="espace-login__lead" id="auth-sub">Réservé aux membres de la famille. Connecte-toi avec le compte Discord qui est sur le serveur : c'est lui qui te relie au bot Moni et à ton rôle.</p>
+  <p class="espace-login__error msg" id="auth-msg"></p>
+  <!-- Connexion principale : par le bot. Un seul écran Discord (Moni V3) ouvre la session du site ET la liaison
+       au bot. L'adresse de départ vient de la passerelle (action `config`), jamais écrite en dur ici. -->
+  <a class="btn btn--accent btn--lg espace-login__btn" id="auth-bot" href="#" onclick="return connexionParLeBot(event)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a18.3 18.3 0 0 1 4.5 2.2 15.8 15.8 0 0 0-15.4 0A18 18 0 0 1 8.8 3.4L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.5 9.3-.3 14 .1 18.7a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.4-.8-10.1-3.6-14.3ZM8 15.9c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg>
+    <span id="auth-bot-lbl">Se connecter avec Discord</span>
+  </a>
+  <p class="espace-login__hint" id="auth-bot-hint">Tu passes par Discord (application Moni V3), puis tu reviens ici connecté(e).</p>
 
-    <!-- Connexion principale : par le bot. Un seul écran Discord (Moni V3)
-         ouvre la session du site ET la liaison au bot. L'adresse de départ
-         vient de la passerelle (action `config`), jamais écrite en dur ici. -->
-    <a class="btn discord" id="auth-bot" href="#" onclick="return connexionParLeBot(event)">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:18px;height:18px;vertical-align:-4px;margin-right:8px;"><path d="M20.3 4.5A19.8 19.8 0 0 0 15.4 3l-.25.5a18.3 18.3 0 0 1 4.3 1.4 15.6 15.6 0 0 0-12.9 0A18.3 18.3 0 0 1 10.85 3.5L10.6 3a19.8 19.8 0 0 0-4.9 1.5C2.6 9.1 1.8 13.6 2.2 18a19.9 19.9 0 0 0 6 3l1.2-1.7a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1L19.8 21a19.9 19.9 0 0 0 6-3c.5-5.1-.8-9.5-3.5-13.5zM9.7 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm4.6 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg><span id="auth-bot-lbl">Se connecter avec Discord</span>
-    </a>
-    <p class="hint" id="auth-bot-hint" style="margin-top:10px;line-height:1.6;">Tu passes par Discord (application Moni V3), puis tu reviens ici connecté(e).</p>
-    <div class="msg" id="auth-msg"></div>
+  <!-- Secours : compte e-mail (administratrice, comptes historiques) — replié par défaut. -->
+  <details class="espace-login__secours" id="auth-secours">
+    <summary>Connexion par e-mail</summary>
+    <div class="espace-login__form">
+      <label class="modal__label" for="email">E-mail</label>
+      <input class="admin-input" type="email" id="email" placeholder="ton@email.com" autocomplete="email">
+      <label class="modal__label" for="password">Mot de passe</label>
+      <input class="admin-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()">
+      <button class="btn btn--ghost" id="auth-btn" type="button" onclick="doAuth()">Se connecter</button>
+      <p class="espace-login__switch" id="auth-switch">Pas encore de compte ? <button type="button" class="lien" onclick="setMode('signup')">Créer un compte</button></p>
+      <p class="espace-login__switch"><button type="button" class="lien" onclick="motDePasseOublie()">Mot de passe oublié ?</button></p>
+    </div>
+  </details>
+  <p class="espace-login__small">Roxwood · Flashback FA · Roleplay uniquement</p>
+</main>
 
-    <!-- Secours : compte e-mail (administratrice, comptes historiques) — replié par défaut. -->
-    <details class="auth-secours" id="auth-secours">
-      <summary>Connexion par e-mail</summary>
-      <label>Email</label>
-      <input type="email" id="email" placeholder="ton@email.com" autocomplete="email" />
-      <label>Mot de passe</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()" />
-      <button class="btn" id="auth-btn" onclick="doAuth()">Se connecter</button>
-      <div class="switch" id="auth-switch">
-        Pas encore de compte ? <button type="button" class="lien" onclick="setMode('signup')">Créer un compte</button>
-      </div>
-      <div class="switch" style="margin-top:10px;">
-        <button type="button" class="lien" onclick="motDePasseOublie()">Mot de passe oublié ?</button>
-      </div>
-    </details>
+<!-- NOUVEAU MOT DE PASSE (après clic sur le lien reçu par e-mail) -->
+<main id="reset-screen" class="espace-login" style="display:none;">
+  <img class="espace-login__logo" src="logo-m-rond.webp" alt="Famille Moni" width="200" height="200">
+  <p class="eyebrow">Famille Moni</p>
+  <h1>Mot de passe</h1>
+  <p class="espace-login__lead">Choisis ton nouveau mot de passe (8 caractères minimum).</p>
+  <div class="espace-login__form">
+    <label class="modal__label" for="new-password">Nouveau mot de passe</label>
+    <input class="admin-input" type="password" id="new-password" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')validerNouveauMdp()">
+    <button class="btn btn--accent" type="button" onclick="validerNouveauMdp()">Enregistrer mon nouveau mot de passe</button>
+    <p class="msg" id="reset-msg"></p>
   </div>
-</div>
-
-<!-- NOUVEAU MOT DE PASSE (après clic sur le lien reçu par email) -->
-<div id="reset-screen" class="auth-wrap" style="display:none;">
-  <div class="card narrow">
-    <h1 class="auth-title">Nouveau <span>mot de passe</span></h1>
-    <div class="sub">Choisis ton nouveau mot de passe (8 caractères minimum).</div>
-    <label>Nouveau mot de passe</label>
-    <input type="password" id="new-password" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')validerNouveauMdp()" />
-    <button class="btn green" onclick="validerNouveauMdp()">✓ Enregistrer mon nouveau mot de passe</button>
-    <div class="msg" id="reset-msg"></div>
-  </div>
-</div>
+</main>
 
 <!-- ESPACE MEMBRE -->
 <div id="member-screen">
+<script>espaceShell()</script>
 
-  <aside class="sb-nav" id="sb-nav">
-    <div class="sb-logo">
-      <div class="t1">Famille <span>Moni</span></div>
-      <div class="t2">Espace membre</div>
-      <div class="sb-mono" aria-hidden="true">M</div>
+<main class="espace-page espace-page--wide">
+  <div class="section__head">
+    <span class="numeral" id="dash-num">✦</span>
+    <h2 id="dash-title">Ma semaine</h2>
+    <p class="sub" id="dash-week"></p>
+    <!-- L'état de la connexion au bot (le vrai : jeton valide, bot joignable) et le bouton qui recharge ce qui est à l'écran. -->
+    <div class="espace-outils" role="group" aria-label="État du bot et actualisation">
+      <span class="status bot-chip" id="bot-chip" data-state="wait"><span class="chip-pre">Bot </span><b>Moni</b> · <span class="chip-when">vérification…</span></span>
+      <button type="button" class="btn btn--ghost btn--sm" id="bot-actualiser" onclick="actualiserTout()" title="Recharger les données affichées">↻<span class="chip-pre"> Actualiser</span></button>
     </div>
+  </div>
 
-    <div class="sb-sect" data-sect="moi">
-    <button type="button" class="sb-group req-approve" aria-expanded="true" aria-controls="sb-sect-moi"><span>Moi</span><svg class="sb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div class="sb-sect-items" id="sb-sect-moi">
-    <button type="button" class="sb-item req-approve active" data-panel="moi" data-sub="Tes ventes, ta paie, ton rang — calculés par le bot." data-title="Ma &lt;em&gt;semaine&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="lbl">Ma semaine</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="bilan" data-sub="Ta carte du mois, à télécharger et poster sur Discord." data-title="Mon &lt;em&gt;bilan&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 15l3-3.5 2.5 2.5L16 10l1.5 2"/></svg></span><span class="lbl">Mon bilan</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="profil" data-sub="Ton personnage, ta photo, ta fiche sur le site public." data-title="Mon &lt;em&gt;profil&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></span><span class="lbl">Mon profil</span></button>
+  <!-- Compte en attente de validation -->
+  <div class="panel" id="panel-pending">
+    <div class="espace-attente">
+      <p class="eyebrow">Demande reçue</p>
+      <h3>En attente</h3>
+      <p>Ton compte est bien enregistré, mais il doit être <b>validé par un administrateur</b> avant d'accéder au tableau de bord de la famille. En attendant, tu peux déjà publier des photos dans la galerie. Reviens un peu plus tard !</p>
+      <div class="espace-login__actions"><button class="btn btn--ghost btn--sm" type="button" onclick="location.reload()">Vérifier</button></div>
     </div>
-    </div>
+  </div>
 
-    <div class="sb-sect" data-sect="famille">
-    <button type="button" class="sb-group req-approve" aria-expanded="true" aria-controls="sb-sect-famille"><span>La famille</span><svg class="sb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div class="sb-sect-items" id="sb-sect-famille">
-    <button type="button" class="sb-item req-approve" data-panel="famille" data-sub="Ventes, classement, paie et bilan du groupe — en direct du bot." data-title="La &lt;em&gt;famille&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg></span><span class="lbl">La famille</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="stocks" data-sub="Ce que la famille possède : stock général, coffres, mouvements." data-title="Les &lt;em&gt;stocks&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="17" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M7 3.5h10"/></svg></span><span class="lbl">Stocks</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="armurerie" data-sub="Les armes de la famille, qui les tient, et les munitions." data-title="L'&lt;em&gt;armurerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></span><span class="lbl">Armurerie</span></button>
-    <button type="button" class="sb-item req-approve" data-panel="braquages" data-sub="Créneaux de braquage, tes cooldowns, l'état des labos." data-title="Braquages &amp; &lt;em&gt;cooldowns&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none"/></svg></span><span class="lbl">Braquages</span></button>
-    <button type="button" id="sb-taxes" class="sb-item req-approve" data-panel="taxes" data-sub="Les taxes et le racket, réservés au rôle taxes et aux administrateurs." data-title="Taxes &amp; &lt;em&gt;racket&lt;/em&gt;" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 3.5h13v17l-2.2-1.5-2.2 1.5-2.1-1.5L9.9 20.5 7.7 19l-2.2 1.5z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="lbl">Taxes</span></button>
-    </div>
-    </div>
+  <!-- ── Panneaux alimentés par le bot : remplis par em-bot.js ── -->
+  <div class="panel active" id="panel-moi"><div class="bot-panel" id="p-moi"><div class="locked">Chargement…</div></div></div>
+  <div class="panel" id="panel-bilan"><div class="bot-panel" id="p-bilan"><div class="locked">Chargement…</div></div></div>
+  <div class="panel" id="panel-famille"><div class="bot-panel" id="p-famille"><div class="locked">Chargement…</div></div></div>
+  <div class="panel" id="panel-stocks"><div class="bot-panel" id="p-stocks"><div class="locked">Chargement…</div></div></div>
+  <div class="panel" id="panel-armurerie"><div class="bot-panel" id="p-armurerie"><div class="locked">Chargement…</div></div></div>
+  <div class="panel" id="panel-braquages"><div class="bot-panel" id="p-braquages"><div class="locked">Chargement…</div></div></div>
+  <div class="panel" id="panel-taxes"><div class="bot-panel" id="p-taxes"><div class="locked">Chargement…</div></div></div>
 
-    <div class="sb-sect" data-sect="vie">
-    <button type="button" class="sb-group" aria-expanded="true" aria-controls="sb-sect-vie"><span>Vie de famille</span><svg class="sb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div class="sb-sect-items" id="sb-sect-vie">
-    <button type="button" class="sb-item req-approve" data-panel="events" data-sub="Les rendez-vous de la famille — dis si tu viens." data-title="Le &lt;em&gt;planning&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4m8-4v4"/></svg></span><span class="lbl">Planning</span></button>
-    <button type="button" class="sb-item" data-panel="galerie" data-sub="Tes screens partent dans la galerie du site public." data-title="La &lt;em&gt;galerie&lt;/em&gt;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.8 6.5l1.2-2.3h4l1.2 2.3"/></svg></span><span class="lbl">Galerie</span></button>
-    <button type="button" class="sb-item req-approve" id="sb-hierarchie" data-panel="hierarchie" data-sub="Les membres et leurs rangs, tels qu'ils apparaissent sur le site public." data-title="La &lt;em&gt;hiérarchie&lt;/em&gt;" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4.5"/><rect x="3" y="16.5" width="6" height="4.5"/><rect x="15" y="16.5" width="6" height="4.5"/><path d="M12 7.5v4M6 16.5v-3h12v3"/></svg></span><span class="lbl">Hiérarchie</span></button>
-    </div>
-    </div>
-
-    <div class="sb-sect" data-sect="systeme">
-    <button type="button" class="sb-group" aria-expanded="true" aria-controls="sb-sect-systeme"><span>Système</span><svg class="sb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div class="sb-sect-items" id="sb-sect-systeme">
-    <button type="button" class="sb-item req-approve" id="tv-btn"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8.5 20.5h7"/></svg></span><span class="lbl">Mode TV</span></button>
-    <a class="sb-item" href="accueil.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-5.5h4V20"/></svg></span><span class="lbl">Retour au site</span></a>
-    <a class="sb-item" id="sb-admin" href="admin.html" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></span><span class="lbl">Panel admin</span></a>
-    </div>
-    </div>
-
-    <div class="sb-foot">
-      <div class="sb-user">Connecté : <b id="who-email"></b></div>
-      <button type="button" class="sb-out" onclick="doLogout()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M17.7 6.6a8 8 0 11-11.4 0"/></svg></span><span class="lbl">Déconnexion</span></button>
-    </div>
-    <button type="button" class="sb-toggle" id="sb-toggle" aria-label="Réduire le menu" title="Réduire le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
-  </aside>
-
-  <nav id="nav-mobile" aria-label="Navigation principale"></nav>
-  <div id="nav-plus" hidden></div>
-
-  <main class="dash">
-    <div class="dash-head">
-      <div class="dash-head-txt">
-        <div class="dash-title" id="dash-title">Ma <em>semaine</em></div>
-        <div class="dash-sub" id="dash-week"></div>
+  <!-- ── Panneaux du site : em-site.js ── -->
+  <div class="panel" id="panel-events">
+    <!-- L'agenda : ce qui arrive, en cartes, avec la réponse en un clic. La grille horaire reste dessous pour situer la semaine. -->
+    <section class="admin-block" id="bloc-agenda">
+      <h3 class="admin-block__title">Prochains rendez-vous <span class="tag">14 jours</span></h3>
+      <div id="cal-agenda"><div class="locked">Chargement…</div></div>
+    </section>
+    <section class="admin-block">
+      <div class="cal-head">
+        <div>
+          <h3 class="admin-block__title" id="cal-range">Planning</h3>
+          <p class="cal-legend"><span class="dot dot--ev"></span> Événement <span class="dot dot--pr"></span> Présence</p>
+        </div>
+        <div class="cal-nav">
+          <button class="btn btn--ghost btn--sm" type="button" onclick="calNav(-1)" aria-label="Semaine précédente">‹</button>
+          <button class="btn btn--ghost btn--sm" type="button" onclick="calNav(0)">Aujourd'hui</button>
+          <button class="btn btn--ghost btn--sm" type="button" onclick="calNav(1)" aria-label="Semaine suivante">›</button>
+        </div>
       </div>
-      <!-- L'état de la connexion au bot (le vrai : jeton valide, bot joignable)
-           et le bouton qui recharge ce qui est à l'écran. -->
-      <div class="dash-tools" role="group" aria-label="État du bot et actualisation">
-        <div class="chip" id="bot-chip" data-state="wait"><span class="chip-pre">Bot </span><b>Moni</b> · <span class="chip-when">vérification…</span></div>
-        <button type="button" class="chip chip-btn" id="bot-actualiser" onclick="actualiserTout()" title="Recharger les données affichées">↻<span class="chip-pre"> Actualiser</span></button>
-      </div>
-    </div>
+      <div class="cal-wrap"><div id="cal-grid"><div class="locked">Chargement…</div></div></div>
+      <div id="cal-detail"></div>
+    </section>
+  </div>
 
-    <!-- Compte en attente de validation -->
-    <div class="panel" id="panel-pending">
-      <div class="card" style="text-align:center; max-width:520px; margin:40px auto 0;">
-        <div style="font-size:40px; margin-bottom:8px;">⏳</div>
-        <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Compte en attente de validation</div>
-        <p style="color:var(--muted); font-size:14px; line-height:1.7;">
-          Ton compte a bien été créé, mais il doit être <b style="color:var(--text)">validé par un administrateur</b>
-          avant d'accéder au dashboard de la famille. En attendant, tu peux déjà publier des photos dans la galerie. Reviens un peu plus tard !
-        </p>
+  <!-- PROFIL : la carte du personnage (photo, rang, spécialité, citation), le formulaire, et l'aperçu de la fiche
+       telle qu'elle s'affiche sur le site public. Tout se met à jour pendant la saisie (em-site.js). -->
+  <div class="panel" id="panel-profil">
+    <section class="perfil">
+      <div class="perfil__card profil-id" aria-label="Identité du personnage">
+        <div class="perfil__avatar-wrap">
+          <div class="avatar-big" id="avatar-big">?</div>
+          <span class="perfil__rank" id="pid-avatar-badge" hidden>Nouvelle photo</span>
+        </div>
+        <p class="eyebrow">Mon personnage</p>
+        <h1 class="perfil__name pid-nom vide" id="pid-nom">Ton personnage</h1>
+        <p class="perfil__discord"><span class="rang-badge" id="pid-rang-badge" style="--rc:#6f6f76">Rang à définir</span></p>
+        <p class="pid-spec" id="pid-spec"></p>
+        <p class="perfil__bio pid-citation" id="pid-citation"></p>
+        <div class="pid-actions">
+          <button type="button" class="btn btn--ghost btn--sm" id="photo-btn" onclick="document.getElementById('photo-input').click()">Choisir une photo</button>
+          <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" onchange="onPhotoChosen(event)" hidden>
+          <button type="button" class="btn btn--ghost btn--sm" id="photo-remove" onclick="retirerPhoto()" hidden>Retirer la photo</button>
+        </div>
+        <p class="f-help">JPG, PNG ou WebP · 5 Mo max · recadrée en carré automatiquement.</p>
+        <p class="f-err" id="photo-err" role="alert"></p>
+        <p class="pid-foot"><a id="pid-lien" href="accueil.html#famiglia" target="_blank" rel="noopener">Voir ma fiche sur le site →</a></p>
       </div>
-    </div>
 
-    <!-- ── Panneaux alimentés par le bot : remplis par em-bot.js ── -->
-    <div class="panel active" id="panel-moi"><div class="bot-panel" id="p-moi"><div class="locked">Chargement…</div></div></div>
-    <div class="panel" id="panel-bilan"><div class="bot-panel" id="p-bilan"><div class="locked">Chargement…</div></div></div>
-    <div class="panel" id="panel-famille"><div class="bot-panel" id="p-famille"><div class="locked">Chargement…</div></div></div>
-    <div class="panel" id="panel-stocks"><div class="bot-panel" id="p-stocks"><div class="locked">Chargement…</div></div></div>
-    <div class="panel" id="panel-armurerie"><div class="bot-panel" id="p-armurerie"><div class="locked">Chargement…</div></div></div>
-    <div class="panel" id="panel-braquages"><div class="bot-panel" id="p-braquages"><div class="locked">Chargement…</div></div></div>
-    <div class="panel" id="panel-taxes"><div class="bot-panel" id="p-taxes"><div class="locked">Chargement…</div></div></div>
-
-    <!-- ── Panneaux du site : em-site.js ── -->
-    <div class="panel" id="panel-events">
-      <!-- L'agenda : ce qui arrive, en cartes, avec la réponse en un clic.
-           La grille horaire reste dessous pour situer la semaine. -->
-      <div class="bloc" id="bloc-agenda">
-        <div class="bloc-t">Prochains rendez-vous <small>les 14 prochains jours</small></div>
-        <div id="cal-agenda"><div class="locked">Chargement…</div></div>
-      </div>
-      <div class="bloc">
-        <div class="cal-head">
-          <div>
-            <div class="bloc-t" style="margin-bottom:2px;" id="cal-range">Planning</div>
-            <div class="cal-legend"><span class="dot" style="background:var(--red);"></span> Événement <span class="dot" style="background:var(--green);margin-left:12px;"></span> Présence</div>
+      <form class="perfil__form profil-form" id="profil-form" novalidate onsubmit="event.preventDefault(); saveProfil();">
+        <h2>Modifier</h2>
+        <fieldset class="f-section">
+          <legend class="f-section-t">Identité</legend>
+          <div class="f-row">
+            <label for="nom-select">Ton personnage</label>
+            <select id="nom-select" class="admin-select"></select>
+            <div class="f-foot"><span class="f-err" id="nom-err" role="alert"></span></div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <button class="cal-btn" onclick="calNav(-1)">‹</button>
-            <button class="cal-btn" onclick="calNav(0)">Aujourd'hui</button>
-            <button class="cal-btn" onclick="calNav(1)">›</button>
+          <div class="f-row">
+            <label for="rang-input">Rang <span class="f-opt">défini par la hiérarchie</span></label>
+            <input type="text" id="rang-input" readonly placeholder="—">
           </div>
-        </div>
-        <div class="cal-wrap"><div id="cal-grid"><div class="locked">Chargement…</div></div></div>
-        <div id="cal-detail"></div>
-      </div>
-    </div>
-
-    <!-- PROFIL ─────────────────────────────────────────────────────────
-         Trois cartes sur une grille : l'identité (le personnage mis en
-         avant, sa photo), le formulaire, et l'aperçu de la fiche telle
-         qu'elle s'affiche sur le site public (même contenu que la modale
-         d'accueil.html). Tout se met à jour pendant la saisie. -->
-    <div class="panel" id="panel-profil">
-      <div class="profil-wrap">
-        <div class="profil-layout">
-
-          <aside class="bloc profil-id" aria-label="Identité du personnage">
-            <div class="pid-avatar-wrap">
-              <div class="avatar-big" id="avatar-big">?</div>
-              <span class="pid-avatar-badge" id="pid-avatar-badge" hidden>Nouvelle photo</span>
-            </div>
-            <div class="pid-body">
-              <div class="pid-nom vide" id="pid-nom">Ton personnage</div>
-              <div><span class="rang-badge" id="pid-rang-badge" style="--rc:#6f6f76">Rang à définir</span></div>
-              <div class="pid-spec" id="pid-spec"></div>
-              <div class="pid-citation" id="pid-citation"></div>
-              <div class="pid-actions">
-                <button type="button" class="btn ghost" id="photo-btn" onclick="document.getElementById('photo-input').click()">Choisir une photo</button>
-                <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" onchange="onPhotoChosen(event)" />
-                <button type="button" class="btn ghost" id="photo-remove" onclick="retirerPhoto()" hidden>Retirer la photo</button>
-              </div>
-              <div class="f-help">JPG, PNG ou WebP · 5 Mo max · recadrée en carré automatiquement.</div>
-              <div class="f-err" id="photo-err" role="alert"></div>
-              <div class="pid-foot"><a id="pid-lien" href="accueil.html#famiglia" target="_blank" rel="noopener">Voir ma fiche sur le site →</a></div>
-            </div>
-          </aside>
-
-          <form class="bloc profil-form" id="profil-form" novalidate onsubmit="event.preventDefault(); saveProfil();">
-            <fieldset class="f-section">
-              <legend class="f-section-t">Identité</legend>
-              <div class="f-row">
-                <label for="nom-select">Ton personnage</label>
-                <select id="nom-select"></select>
-                <div class="f-foot"><span class="f-err" id="nom-err" role="alert"></span></div>
-              </div>
-              <div class="f-row">
-                <label for="rang-input">Rang <span class="f-opt">défini par la hiérarchie</span></label>
-                <input type="text" id="rang-input" readonly placeholder="—" />
-              </div>
-            </fieldset>
-
-            <fieldset class="f-section">
-              <legend class="f-section-t">Personnalité</legend>
-              <div class="f-row">
-                <label for="spec-input">Spécialité <span class="f-opt">(optionnel)</span></label>
-                <input type="text" id="spec-input" maxlength="60" data-max="60" placeholder="ex : Négociations, logistique, muscle…" />
-                <div class="f-foot"><span class="f-err" id="spec-err"></span><span class="f-count" id="spec-count">0 / 60</span></div>
-              </div>
-              <div class="f-row">
-                <label for="citation-input">Citation <span class="f-opt">(optionnel)</span></label>
-                <input type="text" id="citation-input" maxlength="120" data-max="120" placeholder="Ta phrase fétiche, en RP" />
-                <div class="f-foot"><span class="f-err" id="citation-err"></span><span class="f-count" id="citation-count">0 / 120</span></div>
-              </div>
-              <div class="f-row">
-                <label for="bio-input">Bio du personnage <span class="f-opt">(optionnel)</span></label>
-                <textarea id="bio-input" maxlength="500" data-max="500" placeholder="L'histoire de ton personnage en quelques lignes — elle s'affichera sur sa fiche, sur le site."></textarea>
-                <div class="f-foot"><span class="f-err" id="bio-err"></span><span class="f-count" id="bio-count">0 / 500</span></div>
-              </div>
-            </fieldset>
-
-            <div class="f-actions">
-              <span class="f-dirty" id="profil-dirty" hidden>Modifications non enregistrées</span>
-              <button class="btn green btn-save" id="profil-save" type="submit"><span class="spin-dot" aria-hidden="true"></span><span class="btn-lbl">Enregistrer mon profil</span></button>
-              <div class="msg" id="profil-msg"></div>
-            </div>
-          </form>
-
-          <section class="bloc profil-preview" aria-labelledby="prev-t">
-            <div class="bloc-t" id="prev-t">Aperçu de ta fiche publique <small>mise à jour en direct</small></div>
-            <div class="fiche-prev" aria-live="polite">
-              <div class="fiche-prev-avatar" id="prev-avatar">?</div>
-              <div class="fiche-prev-nom" id="prev-nom">—</div>
-              <div class="fiche-prev-rang" id="prev-rang">—</div>
-              <div class="fiche-prev-spec" id="prev-spec"></div>
-              <div class="fiche-prev-citation" id="prev-citation"></div>
-              <div class="fiche-prev-bio" id="prev-bio"></div>
-              <div class="fiche-prev-empty" id="prev-empty">Cette fiche n'a pas encore été remplie dans l'espace membre.</div>
-              <a class="fiche-prev-lien" id="prev-lien" href="accueil.html#famiglia" target="_blank" rel="noopener">Voir la page complète →</a>
-            </div>
-            <p class="fiche-prev-note">C'est ce que voit un visiteur en cliquant sur ton nom dans l'organigramme du site.</p>
-          </section>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- GALERIE -->
-    <div class="panel" id="panel-hierarchie">
-      <div class="bloc">
-        <div class="bloc-t">Les membres <small id="hier-count"></small></div>
-        <p class="hint" style="margin-bottom:14px;">Change un rang, corrige un nom ou retire quelqu'un : la page d'accueil (organigramme et hiérarchie) se met à jour immédiatement, sans rien publier.</p>
-        <div class="hier-add">
-          <input type="text" id="hier-new-nom" placeholder="Prénom Nom du nouveau membre" autocomplete="off" />
-          <select id="hier-new-rang"></select>
-          <button class="btn" type="button" onclick="hierAjouter()">Ajouter</button>
-        </div>
-        <div style="overflow-x:auto;"><table class="vd-table hier-table"><thead><tr><th>Membre</th><th>Rang</th><th></th></tr></thead><tbody id="hier-rows"><tr><td colspan="3" class="hint">Chargement…</td></tr></tbody></table></div>
-        <div class="msg" id="hier-msg"></div>
-      </div>
-      <div class="bloc">
-        <div class="bloc-t">Les rangs <small>du plus haut au plus bas</small></div>
-        <p class="hint" style="margin-bottom:14px;">Le nom d'un rang ne se change pas ici (il relie les membres) ; sa description, elle, apparaît dans la liste « Hiérarchie » du site.</p>
-        <div style="overflow-x:auto;"><table class="vd-table hier-table"><thead><tr><th style="width:40px;">#</th><th>Rang</th><th>Description</th><th></th></tr></thead><tbody id="rang-rows"></tbody></table></div>
-      </div>
-    </div>
-    <div class="panel" id="panel-galerie">
-      <div class="galerie-grid">
-        <div class="bloc galerie-depot">
-          <div class="bloc-t">Publier une photo <small>dans la galerie du site</small></div>
-          <p class="hint" style="margin-bottom:16px;">Partage tes meilleurs screenshots RP — ils apparaissent aussitôt dans la galerie publique.</p>
-          <div class="galerie-zone" id="galerie-zone">
-            <div id="galerie-preview"></div>
-            <div class="galerie-zone-txt" id="galerie-zone-txt">
-              <button type="button" class="btn ghost" onclick="document.getElementById('galerie-input').click()">Choisir une image</button>
-              <span class="hint">JPG, PNG ou WebP</span>
-            </div>
-            <input type="file" id="galerie-input" accept="image/*" onchange="onGalerieChosen(event)" />
+        </fieldset>
+        <fieldset class="f-section">
+          <legend class="f-section-t">Personnalité</legend>
+          <div class="f-row">
+            <label for="spec-input">Spécialité <span class="f-opt">(optionnel)</span></label>
+            <input type="text" id="spec-input" maxlength="60" data-max="60" placeholder="ex : Négociations, logistique, muscle…">
+            <div class="f-foot"><span class="f-err" id="spec-err"></span><span class="f-count" id="spec-count">0 / 60</span></div>
           </div>
-          <label for="galerie-caption" style="margin-top:16px;">Légende <span class="f-opt">(optionnel)</span></label>
-          <input type="text" id="galerie-caption" placeholder="Une nuit à Roxwood…" maxlength="120" />
-          <div class="f-actions" style="margin-top:6px;">
-            <button class="btn green btn-save" id="galerie-btn" onclick="uploadGalerie()"><span class="spin-dot" aria-hidden="true"></span><span class="btn-lbl">Publier dans la galerie</span></button>
-            <div class="msg" id="galerie-msg"></div>
+          <div class="f-row">
+            <label for="citation-input">Citation <span class="f-opt">(optionnel)</span></label>
+            <input type="text" id="citation-input" maxlength="120" data-max="120" placeholder="Ta phrase fétiche, en RP">
+            <div class="f-foot"><span class="f-err" id="citation-err"></span><span class="f-count" id="citation-count">0 / 120</span></div>
           </div>
+          <div class="f-row">
+            <label for="bio-input">Bio du personnage <span class="f-opt">(optionnel)</span></label>
+            <textarea id="bio-input" rows="6" maxlength="500" data-max="500" placeholder="L'histoire de ton personnage en quelques lignes — elle s'affichera sur sa fiche, sur le site."></textarea>
+            <div class="f-foot"><span class="f-err" id="bio-err"></span><span class="f-count" id="bio-count">0 / 500</span></div>
+          </div>
+        </fieldset>
+        <div class="perfil__actions f-actions">
+          <button class="btn btn--accent btn-save" id="profil-save" type="submit"><span class="spin-dot" aria-hidden="true"></span><span class="btn-lbl">Enregistrer mon profil</span></button>
+          <span class="f-dirty" id="profil-dirty" hidden>Modifications non enregistrées</span>
+          <p class="msg" id="profil-msg"></p>
         </div>
-        <div class="bloc galerie-recentes">
-          <div class="bloc-t">Dernières photos publiées <small id="galerie-count"></small></div>
-          <div id="galerie-recentes"><div class="locked">Chargement…</div></div>
+      </form>
+    </section>
+
+    <section class="semaine profil-preview" aria-labelledby="prev-t">
+      <div class="semaine__head">
+        <div><p class="eyebrow">Sur le site public</p><h2 class="semaine__title" id="prev-t">Aperçu de ta fiche</h2></div>
+        <p class="semaine__reset">Mise à jour en direct</p>
+      </div>
+      <div class="fiche-prev" aria-live="polite">
+        <div class="fiche-prev-avatar" id="prev-avatar">?</div>
+        <div class="fiche-prev-nom" id="prev-nom">—</div>
+        <div class="fiche-prev-rang" id="prev-rang">—</div>
+        <div class="fiche-prev-spec" id="prev-spec"></div>
+        <div class="fiche-prev-citation" id="prev-citation"></div>
+        <div class="fiche-prev-bio" id="prev-bio"></div>
+        <div class="fiche-prev-empty" id="prev-empty">Cette fiche n'a pas encore été remplie dans l'espace membre.</div>
+        <a class="fiche-prev-lien" id="prev-lien" href="accueil.html#famiglia" target="_blank" rel="noopener">Voir la page complète →</a>
+      </div>
+      <p class="semaine__hint">C'est ce que voit un visiteur en cliquant sur ton nom dans l'organigramme du site.</p>
+    </section>
+  </div>
+
+  <!-- HIÉRARCHIE (réservée à qui peut la gérer) -->
+  <div class="panel" id="panel-hierarchie">
+    <section class="admin-block">
+      <h3 class="admin-block__title">Les membres <span class="badge badge--accent" id="hier-count"></span></h3>
+      <p class="admin-block__hint">Change un rang, corrige un nom ou retire quelqu'un : la page d'accueil (organigramme et hiérarchie) se met à jour immédiatement, sans rien publier.</p>
+      <div class="hier-add">
+        <input type="text" class="admin-input" id="hier-new-nom" placeholder="Prénom Nom du nouveau membre" autocomplete="off">
+        <select id="hier-new-rang" class="admin-select"></select>
+        <button class="btn btn--accent btn--sm" type="button" onclick="hierAjouter()">Ajouter</button>
+      </div>
+      <div class="table-wrap"><table class="admin-table hier-table"><thead><tr><th>Membre</th><th>Rang</th><th></th></tr></thead><tbody id="hier-rows"><tr><td colspan="3" class="muted">Chargement…</td></tr></tbody></table></div>
+      <p class="msg" id="hier-msg"></p>
+    </section>
+    <section class="admin-block">
+      <h3 class="admin-block__title">Les rangs <span class="tag">du plus haut au plus bas</span></h3>
+      <p class="admin-block__hint">Le nom d'un rang ne se change pas ici (il relie les membres) ; sa description, elle, apparaît dans la liste « Hiérarchie » du site.</p>
+      <div class="table-wrap"><table class="admin-table hier-table"><thead><tr><th style="width:40px;">#</th><th>Rang</th><th>Description</th><th></th></tr></thead><tbody id="rang-rows"></tbody></table></div>
+    </section>
+  </div>
+
+  <!-- GALERIE -->
+  <div class="panel" id="panel-galerie">
+    <section class="admin-block">
+      <h3 class="admin-block__title">Poster une photo</h3>
+      <div class="upload">
+        <div class="upload__drop galerie-zone" id="galerie-zone">
+          <div id="galerie-preview"></div>
+          <div class="galerie-zone-txt" id="galerie-zone-txt">
+            <button type="button" class="btn btn--ghost btn--sm" onclick="document.getElementById('galerie-input').click()">Choisir une image</button>
+            <small>jpg, png ou webp — elle apparaît aussitôt dans la galerie publique</small>
+          </div>
+          <input type="file" id="galerie-input" accept="image/*" onchange="onGalerieChosen(event)" hidden>
+        </div>
+        <div class="upload__side">
+          <label for="galerie-caption">Légende <small>(optionnel)</small></label>
+          <input type="text" class="admin-input" id="galerie-caption" placeholder="Une nuit à Roxwood…" maxlength="120">
+          <button class="btn btn--accent btn-save" id="galerie-btn" type="button" onclick="uploadGalerie()"><span class="spin-dot" aria-hidden="true"></span><span class="btn-lbl">Publier dans la galerie</span></button>
+          <p class="admin-block__hint">Partage tes meilleurs screenshots RP — ils apparaissent aussitôt dans la galerie publique.</p>
+          <p class="msg" id="galerie-msg"></p>
         </div>
       </div>
-    </div>
-
-  </main>
+    </section>
+    <section class="admin-block">
+      <h3 class="admin-block__title">Dernières photos publiées <span class="badge badge--accent" id="galerie-count"></span></h3>
+      <div id="galerie-recentes"><div class="locked">Chargement…</div></div>
+    </section>
+  </div>
+</main>
 </div>
 
 <div class="toast" id="toast"></div>
-<div id="tv-exit" onclick="stopTV()">✕ Quitter le mode TV</div>
+<button type="button" class="btn btn--ghost btn--sm" id="tv-exit" onclick="stopTV()">✕ Quitter le mode TV</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
-<script src="em-core.js?v=3"></script>
-<script src="em-charts.js?v=1"></script>
-<script src="em-site.js?v=3"></script>
-<script src="em-bot.js?v=6"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="fond3d-gl.js?v=1"></script>
-<script src="fond3d.js?v=1"></script>
-<script>
-  // Fond animé : WebGL si possible, repli 2D sinon.
-  if (!(window.fond3dGL && fond3dGL('member-canvas', { logo: 'logo-m-rond.webp' }))) {
-    fond3d('member-canvas', { particules: 260 });
-  }
-</script>
+<script src="em-core.js?v=4"></script>
+<script src="em-charts.js?v=2"></script>
+<script src="em-site.js?v=4"></script>
+<script src="em-bot.js?v=7"></script>
 </body>
 </html>

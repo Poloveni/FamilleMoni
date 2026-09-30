@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  em-core.js — le socle de l'espace membre : connexion (Supabase, e-mail ou
-//  Discord), validation du compte, menu latéral, navigation entre panneaux,
-//  barre mobile, tirer-pour-actualiser, mode TV.
+//  Discord), validation du compte, navigation entre panneaux dans la coque du
+//  modèle Roxwood Network (rail, onglets du téléphone : espace.js), tirer-pour-
+//  actualiser, mode TV.
 //
 //  Ce fichier ne sait rien des données : les panneaux « bot » sont remplis par
 //  em-bot.js (API REST du bot via l'Edge Function bot-suivi), les panneaux
@@ -32,59 +33,8 @@ function showMsg(id, text, ok) {
   if (el) { el.textContent = text; el.className = 'msg ' + (ok ? 'ok' : 'error'); }
 }
 function hideMsg(id) { const el = document.getElementById(id); if (el) el.className = 'msg'; }
-// toast(texte) = succès ; toast(texte, 'err') = erreur (reste plus longtemps).
-function toast(t, type) {
-  const el = document.getElementById('toast');
-  if (!el) return;
-  el.textContent = t; el.classList.toggle('err', type === 'err'); el.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), type === 'err' ? 4200 : 2600);
-}
-
-// ── Menu latéral : sections repliables + mode réduit ───────────────────────
-// Les sections fermées et le mode choisi sont mémorisés. Le mode réduit
-// (icônes seules) s'active tout seul entre 861 et 1180 px, sauf si
-// l'utilisateur a cliqué sur le bouton pour choisir lui-même.
-(function initSidebar() {
-  const nav = document.getElementById('sb-nav');
-  if (!nav) return;
-  let fermes = [];
-  try { fermes = JSON.parse(localStorage.getItem('moni-sb-fermes') || '[]'); } catch (e) {}
-  if (!Array.isArray(fermes)) fermes = [];
-  nav.querySelectorAll('.sb-sect').forEach(sect => {
-    const btn = sect.querySelector('.sb-group');
-    const key = sect.dataset.sect;
-    if (!btn || !key) return;
-    const poser = ferme => { sect.classList.toggle('closed', ferme); btn.setAttribute('aria-expanded', ferme ? 'false' : 'true'); };
-    poser(fermes.includes(key));
-    btn.addEventListener('click', () => {
-      const ferme = !sect.classList.contains('closed');
-      poser(ferme);
-      fermes = fermes.filter(k => k !== key); if (ferme) fermes.push(key);
-      try { localStorage.setItem('moni-sb-fermes', JSON.stringify(fermes)); } catch (e) {}
-    });
-  });
-  const mq = window.matchMedia('(min-width: 861px) and (max-width: 1180px)');
-  const toggle = document.getElementById('sb-toggle');
-  function appliquer() {
-    let pref = null;
-    try { pref = localStorage.getItem('moni-sb-mode'); } catch (e) {}
-    const mini = pref === 'mini' || (pref !== 'large' && mq.matches);
-    document.body.classList.toggle('sb-mini', mini);
-    nav.querySelectorAll('.sb-item, .sb-out').forEach(el => {
-      const l = el.querySelector('.lbl');
-      if (l) { if (mini) el.title = l.textContent.trim(); else el.removeAttribute('title'); }
-    });
-    if (toggle) { const t = mini ? 'Déployer le menu' : 'Réduire le menu'; toggle.setAttribute('aria-label', t); toggle.title = t; }
-  }
-  appliquer();
-  if (mq.addEventListener) mq.addEventListener('change', appliquer); else mq.addListener(appliquer);
-  if (toggle) toggle.addEventListener('click', () => {
-    const mini = document.body.classList.contains('sb-mini');
-    try { localStorage.setItem('moni-sb-mode', mini ? 'large' : 'mini'); } catch (e) {}
-    appliquer();
-  });
-})();
+// toast(texte) = succès ; toast(texte, 'err') = erreur (reste plus longtemps). Même toast que le modèle (espace.js).
+function toast(t, type) { espaceToast(t, type !== 'err'); }
 
 // Sous-titre par défaut : la semaine du bot (reset dimanche 19h).
 (function weekLabel() {
@@ -106,39 +56,38 @@ let modeGerantTaxes = false;
 function activerModeGerantTaxes() {
   if (modeGerantTaxes) return;
   modeGerantTaxes = true;
-  document.querySelectorAll('.sb-item').forEach(el => {
-    const garder = el.dataset.panel === 'taxes' ||
-      (el.tagName === 'A' && (el.getAttribute('href') || '') === 'accueil.html');
-    if (!garder) el.style.display = 'none';
-  });
-  document.querySelectorAll('.sb-group').forEach(g => { g.style.display = 'none'; });
-  const sbTaxes = document.getElementById('sb-taxes');
-  if (sbTaxes) sbTaxes.style.display = '';
+  document.querySelectorAll('.rail__lien[data-panel], .onglets [data-panel]').forEach(el => { el.hidden = el.dataset.panel !== 'taxes'; });
+  // un groupe du rail sans rubrique visible disparaît avec son titre
+  document.querySelectorAll('.rail__groupe').forEach(g => { g.hidden = ![...g.querySelectorAll('.rail__lien')].some(a => !a.hidden); });
+  const tv = document.getElementById('tv-btn'); if (tv) tv.hidden = true;
   if (!isApproved) return;
   ouvrirPanneau('taxes');
 }
 
-function showPanel(name) {
+function showPanel(name, options) {
   if (modeGerantTaxes && name !== 'taxes' && name !== 'pending') name = 'taxes';
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + name);
   if (target) target.classList.add('active');
-  document.querySelectorAll('.sb-item[data-panel]').forEach(i => i.classList.toggle('active', i.dataset.panel === name));
-  const nav = document.querySelector('.sb-item[data-panel="' + name + '"]');
-  const sect = nav && nav.closest('.sb-sect');
-  if (sect && sect.classList.contains('closed')) { const g = sect.querySelector('.sb-group'); if (g) g.click(); }
+  const nav = espaceActive(name);
   const titleEl = document.getElementById('dash-title');
-  if (nav && nav.dataset.title && titleEl) titleEl.innerHTML = nav.dataset.title.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
   const sousEl = document.getElementById('dash-week');
-  if (sousEl) sousEl.textContent = (nav && nav.dataset.sub) || window.__semaineTxt || '';
-  if (name !== 'pending') { try { localStorage.setItem('moni-panel', name); } catch (e) {} }
-  majNavMobile();
+  if (nav) {
+    if (titleEl) titleEl.textContent = nav.dataset.title;
+    if (sousEl) sousEl.textContent = nav.dataset.sub || window.__semaineTxt || '';
+  }
+  if (name !== 'pending') {
+    try { localStorage.setItem('moni-panel', name); } catch (e) {}
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  if (typeof espaceRailFerme === 'function') espaceRailFerme();
+  if (!(options && options.silencieux)) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   if (typeof redessinerGraphiques === 'function') requestAnimationFrame(redessinerGraphiques);
 }
 
 /** Ouvre un panneau ET déclenche son chargement (bot ou site). C'est le point d'entrée à utiliser partout. */
-function ouvrirPanneau(name) {
-  showPanel(name);
+function ouvrirPanneau(name, options) {
+  showPanel(name, options);
   if (!isApproved && name !== 'pending') return;
   if (BOT_PANELS.includes(name) && window.emBot) window.emBot.ouvrir(name);
   if (name === 'galerie' && typeof loadGalerieRecentes === 'function') loadGalerieRecentes();
@@ -164,11 +113,11 @@ function nmVib() { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e
   document.body.appendChild(ptr);
   let y0 = null, tirage = 0, enCours = false;
   window.addEventListener('touchstart', e => {
-    if (enCours || window.innerWidth > 860 || document.body.classList.contains('tv-mode')) return;
+    if (enCours || window.innerWidth > 900 || document.body.classList.contains('tv-mode')) return;
     if ((window.scrollY || 0) > 2) return;
-    const ecran = document.getElementById('member-screen');
-    if (!ecran || ecran.style.display === 'none') return;
-    if (document.getElementById('nav-plus') && !document.getElementById('nav-plus').hidden) return;
+    if (!document.body.classList.contains('is-in')) return;
+    const rail = document.getElementById('rail');
+    if (rail && rail.classList.contains('is-open')) return;
     y0 = e.touches[0].clientY; tirage = 0;
   }, { passive: true });
   window.addEventListener('touchmove', e => {
@@ -189,83 +138,14 @@ function nmVib() { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e
   });
 })();
 
-// ── Navigation mobile « application » ───────────────────────────────────────
-const NM_PRINCIPAUX = ['moi', 'famille', 'stocks', 'braquages'];
-const NM_LBLS = { moi: 'Ma semaine', famille: 'Famille', stocks: 'Stocks', armurerie: 'Armes', braquages: 'Braquages', taxes: 'Taxes', bilan: 'Bilan', profil: 'Profil', events: 'Planning', galerie: 'Galerie', hierarchie: 'Rangs' };
-const NM_ICO_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
-function nmVisibles() {
-  return [...document.querySelectorAll('.sb-nav .sb-item[data-panel]')].filter(b => b.style.display !== 'none');
-}
-function majNavMobile() {
-  const bar = document.getElementById('nav-mobile');
-  if (!bar) return;
-  const visibles = nmVisibles();
-  const principaux = NM_PRINCIPAUX.map(p => visibles.find(b => b.dataset.panel === p)).filter(Boolean);
-  (visibles.filter(b => !principaux.includes(b)).slice(0, 4 - principaux.length)).forEach(b => principaux.push(b));
-  bar.innerHTML = principaux.map(b =>
-    '<button type="button" class="nm-item' + (b.classList.contains('active') ? ' active' : '') + '" data-cible="' + b.dataset.panel + '">' +
-      (b.querySelector('.ico') ? b.querySelector('.ico').innerHTML : '') +
-      '<span>' + escT(NM_LBLS[b.dataset.panel] || (b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel)) + '</span></button>'
-  ).join('') +
-  '<button type="button" class="nm-item" id="nm-plus">' + NM_ICO_PLUS + '<span>Plus</span></button>';
-  bar.querySelectorAll('.nm-item[data-cible]').forEach(x => x.addEventListener('click', () => {
-    nmVib();
-    const src = document.querySelector('.sb-nav .sb-item[data-panel="' + x.dataset.cible + '"]');
-    if (src) src.click();
-  }));
-  document.getElementById('nm-plus').addEventListener('click', () => { nmVib(); ouvrirNavPlus(); });
-}
-function fermerNavPlus() {
-  const sh = document.getElementById('nav-plus');
-  if (sh) { sh.classList.remove('ouvert'); sh.hidden = true; }
-}
-function ouvrirNavPlus() {
-  const sh = document.getElementById('nav-plus');
-  if (!sh) return;
-  const panneaux = nmVisibles();
-  const liens = [...document.querySelectorAll('.sb-nav a.sb-item')].filter(a => a.style.display !== 'none');
-  const tuile = (ico, lbl, cls) =>
-    '<button type="button" class="np-item' + (cls || '') + '">' + ico + '<span>' + escT(lbl) + '</span></button>';
-  sh.innerHTML = '<div class="np-fond"></div><div class="np-feuille"><div class="np-poignee"></div>' +
-    '<div class="np-titre">Menu</div><div class="np-grille" id="np-panneaux">' +
-    panneaux.map(b => tuile(b.querySelector('.ico') ? b.querySelector('.ico').innerHTML : '',
-      b.querySelector('.lbl') ? b.querySelector('.lbl').textContent : b.dataset.panel,
-      b.classList.contains('active') ? ' active' : '')).join('') + '</div>' +
-    '<div class="np-titre">Raccourcis</div><div class="np-grille" id="np-liens">' +
-    liens.map(a => tuile(a.querySelector('.ico') ? a.querySelector('.ico').innerHTML : '',
-      a.querySelector('.lbl') ? a.querySelector('.lbl').textContent : '')).join('') +
-    tuile('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M17.7 6.6a8 8 0 11-11.4 0"/></svg>', 'Déconnexion') +
-    '</div></div>';
-  sh.querySelector('.np-fond').addEventListener('click', fermerNavPlus);
-  [...sh.querySelectorAll('#np-panneaux .np-item')].forEach((t, i) => t.addEventListener('click', () => { fermerNavPlus(); panneaux[i].click(); }));
-  const lt = [...sh.querySelectorAll('#np-liens .np-item')];
-  lt.forEach((t, i) => t.addEventListener('click', () => {
-    fermerNavPlus();
-    if (i < liens.length) { window.location.href = liens[i].getAttribute('href'); }
-    else { doLogout(); }
-  }));
-  const feuille = sh.querySelector('.np-feuille');
-  let fy = null;
-  feuille.addEventListener('touchstart', e => { if (feuille.scrollTop > 0) return; fy = e.touches[0].clientY; }, { passive: true });
-  feuille.addEventListener('touchmove', e => {
-    if (fy === null) return;
-    const d = e.touches[0].clientY - fy;
-    if (d > 0) feuille.style.transform = 'translateY(' + d + 'px)';
-  }, { passive: true });
-  feuille.addEventListener('touchend', e => {
-    if (fy === null) return;
-    const d = e.changedTouches[0].clientY - fy; fy = null;
-    feuille.style.transform = '';
-    if (d > 90) fermerNavPlus();
-  });
-  sh.hidden = false; sh.classList.add('ouvert');
-}
-
-document.querySelectorAll('.sb-item[data-panel]').forEach(item => {
-  item.addEventListener('click', () => {
-    if (!isApproved && item.classList.contains('req-approve')) { toast('Compte en attente de validation.'); return; }
-    ouvrirPanneau(item.dataset.panel);
-  });
+// Rubriques du rail et onglets du téléphone : un clic ouvre le panneau (les rubriques réservées attendent la validation du compte)
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-panel]');
+  if (!a || !a.closest('.rail, .onglets')) return;
+  e.preventDefault();
+  if (!isApproved && a.dataset.req) { toast('Compte en attente de validation.', 'err'); return; }
+  nmVib();
+  ouvrirPanneau(a.dataset.panel);
 });
 
 // ── AUTH ────────────────────────────────────────────────────────────────────
@@ -273,8 +153,8 @@ function setMode(m) {
   mode = m;
   document.getElementById('auth-btn').textContent = m === 'login' ? 'Se connecter' : 'Créer mon compte';
   document.getElementById('auth-sub').textContent = m === 'login'
-    ? 'Connecte-toi pour accéder au dashboard de la famille.'
-    : 'Crée ton compte pour rejoindre l’espace membre.';
+    ? 'Réservé aux membres de la famille. Connecte-toi avec le compte Discord qui est sur le serveur : c’est lui qui te relie au bot Moni et à ton rôle.'
+    : 'Crée ton compte pour rejoindre l’espace membre : un administrateur devra le valider.';
   document.getElementById('auth-switch').innerHTML = m === 'login'
     ? 'Pas encore de compte ? <button type="button" class="lien" onclick="setMode(\'signup\')">Créer un compte</button>'
     : 'Déjà un compte ? <button type="button" class="lien" onclick="setMode(\'login\')">Se connecter</button>';
@@ -339,8 +219,10 @@ function connexionParLeBot(ev) {
 async function doLogout() {
   await sb.auth.signOut();
   currentUser = null;
+  document.body.classList.remove('is-in');
   document.getElementById('member-screen').style.display = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
 }
 
 async function motDePasseOublie() {
@@ -352,6 +234,7 @@ async function motDePasseOublie() {
   showMsg('auth-msg', '📬 Email envoyé à ' + email + ' ! Clique le lien dedans pour choisir un nouveau mot de passe (regarde aussi les spams).', true);
 }
 function showResetForm() {
+  document.body.classList.remove('is-in');
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('member-screen').style.display = 'none';
   document.getElementById('reset-screen').style.display = 'flex';
@@ -369,6 +252,20 @@ async function validerNouveauMdp() {
   else document.getElementById('auth-screen').style.display = 'flex';
 }
 
+// ── Carte du membre en bas du rail : nom RP (à défaut pseudo Discord ou e-mail), rang, photo ──
+function majRailMoi() {
+  if (!currentUser) return;
+  const meta = currentUser.user_metadata || {};
+  const viaBot = /@bot\.famillemoni\.com$/i.test(currentUser.email || '');
+  const nom = currentNom || meta.user_name || meta.full_name || (viaBot ? 'membre Discord' : currentUser.email);
+  const m = (window.MONI_MEMBRES || []).find(x => x.nom === currentNom);
+  espaceNav({
+    nom,
+    grade: !isApproved ? 'En attente' : (m ? m.rang : (modeGerantTaxes ? 'Gérant des taxes' : 'Sans rang')),
+    avatar: currentPhotoUrl || meta.avatar_url || meta.picture || 'icon-192.png',
+  });
+}
+
 // ── SÉQUENCE DE CONNEXION ───────────────────────────────────────────────────
 async function onLogged(user) {
   currentUser = user;
@@ -377,21 +274,23 @@ async function onLogged(user) {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('reset-screen').style.display = 'none';
   document.getElementById('member-screen').style.display = 'block';
-  const viaBot = /@bot\.famillemoni\.com$/i.test(user.email || '');
-  document.getElementById('who-email').textContent = viaBot ? ((user.user_metadata && user.user_metadata.user_name) || 'membre Discord') : user.email;
-  const sbAdmin = document.getElementById('sb-admin');
-  if (sbAdmin) sbAdmin.style.display = user.email === 'syne@live.fr' ? 'flex' : 'none';
+  document.body.classList.add('is-in');
+  majRailMoi();
+  const gestion = document.getElementById('gestion'), navAdmin = document.getElementById('nav-admin');
+  const admin = user.email === 'syne@live.fr';
+  if (gestion) gestion.hidden = !admin;
+  if (navAdmin) navAdmin.hidden = !admin;
   // Les droits viennent de la base, qui applique exactement les mêmes fonctions
   // que ses règles de sécurité : l'affichage ne peut pas diverger de la réalité.
   sb.rpc('peut_gerer_hierarchie').then(({ data, error }) => {
     if (error) { console.warn('[hierarchie] vérification impossible :', error.message); return; }
-    const b = document.getElementById('sb-hierarchie');
-    if (b) b.style.display = data === true ? '' : 'none';
+    const b = document.getElementById('nav-hierarchie');
+    if (b) b.hidden = data !== true;
     if (data === true) hierRender();
   });
   sb.rpc('est_gerant_taxes').then(({ data, error }) => {
     if (error) { console.warn('[taxes] vérification gérant impossible :', error.message); return; }
-    if (data === true) activerModeGerantTaxes();
+    if (data === true) { activerModeGerantTaxes(); majRailMoi(); }
   });
 
   // Un seul aller-retour : on écrit et on relit la colonne dans la même requête.
@@ -402,18 +301,22 @@ async function onLogged(user) {
 
   if (!isApproved) {
     showPanel('pending');
-    document.getElementById('dash-title').innerHTML = 'Compte en <em>attente</em>';
+    document.getElementById('dash-num').textContent = 'Compte';
+    document.getElementById('dash-title').textContent = 'En attente';
+    document.getElementById('dash-week').textContent = 'Un administrateur doit valider ton compte.';
     if (window.emBot) window.emBot.etatCompteAttente();
+    majRailMoi();
     return;
   }
-  // « Ma semaine » d'abord ; si le membre avait quitté ailleurs, on l'y remet.
+  // « Ma semaine » d'abord ; si le membre avait quitté ailleurs (ou arrive avec #rubrique), on l'y remet.
   let panneau = 'moi';
-  try { panneau = localStorage.getItem('moni-panel') || 'moi'; } catch (e) {}
-  const btnPanneau = document.querySelector('.sb-item[data-panel="' + panneau + '"]');
-  if (!btnPanneau || btnPanneau.style.display === 'none') panneau = 'moi';
+  try { panneau = location.hash.slice(1) || localStorage.getItem('moni-panel') || 'moi'; } catch (e) {}
+  const lienPanneau = document.querySelector('.rail__lien[data-panel="' + panneau + '"]');
+  if (!lienPanneau || lienPanneau.hidden) panneau = 'moi';
   await loadProfil();
+  majRailMoi();
   if (window.emBot) await window.emBot.demarrer();
-  ouvrirPanneau(panneau);
+  ouvrirPanneau(panneau, { silencieux: true });
   loadEvents();
 }
 
@@ -439,7 +342,9 @@ function stopTV() {
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) stopTV(); });
 (function tvInit() {
   const btn = document.getElementById('tv-btn');
-  if (btn) btn.addEventListener('click', () => { if (isApproved) startTV(); else toast('Compte en attente de validation.'); });
+  if (btn) btn.addEventListener('click', () => { if (isApproved) startTV(); else toast('Compte en attente de validation.', 'err'); });
+  const out = document.getElementById('logout');
+  if (out) out.addEventListener('click', doLogout);
 })();
 
 // ── DÉMARRAGE ───────────────────────────────────────────────────────────────

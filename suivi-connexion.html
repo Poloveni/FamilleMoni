@@ -1,73 +1,69 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Liaison avec le bot — Famille Moni</title>
-  <meta name="robots" content="noindex, nofollow" />
-  <meta name="referrer" content="no-referrer" />
-  <link rel="icon" href="favicon.ico" sizes="32x32" />
-  <meta name="theme-color" content="#0b0c10" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="dashboard.css" />
-  <link rel="stylesheet" href="moni-theme-dash.css?v=11" />
-  <!--
-    Page de retour du bot Discord (bot-moni-v3). Le bot y renvoie le
-    navigateur avec `#token=<jwt>` après la connexion Discord
-    (/config site-externe set https://famillemoni.com/suivi-connexion.html).
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion au bot · Famille Moni</title>
+<meta name="application-name" content="Famille Moni">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<meta name="theme-color" content="#0a0a0b">
+<!--
+  Page de retour du bot Discord (bot-moni-v3) — l'équivalent du bot-callback.html du modèle Roxwood Network.
+  Le bot y renvoie le navigateur avec `#token=<jwt>` après la connexion Discord
+  (/config site-externe set https://famillemoni.com/suivi-connexion.html).
 
-    Le fragment est lu puis EFFACÉ de la barre d'adresse avant tout autre
-    chargement, et le jeton n'est jamais écrit dans localStorage, un cookie ou
-    l'historique : il part directement vers l'Edge Function `bot-suivi`.
+  Le fragment est lu puis EFFACÉ de la barre d'adresse avant tout autre chargement, et le jeton n'est jamais
+  écrit dans localStorage, un cookie ou l'historique : il part directement vers l'Edge Function `bot-suivi`.
 
-    Deux cas :
-      • une session du site est déjà ouverte → action `link` : le jeton est
-        vérifié (même compte Discord, même serveur) puis rangé côté serveur ;
-      • aucune session → action `login` : c'est LA connexion au site. La
-        passerelle vérifie le jeton auprès du bot, retrouve (ou crée) le
-        compte du site portant cet identifiant Discord, et renvoie un lien
-        magique à usage unique que cette page échange contre une session.
-  -->
-  <script>
-    // Tout de suite, avant supabase-js et avant tout rendu : on capture et on nettoie.
-    (function () {
-      var h = window.location.hash || '';
-      var m = /(?:^#|[#&])token=([^&]+)/.exec(h);
-      window.__botToken = m ? decodeURIComponent(m[1]) : null;
-      if (h) history.replaceState(null, '', window.location.pathname + window.location.search);
-    })();
-  </script>
-  <style>
-    body { margin: 0; min-height: 100vh; background: var(--bg, #0b0c10); color: var(--text, #eef0f4); }
-    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; box-sizing: border-box; }
-    .card.narrow { width: 100%; max-width: 460px; padding: 34px 30px; box-sizing: border-box; }
-    .etat { display: flex; align-items: center; gap: 12px; margin: 18px 0 6px; font-size: 15.5px; line-height: 1.6; }
-    .etat .spin { width: 18px; height: 18px; border: 2px solid var(--border2, #444); border-top-color: var(--paper, #e9dfc9); border-radius: 50% !important; animation: rot .9s linear infinite; flex-shrink: 0; }
-    @keyframes rot { to { transform: rotate(360deg); } }
-    .etat.ok b { color: #6fd79a; }
-    .etat.err b { color: #e0a0a0; }
-    .detail { font-size: 14px; color: var(--dim, #8b91a0); line-height: 1.6; margin-top: 8px; }
-    .actions { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
-    .ro { font-family: var(--caps, serif); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim, #8b91a0); margin-top: 26px; text-align: center; }
-  </style>
+  Deux cas :
+    • une session du site est déjà ouverte → action `link` : le jeton est vérifié (même compte Discord, même
+      serveur) puis rangé côté serveur ;
+    • aucune session → action `login` : c'est LA connexion au site. La passerelle vérifie le jeton auprès du
+      bot, retrouve (ou crée) le compte du site portant cet identifiant Discord, et renvoie un lien magique à
+      usage unique que cette page échange contre une session.
+-->
+<script>
+  // Tout de suite, avant supabase-js et avant tout rendu : on capture et on nettoie.
+  (function () {
+    var h = window.location.hash || '';
+    var m = /(?:^#|[#&])token=([^&]+)/.exec(h);
+    window.__botToken = m ? decodeURIComponent(m[1]) : null;
+    if (h) history.replaceState(null, '', window.location.pathname + window.location.search);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="theme.css?v=1">
+<link rel="stylesheet" href="espace-base.css?v=1">
+<link rel="stylesheet" href="espace.css?v=1">
+<link rel="stylesheet" href="espace-moni.css?v=1">
+<style>
+  .etat{display:flex;align-items:center;justify-content:center;gap:12px;max-width:480px;margin:26px 0 8px;font-size:16px;line-height:1.6;color:var(--ink2)}
+  .etat b{color:var(--ink)}
+  .etat .spin{flex:none;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:tourne .8s linear infinite}
+  @keyframes tourne{to{transform:rotate(360deg)}}
+  .etat.ok b{color:var(--ok)}
+  .etat.err b{color:var(--err)}
+  .detail{max-width:480px;margin:0 0 26px;font-size:14px;line-height:1.6;color:var(--ink2)}
+  .detail:empty{display:none}
+</style>
 </head>
-<body>
-<div class="auth-wrap">
-  <div class="card narrow" role="status" aria-live="polite">
-    <h1 class="auth-title">Espace <span>Membre</span></h1>
-    <div class="sub">Connexion par le bot Moni.</div>
+<body class="espace-body">
 
-    <div class="etat" id="etat"><span class="spin" aria-hidden="true"></span><span id="etat-txt">Vérification en cours…</span></div>
-    <div class="detail" id="detail"></div>
-
-    <div class="actions" id="actions" hidden>
-      <a class="btn" id="btn-retour" href="espace-membre.html">Ouvrir l'espace membre</a>
-      <a class="btn ghost" id="btn-relancer" href="espace-membre.html" hidden>Relancer la liaison</a>
-    </div>
-
-    <div class="ro">Lecture seule — gestion sur Discord</div>
+<main class="espace-login" role="status" aria-live="polite">
+  <img class="espace-login__logo" src="logo-m-rond.webp" alt="Famille Moni" width="200" height="200">
+  <p class="eyebrow">Bot Discord de la famille</p>
+  <h1>Connexion</h1>
+  <div class="etat" id="etat"><span class="spin" aria-hidden="true"></span><span id="etat-txt">Vérification en cours…</span></div>
+  <p class="detail" id="detail"></p>
+  <div class="espace-login__actions" id="actions" hidden>
+    <a class="btn btn--accent" id="btn-retour" href="espace-membre.html">Ouvrir l'espace membre</a>
+    <a class="btn btn--ghost" id="btn-relancer" href="espace-membre.html" hidden>Relancer la liaison</a>
   </div>
-</div>
+  <p class="espace-login__small">Lecture seule — gestion sur Discord</p>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>

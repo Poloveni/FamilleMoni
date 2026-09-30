@@ -16,7 +16,7 @@ en lecture seule. Les tables miroir `bot_*` de Supabase ne sont plus lues.
 | Profil, Planning, Galerie, Hiérarchie | données propres du site | Supabase, inchangé |
 
 Code : `em-core.js` (socle), `em-bot.js` (bot), `em-site.js` (site),
-`em-charts.js` (graphiques), `espace-membre.css` (styles propres à la page).
+`em-charts.js` (graphiques), `espace.js` (coque du modèle Roxwood Network : rail, onglets, palette, modales), `theme.css` + `espace-base.css` + `espace.css` + `espace-moni.css` (styles : identité du site, base commune, feuille du modèle, adaptation des composants).
 Toute la gestion reste sur Discord.
 
 ## Comment ça circule
@@ -150,7 +150,7 @@ guilde.
 ## 5. Publier le site
 
 `publier.bat` (ou `git push`). Fichiers concernés : `espace-membre.html`,
-`suivi-famille.js`, `suivi-connexion.html`, `moni-theme-dash.css`.
+`em-*.js`, `espace.js`, `suivi-connexion.html`, `theme.css`, `espace*.css`.
 
 ## Parcours d'un membre : la connexion par le bot
 

@@ -37,14 +37,14 @@ function hierRender() {
   rows.innerHTML = membres.length ? membres.map(m => `<tr data-id="${escT(m.id || '')}" data-nom="${escT(m.nom)}">
     <td><input type="text" value="${escT(m.nom)}" data-f="nom" /></td>
     <td><select data-f="rang">${hierOptions(m.rang)}</select></td>
-    <td><button class="btn ghost" type="button" onclick="hierEnregistrer(this)">Enregistrer</button><button class="btn danger" type="button" onclick="hierRetirer(this)">Retirer</button></td>
-  </tr>`).join('') : '<tr><td colspan="3" class="hint">Aucun membre — ajoute le premier ci-dessus.</td></tr>';
+    <td><button class="btn btn--ghost btn--sm" type="button" onclick="hierEnregistrer(this)">Enregistrer</button><button class="btn btn--ghost btn--sm btn--danger" type="button" onclick="hierRetirer(this)">Retirer</button></td>
+  </tr>`).join('') : '<tr><td colspan="3" class="muted">Aucun membre — ajoute le premier ci-dessus.</td></tr>';
   rows.querySelectorAll('input,select').forEach(el => el.addEventListener('input', () => el.closest('tr').classList.add('is-dirty')));
   rrows.innerHTML = rangs.map((r, i) => `<tr data-nom="${escT(r.nom)}">
-    <td class="hint">${i + 1}</td>
+    <td class="muted">${i + 1}</td>
     <td><span class="hier-rang-pill" style="background:${escT(r.color)}"></span><b>${escT(r.nom)}</b></td>
     <td><input type="text" value="${escT(r.desc || '')}" data-f="desc" placeholder="Description" /></td>
-    <td><button class="btn ghost" type="button" onclick="rangEnregistrer(this)">Enregistrer</button></td>
+    <td><button class="btn btn--ghost btn--sm" type="button" onclick="rangEnregistrer(this)">Enregistrer</button></td>
   </tr>`).join('');
   rrows.querySelectorAll('input').forEach(el => el.addEventListener('input', () => el.closest('tr').classList.add('is-dirty')));
 }
@@ -77,7 +77,7 @@ async function hierEnregistrer(btn) {
 async function hierRetirer(btn) {
   const tr = btn.closest('tr'), id = tr.dataset.id, nom = tr.dataset.nom;
   if (!id) return;
-  if (!confirm('Retirer ' + nom + ' de la hiérarchie ? Sa fiche et son compte ne sont pas supprimés.')) return;
+  if (!await espaceConfirm('Sa fiche et son compte ne sont pas supprimés.', { title: 'Retirer ' + nom + ' ?', ok: 'Retirer', danger: true })) return;
   const { error } = await sb.from('hierarchie').delete().eq('id', id);
   if (error) { hierMsg('Suppression impossible : ' + error.message, false); return; }
   await chargerHierarchie(); remplirNoms(); hierRender();
@@ -333,6 +333,7 @@ async function saveProfil() {
   if (currentPhotoUrl) setAvatarPhoto(currentPhotoUrl + '?t=' + Date.now()); else setAvatarInitials(nom);
   const badge = document.getElementById('pid-avatar-badge'); if (badge) badge.hidden = true;
   snapshotProfil();
+  if (typeof majRailMoi === 'function') majRailMoi();   // le rail affiche le nom, le rang et la photo à jour
   fin(true);
   toast('Profil enregistré');
   showMsg('profil-msg', 'Ton profil est à jour. Ta fiche apparaît sur le site.', true);
@@ -500,8 +501,8 @@ function renderAgenda() {
       '</div>' +
       '<div class="agenda-act">' +
         (it.kind === 'ev'
-          ? '<button type="button" class="btn ' + (it.going ? 'ghost' : 'green') + ' agenda-btn" onclick="calRsvp(' + idx + ')">' + (it.going ? '✓ J\'y serai' : 'Je participe') + '</button>'
-          : '<button type="button" class="btn ghost agenda-btn" onclick="calShow(' + idx + ');document.getElementById(\'cal-detail\').scrollIntoView({behavior:\'smooth\',block:\'center\'})">Qui vient ?</button>') +
+          ? '<button type="button" class="btn btn--sm ' + (it.going ? 'btn--ghost' : 'btn--accent') + ' agenda-btn" onclick="calRsvp(' + idx + ')">' + (it.going ? '✓ J\'y serai' : 'Je participe') + '</button>'
+          : '<button type="button" class="btn btn--ghost btn--sm agenda-btn" onclick="calShow(' + idx + ');document.getElementById(\'cal-detail\').scrollIntoView({behavior:\'smooth\',block:\'center\'})">Qui vient ?</button>') +
         '<span class="agenda-nb">' + nb + ' participant' + (nb > 1 ? 's' : '') + '</span>' +
       '</div>' +
     '</article>';
@@ -526,7 +527,7 @@ function renderCal() {
   const lundi = calMonday();
   const dim = new Date(lundi); dim.setDate(dim.getDate() + 6);
   const fmtJ = d => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-  document.getElementById('cal-range').textContent = '📅 Semaine du ' + fmtJ(lundi) + ' au ' + fmtJ(dim);
+  document.getElementById('cal-range').textContent = 'Semaine du ' + fmtJ(lundi) + ' au ' + fmtJ(dim);
   const noms = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
   const today = new Date(); today.setHours(0, 0, 0, 0);
   let html = '<div class="cal"><div class="cal-hcell" style="border-left:none;">Heure</div>';
@@ -573,22 +574,22 @@ function calShow(idx) {
     let reacHtml = '';
     if (it.reactions) {
       const bloc = (emo, lbl, arr) => (arr && arr.length)
-        ? '<div style="margin-top:7px;font-size:12.5px;color:var(--muted);">' + emo + ' <b style="color:var(--text);">' + lbl + ' (' + arr.length + ')</b> : ' + arr.map(escT).join(', ') + '</div>'
+        ? '<div class="hint" style="margin-top:7px;">' + emo + ' <b>' + lbl + ' (' + arr.length + ')</b> : ' + arr.map(escT).join(', ') + '</div>'
         : '';
       reacHtml = bloc('✅', 'Présents', it.reactions.oui) + bloc('❌', 'Absents', it.reactions.non) + bloc('❓', 'Incertains', it.reactions.incertain);
-      reacHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">' +
+      reacHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">' +
         (reacHtml || '<span class="hint">Personne n\'a encore réagi sur Discord.</span>') + '</div>';
     }
-    box.innerHTML = '<div class="cal-card pr"><h3>🟢 ' + escT(it.titre) + '</h3>' +
+    box.innerHTML = '<div class="cal-card pr"><h3>' + escT(it.titre) + ' <span class="tag">présence</span></h3>' +
       '<div class="meta">' + escT(quand) + (it.auteur ? ' · posté par ' + escT(it.auteur) : '') + '</div>' +
       '<p>' + escT(it.texte) + '</p>' + reacHtml + '</div>';
   } else {
-    box.innerHTML = '<div class="cal-card"><h3>🔴 ' + escT(it.titre) + (it.type ? ' <span style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;">· ' + escT(it.type) + '</span>' : '') + '</h3>' +
+    box.innerHTML = '<div class="cal-card"><h3>' + escT(it.titre) + (it.type ? ' <span class="tag tag--accent">' + escT(it.type) + '</span>' : '') + '</h3>' +
       '<div class="meta">' + escT(quand) + '</div>' +
       '<p>' + escT(it.texte) + '</p>' +
       '<div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">' +
-      '<button class="btn ' + (it.going ? 'ghost' : 'green') + '" style="width:auto;padding:9px 18px;font-size:11px;" onclick="calRsvp(' + idx + ')">' + (it.going ? '✓ Je participe' : 'Je participe') + '</button>' +
-      '<span style="font-size:12px;color:var(--muted);">' + it.count + ' participant' + (it.count > 1 ? 's' : '') + '</span></div></div>';
+      '<button class="btn btn--sm ' + (it.going ? 'btn--ghost' : 'btn--accent') + '" type="button" onclick="calRsvp(' + idx + ')">' + (it.going ? '✓ Je participe' : 'Je participe') + '</button>' +
+      '<span class="hint">' + it.count + ' participant' + (it.count > 1 ? 's' : '') + '</span></div></div>';
   }
 }
 

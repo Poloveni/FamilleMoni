@@ -3,12 +3,13 @@
 //  courbe) et le compteur animé. Repris tels quels de l'ancienne page ; ne
 //  dépendent que de escT()/fmtArgent() (em-core.js). Chargé après em-core.js.
 // ─────────────────────────────────────────────────────────────────────────────
-const DONUT_COLORS = ['#d4b26e', '#8b2f2f', '#2a7a45', '#6f7f96', '#e9dfc9', '#6b4a7a', '#b06a3b'];
-const CH = {   // couleurs et polices partagées par les trois moteurs canvas
-  caps: '600 9px Cinzel, Georgia, serif', num: '700 11px "Playfair Display", Georgia, serif',
-  lbl: '500 10.5px "Crimson Pro", Georgia, serif',
-  ink: 'rgba(239,230,211,0.92)', ink2: 'rgba(168,156,136,0.95)', dim: 'rgba(151,138,118,0.9)',
-  accent: 'rgba(233,223,201,0.55)', green: '#45d97f',
+// mêmes couleurs de série que les coffres du modèle (espace.css / tableau.html) ; l'accent en premier
+const DONUT_COLORS = ['#e0503f', '#6fcf8e', '#e5b453', '#6ea8fe', '#c792ea', '#9aa0a6', '#80cbc4'];
+const CH = {   // couleurs et polices partagées par les trois moteurs canvas (DA du modèle : mono pour les libellés)
+  caps: '500 9px "JetBrains Mono", ui-monospace, monospace', num: '700 11px "JetBrains Mono", ui-monospace, monospace',
+  lbl: '500 10.5px Archivo, system-ui, sans-serif',
+  ink: 'rgba(239,233,220,0.92)', ink2: 'rgba(143,138,128,0.95)', dim: 'rgba(143,138,128,0.9)',
+  accent: 'rgba(224,80,63,0.7)', green: '#6fcf8e',
 };
 
 // ══ MOTEUR GRAPHIQUE CANVAS ══
@@ -102,12 +103,12 @@ function drawBarChart(container, data, quota) {
       const y = padT + zone - bh;
       const done = d.value >= quota;
       const grad = ctx.createLinearGradient(0, y, 0, y + bh);
-      // Quota atteint : vert forêt. Premier : ivoire. Les autres : ardoise.
-      if (done) { grad.addColorStop(0, '#45d97f'); grad.addColorStop(1, '#1a5230'); }
-      else if (i === 0) { grad.addColorStop(0, '#f1ead9'); grad.addColorStop(1, '#8a7d69'); }
-      else { grad.addColorStop(0, '#8d8d96'); grad.addColorStop(1, '#3a3a40'); }
+      // Quota atteint : vert. Premier : l'accent. Les autres : gris ardoise.
+      if (done) { grad.addColorStop(0, '#6fcf8e'); grad.addColorStop(1, '#2a6b45'); }
+      else if (i === 0) { grad.addColorStop(0, '#e0503f'); grad.addColorStop(1, '#7a2a22'); }
+      else { grad.addColorStop(0, '#5f5f66'); grad.addColorStop(1, '#2a2a2e'); }
       ctx.save();
-      ctx.shadowColor = done ? 'rgba(69,217,127,0.35)' : 'rgba(233,223,201,0.18)';
+      ctx.shadowColor = done ? 'rgba(111,207,142,0.35)' : 'rgba(224,80,63,0.18)';
       ctx.shadowBlur = hoverIdx === i ? 18 : 6;
       ctx.fillStyle = grad;
       roundTopRect(ctx, x, y, bw, bh, 2);
@@ -201,7 +202,7 @@ function drawDonut(container, parts) {
       ctx.restore();
     });
     ctx.fillStyle = CH.ink;
-    ctx.font = '900 28px "Playfair Display", Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '800 28px Archivo, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(Math.round(total * p).toLocaleString('fr-FR'), cx, cy - 8);
     ctx.fillStyle = CH.dim; ctx.font = CH.caps;
     ctx.fillText('UNITÉS EN STOCK', cx, cy + 16);
@@ -238,8 +239,8 @@ function drawLineChart(container, pts) {
     ctx.lineTo(X(vis[vis.length - 1].t), h - padB);
     ctx.closePath();
     const grad = ctx.createLinearGradient(0, padT, 0, h - padB);
-    grad.addColorStop(0, 'rgba(69,217,127,0.22)');
-    grad.addColorStop(1, 'rgba(69,217,127,0)');
+    grad.addColorStop(0, 'rgba(111,207,142,0.22)');
+    grad.addColorStop(1, 'rgba(111,207,142,0)');
     ctx.fillStyle = grad;
     ctx.fill();
     // Repères horizontaux discrets : quatre lignes, pour situer l'échelle.
@@ -258,7 +259,7 @@ function drawLineChart(container, pts) {
     ctx.fillStyle = CH.green; ctx.shadowColor = CH.green; ctx.shadowBlur = 10;
     ctx.beginPath(); ctx.arc(X(last.t), Y(last.y), 4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
-    ctx.fillStyle = CH.ink; ctx.font = '700 15px "Playfair Display", Georgia, serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = CH.ink; ctx.font = '700 15px Archivo, system-ui, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText(fmtArgent(Math.round(last.y)), padL + 2, 16);
     ctx.fillStyle = CH.dim; ctx.font = CH.caps; ctx.textAlign = 'right';
     ctx.fillText('MAX ' + fmtArgent(yMax), w - 4, 14);

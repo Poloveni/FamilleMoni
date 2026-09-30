@@ -1,5 +1,5 @@
 /* Service Worker — Famille Moni (PWA) */
-const CACHE = 'moni-v12';
+const CACHE = 'moni-v13';
 // Uniquement des fichiers qui existent : un chemin fantôme ne casse rien
 // (allSettled), mais il coûte une requête 404 à chaque installation.
 const CORE = [
