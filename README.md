@@ -8,7 +8,7 @@ Le modèle sépare deux parties :
 | | **Personnalisable, site par site** | **Mutualisé, identique sur tous les sites** |
 |---|---|---|
 | Quoi | La **vitrine** (page d'accueil) et toute la **direction artistique** | La **partie gestion** : espace membre, serveur, base, déploiement |
-| Fichiers | `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js`, `pellicule.js` | `espace/`, `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/` |
+| Fichiers | `site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`, `galerie.js`, `pellicule.js` | `espace/`, `server/`, `org.js`, `main.js`, `404.html`, `compose*.yaml`, `docs/`, `.claude/skills/` |
 | Liberté | Totale : textes, sections, mise en page, couleurs, polices, visuels, effets | Aucune modification dans un site : les améliorations se font **dans le modèle**, puis chaque site les récupère |
 
 **La direction artistique s'applique aussi à la partie gestion**, sans la modifier techniquement. L'espace membre ne contient aucune couleur ni police en dur : il prend celles de `theme.css`, l'accent de `site.json`, le nom et les textes de `site.json`, le logo de `assets/`. Chaque site a donc un espace membre à ses couleurs, mais son code est le même partout.
@@ -54,6 +54,7 @@ Les conflits éventuels ne portent que sur les fichiers personnalisables (`site.
 | nginx : HTTPS, rôle de chaque réglage, plusieurs sites, dépannage | [docs/nginx.md](docs/nginx.md) |
 | Stockage des photos (disque ou CDN), contrat attendu du service | [docs/stockage.md](docs/stockage.md) |
 | API du site (routes, droits, limites) et API du bot Discord relayée | [docs/api.md](docs/api.md) |
+| Audits par angle (accès, navigateur, bot, fiabilité, modèle) : prompts, commande `/audit` dans Claude Code | [docs/audits.md](docs/audits.md) |
 | Consignes pour Claude Code sur ce dépôt | [CLAUDE.md](CLAUDE.md) |
 
 ## Développement
@@ -74,5 +75,6 @@ docker compose up          # http://localhost:3000  ·  espace membre : http://l
 - `assets/` — logo, favicon, image de partage, logo Roxwood, photos d'exemple
 - `espace/` — pages de l'espace membre (`espace.js` et `espace.css` partagés)
 - `server/` — serveur (`src/`, dont `site.ts` qui insère `site.json` dans les pages), schéma et migrations de la base (`prisma/`), configuration nginx (`deploy/`)
-- `docs/` — nginx, stockage des photos, API
+- `docs/` — nginx, stockage des photos, API, prompts d'audit
+- `.claude/skills/` — commandes Claude Code du projet (`/audit`)
 - `compose.yaml` — site, base et sauvegardes (dev et prod) ; `compose.override.yaml` — réglages de dev uniquement
