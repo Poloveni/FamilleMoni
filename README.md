@@ -33,7 +33,7 @@ En bas de chaque vitrine : la signature **« Développé par Roxwood Network »*
    | `description` | présentation courte (hero, moteurs de recherche, aperçus de lien) | |
 
    Dans une page, `{{nom}}` insère la valeur, `{{Groupe}}` la même avec une majuscule (« Le cartel »), `{{url}}` l'adresse du site (`BASE_URL`). Le serveur refuse de démarrer si une valeur manque.
-3. **Direction artistique** : [`theme.css`](theme.css) regroupe les fonds, les textes, les polices (et leur import) et la largeur du contenu ; il s'applique à tout le site, espace membre compris. Pour aller plus loin sur la vitrine : [`styles.css`](styles.css) (en gardant les noms de classes de la navigation, des boutons et du pied de page, partagés avec l'espace membre) et [`pellicule.js`](pellicule.js) (animations propres à la vitrine : index des chapitres, curseur, citation).
+3. **Direction artistique** : [`theme.css`](theme.css) regroupe les fonds, les textes, les polices (fichiers dans `assets/fonts/`, servis par le site : rien ne se charge depuis un hébergeur tiers) et la largeur du contenu ; il s'applique à tout le site, espace membre compris. Pour aller plus loin sur la vitrine : [`styles.css`](styles.css) (en gardant les noms de classes de la navigation, des boutons et du pied de page, partagés avec l'espace membre) et [`pellicule.js`](pellicule.js) (animations propres à la vitrine : index des chapitres, curseur, citation).
 4. **Visuels** (dans `assets/`, mêmes noms de fichiers) : `logo.png` (carré, fond transparent), `favicon.png`, `og-image.jpg` (1200 × 630, aperçu de partage). Ne pas toucher à `roxwood.png`.
 5. **Vitrine** : [`index.html`](index.html) est un point de départ — remplacer les textes marqués « Texte à remplacer », ajouter, retirer ou réordonner les sections librement. Des styles prêts à l'emploi existent dans `styles.css` pour un nuancier de couleurs (`.couleurs`), des cartes d'événements (`.evenements`) et un lexique (`.vocab`). Deux sections se remplissent seules depuis l'espace membre et restent masquées si vides : la hiérarchie (`org.js`) et la galerie (`galerie.js`).
 6. **Photos d'exemple** : les six images de `assets/exemples/` s'affichent dans la galerie de l'accueil tant qu'aucune vraie photo n'est publiée (fichiers du projet, jamais envoyés au stockage). Pour ne jamais les montrer : vider la liste `EXEMPLES` de `galerie.js` et supprimer le dossier.
@@ -70,7 +70,7 @@ docker compose up          # http://localhost:3000  ·  espace membre : http://l
 - Deux sites en dev en même temps : ils utilisent tous deux le port 3000 ; arrêter l'un (`docker compose stop`) avant de lancer l'autre.
 
 ## Organisation
-- `site.json` — identité du site ; `theme.css` — couleurs et polices du site
+- `site.json` — identité du site ; `theme.css` — couleurs et polices du site ; `confidentialite.html` — ce que le site enregistre (à relire si le site change ce qu'il collecte)
 - `index.html`, `styles.css` — vitrine (animations `pellicule.js`, organigramme `org.js`, galerie `galerie.js`, `main.js`) ; `404.html`
 - `assets/` — logo, favicon, image de partage, logo Roxwood, photos d'exemple
 - `espace/` — pages de l'espace membre (`espace.js` et `espace.css` partagés)
