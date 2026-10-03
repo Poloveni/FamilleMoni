@@ -7,8 +7,6 @@
 <meta name="application-name" content="{{nom}}">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="../assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="../theme.css">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="espace.css">
@@ -43,7 +41,10 @@
 <script>
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/@([^\s@<][^@<]{0,40}?)(?=\s|$|[.,;:!?])/g, (m0, n) => mentionable.has(n.toLowerCase()) ? `<span class="mention">@${n}</span>` : m0);
+  // liens et mentions : le texte est découpé autour des adresses (morceaux impairs), les mentions ne sont cherchées
+  // que hors des liens — sinon un « @nom » dans une adresse insérerait une balise au milieu de l'attribut href
+  const linkify = s => esc(s).split(/(https?:\/\/[^\s<]+)/).map((t, i) => i % 2 ? `<a href="${t}" target="_blank" rel="noopener">${t}</a>`
+    : t.replace(/@([^\s@<][^@<]{0,40}?)(?=\s|$|[.,;:!?])/g, (m0, n) => mentionable.has(n.toLowerCase()) ? `<span class="mention">@${n}</span>` : m0)).join('');
   let mentionable = new Set(), members = [];
   const isMentioned = c => { const re = new RegExp('@(' + [me.displayName, me.username].filter(Boolean).map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![\\w-])', 'i'); return re.test(c); };
   const time = d => new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -61,7 +62,7 @@
     const mine = m.author.id === me.id;
     const canDel = mine || me.isAdmin;
     return `<article class="msg ${mine ? 'msg--mine' : ''} ${grouped ? 'msg--grouped' : ''} ${!mine && isMentioned(m.content) ? 'msg--mention' : ''}" data-id="${m.id}">
-      <img class="msg__avatar" src="${m.author.avatarUrl || '../assets/favicon.png'}" alt="">
+      <img class="msg__avatar" src="${esc(m.author.avatarUrl || '../assets/favicon.png')}" alt="">
       <div class="msg__body">
         <header class="msg__head"><b class="msg__name">${esc(m.author.displayName)}</b><span class="msg__rank" data-featured="${m.author.rankFeatured}">${esc(m.author.rankLabel || '')}</span><time>${time(m.createdAt)}</time>${canDel ? `<button class="msg__del" data-del="${m.id}" title="Supprimer">✕</button>` : ''}</header>
         <p class="msg__text">${linkify(m.content)}</p>
@@ -105,7 +106,7 @@
 
   function renderOnline(list) {
     $('onlineCount').textContent = list.length;
-    $('online').innerHTML = list.map(u => `<li><img src="${u.avatarUrl || '../assets/favicon.png'}" alt=""><span>${esc(u.displayName)}</span><i data-featured="${u.rankFeatured}">${esc(u.rankLabel || '')}</i></li>`).join('');
+    $('online').innerHTML = list.map(u => `<li><img src="${esc(u.avatarUrl || '../assets/favicon.png')}" alt=""><span>${esc(u.displayName)}</span><i data-featured="${u.rankFeatured}">${esc(u.rankLabel || '')}</i></li>`).join('');
   }
 
   let es;
@@ -113,6 +114,14 @@
     es = new EventSource('../api/chat/stream');
     es.onopen = () => { $('status').textContent = ''; $('status').hidden = true; };
     es.onerror = () => { $('status').hidden = false; $('status').textContent = 'Connexion perdue, nouvelle tentative…'; };
+    // fin décidée par le serveur : le flux n'est pas rouvert tout seul (un onglet de trop se reconnecterait en boucle)
+    es.addEventListener('closed', e => {
+      es.close();
+      const raison = JSON.parse(e.data);
+      $('status').hidden = false;
+      if (raison === 'stop') { $('status').textContent = 'Le site redémarre, reconnexion…'; setTimeout(connect, 5000); }
+      else $('status').textContent = raison === 'limit' ? 'Chat ouvert dans trop d’onglets : celui-ci est en pause. Recharge la page pour le reprendre.' : 'Accès au chat fermé. Recharge la page.';
+    });
     es.addEventListener('message', e => append(JSON.parse(e.data)));
     es.addEventListener('presence', e => renderOnline(JSON.parse(e.data)));
     es.addEventListener('delete', e => { const { id } = JSON.parse(e.data); const el = log.querySelector(`[data-id="${id}"]`); if (el) el.remove(); });
@@ -121,6 +130,7 @@
   async function init() {
     me = await api('../api/me');
     if (me.status !== 'approved') { location.replace('attente.html'); return; }
+    if (!me.isMember) { location.replace('profil.html'); return; }
     espaceNav(me);
     members = await api('../api/chat/mentions').catch(() => []);
     mentionable = new Set(members.flatMap(u => [u.name.toLowerCase(), u.username.toLowerCase()]));
