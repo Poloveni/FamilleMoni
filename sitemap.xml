@@ -3,4 +3,7 @@
   <url>
     <loc>{{url}}/</loc>
   </url>
+  <url>
+    <loc>{{url}}/confidentialite.html</loc>
+  </url>
 </urlset>

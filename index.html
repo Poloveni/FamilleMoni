@@ -20,8 +20,7 @@
 <meta name="twitter:title" content="{{nom}}">
 <meta name="twitter:description" content="{{description}}">
 <meta name="twitter:image" content="{{url}}/assets/og-image.jpg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="assets/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="theme.css">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -185,7 +184,7 @@
     <p class="tirage__petit">Candidatures traitées sur le Discord · {{serveur}}</p>
   </div>
   <footer class="footer">
-    <span>Fin de la pellicule</span><span>{{devise}}</span>
+    <span>Fin de la pellicule</span><span>{{devise}}</span><a href="confidentialite.html">Confidentialité</a>
   </footer>
   <!-- signature commune aux sites Roxwood Network : à garder telle quelle -->
   <div class="signature">
