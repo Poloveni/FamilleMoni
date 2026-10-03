@@ -1,8 +1,7 @@
 /* ==========================================================
    Styles de la VITRINE (index.html), libres pour chaque site.
-   Couleurs et polices : theme.css. Attention : la barre de navigation, le menu burger,
-   les boutons (.btn), .eyebrow, .numeral, le pied de page et la signature sont aussi utilisés
-   par l'espace membre ; les modifier change aussi son apparence (garder les noms de classes).
+   Couleurs et polices : theme.css. Attention : les boutons (.btn et variantes), .eyebrow, .numeral et .section__head
+   sont aussi utilisés par l'espace membre ; les modifier change aussi son apparence (garder les noms de classes).
 
    DA « Pellicule » : on suit le groupe comme un photographe en filature, et le défilement fait avancer le film.
    00 prise de vue (viseur) → 01 filature (scène épinglée) → 02 planche contact (film horizontal, négatif → positif)
