@@ -13,7 +13,7 @@ Le modèle sépare deux parties :
 
 **La direction artistique s'applique aussi à la partie gestion**, sans la modifier techniquement. L'espace membre ne contient aucune couleur ni police en dur : il prend celles de `theme.css`, l'accent de `site.json`, le nom et les textes de `site.json`, le logo de `assets/`. Chaque site a donc un espace membre à ses couleurs, mais son code est le même partout.
 
-Ce que la partie gestion apporte, prête à l'emploi : connexion Discord réservée aux membres du serveur, validation des comptes, profils, liste des membres, grades et droits paramétrables, organigramme public, galerie photo, salon de discussion en temps réel, pages reliées au bot Discord Roxwood (tableau de bord, classement, statistiques, taxes, armurerie), sauvegardes quotidiennes, plusieurs sites sur un même VPS.
+Ce que la partie gestion apporte, prête à l'emploi : connexion Discord réservée aux membres du serveur, validation des comptes, accès réservé au rôle Discord « membre » et niveaux de droits (Gestion, pouvoirs complets), profils, liste des membres, grades et droits paramétrables, organigramme public, galerie photo, salon de discussion en temps réel, pages reliées au bot Discord Roxwood (tableau de bord, classement, statistiques, taxes, armurerie), sauvegardes quotidiennes, plusieurs sites sur un même VPS.
 
 En bas de chaque vitrine : la signature **« Développé par Roxwood Network »** (à garder).
 
@@ -37,7 +37,7 @@ En bas de chaque vitrine : la signature **« Développé par Roxwood Network »*
 4. **Visuels** (dans `assets/`, mêmes noms de fichiers) : `logo.png` (carré, fond transparent), `favicon.png`, `og-image.jpg` (1200 × 630, aperçu de partage). Ne pas toucher à `roxwood.png`.
 5. **Vitrine** : [`index.html`](index.html) est un point de départ — remplacer les textes marqués « Texte à remplacer », ajouter, retirer ou réordonner les sections librement. Des styles prêts à l'emploi existent dans `styles.css` pour un nuancier de couleurs (`.couleurs`), des cartes d'événements (`.evenements`) et un lexique (`.vocab`). Deux sections se remplissent seules depuis l'espace membre et restent masquées si vides : la hiérarchie (`org.js`) et la galerie (`galerie.js`).
 6. **Photos d'exemple** : les six images de `assets/exemples/` s'affichent dans la galerie de l'accueil tant qu'aucune vraie photo n'est publiée (fichiers du projet, jamais envoyés au stockage). Pour ne jamais les montrer : vider la liste `EXEMPLES` de `galerie.js` et supprimer le dossier.
-7. **Déployer** : [server/README.md](server/README.md).
+7. **Déployer** : [server/README.md](server/README.md) — installation, puis **première connexion** dans l'ordre : bot à jour avec son rôle membre (`/config role set membre`), propriétaire du serveur Discord connecté au site, rôle membre et grades réglés dans Gestion → Hiérarchie.
 
 ### Récupérer plus tard les améliorations du modèle
 La partie gestion étant identique partout, un correctif fait dans le modèle se reprend dans chaque site :
@@ -62,7 +62,7 @@ Prérequis : Docker Desktop.
 ```bash
 docker compose up          # http://localhost:3000  ·  espace membre : http://localhost:3000/espace/
 ```
-- Connexion sans Discord (bouton de connexion → compte « Dev local » avec tous les droits).
+- Connexion sans Discord (bouton de connexion → compte « Dev local » avec tous les droits). Pour essayer un autre niveau d'accès : `http://localhost:3000/auth/discord?compte=<ID Discord>` ouvre la session d'un compte existant (dev uniquement, refusé en production).
 - Pages, CSS, JS et `site.json` : rafraîchir le navigateur suffit (en dev, rien n'est mis en cache). Serveur (`server/src`) : `docker compose restart app`.
 - Photos de la galerie écrites dans `uploads/` (ignoré par git). Base dans un volume Docker (`docker compose down -v` la remet à zéro).
 - Base : après une modification de `server/prisma/schema.prisma`, `docker compose exec app npx prisma migrate dev --name <description>`, et **committer le dossier de migration créé** : c'est lui que la prod applique au démarrage.
