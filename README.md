@@ -45,7 +45,7 @@ La partie gestion étant identique partout, un correctif fait dans le modèle se
 git remote add modele https://github.com/poulpizar01/roxwood-network-site-famille-template.git   # une seule fois
 git fetch modele && git merge modele/main --allow-unrelated-histories                            # --allow-… : la première fois seulement
 ```
-Les conflits éventuels ne portent que sur les fichiers personnalisables (`site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`…) : y garder la version du site. Un site qui a modifié un fichier mutualisé perd cette garantie : corriger plutôt dans le modèle.
+Les conflits éventuels ne portent que sur les fichiers personnalisables (`site.json`, `theme.css`, `index.html`, `styles.css`, `assets/`…) : y garder la version du site. Un site qui a modifié un fichier mutualisé perd cette garantie : corriger plutôt dans le modèle. Toujours passer par ce merge, jamais par une copie des fichiers ni un `git cherry-pick` : git ne saurait pas que ces corrections sont intégrées, et chaque mise à jour suivante tournerait aux conflits (marche à suivre si c'est déjà arrivé : [CLAUDE.md](CLAUDE.md)).
 
 ## Documentation
 | Sujet | Où |
