@@ -5,7 +5,7 @@
   const calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const deux = n => String(n).padStart(2, '0');
 
-  // ---- bobine : un chapitre par section ; les chapitres masqués (hiérarchie, galerie vides) le restent dans l'index
+  // ---- bobine : un chapitre par section ; un chapitre masqué (hiérarchie vide) le reste dans l'index
   const liens = [...document.querySelectorAll('.bobine a[data-ch]')];
   const chapitres = liens.map(a => ({ a, sec: document.getElementById(a.dataset.ch) })).filter(c => c.sec);
   const syncMasques = () => chapitres.forEach(c => { c.a.parentElement.hidden = c.sec.hidden; });

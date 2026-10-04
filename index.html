@@ -39,7 +39,6 @@
     <a href="#histoire">Histoire</a>
     <a href="#valeurs">Valeurs</a>
     <a href="#hierarchie" id="navHierarchie" hidden>Hiérarchie</a>
-    <a href="#galerie" id="navGalerie" hidden>Galerie</a>
     <a href="espace/">{{espace}}</a>
     <a class="nav__cta" href="{{discord}}" target="_blank" rel="noopener">Discord</a>
   </nav>
@@ -52,8 +51,7 @@
     <li><a href="#histoire" data-ch="histoire"><b>01</b><span>Filature</span></a></li>
     <li><a href="#valeurs" data-ch="valeurs"><b>02</b><span>Planche contact</span></a></li>
     <li hidden><a href="#hierarchie" data-ch="hierarchie"><b>03</b><span>Chambre noire</span></a></li>
-    <li hidden><a href="#galerie" data-ch="galerie"><b>04</b><span>Révélateur</span></a></li>
-    <li><a href="#rejoindre" data-ch="rejoindre"><b>05</b><span>Tirage</span></a></li>
+    <li><a href="#rejoindre" data-ch="rejoindre"><b>04</b><span>Tirage</span></a></li>
   </ol>
   <p class="bobine__heure" aria-hidden="true"><span id="heure">22:00</span><span>P.<b id="pose">01</b></span></p>
 </aside>
@@ -156,25 +154,7 @@
   </div>
 </section>
 
-<!-- ============ 04 · TABLE LUMINEUSE : photos postées depuis l'espace membre (galerie.js), masquée si vide.
-     Les photos sont posées en négatifs ; sous la loupe (curseur), elles apparaissent en positif. Clic : le tirage en grand. ============ -->
-<section class="ch ch--table" id="galerie" hidden>
-  <header class="table__tete">
-    <h2 class="table__titre">Galerie</h2>
-    <p class="table__sub">04 — Table lumineuse · {{Groupe}} en images</p>
-    <p class="table__aide"><span class="table__aide-souris">Passer la loupe sur les négatifs · cliquer pour le tirage</span><span class="table__aide-doigt">Toucher un négatif pour le tirage</span></p>
-  </header>
-  <div class="table__planche" id="galerieGrid"></div>
-  <i class="loupe" id="loupe" aria-hidden="true"></i>
-</section>
-<div class="lightbox" id="lightbox" hidden>
-  <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
-  <button class="lightbox__nav lightbox__nav--prev" id="lbPrev" aria-label="Précédente">‹</button>
-  <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
-  <button class="lightbox__nav lightbox__nav--next" id="lbNext" aria-label="Suivante">›</button>
-</div>
-
-<!-- ============ 05 · TIRAGE : le papier clair ============ -->
+<!-- ============ 04 · TIRAGE : le papier clair ============ -->
 <section class="ch ch--tirage" id="rejoindre">
   <h2 class="tirage__titre">Rejoindre</h2>
   <div class="tirage__bas">
@@ -202,7 +182,6 @@
 </main>
 
 <script src="org.js"></script>
-<script src="galerie.js"></script>
 <script src="main.js"></script>
 <script src="pellicule.js"></script>
 </body>

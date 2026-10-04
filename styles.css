@@ -5,7 +5,7 @@
 
    DA « Pellicule » : on suit le groupe comme un photographe en filature, et le défilement fait avancer le film.
    00 prise de vue (viseur) → 01 filature (scène épinglée) → 02 planche contact (film horizontal, négatif → positif)
-   → 03 chambre noire (lumière rouge, tirages qui se révèlent) → 04 révélateur (photos) → 05 tirage (papier clair).
+   → 03 chambre noire (lumière rouge, tirages qui se révèlent) → 04 tirage (papier clair).
    Les animations liées au défilement sont en CSS natif (animation-timeline), regroupées en bas du fichier :
    sans prise en charge, ou si le visiteur demande moins de mouvement, la page reste une lecture statique complète.
    ========================================================== */
@@ -22,8 +22,8 @@
   /* rouge uni : fin de la planche et début de la chambre sont identiques, le raccord ne se voit pas.
      Le halo de la lampe vit à part, dans la chambre seulement (.ch--chambre::before) */
   --rouge-chambre:color-mix(in srgb,var(--accent) 16%,#050101);
-  /* lumière blanche qui s'allume à la fin de la chambre = ton du haut de la table lumineuse (raccord sans couture) */
-  --lumiere-table:#eeebe4;   /* = papier du tirage (05) */
+  /* lumière blanche qui s'allume à la fin de la chambre = papier du tirage (04) : raccord sans couture */
+  --lumiere-papier:#eeebe4;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -207,7 +207,7 @@ body.vitrine .nav__links a:hover{opacity:1}
 .ch--planche{padding:14vh 0}
 .pellicule{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:46px 0;background:#0c0a08}
 .pellicule::-webkit-scrollbar{display:none}
-/* perforations éclairées par la table lumineuse */
+/* perforations éclairées (lumière derrière le film) */
 .pellicule::before,.pellicule::after{content:"";position:absolute;left:0;right:0;height:13px;background:repeating-linear-gradient(90deg,transparent 0 13px,rgba(245,238,222,.85) 13px 27px);pointer-events:none}
 .pellicule::before{top:16px}
 .pellicule::after{bottom:16px}
@@ -251,59 +251,8 @@ body.vitrine .nav__links a:hover{opacity:1}
 .rank--open{opacity:.55}
 .rank--open::before{background:linear-gradient(#c3bcae,#9e9688)}
 
-.lightbox{position:fixed;inset:0;z-index:100;background:rgba(6,6,6,.96);display:flex;align-items:center;justify-content:center;padding:60px 70px}
-.lightbox figure{margin:0;max-width:100%;max-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
-.lightbox img{max-width:100%;max-height:calc(100vh - 150px);object-fit:contain}
-.lightbox figcaption{color:var(--ink2);font-family:var(--serif);font-size:12px;letter-spacing:.06em;text-align:center}
-.lightbox figcaption i{font-style:normal;color:var(--ink)}
-.lightbox figcaption b{color:var(--ink);font-weight:500}
-.lightbox figcaption span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-left:8px}
-.lightbox__close,.lightbox__nav{position:absolute;background:none;border:1px solid var(--line);color:var(--ink);cursor:pointer;font-size:22px;width:46px;height:46px;transition:.2s}
-.lightbox__close:hover,.lightbox__nav:hover{border-color:var(--accent);background:var(--accent)}
-.lightbox__close{top:18px;right:18px}
-.lightbox__nav{top:50%;transform:translateY(-50%);font-size:30px}
-.lightbox__nav--prev{left:14px}.lightbox__nav--next{right:14px}
-
-/* ---------- 04 · TABLE LUMINEUSE : négatifs posés en mosaïque ; sous la loupe (galerie.js), le positif agrandi ---------- */
-.ch--table{--ink:#0d0d0d;--ink2:#5b5850;--line:rgba(13,13,13,.14);--r-loupe:120px;position:relative;padding:18vh var(--droite) 20vh var(--gauche);overflow:clip;color:var(--ink);
-  /* haut et bas au ton exact de la lumière de la chambre et du papier du tirage : raccords invisibles */
-  background:linear-gradient(var(--lumiere-table),transparent 35vh),linear-gradient(to top,var(--lumiere-table),transparent 35vh),
-    repeating-linear-gradient(90deg,rgba(0,0,0,.03) 0 1px,transparent 1px 48px),repeating-linear-gradient(rgba(0,0,0,.03) 0 1px,transparent 1px 48px),
-    radial-gradient(ellipse 75% 60% at 50% 50%,#fcfaf5,var(--lumiere-table) 75%)}
-.table__tete{display:grid;grid-template-columns:auto 1fr;align-items:end;gap:8px 4vw;margin-bottom:8vh}
-.table__titre{grid-row:span 2;margin:0;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:clamp(80px,12vw,210px);line-height:.8;text-transform:uppercase}
-.table__sub,.table__aide{margin:0;font-family:var(--serif);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
-.table__aide{color:var(--ink)}
-.table__aide-doigt{display:none}
-@media (hover:none){.table__aide-souris{display:none}.table__aide-doigt{display:inline}}
-/* mosaïque dense : la case dépend du format de la photo (large, haute, carrée), la première large est mise en avant */
-.table__planche{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-rows:clamp(80px,8.4vw,160px);grid-auto-flow:dense;gap:clamp(14px,2vw,30px)}
-.negatif{display:flex;flex-direction:column;min-width:0;margin:0}
-.negatif--large{grid-column:span 5;grid-row:span 2}
-.negatif--haute{grid-column:span 3;grid-row:span 3}
-.negatif--carree{grid-column:span 3;grid-row:span 2}
-.negatif--large:first-child{grid-column:span 7;grid-row:span 3}
-/* le cadre de film noir autour de l'image */
-.negatif__cadre{position:relative;flex:1;min-height:0;display:block;width:100%;padding:0;border:10px solid #111;background:#111;cursor:zoom-in;overflow:hidden;box-shadow:0 18px 30px -18px rgba(0,0,0,.55)}
-.negatif__cadre img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-/* négatif couleur : inversé, avec le voile orangé du film */
-.negatif__neg{filter:invert(1) sepia(.5) saturate(1.7) hue-rotate(-12deg) contrast(.92)}
-/* positif agrandi, découvert en cercle sous la loupe ; le rayon est divisé par le grossissement (le cercle est agrandi avec l'image) */
-.negatif__pos{clip-path:circle(0 at var(--lx,50%) var(--ly,50%));transform-origin:var(--lx,50%) var(--ly,50%);transform:scale(1.8)}
-.negatif.is-loupe .negatif__pos{clip-path:circle(calc(var(--r-loupe) / 1.8) at var(--lx) var(--ly))}
-.ch--table.a-loupe .table__planche,.ch--table.a-loupe .negatif__cadre{cursor:none}
-.negatif figcaption{display:flex;gap:10px;align-items:baseline;min-width:0;padding-top:8px;font-family:var(--serif);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
-.negatif figcaption b{font-weight:500;color:var(--accent-dark)}
-.negatif figcaption i{font-style:normal;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
-.negatif figcaption span{margin-left:auto}
-/* la loupe : un anneau qui suit le curseur au-dessus de la table */
-.loupe{position:absolute;left:0;top:0;z-index:3;width:calc(var(--r-loupe) * 2);height:calc(var(--r-loupe) * 2);margin:calc(var(--r-loupe) * -1) 0 0 calc(var(--r-loupe) * -1);border-radius:50%;pointer-events:none;
-  border:2px solid #111;box-shadow:0 0 0 7px rgba(255,255,255,.45),0 0 0 8px rgba(0,0,0,.25),0 24px 40px rgba(0,0,0,.35),inset 0 0 24px rgba(0,0,0,.35);
-  opacity:0;scale:.6;transition:opacity .25s,scale .4s var(--ease);will-change:transform}
-.ch--table.a-loupe .loupe{opacity:1;scale:1}
-
-/* ---------- 05 · TIRAGE : le papier clair (les variables de couleur s'inversent localement) ---------- */
-.ch--tirage{--ink:#0d0d0d;--ink2:#5b5850;--line:rgba(13,13,13,.14);padding:20vh var(--droite) 0 var(--gauche);overflow:clip;background:#eeebe4;color:var(--ink)}
+/* ---------- 04 · TIRAGE : le papier clair (les variables de couleur s'inversent localement) ---------- */
+.ch--tirage{--ink:#0d0d0d;--ink2:#5b5850;--line:rgba(13,13,13,.14);padding:20vh var(--droite) 0 var(--gauche);overflow:clip;background:var(--lumiere-papier);color:var(--ink)}
 .tirage__titre{width:max-content;margin:0;font-family:var(--display);font-weight:800;font-stretch:62%;font-variation-settings:"wdth" 62;font-size:17vw;line-height:.76;text-transform:uppercase;white-space:nowrap}
 .tirage__bas{display:grid;grid-template-columns:1fr 1.3fr 1fr;align-items:end;gap:30px 4vw;margin-top:6vh;padding:7vh 0 14vh;border-top:1px solid var(--line)}
 .tirage__groupe{margin:0;font-family:var(--display);font-weight:700;font-stretch:75%;font-variation-settings:"wdth" 75;font-size:clamp(28px,3vw,46px);line-height:1;text-transform:uppercase}
@@ -432,7 +381,7 @@ body.vitrine .nav__links a:hover{opacity:1}
     .planche__bascule{display:block;position:absolute;left:0;right:0;top:50%;z-index:3;margin:0;text-align:center;font-family:var(--serif);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:color-mix(in srgb,var(--accent) 45%,#fff);
       opacity:0;animation:bascule linear both;animation-timeline:--planche;animation-range:contain 88% contain 100%}
     @keyframes bascule{0%{opacity:0;letter-spacing:.6em}60%,100%{opacity:1;letter-spacing:.3em}}
-    /* sans hiérarchie (section vide, masquée), la planche enchaîne sur la table : pas de rouge */
+    /* sans hiérarchie (section vide, masquée), la planche enchaîne sur le tirage : pas de rouge */
     body:has(#hierarchie[hidden]) .planche__scene::after,body:has(#hierarchie[hidden]) .planche__bascule{display:none}
     .pose:nth-child(1){animation-name:neg0}
     .pose:nth-child(2){animation-name:neg1}
@@ -458,25 +407,16 @@ body.vitrine .nav__links a:hover{opacity:1}
   @keyframes lampe{from{opacity:0}to{opacity:1}}
   .rank{animation:revelation linear both;animation-timeline:view();animation-range:entry 5% cover 42%}
   @keyframes revelation{from{filter:brightness(2.6) contrast(.2) sepia(.5);opacity:.3}to{filter:none;opacity:1}}
-  /* 03 → 04 : la lumière de la table monte depuis le bas et envahit la chambre, en fondu continu.
-     Le bord bas de la chambre est toujours exactement du ton de la table : aucune démarcation, à aucun moment. */
+  /* 03 → 04 : la lumière du papier monte depuis le bas et envahit la chambre, en fondu continu.
+     Le bord bas de la chambre est toujours exactement du ton du tirage : aucune démarcation, à aucun moment. */
   .ch--chambre::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
-    background:linear-gradient(to top,var(--lumiere-table) 0,var(--lumiere-table) var(--monte),transparent calc(var(--monte) + 55vh));
+    background:linear-gradient(to top,var(--lumiere-papier) 0,var(--lumiere-papier) var(--monte),transparent calc(var(--monte) + 55vh));
     animation:lumiereMonte linear both;animation-timeline:view();animation-range:exit 0% exit 100%}
   @keyframes lumiereMonte{from{--monte:0vh}to{--monte:70vh}}
 
-  /* 04 · table lumineuse : les négatifs se posent un à un. Sans hiérarchie (on arrive de la planche, sombre),
-     l'ombre se retire vers le haut, même principe : le bord haut reste du ton de la planche jusqu'au bout. */
-  body:has(#hierarchie[hidden]) .ch--table::before{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
-    background:linear-gradient(#0a0a0a 0,#0a0a0a var(--ombre),transparent calc(var(--ombre) + 55vh));
-    animation:ombreSeRetire linear both;animation-timeline:view();animation-range:entry 0% entry 100%}
-  @keyframes ombreSeRetire{from{--ombre:70vh}to{--ombre:-55vh}}
-  .negatif{animation:pose linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
-  @keyframes pose{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:none}}
-
-  /* 05 · tirage : le titre se découvre de bas en haut. Le papier ne « blanchit » que s'il arrive après une section sombre
-     (galerie et hiérarchie vides : on vient de la planche) ; après la table ou la chambre éclairée, il est déjà clair. */
-  body:has(#galerie[hidden]):has(#hierarchie[hidden]) .ch--tirage{animation:blanchit linear both;animation-timeline:view();animation-range:entry 0% entry 75%}
+  /* 04 · tirage : le titre se découvre de bas en haut. Le papier ne « blanchit » que s'il arrive après une section sombre
+     (hiérarchie vide : on vient de la planche) ; après la chambre éclairée, il est déjà clair. */
+  body:has(#hierarchie[hidden]) .ch--tirage{animation:blanchit linear both;animation-timeline:view();animation-range:entry 0% entry 75%}
   @keyframes blanchit{from{background-color:#0a0a0a}}
   .tirage__titre{animation:voletTitre linear both;animation-timeline:view();animation-range:entry 10% cover 40%}
   @keyframes voletTitre{from{clip-path:inset(100% 0 -5% 0);transform:translateY(18%)}to{clip-path:inset(-5% 0 -5% 0);transform:none}}
@@ -502,11 +442,6 @@ body.vitrine .nav__links a:hover{opacity:1}
   .tirage__bas{grid-template-columns:1fr 1fr}
   .tirage__lien{grid-column:1/-1;justify-self:start}
   .evenements,.vocab{grid-template-columns:1fr}
-  /* table lumineuse : 6 colonnes */
-  .table__planche{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:clamp(80px,13vw,150px)}
-  .negatif--large{grid-column:span 4}
-  .negatif--haute,.negatif--carree{grid-column:span 2}
-  .negatif--large:first-child{grid-column:span 6;grid-row:span 3}
 }
 /* téléphone : compositions réinterprétées, la bobine passe en bas de l'écran */
 @media (max-width:720px){
@@ -541,15 +476,5 @@ body.vitrine .nav__links a:hover{opacity:1}
   .rank--lvl1 .rank__name{font-size:28px}
   .rank--lvl2 .rank__name{font-size:24px}
   .tirage__bas{grid-template-columns:1fr}
-  /* table lumineuse : deux colonnes, les photos larges sur toute la largeur */
-  .table__tete{grid-template-columns:1fr}
-  .table__titre{grid-row:auto;font-size:clamp(64px,22vw,120px)}
-  .table__planche{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:40vw;gap:22px 12px}
-  .negatif--large,.negatif--large:first-child{grid-column:span 2;grid-row:span 1}
-  .negatif--haute{grid-column:span 1;grid-row:span 2}
-  .negatif--carree{grid-column:span 1;grid-row:span 1}
-  .negatif__cadre{border-width:6px}
-  .negatif figcaption i{display:none}
-  .lightbox{padding:60px 10px}.lightbox__nav{display:none}
 }
 [hidden]{display:none!important}
