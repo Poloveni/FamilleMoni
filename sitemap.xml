@@ -4,6 +4,9 @@
     <loc>{{url}}/</loc>
   </url>
   <url>
+    <loc>{{url}}/accueil.html</loc>
+  </url>
+  <url>
     <loc>{{url}}/confidentialite.html</loc>
   </url>
 </urlset>

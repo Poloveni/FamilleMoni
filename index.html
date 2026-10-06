@@ -2,60 +2,49 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <!-- Filet de sécurité : si le bot Discord renvoie un jeton ici (#token=…)
-       au lieu de la page de retour, on le relaie tout de suite à
-       suivi-connexion.html — le fragment ne quitte jamais le navigateur. -->
-  <script>if(/(^#|[#&])token=/.test(location.hash)){location.replace('suivi-connexion.html'+location.hash);}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Famille Moni — Roxwood GTA RP</title>
   <meta name="description" content="La Famille Moni — organisation RP née de la Famiglia Moncini, active à Roxwood sur Flashback FA (GTA RP). Histoire, code d'honneur, hiérarchie, galerie." />
-  <link rel="icon" href="favicon.ico" sizes="32x32" />
-  <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192" />
-  <link rel="manifest" href="manifest.json" />
+  <!-- {{url}}, {{nom}}, {{espace}}… viennent de site.json et de BASE_URL (voir README) : ne pas les remplacer ici. -->
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
   <meta name="theme-color" content="#0c0c0e" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="Moni" />
-  <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
   <!-- Déjà entré dans cet onglet ? On passe directement à l'accueil. -->
   <script>try { if (sessionStorage.getItem('moni-entered') && !location.hash) location.replace('accueil.html'); } catch (e) {}</script>
 
   <!-- Open Graph (aperçu Discord / réseaux) -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Famille Moni" />
+  <meta property="og:site_name" content="{{nom}}" />
   <meta property="og:title" content="La Famille Moni — Roxwood GTA RP" />
   <meta property="og:description" content="Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable. Flashback FA — GTA RP." />
-  <meta property="og:image" content="https://famillemoni.com/hero-og.jpg" />
+  <meta property="og:image" content="{{url}}/assets/og-image.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="https://famillemoni.com/" />
+  <meta property="og:url" content="{{url}}/" />
   <meta property="og:locale" content="fr_FR" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="La Famille Moni — Roxwood GTA RP" />
   <meta name="twitter:description" content="Née de la Famiglia Moncini, la famille Moni bâtit à Los Santos ce que son père a bâti en Italie : un empire discret mais mémorable." />
-  <meta name="twitter:image" content="https://famillemoni.com/hero-og.jpg" />
-  <link rel="canonical" href="https://famillemoni.com/" />
+  <meta name="twitter:image" content="{{url}}/assets/og-image.jpg" />
+  <link rel="canonical" href="{{url}}/" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Famille Moni",
     "alternateName": "Famiglia Moncini",
-    "url": "https://famillemoni.com/",
-    "logo": "https://famillemoni.com/icon-512.png",
+    "url": "{{url}}/",
+    "logo": "{{url}}/assets/logo.png",
     "description": "La Famille Moni — organisation RP née de la Famiglia Moncini, active à Roxwood sur Flashback FA (GTA RP)."
   }
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" as="image" href="logo-m-rond.webp" fetchpriority="high" />
+  <link rel="preload" href="assets/fonts/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" as="image" href="assets/logo-m-rond.webp" fetchpriority="high" />
   <link rel="prefetch" href="accueil.html" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="accueil.css?v=4" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    html, body { height: 100%; overflow: hidden; background: #050506; }
+    html, body.vitrine { height: 100%; overflow: hidden; background: #050506; }
     .entry { position: relative; min-height: 100vh; min-height: 100dvh; background: #050506; transition: opacity .7s ease, transform .7s ease; }
     .entry.is-leaving { opacity: 0; transform: scale(1.04); pointer-events: none; }
     /* La scène 3D occupe tout l'écran ; le texte est posé par-dessus. */
@@ -76,19 +65,19 @@
     @media (max-width: 600px) { .entry__inner { top: 64%; } .entry__fallback { top: 40%; } }
     @media (prefers-reduced-motion: reduce) { .entry__name, .entry__btn { animation: none; } }
   </style>
-  <script data-goatcounter="https://famillemoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
-<body>
+<!-- Page d'entrée de la vitrine (DA « Le Cachet ») : la plaque sous le projecteur, puis accueil.html. -->
+<body class="vitrine">
 <div class="grain" aria-hidden="true"></div>
 <main class="entry" id="entry">
   <canvas id="scene3d" aria-hidden="true"></canvas>
-  <div class="entry__fallback" id="fallback" aria-hidden="true"><img src="logo-m-rond.webp" alt="" width="768" height="768"></div>
+  <div class="entry__fallback" id="fallback" aria-hidden="true"><img src="assets/logo-m-rond.webp" alt="" width="768" height="768"></div>
   <div class="entry__inner">
     <h1 class="entry__title">La Famille Moni</h1>
     <p class="entry__name caps">La Famille Moni</p>
     <a class="entry__btn" href="accueil.html" id="enter">Entrer</a>
   </div>
-  <p class="entry__small caps"><a href="espace-membre.html">Espace membre</a> · Roxwood · Flashback FA</p>
+  <p class="entry__small caps"><a href="espace/">{{espace}}</a> · Roxwood · {{serveur}}</p>
 </main>
 <script>
   document.getElementById('enter').addEventListener('click', function (e) {
@@ -99,7 +88,8 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('enter').click(); });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<!-- three.js : servi par le site (assets/vendor/), aucune ressource tierce -->
+<script src="assets/vendor/three.min.js"></script>
 <script>
 /* ── Page d'entrée en 3D : la plaque argentée sous un projecteur, dans la poussière ── */
 (function () {
@@ -236,7 +226,7 @@
     renderer.render(scene, camera);
   }
 
-  new THREE.TextureLoader().load('logo-m-rond.webp', function (tex) {
+  new THREE.TextureLoader().load('assets/logo-m-rond.webp', function (tex) {
     tex.encoding = THREE.sRGBEncoding;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     var mat = new THREE.MeshStandardMaterial({
