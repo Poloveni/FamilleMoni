@@ -68,6 +68,7 @@
 
   // ---- galerie : le site n'accepte aucun envoi d'images, chaque cliché est un fichier du projet (assets/galerie/).
   // Pour en ajouter un : déposer le fichier dans le dossier, puis une ligne ici (large = deux colonnes).
+  // Limite de stockage : format .webp, 300 Ko au plus par cliché (1600 px de large suffisent), 20 Mo pour tout le dossier.
   // membres-01 à 41 : les clichés que les membres avaient déposés sur l'ancien site, du plus récent au plus ancien.
   const LEGENDES = { 31: 'Oscar', 32: 'Kaelan', 33: 'Ezio', 34: 'La Donna', 35: 'James' };
   const GALERIE = [
