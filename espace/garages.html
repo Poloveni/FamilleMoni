@@ -89,7 +89,7 @@
     // la fourrière n'est demandée qu'aux admins du bot (lui seul en décide) : à un autre, il la refuserait à chaque rafraîchissement
     const [sortis, lu] = await Promise.all([espaceBot.get('garages/vehicles'), adminBot ? espaceBot.get('garages/impounds').catch(() => null) : null]);
     const classement = fourriere(lu);
-    vehicules = sortis;
+    vehicules = sortis.map(v => ({ ...v, since: v.since ?? v.timestamp }));   // date de sortie : « since » ou « timestamp » selon la version du bot
     name = await espaceBot.names([...sortis, ...(classement || [])].filter(v => v.discordId).map(v => ({ userId: v.discordId, username: v.joueur })));
     majA = Date.now(); render(); renderFourriere(classement);
     $('page').hidden = false;

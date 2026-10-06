@@ -82,7 +82,7 @@ Un serveur Discord ne déclare **qu'un seul site externe** : tester le bot en de
 | `taxes` | `?status=active\|expired`, `/:id` (seul le détail donne téléphone et mot de passe), `/types` (libellés des types et des zones) | Taxes |
 | `armurerie` | `/`, `?status=lost`, `/ammo`, `/ammo/history`, `/ammo/production`, `/types` (modèles d'armes et catégories) | Armurerie |
 | `roles` | `/` (rôles du serveur Discord : `id`, `name`, `color` — relayé aux pouvoirs complets seulement) | Hiérarchie (rôle membre, rôle de chaque grade choisis par leur nom ; sans liaison au bot, identifiant à coller) |
-| `garages` | `/vehicles` (véhicules sortis), `/impounds` (classement fourrière, admin du bot seulement ; liste seule ou `{ montantIndicatif, classement }`, les deux formes sont lues) | Garage |
+| `garages` | `/vehicles` (véhicules sortis ; date de sortie dans `since` ou `timestamp`), `/impounds` (classement fourrière, admin du bot seulement ; liste seule ou `{ montantIndicatif, classement }`, les deux formes sont lues) | Garage |
 
 Les référentiels (`/types`, `/items`) évitent au site de recopier des listes du bot. Si le bot ne les connaît pas encore, les pages se replient sur les clés brutes mises en forme.
 
