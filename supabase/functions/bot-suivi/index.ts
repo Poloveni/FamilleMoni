@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  bot-suivi — passerelle LECTURE SEULE entre l'espace membre et l'API REST
-//  du bot Discord (bot-moni-v3, dossier src/api/ du bot).
+//  du bot Discord (roxwood-network-famille, dossier src/api/ du bot).
 //
 //  Pourquoi une fonction : le site est 100 % statique (GitHub Pages). Le
 //  jeton que le bot délivre après la connexion Discord ne doit pas vivre dans
@@ -11,7 +11,8 @@
 //  Ce que la fonction garantit, quoi que fasse le navigateur :
 //   • l'appelant est un membre connecté au site (JWT Supabase vérifié) ;
 //   • son compte est approuvé (table comptes) ; un accès « taxes uniquement »
-//     ne peut relayer que les routes taxes ;
+//     ne peut relayer que les routes taxes (le bot, lui, ouvre les taxes à
+//     tout membre : il n'a plus de rôle taxes) ;
 //   • le jeton du bot qu'il tente de lier correspond à SON compte Discord
 //     (identité Discord de Supabase, jamais user_metadata) et à la guilde
 //     Famille Moni ;
@@ -38,7 +39,7 @@
 //  Appel depuis le site : POST JSON { action, ... } avec
 //    Authorization: Bearer <access_token de la session Supabase du membre>
 //    apikey: <clé publishable>
-//  Actions avec session du site : status | link { token } | unlink | api { path, query }
+//  Actions avec session du site : status | link { token } | unlink | api { path, query } | noms
 //  Actions SANS session (page de connexion) : config | login { token }
 //    `login` = connexion au site PAR le bot : le jeton du bot, vérifié auprès
 //    de lui, désigne un compte Discord ; on retrouve (ou crée) le compte du
@@ -93,12 +94,15 @@ const ROUTES_AUTORISEES: RegExp[] = [
   /^\/api\/stocks$/,
   /^\/api\/stocks\/channels$/,
   /^\/api\/stocks\/history$/,
+  /^\/api\/stocks\/items$/,
   new RegExp(`^/api/stocks/${SNOWFLAKE}$`),
   /^\/api\/quotas$/,
   /^\/api\/quotas\/config$/,
   /^\/api\/quotas\/summary$/,
   /^\/api\/quotas\/ranking$/,
   /^\/api\/quotas\/pay$/,
+  /^\/api\/quotas\/cooldowns$/,
+  /^\/api\/quotas\/braquages$/,
   new RegExp(`^/api/quotas/pay/${SNOWFLAKE}$`),
   new RegExp(`^/api/quotas/${SNOWFLAKE}$`),
   /^\/api\/ventes$/,
@@ -107,13 +111,14 @@ const ROUTES_AUTORISEES: RegExp[] = [
   /^\/api\/armurerie\/search$/,
   /^\/api\/armurerie\/ammo$/,
   /^\/api\/armurerie\/ammo\/history$/,
+  /^\/api\/armurerie\/ammo\/production$/,
+  /^\/api\/armurerie\/types$/,
   /^\/api\/taxes$/,
   /^\/api\/taxes\/search$/,
+  /^\/api\/taxes\/types$/,
   /^\/api\/taxes\/[0-9]{1,12}$/,
-  // Ajoutées par le second correctif du bot (docs/bot-moni-v3-correctifs/) :
-  /^\/api\/braquages$/,
-  /^\/api\/cooldowns$/,
-  new RegExp(`^/api/cooldowns/${SNOWFLAKE}$`),
+  /^\/api\/garages\/vehicles$/,
+  /^\/api\/garages\/impounds$/,
 ];
 
 /** Un compte du site en accès « taxes uniquement » ne relaie que ce qui concerne les taxes (et son identité). */
@@ -151,7 +156,7 @@ async function appelBot(path: string, token: string, query: URLSearchParams | nu
   return { status: r.status, body };
 }
 
-interface MeBot { id: string; username: string; isAdmin: boolean; isTaxes: boolean; guildId: string }
+interface MeBot { id: string; username: string; isAdmin: boolean; guildId: string }
 
 function estMeBot(x: unknown): x is MeBot {
   return !!x && typeof x === "object" && typeof (x as MeBot).id === "string" && typeof (x as MeBot).guildId === "string";
@@ -291,7 +296,7 @@ async function connexionParLeBot(admin: Admin, body: Record<string, unknown>, co
   if (expiresAt.getTime() > Date.now()) {
     await admin.from("bot_sessions").upsert({
       user_id: user.id, discord_id: me.id, username: me.username, token,
-      expires_at: expiresAt.toISOString(), is_admin: !!me.isAdmin, is_taxes: !!me.isTaxes,
+      expires_at: expiresAt.toISOString(), is_admin: !!me.isAdmin,
       linked_at: new Date().toISOString(), last_used: new Date().toISOString(),
     });
   }
@@ -299,7 +304,7 @@ async function connexionParLeBot(admin: Admin, body: Record<string, unknown>, co
   const { data: lien, error: lienErr } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.email });
   const tokenHash = lien?.properties?.hashed_token;
   if (lienErr || !tokenHash) return refus(500, "site_error", "Ouverture de session impossible : " + (lienErr?.message ?? "lien vide"), base);
-  return json({ ok: true, ...base, tokenHash, nouveau, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin, isTaxes: !!me.isTaxes } });
+  return json({ ok: true, ...base, tokenHash, nouveau, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin } });
 }
 
 // ─── Serveur ─────────────────────────────────────────────────────────────────
@@ -378,7 +383,7 @@ Deno.serve(async (req: Request) => {
   const discordIdSite: string | null = discordIdDe(user);
 
   const { data: session } = await admin
-    .from("bot_sessions").select("discord_id, username, token, expires_at, is_admin, is_taxes, linked_at")
+    .from("bot_sessions").select("discord_id, username, token, expires_at, is_admin, linked_at")
     .eq("user_id", user.id).maybeSingle();
   const sessionValide = !!session && new Date(session.expires_at).getTime() > Date.now();
 
@@ -440,12 +445,11 @@ Deno.serve(async (req: Request) => {
       token,
       expires_at: expiresAt.toISOString(),
       is_admin: !!me.isAdmin,
-      is_taxes: !!me.isTaxes,
       linked_at: new Date().toISOString(),
       last_used: new Date().toISOString(),
     });
     if (upErr) return refus(500, "site_error", "Enregistrement impossible : " + upErr.message, base);
-    return json({ ok: true, ...base, linked: true, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin, isTaxes: !!me.isTaxes }, expiresAt: expiresAt.toISOString() });
+    return json({ ok: true, ...base, linked: true, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin }, expiresAt: expiresAt.toISOString() });
   }
 
   // ── status ──
@@ -466,16 +470,42 @@ Deno.serve(async (req: Request) => {
       if (r.status === 403) return json({ ok: true, ...base, linked: true, code: "forbidden", message: (r.body as { error?: string })?.error ?? "Accès refusé par le bot.", expiresAt: session!.expires_at });
       if (r.status === 200 && estMeBot(r.body)) {
         const me = r.body;
-        if (me.isAdmin !== session!.is_admin || me.isTaxes !== session!.is_taxes || me.username !== session!.username) {
-          await admin.from("bot_sessions").update({ is_admin: !!me.isAdmin, is_taxes: !!me.isTaxes, username: me.username }).eq("user_id", user.id);
+        if (me.isAdmin !== session!.is_admin || me.username !== session!.username) {
+          await admin.from("bot_sessions").update({ is_admin: !!me.isAdmin, username: me.username }).eq("user_id", user.id);
         }
-        return json({ ok: true, ...base, linked: true, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin, isTaxes: !!me.isTaxes }, expiresAt: session!.expires_at, linkedAt: session!.linked_at });
+        return json({ ok: true, ...base, linked: true, me: { id: me.id, username: me.username, isAdmin: !!me.isAdmin }, expiresAt: session!.expires_at, linkedAt: session!.linked_at });
       }
       return json({ ok: true, ...base, linked: true, code: "unavailable", message: `Réponse inattendue du bot (${r.status}).`, expiresAt: session!.expires_at });
     } catch (e) {
       return json({ ok: true, ...base, linked: true, code: "unavailable", message: "Le bot ne répond pas : " + String((e as Error).message ?? e), expiresAt: session!.expires_at,
-        me: { id: session!.discord_id, username: session!.username, isAdmin: session!.is_admin, isTaxes: session!.is_taxes } });
+        me: { id: session!.discord_id, username: session!.username, isAdmin: session!.is_admin } });
     }
+  }
+
+  // ── noms ──
+  // Le bot ne donne la liste des joueurs qu'à ses administrateurs : pour un
+  // membre, les lignes de groupe (classement, paie, ventes) n'ont qu'un
+  // identifiant Discord. Le site, lui, connaît le personnage de chaque compte
+  // rattaché à un Discord (profils.nom) : on renvoie cette correspondance,
+  // purement décorative — aucun droit n'en dépend.
+  if (action === "noms") {
+    const noms: Record<string, string> = {};
+    if (taxesSeulement) return json({ ok: true, noms });
+    try {
+      const { data: profils } = await admin.from("profils").select("id, nom");
+      const parCompte = new Map((profils ?? []).map((p: { id: string; nom: string | null }) => [p.id, String(p.nom ?? "").trim()]));
+      for (let page = 1; page <= 20; page++) {
+        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+        if (error) break;
+        const users: Utilisateur[] = data?.users ?? [];
+        for (const u of users) {
+          const discordId = discordIdDe(u), nom = parCompte.get(u.id);
+          if (discordId && nom) noms[discordId] = nom.slice(0, 80);
+        }
+        if (users.length < 200) break;
+      }
+    } catch { /* décoratif : sans noms, le site affiche l'identifiant abrégé */ }
+    return json({ ok: true, noms });
   }
 
   // ── api ──
@@ -504,6 +534,8 @@ Deno.serve(async (req: Request) => {
       if (r.status === 403) return refus(403, "forbidden", (r.body as { error?: string })?.error ?? "Accès refusé par le bot.", base);
       if (r.status === 404) return refus(404, "not_found", (r.body as { error?: string })?.error ?? "Introuvable.", base);
       if (r.status === 400) return refus(400, "bad_request", (r.body as { error?: string })?.error ?? "Requête refusée par le bot.", base);
+      // Le bot plafonne les lectures par serveur Discord (toute la famille partage le même compteur).
+      if (r.status === 429) return refus(429, "rate_limited", "Le bot a reçu trop de demandes de la famille en peu de temps — réessaie dans quelques minutes.", base);
       if (r.status >= 500) return refus(502, "unavailable", `Erreur du bot (${r.status}).`, base);
       return json({ ok: true, status: r.status, fetchedAt: new Date().toISOString(), data: r.body });
     } catch (e) {

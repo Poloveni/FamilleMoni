@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  em-bot.js — tout ce que l'espace membre affiche à partir du bot Discord
-//  (bot-moni-v3), en LECTURE SEULE : Ma semaine, La famille, Stocks,
-//  Armurerie, Braquages & cooldowns, Taxes, et la carte du mois.
+//  (roxwood-network-famille), en LECTURE SEULE : Ma semaine, La famille,
+//  Stocks, Armurerie, Braquages & cooldowns, Garage, Taxes, et la carte du mois.
 //
 //  Le navigateur ne parle jamais au bot : chaque lecture passe par l'Edge
 //  Function Supabase `bot-suivi`, qui détient le jeton du bot côté serveur,
@@ -21,9 +21,13 @@
   // ── État ──────────────────────────────────────────────────────────────────
   var S = {
     statut: null,          // dernière réponse `status` de la passerelle
-    me: null,              // { id, username, isAdmin, isTaxes } vu par le bot
-    week: '',              // '' = semaine en cours (depuis le reset du bot), sinon 'AAAA-Www'
-    config: undefined,     // /api/quotas/config (objectifs, taux, plage) — null si le bot ne l'expose pas
+    me: null,              // { id, username, isAdmin } vu par le bot
+    week: '',              // '' = semaine en cours (depuis le reset du bot), sinon 'AAAA-Www' (semaine de paie, close le dimanche 19h)
+    config: undefined,     // /api/quotas/config (objectifs, taux, paliers, plage) — null si le bot ne répond pas
+    taxeRef: undefined,    // /api/taxes/types (types fixes et zones, avec leur libellé) — null si indisponible
+    armeTypes: {},         // /api/armurerie/types : clé du modèle → libellé
+    stockItems: null,      // /api/stocks/items : catalogue des items suivis, dans l'ordre du Stock Général
+    stockListe: [],        // stock général enrichi du catalogue (pour le filtre de recherche)
     cache: {},
     derniereOk: null,
     noms: {},
@@ -33,7 +37,7 @@
     tickers: [],
   };
 
-  var TAXE_TYPES = { sporex: 'Taxe Spore X', heroine: 'Taxe Héroïne', vente: 'Taxe Vente', fertilisant: 'Taxe Fertilisant', cannabis: 'Taxe Cannabis', mexicana: 'Taxe Mexicana', cocaine: 'Taxe Cocaïne' };
+  var TAXE_TYPES = { sporex: 'Taxe Spore X', heroine: 'Taxe Héroïne', vente: 'Taxe Vente', fertilisant: 'Taxe Fertilisant', cannabis: 'Taxe Cannabis', mexicana: 'Taxe Mexicana', cocaine: 'Taxe Cocaïne', salvia: 'Taxe Salvia' };
   var QUOTA_LBL = { vente: 'Ventes', actions: 'Actions', recolte: 'Récolte', labos: 'Labos' };
   var ARME_STATUT = { en_stock: ['En stock', 'ok'], pretee: ['Prêtée', 'warn'], perdue: ['Perdue', 'bad'] };
 
@@ -74,7 +78,7 @@
   function estMoi(id) { return !!(S.me && S.me.id === id); }
   function monNom() { return currentNom || (S.me ? nomDe(S.me.id) : ''); }
 
-  /** Semaine ISO d'une date (lundi UTC), format AAAA-Www — même définition que src/api/week.ts du bot. */
+  /** Semaine ISO d'une date (lundi UTC), format AAAA-Www. */
   function isoWeek(date) {
     var d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
     var day = d.getUTCDay() || 7;
@@ -84,9 +88,19 @@
     var w = Math.ceil(((d - jan1) / 86400e3 + 1) / 7);
     return y + '-W' + (w < 10 ? '0' : '') + w;
   }
+  /**
+   * Semaine de paie d'un instant, au format du bot (AAAA-Www). Pour le bot
+   * (src/api/week.ts), la semaine AAAA-Www va du dimanche 19h (heure de Paris)
+   * qui précède son lundi au dimanche 19h qui la clôt : passé dimanche 19h,
+   * on est déjà dans la semaine suivante.
+   */
+  function semainePaie(date) {
+    var p = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));   // l'horloge de Paris, lue comme une heure locale
+    return isoWeek(new Date(Date.UTC(p.getFullYear(), p.getMonth(), p.getDate(), p.getHours() + 5)));
+  }
   function semainesPassees(n) {
-    var out = [], d = new Date();
-    for (var i = 1; i <= n; i++) out.push(isoWeek(new Date(d.getTime() - i * 7 * 86400e3)));
+    var out = [], t = Date.now();
+    for (var i = 1; i <= n; i++) out.push(semainePaie(new Date(t - i * 7 * 86400e3)));
     return out;
   }
   /** Lundi (UTC) d'une semaine ISO. */
@@ -97,6 +111,8 @@
     var d = new Date(w1); d.setUTCDate(w1.getUTCDate() + (+m[2] - 1) * 7);
     return d;
   }
+  /** Ouverture d'une semaine de paie : le dimanche 19h qui précède son lundi. */
+  function debutPaie(week) { var l = lundiDe(week); return l ? 'dim. ' + fmtDate(l.getTime() - 86400e3) + ' 19h' : ''; }
 
   // ── Passerelle ────────────────────────────────────────────────────────────
   function ErreurBot(code, message, statut) { this.code = code || 'unknown'; this.message = message || 'Erreur'; this.statut = statut || 0; }
@@ -127,7 +143,6 @@
     var cle = path + '?' + Object.keys(query).sort().map(function (k) { return k + '=' + query[k]; }).join('&');
     if (S.cache[cle]) return S.cache[cle];
     var p = appel({ action: 'api', path: path, query: query }).then(function (d) {
-      absorberNoms(d.data);
       var res = { data: d.data, at: new Date(d.fetchedAt || Date.now()) };
       S.cache[cle] = res; S.derniereOk = res.at; majChip();
       return res;
@@ -138,36 +153,56 @@
   function wk() { return S.week ? { week: S.week } : {}; }
 
   // ── Noms, config ──────────────────────────────────────────────────────────
-  /** Les routes de groupe du bot (classement, paie, ventes…) portent le nom de chaque joueur sur la ligne : on le retient au passage. */
-  function absorberNoms(data) {
-    var fix = window.MONI_NOM_FIX || {};
-    var lignes = Array.isArray(data) ? data : (data && Array.isArray(data.players) ? data.players : []);
-    lignes.forEach(function (l) {
-      if (!l || typeof l !== 'object' || !l.name) return;
-      if (l.userId) S.noms[l.userId] = fix[l.userId] || titre(l.name);
-    });
-  }
+  /**
+   * Deux sources de noms. Le bot : les pseudos Discord — la liste complète
+   * pour ses administrateurs, soi-même seulement pour un membre. Le site : le
+   * personnage de chaque compte rattaché à un Discord (action `noms` de la
+   * passerelle), qui prime — c'est le nom que la famille connaît.
+   */
   async function chargerNoms() {
     if (S.nomsCharges) return;
     S.nomsCharges = true;
     var fix = window.MONI_NOM_FIX || {};
-    try {
-      var u = await api('/api/users');
-      (u.data || []).forEach(function (x) { if (x.userId) S.noms[x.userId] = fix[x.userId] || titre(x.gameName || x.username); });
-    } catch (e) {}
+    var r = await Promise.allSettled([api('/api/users'), appel({ action: 'noms' })]);
+    if (r[0].status === 'fulfilled') (r[0].value.data || []).forEach(function (x) { if (x.userId && x.username) S.noms[x.userId] = titre(x.username); });
+    if (r[1].status === 'fulfilled') { var site = r[1].value.noms || {}; Object.keys(site).forEach(function (id) { S.noms[id] = site[id]; }); }
     Object.keys(fix).forEach(function (id) { S.noms[id] = fix[id]; });
   }
   async function chargerConfig() {
     if (S.config !== undefined) return;
     try {
       var r = await api('/api/quotas/config', wk());
-      // Sur un bot pas encore corrigé, cette adresse tombe sur /:userId : on ne
-      // la prend que si elle a la forme attendue.
       S.config = (r.data && r.data.range && r.data.targets) ? r.data : null;
     } catch (e) { S.config = null; }
   }
-  /** Vrai si les lignes de stock portent la configuration des items (bot à jour du correctif n°2) — `vente` y est alors un booléen ou null, jamais absent. */
-  function stocksConfigures(liste) { return liste.length > 0 && Object.prototype.hasOwnProperty.call(liste[0], 'vente'); }
+  /**
+   * Lignes de stock (général ou d'un coffre) enrichies du catalogue des items
+   * du bot : nom d'affichage, groupe, vendable aux PNJ, labo lié, masqué du
+   * Stock Général — et rangées dans le même ordre que sur Discord. Un item
+   * absent du catalogue garde sa ligne brute, à la suite. Sans catalogue
+   * (`items` null), rien ne change.
+   */
+  function avecCatalogue(lignes, items) {
+    if (!items) return lignes;
+    var cat = {}, rang = {};
+    items.forEach(function (it, i) { var k = String(it.name).toLowerCase(); cat[k] = it; rang[k] = i; });
+    var pos = function (s) { var r = rang[String(s.item).toLowerCase()]; return r == null ? 1e9 : r; };
+    return lignes.map(function (s) {
+      var it = cat[String(s.item).toLowerCase()];
+      return it ? { item: s.item, quantite: s.quantite, name: it.name, group: it.stockGroup, vente: !!it.vente, laboLie: it.laboLie, masque: it.visibleStock === false } : s;
+    }).sort(function (a, b) { return pos(a) - pos(b); });
+  }
+  function groupeItem(s) { return s.group || (s.vente ? 'Vente PNJ' : (s.laboLie ? 'Labo ' + titre(s.laboLie) : '—')); }
+  async function chargerTaxeRef() {
+    if (S.taxeRef !== undefined) return;
+    try { var r = await api('/api/taxes/types'); S.taxeRef = (r.data && r.data.fixed && r.data.zones) ? r.data : null; } catch (e) { S.taxeRef = null; }
+  }
+  function paliersTxt(tranches) { return tranches.map(function (t) { return (t.upTo == null ? 'au-delà' : 'jusqu\'à ' + fmtN(t.upTo)) + ' : ' + fmt$(t.amount); }).join(' · '); }
+  /** Les cooldowns d'un membre dans la réponse du bot (un administrateur reçoit ceux de tout le monde, un membre les siens). */
+  function cooldownsDe(liste, id) { return (liste || []).filter(function (c) { return c.userId === id; }); }
+  function ligneCooldown(c, avecNom) {
+    return '<div class="cd-row"><span class="cd-quoi">' + (avecNom ? '<b>' + esc(nomDe(c.userId)) + '</b> · ' : '') + esc(c.label) + '</span><span class="cd-reste" data-fin="' + Number(c.expiresAt) + '">…</span><span class="ref">' + esc(fmtDateHeure(c.expiresAt)) + '</span></div>';
+  }
   function nomItem(s) { return s && s.name ? s.name : titre(s ? s.item : ''); }
 
   // ── Pastille d'état dans l'en-tête ────────────────────────────────────────
@@ -184,7 +219,7 @@
     if (st.code === 'forbidden') { el.dataset.state = 'off'; el.innerHTML = tete + '<span class="chip-when">accès refusé</span>'; el.title = st.message || ''; return; }
     el.dataset.state = 'ok';
     el.innerHTML = tete + '<span class="chip-when">' + esc(S.me ? S.me.username : 'connecté') + (quand ? ' · ' + quand : '') + '</span>';
-    el.title = 'Connecté au bot' + (S.me && S.me.isAdmin ? ' (administrateur)' : (S.me && S.me.isTaxes ? ' (rôle taxes)' : '')) + (st.expiresAt ? ' — jeton valable jusqu\'au ' + fmtDate(new Date(st.expiresAt).getTime()) : '');
+    el.title = 'Connecté au bot' + (S.me && S.me.isAdmin ? ' (administrateur)' : '') + (st.expiresAt ? ' — jeton valable jusqu\'au ' + fmtDate(new Date(st.expiresAt).getTime()) : '');
   }
 
   // ── États (non connecté, expiré, indisponible…) ──────────────────────────
@@ -202,6 +237,7 @@
       case 'not_found': return locked('<b>Introuvable</b> côté bot.<br><small>' + msg + '</small>');
       case 'unavailable': case 'gateway': return locked('<b>Bot indisponible</b> pour le moment — aucune donnée n\'est affichée plutôt que des chiffres faux.<br><small>' + msg + '</small><div class="sv-cta"><button type="button" class="btn ghost sv-btn" onclick="actualiserTout()">Réessayer</button></div>');
       case 'gateway_missing': return locked('La passerelle <code>bot-suivi</code> n\'est <b>pas déployée</b> sur Supabase.<br><small>Voir <code>docs/SUIVI-FAMILLE.md</code>.</small>');
+      case 'rate_limited': return locked('<b>Trop de demandes au bot</b> en peu de temps (le plafond est partagé par toute la famille).<br><small>' + msg + '</small><div class="sv-cta"><button type="button" class="btn ghost sv-btn" onclick="actualiserTout()">Réessayer</button></div>');
       case 'site_forbidden': return locked('<b>Accès non ouvert</b> pour ce compte du site.<br><small>' + msg + '</small>');
       case 'unauthorized': return locked('<b>Session du site expirée.</b> Recharge la page et reconnecte-toi.');
       case 'no_discord_identity': return locked('Ton compte du site n\'est <b>pas relié à Discord</b>.<br><small>Déconnecte-toi puis utilise « Se connecter avec Discord » : c\'est ce qui prouve que les données du bot sont bien les tiennes.</small>');
@@ -215,7 +251,8 @@
       case 'forbidden': return 'accès refusé par le bot';
       case 'unavailable': case 'gateway': return 'bot injoignable';
       case 'reconnect': return 'reconnexion au bot requise';
-      case 'not_found': return 'pas encore exposé par ce bot';
+      case 'not_found': return 'introuvable côté bot';
+      case 'rate_limited': return 'trop de demandes au bot';
       case 'bad_request': return 'refusé par le bot';
       default: return err && err.message ? String(err.message).slice(0, 60) : '';
     }
@@ -249,7 +286,7 @@
       var r = S.config.range;
       return 'du ' + fmtDateHeure(r.since) + ' au ' + fmtDateHeure(r.until);
     }
-    return S.week ? 'semaine ISO ' + S.week : 'depuis le dernier reset hebdomadaire du bot (dimanche 19h)';
+    return S.week ? 'du ' + debutPaie(S.week) + ' au dimanche 19h suivant' : 'depuis le dernier reset hebdomadaire du bot (dimanche 19h)';
   }
   function avertissementSemainePassee() {
     if (!S.week) return '';
@@ -263,7 +300,7 @@
       if (obj) {
         var p = Math.min(100, Math.round(100 * val / obj));
         prog = '<div class="vd-progress sv-prog' + (val >= obj ? ' ok' : '') + '"><span style="width:' + p + '%"></span></div><div class="vd-progress-txt">' + fmtN(val) + ' / ' + fmtN(obj) + ' · ' + p + ' %</div>';
-      } else prog = '<span class="hint">' + (cibles ? 'pas d\'objectif configuré' : 'objectif non exposé par ce bot') + '</span>';
+      } else prog = '<span class="hint">' + (cibles ? 'pas d\'objectif configuré' : 'objectif indisponible') + '</span>';
       return ['<b>' + esc(QUOTA_LBL[c] || titre(c)) + '</b>', fmtN(val), prog];
     }), ['', 'num', 'prog']);
   }
@@ -281,10 +318,11 @@
       api('/api/quotas/pay/' + me.id, wk()),
       api('/api/ventes/' + me.id, wk()),
       api('/api/quotas/ranking', wk()),
-      api('/api/cooldowns'),
+      api('/api/quotas/cooldowns'),
       api('/api/ventes', wk()),
     ]);
     var quota = r[0], paie = r[1], ventes = r[2], rang = r[3], cd = r[4], groupe = r[5];
+    var mesCd = cd.status === 'fulfilled' ? cooldownsDe(cd.value.data, me.id) : [];
     var html = barreSemaine();
 
     // Héros : mes ventes face à l'objectif
@@ -297,7 +335,7 @@
       html += '<div class="moi-hero-lbl">Mes ventes' + (S.week ? ' · semaine ' + esc(S.week.replace('-W', ' n°')) : ' · cette semaine') + '</div>'
         + '<div class="moi-hero-num">' + fmtN(mv) + (obj ? '<small> / ' + fmtN(obj) + '</small>' : '') + '</div>'
         + (obj ? '<div class="goal-bar sv-prog' + (mv >= obj ? ' ok' : '') + '"><span style="width:' + pct + '%"></span></div>' : '')
-        + '<div class="moi-hero-note">' + (obj ? (mv >= obj ? 'Objectif atteint. Chaque vente de plus compte pour le classement.' : 'Encore ' + fmtN(obj - mv) + ' pour atteindre l\'objectif.') : 'Objectif non exposé par ce bot.') + '</div>';
+        + '<div class="moi-hero-note">' + (obj ? (mv >= obj ? 'Objectif atteint. Chaque vente de plus compte pour le classement.' : 'Encore ' + fmtN(obj - mv) + ' pour atteindre l\'objectif.') : 'Pas d\'objectif de ventes configuré.') + '</div>';
     }
     html += '</div>';
 
@@ -312,7 +350,7 @@
       + kpi('Ma paie', paie.status === 'fulfilled' ? fmt$(paie.value.data.salaire) : null, S.config && S.config.salaryRates ? 'taux actuels du bot' : 'calculée par le bot', paie)
       + kpi('Mon rang', rangTxt, rangFoot, rang, true)
       + kpi('Part du groupe', (mv != null && groupe.status === 'fulfilled') ? (groupe.value.data.groupTotal ? Math.round(100 * mv / groupe.value.data.groupTotal) + ' %' : '0 %') : null, groupe.status === 'fulfilled' ? 'sur ' + fmtN(groupe.value.data.groupTotal) + ' unités vendues' : '', groupe)
-      + kpi('Cooldowns actifs', cd.status === 'fulfilled' ? String((cd.value.data.cooldowns || []).length) : null, cd.status === 'fulfilled' && cd.value.data.cooldowns.length ? 'détail dans Braquages & cooldowns' : 'rien en attente', cd)
+      + kpi('Cooldowns actifs', cd.status === 'fulfilled' ? String(mesCd.length) : null, mesCd.length ? 'détail dans Braquages & cooldowns' : 'rien en attente', cd)
       + '</div>';
 
     html += '<div class="grid2 sv-grid">';
@@ -329,9 +367,11 @@
       var d = (ventes.value.data.detail || []).slice().sort(function (a, b) { return b.quantite - a.quantite; });
       html += d.length ? tableau(['Drogue', 'Quantité'], d.map(function (x) { return ['<b>' + esc(x.item) + '</b>', fmtN(x.quantite)]; }), ['', 'num']) : locked('Pas de vente confirmée sur cette période.');
       if (paie.status === 'fulfilled' && S.config && S.config.salaryRates) {
-        var taux = S.config.salaryRates, p = paie.value.data;
-        html += '<details class="sv-details"><summary>Comment ma paie est calculée</summary>' + tableau(['Catégorie', 'Fait', 'Taux actuel'], Object.keys(taux).map(function (c) { return [esc(QUOTA_LBL[c] || titre(c)), fmtN(p.byQuotaType && p.byQuotaType[c] || 0), fmt$(taux[c]) + ' / unité']; }), ['', 'num', 'num'])
-          + (Object.keys(S.config.itemSalaryRates || {}).length ? '<p class="hint sv-note">Taux spécifiques : ' + Object.keys(S.config.itemSalaryRates).map(function (k) { return esc(k) + ' ' + esc(fmt$(S.config.itemSalaryRates[k])); }).join(' · ') + '.</p>' : '') + '</details>';
+        var taux = S.config.salaryRates, p = paie.value.data, vp = S.config.ventePaliers || {}, bareme = (vp.general || []).length > 0, parItem = vp.byItem || {};
+        html += '<details class="sv-details"><summary>Comment ma paie est calculée</summary>' + tableau(['Catégorie', 'Fait', 'Taux actuel'], Object.keys(taux).map(function (c) { return [esc(QUOTA_LBL[c] || titre(c)), fmtN(p.byQuotaType && p.byQuotaType[c] || 0), (c === 'vente' && bareme) ? 'barème progressif' : fmt$(taux[c]) + ' / unité']; }), ['', 'num', 'num'])
+          + (bareme ? '<p class="hint sv-note">Barème des ventes, par unité : ' + esc(paliersTxt(vp.general)) + '.</p>' : '')
+          + (Object.keys(S.config.itemSalaryRates || {}).length ? '<p class="hint sv-note">Taux spécifiques : ' + Object.keys(S.config.itemSalaryRates).map(function (k) { return esc(k) + ' ' + esc(fmt$(S.config.itemSalaryRates[k])); }).join(' · ') + '.</p>' : '')
+          + Object.keys(parItem).map(function (k) { return '<p class="hint sv-note">Barème propre à ' + esc(k) + ' : ' + esc(paliersTxt(parItem[k])) + '.</p>'; }).join('') + '</details>';
       }
     } else html += blocErr(ventes.reason);
     html += '</div></div>';
@@ -356,7 +396,7 @@
     var st = {}; if (stocks.status === 'fulfilled') (stocks.value.data || []).forEach(function (s) { st[s.item] = s.quantite; });
     html += '<div class="kpis sv-kpis">'
       + kpi('Ventes du groupe', ventes.status === 'fulfilled' ? fmtN(ventes.value.data.groupTotal) : null, ventes.status === 'fulfilled' ? (ventes.value.data.players || []).length + ' vendeur(s)' : '', ventes)
-      + kpi('Quotas atteints', nbOk != null ? nbOk + '<small> / ' + nbActifs + '</small>' : (nbActifs != null ? nbActifs + '<small> actifs</small>' : null), cibles && cibles.vente ? 'objectif : ' + fmtN(cibles.vente) + ' ventes' : 'objectif non exposé par ce bot', quotas, true)
+      + kpi('Quotas atteints', nbOk != null ? nbOk + '<small> / ' + nbActifs + '</small>' : (nbActifs != null ? nbActifs + '<small> actifs</small>' : null), cibles && cibles.vente ? 'objectif : ' + fmtN(cibles.vente) + ' ventes' : 'pas d\'objectif de ventes configuré', quotas, true)
       + kpi('Paie du groupe', paieTotale != null ? fmt$(paieTotale) : null, 'somme des paies calculées par le bot', paies)
       + kpi('Argent sale au coffre', stocks.status === 'fulfilled' ? fmt$(st['argent sale'] || 0) : null, 'tous coffres confondus', stocks)
       + '</div>';
@@ -369,6 +409,8 @@
     if (rang.status === 'fulfilled') {
       var l = rang.value.data || [];
       html += l.length ? tableau(['#', 'Membre', 'Points'], l.map(function (x, i) { return { cls: estMoi(x.userId) ? 'moi' : '', cells: [String(i + 1), nomLien(x.userId) + (estMoi(x.userId) ? ' <span class="cd-me">toi</span>' : ''), '<b>' + fmtN(x.points) + '</b>'] }; }), ['rk', '', 'num']) : locked('Personne n\'a encore de points sur cette période.');
+      var pts = S.config && S.config.classementRates ? S.config.classementRates : {};
+      if (Object.keys(pts).length) html += '<p class="hint sv-note">Points par unité : ' + Object.keys(pts).map(function (c) { return esc(QUOTA_LBL[c] || titre(c)) + ' ' + fmtN(pts[c]); }).join(' · ') + '.</p>';
     } else html += blocErr(rang.reason);
     html += '</div>';
     html += '<div class="bloc"><div class="bloc-t">Paie du groupe <small>tous les membres suivis</small></div>';
@@ -415,9 +457,10 @@
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     await chargerConfig();
     var cibles = S.config && S.config.targets ? S.config.targets : null, acts = S.config && S.config.activities ? S.config.activities : {};
-    var r = await Promise.allSettled([api('/api/quotas/' + id, wk()), api('/api/quotas/pay/' + id, wk()), api('/api/ventes/' + id, wk()), api('/api/cooldowns/' + id), api('/api/quotas/ranking', wk())]);
+    var r = await Promise.allSettled([api('/api/quotas/' + id, wk()), api('/api/quotas/pay/' + id, wk()), api('/api/ventes/' + id, wk()), api('/api/quotas/cooldowns'), api('/api/quotas/ranking', wk())]);
     if (F.membre !== id || !$('fam-membre')) return;
     var quota = r[0], paie = r[1], ventes = r[2], cd = r[3], rang = r[4];
+    var cds = cd.status === 'fulfilled' ? cooldownsDe(cd.value.data, id) : [];
     var rangTxt = '—';
     if (rang.status === 'fulfilled') { var l = rang.value.data || [], k = l.findIndex(function (x) { return x.userId === id; }); rangTxt = k >= 0 ? (k + 1) + ' / ' + l.length + ' · ' + fmtN(l[k].points) + ' pts' : 'aucun point'; }
     var html = '<div class="bloc sv-fiche">' + tete;
@@ -425,7 +468,7 @@
       + kpi('Ventes', ventes.status === 'fulfilled' ? fmtN(ventes.value.data.total) : null, cibles && cibles.vente ? 'objectif ' + fmtN(cibles.vente) : 'unités confirmées', ventes)
       + kpi('Paie', paie.status === 'fulfilled' ? fmt$(paie.value.data.salaire) : null, 'calculée par le bot', paie)
       + kpi('Rang', rangTxt, 'classement par points', rang)
-      + kpi('Cooldowns', cd.status === 'fulfilled' ? String((cd.value.data.cooldowns || []).length) : null, 'en cours', cd)
+      + kpi('Cooldowns', cd.status === 'fulfilled' ? String(cds.length) : null, 'en cours', cd)
       + '</div><div class="grid2 sv-grid">';
     html += '<div><div class="bloc-t" style="margin-bottom:10px;">Quota <small>par catégorie</small></div>';
     if (quota.status === 'fulfilled') {
@@ -438,10 +481,7 @@
       var d = (ventes.value.data.detail || []).slice().sort(function (a, b) { return b.quantite - a.quantite; });
       html += d.length ? tableau(['Drogue', 'Quantité'], d.map(function (x) { return ['<b>' + esc(x.item) + '</b>', fmtN(x.quantite)]; }), ['', 'num']) : locked('Pas de vente confirmée sur cette période.');
     } else html += blocErr(ventes.reason);
-    if (cd.status === 'fulfilled') {
-      var cds = cd.value.data.cooldowns || [];
-      html += '<div class="bloc-t" style="margin:16px 0 10px;">Cooldowns</div>' + (cds.length ? '<div class="cd-liste">' + cds.map(function (c) { return '<div class="cd-row"><span class="cd-quoi">' + esc(c.label) + '</span><span class="cd-reste" data-fin="' + Number(c.expiresAt) + '">…</span><span class="ref">' + esc(fmtDateHeure(c.expiresAt)) + '</span></div>'; }).join('') + '</div>' : locked('Aucun cooldown en cours.'));
-    }
+    if (cd.status === 'fulfilled') html += '<div class="bloc-t" style="margin:16px 0 10px;">Cooldowns</div>' + (cds.length ? '<div class="cd-liste">' + cds.map(function (c) { return ligneCooldown(c); }).join('') + '</div>' : locked('Aucun cooldown en cours.'));
     html += '</div></div></div>';
     el.innerHTML = html;
     ticker(function () { el.querySelectorAll('.cd-reste').forEach(function (x) { var fin = Number(x.dataset.fin); x.textContent = fin > Date.now() ? 'dans ' + fmtDuree(fin - Date.now()) : 'terminé'; }); });
@@ -452,12 +492,13 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   async function rendreStocks(cible) {
-    var r = await Promise.allSettled([api('/api/stocks'), api('/api/stocks/channels'), api('/api/stocks/history', { item: 'argent sale', limit: '200' })]);
-    var stocks = r[0], canaux = r[1], histArgent = r[2];
-    var liste = stocks.status === 'fulfilled' ? (stocks.value.data || []) : [];
+    var r = await Promise.allSettled([api('/api/stocks'), api('/api/stocks/channels'), api('/api/stocks/history', { item: 'argent sale', limit: '200' }), api('/api/stocks/items')]);
+    var stocks = r[0], canaux = r[1], histArgent = r[2], cat = r[3];
+    S.stockItems = cat.status === 'fulfilled' ? (cat.value.data || []) : null;
+    var liste = S.stockListe = avecCatalogue(stocks.status === 'fulfilled' ? (stocks.value.data || []) : [], S.stockItems);
     var canauxL = canaux.status === 'fulfilled' ? (canaux.value.data || []) : [];
     var st = {}; liste.forEach(function (s) { st[s.item] = s.quantite; });
-    var configure = stocksConfigures(liste);
+    var configure = !!S.stockItems;
     var drogues = liste.filter(function (s) { return s.vente === true && s.quantite > 0; }).sort(function (a, b) { return b.quantite - a.quantite; });
     var totalDrogue = drogues.reduce(function (t, s) { return t + s.quantite; }, 0);
     var html = '';
@@ -465,7 +506,7 @@
     html += '<div class="kpis sv-kpis">'
       + kpi('Argent sale', stocks.status === 'fulfilled' ? fmt$(st['argent sale'] || 0) : null, 'à blanchir', stocks)
       + kpi('Argent propre', stocks.status === 'fulfilled' ? fmt$(st['argent'] || 0) : null, 'au coffre', stocks)
-      + kpi('Drogue à vendre', stocks.status === 'fulfilled' ? (configure ? fmtN(totalDrogue) : '—') : null, configure ? drogues.length + ' produit(s) vendables aux PNJ' : 'configuration des items non exposée par ce bot', stocks)
+      + kpi('Drogue à vendre', stocks.status === 'fulfilled' ? (configure ? fmtN(totalDrogue) : '—') : null, configure ? drogues.length + ' produit(s) vendables aux PNJ' : 'catalogue des items indisponible', stocks)
       + kpi('Items suivis', stocks.status === 'fulfilled' ? String(liste.length) : null, 'tous coffres confondus', stocks)
       + '</div>';
 
@@ -502,7 +543,7 @@
     html += '</div>';
 
     html += '<div class="bloc"><div class="bloc-t">Historique des mouvements <small>du plus récent au plus ancien</small></div><div class="tx-outils sv-outils">'
-      + '<label class="sv-sel"><span>Item</span><select onchange="emBot.filtre(\'histItem\', this.value)"><option value="">Tous</option>' + liste.map(function (i) { return '<option value="' + esc(i.item) + '"' + (F.histItem === i.item ? ' selected' : '') + '>' + esc(titre(i.item)) + '</option>'; }).join('') + '</select></label>'
+      + '<label class="sv-sel"><span>Item</span><select onchange="emBot.filtre(\'histItem\', this.value)"><option value="">Tous</option>' + liste.map(function (i) { return '<option value="' + esc(i.item) + '"' + (F.histItem === i.item ? ' selected' : '') + '>' + esc(nomItem(i)) + '</option>'; }).join('') + '</select></label>'
       + '<label class="sv-sel"><span>Coffre</span><select onchange="emBot.filtre(\'histCoffre\', this.value)"><option value="">Tous</option>' + canauxL.map(function (c) { return '<option value="' + esc(c.channelId) + '"' + (F.histCoffre === c.channelId ? ' selected' : '') + '>' + esc(c.label || String(c.channelId).slice(-4)) + '</option>'; }).join('') + '</select></label>'
       + '<label class="sv-sel"><span>Nombre</span><select onchange="emBot.filtre(\'histLimit\', this.value)">' + ['20', '50', '100', '200'].map(function (n) { return '<option value="' + n + '"' + (F.histLimit === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>'
       + '</div><div id="stk-hist">' + locked('Chargement…') + '</div></div>';
@@ -511,10 +552,10 @@
     return function apres(reel) {
     if (stocks.status === 'fulfilled') {
       var dEl = reel.querySelector('#stk-donut');
-      if (!configure) dEl.innerHTML = locked('Ce bot n\'expose pas encore la configuration des items : impossible de distinguer la drogue du matériel. <small>(correctif n°2 du bot)</small>');
+      if (!configure) dEl.innerHTML = blocErr(cat.reason);
       else if (!drogues.length) dEl.innerHTML = locked('Aucune drogue vendable en stock actuellement.');
       else {
-        var parts = drogues.map(function (s) { return { nom: titre(s.item), val: s.quantite }; });
+        var parts = drogues.map(function (s) { return { nom: nomItem(s), val: s.quantite }; });
         if (parts.length > 7) parts = parts.slice(0, 6).concat([{ nom: 'Autres (' + (parts.length - 6) + ' produits)', val: parts.slice(6).reduce(function (t, d) { return t + d.val; }, 0), detail: parts.slice(6) }]);
         drawDonut(dEl, parts);
       }
@@ -531,12 +572,13 @@
   }
   function tableStocks(liste, q) {
     q = String(q || '').trim().toLowerCase();
-    var rows = liste.filter(function (s) { return !q || String(s.item).toLowerCase().indexOf(q) >= 0; });
-    if (!rows.length) return locked(liste.length ? 'Aucun item ne correspond.' : 'Aucun stock connu du bot.');
+    // Comme le Stock Général de Discord : un item masqué par /config reste suivi (coffres, historique) mais n'est pas listé ici.
+    var visibles = liste.filter(function (s) { return !s.masque; }), masques = liste.length - visibles.length;
+    var rows = visibles.filter(function (s) { return !q || nomItem(s).toLowerCase().indexOf(q) >= 0; });
+    if (!rows.length) return locked(visibles.length ? 'Aucun item ne correspond.' : 'Aucun stock connu du bot.');
     return tableau(['Item', 'Groupe', 'Quantité'], rows.map(function (s) {
-      var grp = s.group || (s.vente ? 'Vente PNJ' : (s.laboLie ? 'Labo' : '—'));
-      return ['<b>' + esc(nomItem(s)) + '</b>' + (s.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(grp) + '</span>', fmtN(s.quantite)];
-    }), ['', '', 'num']) + '<p class="hint sv-note">' + rows.length + ' item(s).</p>';
+      return ['<b>' + esc(nomItem(s)) + '</b>' + (s.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(groupeItem(s)) + '</span>', fmtN(s.quantite)];
+    }), ['', '', 'num']) + '<p class="hint sv-note">' + rows.length + ' item(s)' + (masques ? ' · ' + masques + ' masqué(s) du stock général par le bot' : '') + '.</p>';
   }
   async function chargerCoffre(canauxL) {
     var el = $('stk-coffre'); if (!el) return;
@@ -548,10 +590,10 @@
     try {
       var r = await api('/api/stocks/' + F.coffre);
       if (!F.coffre || (c && c.channelId !== F.coffre)) return;
-      var rows = (r.data || []).filter(function (x) { return x.quantite > 0; }).sort(function (a, b) { return b.quantite - a.quantite; });
+      var rows = avecCatalogue(r.data || [], S.stockItems).filter(function (x) { return x.quantite > 0; }).sort(function (a, b) { return b.quantite - a.quantite; });
       var vides = (r.data || []).length - rows.length;
       el.innerHTML = '<div class="cf-contenu">' + tete(rows.length + ' item(s) en stock' + (vides ? ' · ' + vides + ' à zéro' : ''))
-        + (rows.length ? tableau(['Item', 'Groupe', 'Quantité'], rows.map(function (x) { return ['<b>' + esc(nomItem(x)) + '</b>' + (x.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(x.group || (x.vente ? 'Vente PNJ' : (x.laboLie ? 'Labo' : '—'))) + '</span>', fmtN(x.quantite)]; }), ['', '', 'num'])
+        + (rows.length ? tableau(['Item', 'Groupe', 'Quantité'], rows.map(function (x) { return ['<b>' + esc(nomItem(x)) + '</b>' + (x.vente ? ' ' + pill('vendable', 'ok') : ''), '<span class="ref">' + esc(groupeItem(x)) + '</span>', fmtN(x.quantite)]; }), ['', '', 'num'])
           : locked(vides ? 'Ce coffre est vide pour le moment.' : 'Aucun mouvement enregistré pour ce coffre.')) + '</div>';
       if (window.innerWidth <= 860) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (e) { el.innerHTML = '<div class="cf-contenu">' + tete('indisponible') + blocErr(e) + '</div>'; }
@@ -563,8 +605,8 @@
       var r = await api('/api/stocks/history', q), rows = r.data || [];
       var lbl = function (id) { var c = canauxL.find(function (x) { return x.channelId === id; }); return c ? (c.role === 'logs_coffres_admin' ? '🛡️ ' : '') + (c.label || String(id).slice(-4)) : (id ? '…' + String(id).slice(-4) : '—'); };
       el.innerHTML = rows.length ? tableau(['Quand', 'Joueur', 'Action', 'Item', 'Qté', 'Avant → après', 'Coffre'], rows.map(function (h) {
-        var retrait = /retrait|sortie|pris/i.test(h.action);
-        return ['<span title="' + esc(fmtDateHeure(h.timestamp)) + '">' + esc(fmtRel(h.timestamp)) + '</span>', esc(h.joueur), pill(h.action, retrait ? 'bad' : 'ok'), '<b>' + esc(titre(h.item)) + '</b>', (retrait ? '−' : '+') + fmtN(h.quantite), '<span class="ref">' + fmtN(h.stockAvant) + ' → ' + fmtN(h.stockApres) + '</span>', esc(lbl(h.channelId))];
+        var retrait = /retir|retrait|sortie|pris/i.test(h.action);   // le bot écrit « retire » ou « depose »
+        return ['<span title="' + esc(fmtDateHeure(h.timestamp)) + '">' + esc(fmtRel(h.timestamp)) + '</span>', esc(h.joueur), pill(retrait ? 'retrait' : 'dépôt', retrait ? 'bad' : 'ok'), '<b>' + esc(titre(h.item)) + '</b>', (retrait ? '−' : '+') + fmtN(h.quantite), '<span class="ref">' + fmtN(h.stockAvant) + ' → ' + fmtN(h.stockApres) + '</span>', esc(lbl(h.channelId))];
       }), ['', '', '', '', 'num', 'num', '']) : locked('Aucun mouvement pour ces filtres.');
     } catch (e) { el.innerHTML = blocErr(e); }
   }
@@ -573,14 +615,15 @@
   //  ARMURERIE
   // ═══════════════════════════════════════════════════════════════════════════
   async function rendreArmurerie(cible) {
-    var r = await Promise.allSettled([api('/api/armurerie/ammo'), api('/api/armurerie/ammo/history')]);
-    var ammo = r[0], hist = r[1], html = '';
+    var r = await Promise.allSettled([api('/api/armurerie/ammo'), api('/api/armurerie/ammo/history'), api('/api/armurerie/ammo/production'), api('/api/armurerie/types')]);
+    var ammo = r[0], hist = r[1], prod = r[2], types = r[3], html = '';
+    if (types.status === 'fulfilled') (types.value.data || []).forEach(function (t) { S.armeTypes[t.key] = t.label; });
     if (ammo.status === 'fulfilled') {
-      var a = ammo.value.data, typeLbl = a.fabricationType === 'pistolet' ? 'pistolet' : (a.fabricationType === 'smg' ? 'SMG' : null);
+      var a = ammo.value.data;
       html += '<div class="kpis sv-kpis">'
         + kpi('Munitions pistolet', fmtN(a.stock), 'en stock, boîtes converties')
         + kpi('Munitions SMG', fmtN(a.stockSmg), 'en stock')
-        + kpi('Fabriquées · semaine', fmtN(a.fabriqueesCetteSemaine), typeLbl ? 'calibre ' + typeLbl + ' · plafond ' + fmtN(a.fabricationQuotaHebdo) : 'aucune fabrication pour ce type de groupe')
+        + kpi('Fabriquées · semaine', fmtN(a.fabriqueesCetteSemaine), 'plafond indicatif : ' + fmtN(a.fabricationQuotaHebdo))
         + kpi('Vendues · semaine', fmtN(a.vendusCetteSemaine), 'déclarations depuis le dernier reset')
         + '</div>';
     } else html += '<div class="bloc"><div class="bloc-t">Munitions</div>' + blocErr(ammo.reason) + '</div>';
@@ -590,6 +633,7 @@
       + '<div class="tx-filtres" role="group" aria-label="Filtrer par statut">' + [['', 'Actives'], ['in_stock', 'En stock'], ['loaned', 'Prêtées'], ['lost', 'Perdues']].map(function (f) { return '<button type="button" class="tx-filtre' + (F.armeStatut === f[0] ? ' active' : '') + '" onclick="emBot.filtre(\'armeStatut\', \'' + f[0] + '\')">' + f[1] + '</button>'; }).join('') + '</div>'
       + '<span class="tx-compte" id="arm-compte"></span></div><div id="arm-liste">' + locked('Chargement…') + '</div></div>';
 
+    html += '<div class="grid2 sv-grid">';
     html += '<div class="bloc"><div class="bloc-t">Ventes de munitions <small>depuis le dernier reset (dimanche 19h)</small></div>';
     if (hist.status === 'fulfilled') {
       var h = hist.value.data || [];
@@ -598,6 +642,12 @@
       html += h.length ? tableau(['Quand', 'ID acheteur', 'Quantité', 'Prix'], h.map(function (v) { return ['<span title="' + esc(fmtDateHeure(v.timestamp)) + '">' + esc(fmtRel(v.timestamp)) + '</span>', '<code class="sv-id">' + esc(v.acheteur_id) + '</code>', fmtN(v.quantite), esc(fmt$(v.prix))]; }), ['', '', 'num', 'num'], true) : locked('Aucune vente de munitions déclarée cette semaine.');
     } else html += blocErr(hist.reason);
     html += '</div>';
+    html += '<div class="bloc"><div class="bloc-t">Fabrication de munitions <small>depuis le dernier reset (dimanche 19h)</small></div>';
+    if (prod.status === 'fulfilled') {
+      var f = prod.value.data || [];
+      html += f.length ? tableau(['Quand', 'Membre', 'Quantité'], f.map(function (v) { return ['<span title="' + esc(fmtDateHeure(v.timestamp)) + '">' + esc(fmtRel(v.timestamp)) + '</span>', esc(S.noms[v.userId] || (v.username ? titre(v.username) : nomDe(v.userId))), fmtN(v.quantite)]; }), ['', '', 'num']) : locked('Aucune fabrication déclarée cette semaine.');
+    } else html += blocErr(prod.reason);
+    html += '</div></div>';
     cible.innerHTML = html;
     chargerArmes();
   }
@@ -610,47 +660,87 @@
       var rows = r.data || [];
       if (q.length >= 2 && F.armeStatut) { var stt = { in_stock: 'en_stock', loaned: 'pretee', lost: 'perdue' }[F.armeStatut]; rows = rows.filter(function (a) { return a.statut === stt; }); }
       if (cpt) cpt.textContent = rows.length + ' arme(s)';
-      el.innerHTML = rows.length ? tableau(['Arme', 'Référence', 'Type', 'Statut', 'Prêtée à'], rows.map(function (a) { var s = ARME_STATUT[a.statut] || [a.statut, '']; return ['<b>' + esc(a.nom) + '</b>', '<span class="ref">' + esc(a.reference) + '</span>', esc(a.type || '—'), pill(s[0], s[1]), esc(a.preteeA || '—')]; }))
+      el.innerHTML = rows.length ? tableau(['Arme', 'Référence', 'Type', 'Statut', 'Prêtée à'], rows.map(function (a) { var s = ARME_STATUT[a.statut] || [a.statut, '']; return ['<b>' + esc(a.nom) + '</b>', '<span class="ref">' + esc(a.reference) + '</span>', esc(S.armeTypes[a.type] || a.type || '—'), pill(s[0], s[1]), esc(a.preteeA || '—')]; }))
         : locked(q.length >= 2 ? 'Aucune arme ne correspond à « ' + esc(q) + ' ».' : 'Aucune arme dans cette catégorie.');
     } catch (e) { el.innerHTML = blocErr(e); }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  BRAQUAGES, COOLDOWNS, LABOS
+  //  BRAQUAGES, COOLDOWNS
   // ═══════════════════════════════════════════════════════════════════════════
   async function rendreBraquages(cible) {
-    var r = await Promise.allSettled([api('/api/braquages'), api('/api/cooldowns')]);
-    var br = r[0], cd = r[1], html = '';
-    var pasExpose = function (res) { return res.status === 'rejected' && (res.reason.code === 'bad_request' || res.reason.code === 'not_found'); };
+    var r = await Promise.allSettled([api('/api/quotas/braquages'), api('/api/quotas/cooldowns')]);
+    var br = r[0], cd = r[1], html = '', admin = !!(S.me && S.me.isAdmin);
 
-    html += '<div class="bloc"><div class="bloc-t">Braquages <small>créneaux de la semaine glissante (7 jours)</small></div>';
+    html += '<div class="bloc"><div class="bloc-t">Braquages <small>créneaux du groupe, sur 7 jours glissants</small></div>';
     if (br.status === 'fulfilled') {
-      var l = (br.value.data && br.value.data.braquages) || [];
+      var l = br.value.data || [];
       html += l.length ? '<div class="braq-grid">' + l.map(function (b) {
-        var pct = b.limit ? Math.round(100 * b.available / b.limit) : 0, plein = b.available <= 0;
-        return '<div class="braq-carte' + (plein ? ' plein' : '') + '"><div class="braq-nom">' + esc(b.label) + '</div><div class="braq-num">' + b.available + '<small> / ' + b.limit + '</small></div>'
+        var dispo = Math.max(0, b.limit - b.used), pct = b.limit ? Math.round(100 * dispo / b.limit) : 0, plein = dispo <= 0;
+        return '<div class="braq-carte' + (plein ? ' plein' : '') + '"><div class="braq-nom">' + esc(b.label) + '</div><div class="braq-num">' + dispo + '<small> / ' + b.limit + '</small></div>'
           + '<div class="vd-progress sv-prog' + (plein ? '' : ' ok') + '"><span style="width:' + pct + '%"></span></div>'
-          + '<div class="braq-note">' + (plein ? (b.nextFreeAt ? 'prochain créneau ' + esc(fmtRel(b.nextFreeAt)) : 'complet') : b.available + ' créneau(x) disponible(s)') + '</div></div>';
+          + '<div class="braq-note">' + (plein ? (b.nextSlotAt ? 'prochain créneau ' + esc(fmtRel(b.nextSlotAt)) : 'complet') : dispo + ' créneau(x) disponible(s)') + '</div></div>';
       }).join('') + '</div>' : locked('Aucun braquage plafonné pour le type de groupe actuel.');
-    } else html += pasExpose(br) ? locked('Ce bot n\'expose pas encore les plafonds de braquage. <small>(correctif n°2 du bot)</small>') : blocErr(br.reason);
+    } else html += blocErr(br.reason);
     html += '</div>';
 
+    var tous = cd.status === 'fulfilled' ? (cd.value.data || []) : [];
     html += '<div class="bloc"><div class="bloc-t">Mes cooldowns <small>décompte en direct</small></div>';
     if (cd.status === 'fulfilled') {
-      var cds = (cd.value.data && cd.value.data.cooldowns) || [];
-      html += cds.length ? '<div class="cd-liste">' + cds.map(function (c) { return '<div class="cd-row"><span class="cd-quoi">' + esc(c.label) + '</span><span class="cd-reste" data-fin="' + Number(c.expiresAt) + '">…</span><span class="ref">' + esc(fmtDateHeure(c.expiresAt)) + '</span></div>'; }).join('') + '</div>' : locked('Aucun cooldown en cours : tout est disponible.');
-    } else html += pasExpose(cd) ? locked('Ce bot n\'expose pas encore les cooldowns. <small>(correctif n°2 du bot)</small>') : blocErr(cd.reason);
+      var cds = cooldownsDe(tous, S.me.id);
+      html += cds.length ? '<div class="cd-liste">' + cds.map(function (c) { return ligneCooldown(c); }).join('') + '</div>' : locked('Aucun cooldown en cours : tout est disponible.');
+    } else html += blocErr(cd.reason);
     html += '</div>';
+
+    // Le bot ne donne les cooldowns des autres qu'à ses administrateurs.
+    if (admin && cd.status === 'fulfilled') {
+      var autres = tous.filter(function (c) { return !estMoi(c.userId); }).sort(function (a, b) { return a.expiresAt - b.expiresAt; });
+      html += '<div class="bloc"><div class="bloc-t">Cooldowns de la famille <small>visibles des administrateurs uniquement</small></div>'
+        + (autres.length ? '<div class="cd-liste">' + autres.map(function (c) { return ligneCooldown(c, true); }).join('') + '</div>' : locked('Aucun autre membre n\'a de cooldown en cours.')) + '</div>';
+    }
     cible.innerHTML = html;
-    ticker(function () { cible.querySelectorAll('.cd-reste').forEach(function (el) { var fin = Number(el.dataset.fin); el.textContent = fin > Date.now() ? 'dans ' + fmtDuree(fin - Date.now()) : 'terminé'; el.classList.toggle('fini', fin <= Date.now()); }); });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  GARAGE — véhicules sortis, fourrière
+  // ═══════════════════════════════════════════════════════════════════════════
+  async function rendreGarage(cible) {
+    var admin = !!(S.me && S.me.isAdmin);
+    var r = await Promise.allSettled([api('/api/garages/vehicles')].concat(admin ? [api('/api/garages/impounds')] : []));
+    var veh = r[0], four = r[1], html = '';
+
+    html += '<div class="bloc"><div class="bloc-t">Véhicules sortis <small>pas encore rangés au garage</small></div>';
+    if (veh.status === 'fulfilled') {
+      var v = veh.value.data || [];
+      html += v.length ? tableau(['Plaque', 'Modèle', 'Sorti par', 'Depuis'], v.map(function (x) { return ['<code class="sv-id">' + esc(x.plaque) + '</code>', esc(x.modele || '—'), '<b>' + esc(x.joueur || '—') + '</b>', '<span title="' + esc(fmtDateHeure(x.since)) + '">' + esc(fmtRel(x.since)) + '</span>']; }))
+        + '<p class="hint sv-note">' + v.length + ' véhicule(s) dehors.</p>' : locked('Tous les véhicules sont rangés.');
+    } else html += blocErr(veh.reason);
+    html += '</div>';
+
+    // Le classement des mises en fourrière est réservé aux administrateurs du bot (comme /fourrieres sur Discord).
+    if (admin) {
+      html += '<div class="bloc"><div class="bloc-t">Fourrière <small>mises en fourrière cumulées — administrateurs uniquement</small></div>';
+      if (four.status === 'fulfilled') {
+        var f = four.value.data || [];
+        html += f.length ? tableau(['#', 'Membre', 'Mises en fourrière', 'Montant indicatif'], f.map(function (x, i) { return [String(i + 1), '<b>' + esc(x.joueur || (x.discordId ? nomDe(x.discordId) : '—')) + '</b>', fmtN(x.total), esc(fmt$(x.montant))]; }), ['rk', '', 'num', 'num'])
+          + '<p class="hint sv-note">Montant purement indicatif : le bot ne facture rien.</p>' : locked('Aucune mise en fourrière enregistrée.');
+      } else html += blocErr(four.reason);
+      html += '</div>';
+    }
+    cible.innerHTML = html;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   //  TAXES
   // ═══════════════════════════════════════════════════════════════════════════
   async function rendreTaxes(cible) {
-    if (!(S.me && S.me.isTaxes)) { cible.innerHTML = locked('Les taxes sont réservées au <b>rôle taxes</b> ou aux administrateurs du serveur Discord.'); return; }
-    var typesOpts = [['', 'Tous les types']].concat(Object.keys(TAXE_TYPES).map(function (k) { return [k, TAXE_TYPES[k]]; })).concat([['zone', 'Toutes les zones']]);
+    await chargerTaxeRef();
+    // Les types proposés sont ceux du type de groupe actuel ; une taxe d'un type sorti du barème reste visible sous « Tous les types ».
+    var ref = S.taxeRef, dispo = function (t) { return t.available; };
+    var typesOpts = [['', 'Tous les types']]
+      .concat(ref ? ref.fixed.filter(dispo).map(function (t) { return [t.key, 'Taxe ' + t.label]; }) : Object.keys(TAXE_TYPES).map(function (k) { return [k, TAXE_TYPES[k]]; }))
+      .concat([['zone', 'Toutes les zones']])
+      .concat(ref ? ref.zones.filter(dispo).map(function (z) { return [z.key, 'Zone · ' + z.label]; }) : []);
     cible.innerHTML = '<div class="bloc"><div class="bloc-t">Taxes & racket <small>infos générales ; téléphone et mot de passe à la demande</small></div>'
       + '<div class="tx-outils sv-outils">' + recherche('tx-q', 'Chercher un groupe…', F.taxeQ, 'emBot.filtre(\'taxeQ\', this.value)')
       + '<label class="sv-sel"><span>Type</span><select onchange="emBot.filtre(\'taxeType\', this.value)">' + typesOpts.map(function (t) { return '<option value="' + t[0] + '"' + (F.taxeType === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>'; }).join('') + '</select></label>'
@@ -658,7 +748,13 @@
       + '<span class="tx-compte" id="tx-compte"></span></div><div id="tx-liste">' + locked('Chargement…') + '</div></div>';
     chargerTaxes();
   }
-  function libelleTypeTaxe(t) { return TAXE_TYPES[t] || ('Zone · ' + titre(t)); }
+  function libelleTypeTaxe(t) {
+    var ref = S.taxeRef, par = function (liste) { return (liste || []).filter(function (x) { return x.key === t; })[0]; };
+    var fixe = ref && par(ref.fixed), zone = ref && par(ref.zones);
+    if (fixe) return 'Taxe ' + fixe.label;
+    if (zone) return 'Zone · ' + zone.label;
+    return TAXE_TYPES[t] || ('Zone · ' + titre(t));
+  }
   async function chargerTaxes() {
     var el = $('tx-liste'), cpt = $('tx-compte'); if (!el) return;
     try {
@@ -684,11 +780,12 @@
     return out;
   }
   function semainesDuMois(mo) {
-    // Les semaines ISO dont le lundi tombe dans le mois — même découpage que
-    // l'ancien archivage (une semaine appartient au mois où elle commence).
+    // Les semaines dont le lundi tombe dans le mois (une semaine appartient au
+    // mois où elle commence).
     var y = +mo.slice(0, 4), m = +mo.slice(5, 7) - 1, out = [], d = new Date(Date.UTC(y, m, 1));
     while (d.getUTCMonth() === m) { if ((d.getUTCDay() || 7) === 1) out.push(isoWeek(d)); d.setUTCDate(d.getUTCDate() + 1); }
-    return out.filter(function (w) { return lundiDe(w) <= new Date(); });
+    // une semaine de paie s'ouvre le dimanche 19h (Paris) qui précède son lundi
+    return out.filter(function (w) { return lundiDe(w).getTime() - 7 * 3600e3 <= Date.now(); });
   }
   function lblMois(mo) { return new Date(mo + '-15T12:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }); }
 
@@ -717,7 +814,7 @@
       var paieW = paies.find(function (p) { return p.userId === me.id; });
       lignes.push({ w: semaines[i], groupe: ventes.groupTotal, moi: moiW ? moiW.total : 0, paie: paieW ? paieW.salaire : 0 });
     });
-    zone.innerHTML = tableau(['Semaine', 'Mes ventes', 'Ma paie', 'Groupe'], lignes.map(function (l) { return l.err ? [esc(l.w), '<span class="sv-ind">' + esc(libelleCourt(l.err)) + '</span>', '', ''] : [esc(l.w.replace('-W', ' n°')) + '<br><span class="ref">dès le ' + esc(fmtDate(lundiDe(l.w))) + '</span>', '<b>' + fmtN(l.moi) + '</b>', esc(fmt$(l.paie)), fmtN(l.groupe)]; }), ['', 'num', 'num', 'num'])
+    zone.innerHTML = tableau(['Semaine', 'Mes ventes', 'Ma paie', 'Groupe'], lignes.map(function (l) { return l.err ? [esc(l.w), '<span class="sv-ind">' + esc(libelleCourt(l.err)) + '</span>', '', ''] : [esc(l.w.replace('-W', ' n°')) + '<br><span class="ref">dès le ' + esc(debutPaie(l.w)) + '</span>', '<b>' + fmtN(l.moi) + '</b>', esc(fmt$(l.paie)), fmtN(l.groupe)]; }), ['', 'num', 'num', 'num'])
       + '<p class="hint sv-note">Paie recalculée par le bot avec les taux actuels' + (ratees ? ' · ' + ratees + ' semaine(s) indisponible(s)' : '') + '.</p>';
     if (!semaines.length || ratees === semaines.length) { etat.innerHTML = locked(semaines.length ? 'Le bot n\'a pas répondu pour ce mois.' : 'Aucune semaine commencée dans ce mois.'); return; }
     var moi = parUser[me.id] || { ventes: 0, recolte: 0, activites: 0, paie: 0 };
@@ -777,7 +874,7 @@
   // ═══════════════════════════════════════════════════════════════════════════
   //  ORCHESTRATION
   // ═══════════════════════════════════════════════════════════════════════════
-  var RENDUS = { moi: rendreMoi, famille: rendreFamille, stocks: rendreStocks, armurerie: rendreArmurerie, braquages: rendreBraquages, taxes: rendreTaxes, bilan: rendreBilan };
+  var RENDUS = { moi: rendreMoi, famille: rendreFamille, stocks: rendreStocks, armurerie: rendreArmurerie, braquages: rendreBraquages, garage: rendreGarage, taxes: rendreTaxes, bilan: rendreBilan };
   var debounce = {};
 
   async function chargerStatut(force) {
@@ -787,7 +884,6 @@
       S.statut = d; S.me = d.linked && d.me ? d.me : null;
       if (d.linked && !d.code) S.derniereOk = S.derniereOk || new Date();
     } catch (e) { S.statut = { configured: true, linked: false, code: e.code, message: e.message, erreur: e }; S.me = null; }
-    var navTaxes = $('nav-taxes'); if (navTaxes && !modeGerantTaxes) navTaxes.hidden = !(S.me && S.me.isTaxes);
     majChip();
     return S.statut;
   }
@@ -823,7 +919,7 @@
       cible.innerHTML = tmp.innerHTML;
       if (typeof apres === 'function') apres(cible);
       if (panneau === 'armurerie') chargerArmes();
-      if (panneau === 'taxes' && S.me && S.me.isTaxes) chargerTaxes();
+      if (panneau === 'taxes') chargerTaxes();
       if (panneau === 'bilan') chargerBilan();
       if (panneau === 'braquages') ticker(function () { cible.querySelectorAll('.cd-reste').forEach(function (el) { var fin = Number(el.dataset.fin); el.textContent = fin > Date.now() ? 'dans ' + fmtDuree(fin - Date.now()) : 'terminé'; }); });
     } catch (e) {
@@ -839,7 +935,7 @@
     ouvrir: function (panneau) { S.panneau = panneau; rendre(panneau); },
     /** Recharge tout ce qui est en cache et redessine le panneau courant. */
     actualiser: async function () {
-      S.cache = {}; S.config = undefined; S.nomsCharges = false;
+      S.cache = {}; S.config = undefined; S.taxeRef = undefined; S.nomsCharges = false;
       await chargerStatut(true);
       if (S.panneau) await rendre(S.panneau);
     },
@@ -862,7 +958,7 @@
     filtre: function (cle, valeur) {
       var dejaOuvert = cle === 'coffre' ? F.coffre : null;
       F[cle] = valeur;
-      if (cle === 'stockQ') { var t = $('stk-table'), c = S.cache['/api/stocks?']; if (t && c && c.data) t.innerHTML = tableStocks(c.data, valeur); return; }
+      if (cle === 'stockQ') { var t = $('stk-table'), c = S.cache['/api/stocks?']; if (t && c && c.data) t.innerHTML = tableStocks(S.stockListe, valeur); return; }
       if (cle === 'coffre') {
         if (valeur && dejaOuvert === valeur) F.coffre = '';   // second appui sur la même tuile : on referme
         var lc = S.cache['/api/stocks/channels?']; chargerCoffre(lc && lc.data ? lc.data : []);

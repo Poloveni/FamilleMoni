@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="espace.css?v=1">
 <link rel="stylesheet" href="espace-moni.css?v=2">
 <link rel="stylesheet" href="admin.css?v=2">
-<script src="espace.js?v=1"></script>
+<script src="espace.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <!-- Le panel admin partage la coque de l'espace membre (modèle Roxwood Network, rubrique « Gestion ») :
@@ -344,7 +344,7 @@
     var tags = (c.rang ? '<span class="tag tag--accent">' + escHTML(c.rang) + '</span>' : '') +
       (acces === 'taxes' ? '<span class="tag">Taxes seules</span>' : '') +
       (c.bot_lie === true ? '<span class="tag tag--ok" title="Jeton du bot valide : les panneaux du bot fonctionnent pour ce compte">Bot lié</span>' : (c.bot_lie === false ? '<span class="tag" title="Pas de jeton du bot valide : ce compte devra se reconnecter par Discord">Bot non lié</span>' : '')) +
-      (c.bot_admin ? '<span class="tag">Admin Discord</span>' : (c.bot_taxes ? '<span class="tag">Rôle taxes</span>' : ''));
+      (c.bot_admin ? '<span class="tag">Admin Discord</span>' : '');
     return '<article class="insc-row' + (acces === 'taxes' ? ' limite' : '') + (c.approuve ? '' : ' attente') + '">' + avatar +
       '<div class="insc-qui"><div class="insc-nom">' + escHTML(titre) + tags + '</div>' +
       '<div class="insc-meta">' + ident.join('') + '</div>' +

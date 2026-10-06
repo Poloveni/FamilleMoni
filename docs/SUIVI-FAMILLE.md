@@ -1,18 +1,21 @@
 # L'espace membre et l'API du bot
 
 Depuis le 17 septembre 2026, l'espace membre est **bâti autour de l'API REST
-du bot Discord** [bot-moni-v3](https://github.com/poulpizar01/bot-moni-v3),
-en lecture seule. Les tables miroir `bot_*` de Supabase ne sont plus lues.
+du bot Discord**, en lecture seule. Les tables miroir `bot_*` de Supabase ne
+sont plus lues. Depuis le 6 octobre 2026, le site suit l'API de
+[roxwood-network-famille](https://github.com/poulpizar01/roxwood-network-famille)
+(le bot générique qui a remplacé bot-moni-v3 sur `api.famillemoni.com`).
 
 | Panneau | Ce qu'il montre | Routes du bot |
 |---|---|---|
-| Ma semaine | mes ventes face à l'objectif, ma paie, mon rang, mon quota, mes cooldowns | `/quotas/:me`, `/quotas/pay/:me`, `/ventes/:me`, `/quotas/ranking`, `/cooldowns`, `/quotas/config` |
+| Ma semaine | mes ventes face à l'objectif, ma paie, mon rang, mon quota, mes cooldowns | `/quotas/:me`, `/quotas/pay/:me`, `/ventes/:me`, `/quotas/ranking`, `/quotas/cooldowns`, `/quotas/config` |
 | Mon bilan | la carte du mois (image à poster), semaine par semaine | `/ventes`, `/quotas`, `/quotas/pay` avec `?week=` |
 | La famille | ventes, classement, paie et bilan du groupe, sélecteur de semaine | `/ventes`, `/quotas`, `/quotas/ranking`, `/quotas/pay`, `/quotas/summary`, `/stocks` |
-| Stocks | stock général, drogue à vendre, coffres, historique, courbe d'argent sale | `/stocks`, `/stocks/channels`, `/stocks/:id`, `/stocks/history` |
-| Armurerie | armes, munitions, ventes de munitions | `/armurerie*` |
-| Braquages | créneaux de la semaine glissante, mes cooldowns | `/braquages`, `/cooldowns` |
-| Taxes | rôle taxes / admin uniquement | `/taxes*` |
+| Stocks | stock général, drogue à vendre, coffres, historique, courbe d'argent sale | `/stocks`, `/stocks/items`, `/stocks/channels`, `/stocks/:id`, `/stocks/history` |
+| Armurerie | armes, munitions, ventes et fabrication de munitions | `/armurerie`, `/armurerie/search`, `/armurerie/types`, `/armurerie/ammo`, `/ammo/history`, `/ammo/production` |
+| Braquages | créneaux du groupe sur 7 jours glissants, mes cooldowns (ceux de tous pour un admin) | `/quotas/braquages`, `/quotas/cooldowns` |
+| Garage | véhicules sortis ; classement de la fourrière pour les admins | `/garages/vehicles`, `/garages/impounds` |
+| Taxes | taxes et racket, détail à la demande | `/taxes`, `/taxes/types`, `/taxes/:id` |
 | Profil, Planning, Galerie, Hiérarchie | données propres du site | Supabase, inchangé |
 
 Code : `em-core.js` (socle), `em-bot.js` (bot), `em-site.js` (site),
@@ -81,22 +84,9 @@ server {
 ```
 
 N'ouvre que 443 dans le pare-feu ; le port 3001 reste local. Puis
-`git pull && npm install && npx prisma migrate deploy && npm run build && sudo systemctl restart bot-moni-v3.service`
-(ou `docker compose up -d --build`). Dans les logs :
-`✅ API REST en écoute sur le port 3001`.
-
-**Applique aussi les deux correctifs** de `docs/bot-moni-v3-correctifs/`
-(voir plus bas), dans l'ordre : le premier corrige deux points de sécurité de
-l'API et ajoute les objectifs, le second ajoute braquages, cooldowns, labos,
-la configuration des items et les noms des membres. Sans eux, l'espace membre
-fonctionne mais affiche « pas encore exposé par ce bot » aux endroits
-concernés.
-
-```bash
-cd bot-moni-v3
-git am /chemin/vers/0001-*.patch /chemin/vers/0002-*.patch
-npm run typecheck
-```
+`git pull && npm install && npx prisma migrate deploy && npm run build`, redémarrage du service
+(ou `docker compose up -d --build`) — voir le README du bot. Dans les logs :
+`✅ API REST en écoute sur 127.0.0.1:3001`.
 
 ## 2. Discord Developer Portal
 
@@ -118,8 +108,9 @@ C'est **l'URL exacte de la page de retour** du site (le bot y renvoie le
 navigateur avec `#token=…`). L'origine CORS `https://famillemoni.com` en est
 dérivée automatiquement. `/config site-externe list` pour vérifier.
 
-Si le rôle « taxes » doit voir l'onglet Taxes du site :
-`/config role set cible:taxes role:@Gérants` (les admins l'ont d'office).
+L'API n'est ouverte qu'aux porteurs du **rôle membre** du bot (et aux
+administrateurs) : `/config role set membre @rôle` côté Discord. Sans ce rôle, la connexion
+est refusée (« Il te manque le rôle requis… »).
 
 ## 4. Côté Supabase
 
@@ -190,67 +181,55 @@ là, la connexion par le bot le retrouve aussi.
 
 ## Qui voit quoi
 
-| Donnée | Membre | Admin Discord | Rôle taxes |
-|---|---|---|---|
-| Stock général, historique, coffres normaux | ✔ | ✔ | ✔ |
-| Coffres administrateurs (contenu et mouvements) | ✖ (403) | ✔ | ✖ |
-| Mon quota, ma paie, mes ventes | soi-même | tout le monde | soi-même |
-| Classement, paie du groupe, bilan, ventes du groupe | ✔ (données de groupe, comme sur Discord) | ✔ | ✔ |
-| Armurerie, munitions | ✔ | ✔ | ✔ |
-| Taxes (liste, détail avec téléphone / mot de passe) | ✖ | ✔ | ✔ |
+| Donnée | Membre | Admin Discord |
+|---|---|---|
+| Stock général, historique, coffres normaux | ✔ | ✔ |
+| Coffres administrateurs (contenu et mouvements) | ✖ (403) | ✔ |
+| Mon quota, ma paie, mes ventes | soi-même | tout le monde |
+| Classement, paie du groupe, bilan, ventes du groupe | ✔ (données de groupe, comme sur Discord) | ✔ |
+| Cooldowns | les siens | ceux de tout le monde |
+| Armurerie, munitions, véhicules sortis | ✔ | ✔ |
+| Classement de la fourrière | ✖ (403) | ✔ |
+| Taxes (liste, détail avec téléphone / mot de passe) | ✔ | ✔ |
+| Liste des joueurs (`/api/users`) | soi-même | ✔ |
+
+Le bot n'a plus de rôle « taxes » : tout membre autorisé lit les taxes. Côté
+site, un compte réglé sur « Taxes uniquement » (panel admin) ne voit, lui,
+que ce panneau.
 
 Ces règles sont celles du bot ; le site n'en ajoute qu'une, la sienne :
 compte approuvé en accès complet. Un onglet masqué n'est jamais la seule
 barrière — la requête correspondante est refusée par le bot.
 
-## Les correctifs du bot (`docs/bot-moni-v3-correctifs/`)
+## Ce que le site attend du bot
 
-### 0002 — braquages, cooldowns, config des items, noms
+Formes de réponse lues par `em-bot.js` — à revérifier si l'API du bot change :
 
-- `GET /api/braquages` : plafonds de la semaine glissante (7 j), consommé,
-  restant, prochain créneau libre — même calcul que `checkBraquageLimit`.
-- `GET /api/cooldowns` (les siens), `/api/cooldowns/:userId` (soi-même ou admin).
-- `GET /api/stocks` et `/api/stocks/:channelId` : chaque ligne porte la
-  configuration de son item (`name`, `group`, `vente`, `visibleStock`,
-  `laboLie`, `stockMultiplier`). Champs ajoutés, rien de retiré. Sans eux,
-  impossible de distinguer la drogue du matériel.
-- Routes de groupe (`/api/quotas`, `/pay`, `/ranking`, `/api/ventes`,
-  `/api/armurerie/ammo/history`) : chaque ligne porte le nom du joueur
-  (`name`). Elles renvoyaient déjà les identifiants de chacun à tout membre,
-  comme le classement Discord montre les noms ; le nom est mis là où il sert.
-  `/api/users` reste réservé aux admins.
+- **Semaines** : `?week=AAAA-Www` désigne la *semaine de paie* close le
+  dimanche 19h (heure de Paris) de cette semaine ISO, ouverte le dimanche 19h
+  précédent. Le site calcule ses libellés de la même façon (`semainePaie`).
+- **Noms** : les lignes de groupe ne portent que `userId`. `/api/users` donne
+  les pseudos Discord aux administrateurs, soi-même aux membres. Le site
+  complète avec le personnage de chaque compte rattaché à un Discord
+  (`profils.nom`, action `noms` de la passerelle), qui prime.
+- **Stocks** : `/api/stocks` et `/api/stocks/:channelId` renvoient
+  `{ item, quantite }` ; nom d'affichage, groupe, `vente`, `laboLie`,
+  `visibleStock` viennent du catalogue `/api/stocks/items`, fusionné côté
+  site (clé = nom en minuscules). Un item `visibleStock: false` est masqué du
+  stock général, comme sur Discord.
+- **Braquages** : `/api/quotas/braquages` → `[{ action, label, limit, used, nextSlotAt }]`.
+- **Cooldowns** : `/api/quotas/cooldowns` → `[{ userId, action, label, expiresAt }]`.
+- **Taxes** : libellés des types et des zones lus dans `/api/taxes/types`.
+- **Plafond** : le bot limite les lectures à 300 par quart d'heure *pour toute
+  la famille*. Au-delà, les panneaux affichent « Trop de demandes au bot ».
 
-**Après l'ajout de ces routes, redéployer la fonction** `bot-suivi` (sa
-liste blanche les connaît déjà, mais la version en ligne doit être à jour) :
+Le dossier `docs/bot-moni-v3-correctifs/` ne concerne que l'ancien bot
+(bot-moni-v3) : il est conservé pour mémoire, rien n'est à appliquer sur
+roxwood-network-famille.
+
+**Quand la liste des routes change, redéployer la fonction** `bot-suivi` (elle
+ne relaie que les routes de sa liste blanche) :
 `npx -y supabase@latest functions deploy bot-suivi --no-verify-jwt --project-ref prwdtdmdkhzwfyivaepw`.
-
-### 0001 — sécurité et objectifs
-
-Un seul commit, trois changements, tous dans `src/api/` (+ une signature dans
-`src/db.ts`) :
-
-1. **Rôles revérifiés à chaque requête.** Le JWT du bot embarque `isAdmin`
-   et `isTaxes` calculés au login et valables 7 jours : un membre à qui l'on
-   retirait un rôle (ou expulsé du serveur) gardait ses accès jusqu'à
-   l'expiration. `requireAuth(client)` re-résout désormais l'appartenance et
-   les rôles via le cache membres du bot (intent `GuildMembers` déjà actif) ;
-   le token ne prouve plus que l'identité. `/api/me` reflète les droits du
-   moment, ce dont le site se sert pour afficher ou non l'onglet Taxes.
-2. **Historique des coffres admin.** `GET /api/stocks/history` renvoyait les
-   mouvements des coffres admin à tout membre (avec `?channelId=` ou sans
-   filtre), alors que `/channels` et `/:channelId` les lui cachent. Même règle
-   partout maintenant : exclus de la liste, 403 si demandés explicitement.
-3. **`GET /api/quotas/config?week=`** : plage `[since, until)` résolue,
-   objectifs (`/config quota`), taux (`/config salaire`, `/config classement`)
-   actuels, libellés des activités. Sans elle, l'API ne permettait pas
-   d'afficher une progression ni d'expliquer une paie. Sans le correctif, le
-   site fonctionne quand même : il écrit « objectif non exposé par ce bot ».
-
-Vérifié en local sur un Postgres de test avec les vraies routes (voir la
-section « Vérifications » du compte rendu de livraison) : un token signé
-`isAdmin: true` pour un simple membre est bien rétrogradé ; un membre qui
-demande l'historique d'un coffre admin reçoit 403 ; l'historique global d'un
-membre ne contient plus les lignes des coffres admin.
 
 ## Dépannage
 
@@ -264,6 +243,7 @@ membre ne contient plus les lignes des coffres admin.
 | « Le compte Discord utilisé chez le bot n'est pas celui relié à ton compte du site » | Le membre s'est connecté sur Discord (navigateur) avec un autre compte |
 | « Ton compte du site n'est pas relié à Discord » | Compte email/mot de passe : se connecter par le bot une fois (ou lier depuis un panneau) |
 | Après connexion par le bot, « Compte en attente de validation » | Nouveau compte créé par le bot : à approuver dans le panel admin (il apparaît avec son pseudo Discord si `migrations/comptes-details.sql` a été rejoué) |
-| Onglet Taxes absent alors que le rôle est donné | Sans le correctif 0001 du bot, il faut se reconnecter au bot (les rôles étaient figés dans le jeton) |
-| « pas encore exposé par ce bot » (braquages, cooldowns, drogue à vendre) | Correctif 0002 pas appliqué, ou fonction `bot-suivi` pas redéployée |
-| Les membres apparaissent comme « Membre …1234 » | Correctif 0002 pas appliqué (les routes de groupe ne portaient pas encore les noms) |
+| « Route non autorisée » dans un panneau | Fonction `bot-suivi` pas redéployée après une mise à jour du site |
+| « Trop de demandes au bot » | Plafond du bot atteint (300 lectures / 15 min pour toute la famille) : attendre quelques minutes |
+| « Il te manque le rôle requis » | Le membre n'a pas le rôle membre configuré dans le bot (`/config role`) |
+| Les membres apparaissent comme « Membre …1234 » | Leur compte du site n'est pas rattaché à leur Discord, ou ils n'ont pas choisi de personnage dans Mon profil (un admin Discord voit au moins leur pseudo) |

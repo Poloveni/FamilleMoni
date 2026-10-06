@@ -22,7 +22,7 @@ let currentNom = '';
 let isApproved = false;
 
 /** Panneaux alimentés par l'API du bot (em-bot.js) — tout le reste vient du site. */
-const BOT_PANELS = ['moi', 'famille', 'stocks', 'armurerie', 'braquages', 'taxes', 'bilan'];
+const BOT_PANELS = ['moi', 'famille', 'stocks', 'armurerie', 'braquages', 'garage', 'taxes', 'bilan'];
 
 // ── OUTILS ──────────────────────────────────────────────────────────────────
 function escT(s) { return String(s == null ? '' : s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }

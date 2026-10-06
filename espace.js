@@ -72,8 +72,9 @@ const ESPACE_NAV = [
     { panel: 'famille', label: 'La famille', court: 'Famille', req: true, sub: 'Ventes, classement, paie et bilan du groupe — en direct du bot.' },
     { panel: 'stocks', label: 'Stocks', court: 'Stocks', req: true, sub: 'Ce que la famille possède : stock général, coffres, mouvements.' },
     { panel: 'armurerie', label: 'Armurerie', req: true, sub: 'Les armes de la famille, qui les tient, et les munitions.' },
-    { panel: 'braquages', label: 'Braquages', req: true, sub: 'Créneaux de braquage, tes cooldowns, l’état des labos.' },
-    { panel: 'taxes', label: 'Taxes', req: true, id: 'nav-taxes', hidden: true, sub: 'Les taxes et le racket, réservés au rôle taxes et aux administrateurs.' },
+    { panel: 'braquages', label: 'Braquages', req: true, sub: 'Les créneaux de braquage du groupe et les cooldowns en cours.' },
+    { panel: 'garage', label: 'Garage', req: true, sub: 'Les véhicules sortis, et la fourrière.' },
+    { panel: 'taxes', label: 'Taxes', req: true, sub: 'Les taxes et le racket des groupes, avec leurs échéances.' },
   ] },
   { groupe: 'Vie de famille', liens: [
     { panel: 'events', label: 'Planning', court: 'Planning', req: true, sub: 'Les rendez-vous de la famille — dis si tu viens.' },

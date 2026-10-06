@@ -10,7 +10,7 @@
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <meta name="theme-color" content="#0a0a0b">
 <!--
-  Page de retour du bot Discord (bot-moni-v3) — l'équivalent du bot-callback.html du modèle Roxwood Network.
+  Page de retour du bot Discord (roxwood-network-famille) — l'équivalent du bot-callback.html du modèle Roxwood Network.
   Le bot y renvoie le navigateur avec `#token=<jwt>` après la connexion Discord
   (/config site-externe set https://famillemoni.com/suivi-connexion.html).
 
@@ -106,7 +106,7 @@
     try { d = await r.json(); } catch (e) {}
     if (r.ok && d && d.ok) {
       var qui = d.me ? String(d.me.username).replace(/[<>&"]/g, '') : 'toi';
-      var droits = d.me && d.me.isAdmin ? ' (administrateur)' : (d.me && d.me.isTaxes ? ' (rôle taxes)' : '');
+      var droits = d.me && d.me.isAdmin ? ' (administrateur)' : '';
       if (connexion) {
         // Le lien magique devient une session Supabase — ici, sans passer par un mail.
         var v = await sb.auth.verifyOtp({ type: 'magiclink', token_hash: d.tokenHash });
