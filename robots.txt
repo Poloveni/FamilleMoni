@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /espace-membre.html
+Disallow: /espace/
 
-Sitemap: https://famillemoni.com/sitemap.xml
+Sitemap: {{url}}/sitemap.xml

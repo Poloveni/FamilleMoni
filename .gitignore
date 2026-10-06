@@ -1,7 +1,9 @@
-# Dossiers de sauvegarde : ils ne doivent JAMAIS partir sur GitHub Pages,
-# sinon l'ancienne version du site reste accessible publiquement en ligne.
+node_modules/
+server/node_modules/
+.env
+.DS_Store
+backups/
+# sauvegardes locales de l'ancien site
 _sauvegarde*/
 *-sauvegarde/
 *.bak
-reparer.bat
-reparation-log.txt
