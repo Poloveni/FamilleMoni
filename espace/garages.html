@@ -77,9 +77,18 @@
       <td><b>${esc(c.discordId ? name(c.discordId) : c.joueur)}</b></td><td>${esc(c.total)}</td><td><b class="pay">${money(c.montant)}</b></td></tr>`).join('')
       : '<tr><td colspan="4" class="admin-empty">Aucune mise en fourrière enregistrée.</td></tr>';
   }
+  // fourrière : selon sa version, le bot renvoie la liste seule ({ discordId, montant }) ou { montantIndicatif, classement }
+  // ({ discord_id }, montant à calculer) ; toute autre réponse masque le bloc sans emporter les véhicules
+  function fourriere(lu) {
+    const liste = Array.isArray(lu) ? lu : lu?.classement;
+    if (!Array.isArray(liste)) return null;
+    const tarif = Number(lu.montantIndicatif) || 0;
+    return liste.filter(Boolean).map(c => ({ discordId: c.discordId ?? c.discord_id, joueur: c.joueur, total: Number(c.total) || 0, montant: Number(c.montant ?? c.total * tarif) || 0 }));
+  }
   async function load(adminBot) {
     // la fourrière n'est demandée qu'aux admins du bot (lui seul en décide) : à un autre, il la refuserait à chaque rafraîchissement
-    const [sortis, classement] = await Promise.all([espaceBot.get('garages/vehicles'), adminBot ? espaceBot.get('garages/impounds').catch(() => null) : null]);
+    const [sortis, lu] = await Promise.all([espaceBot.get('garages/vehicles'), adminBot ? espaceBot.get('garages/impounds').catch(() => null) : null]);
+    const classement = fourriere(lu);
     vehicules = sortis;
     name = await espaceBot.names([...sortis, ...(classement || [])].filter(v => v.discordId).map(v => ({ userId: v.discordId, username: v.joueur })));
     majA = Date.now(); render(); renderFourriere(classement);
